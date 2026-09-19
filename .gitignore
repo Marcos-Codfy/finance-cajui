@@ -1,0 +1,119 @@
+# ---------------------------------------------------------------
+# Segredos e dados reais — nunca versionar
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+key.properties
+**/android/key.properties
+google-services.json
+GoogleService-Info.plist
+
+# Banco JSON, backups e arquivos recebidos por compartilhamento
+data/
+backups/
+uploads/
+*.jsonl
+*.age
+*.enc
+
+# Planilhas e exportações financeiras pessoais
+*.xlsx
+*.xls
+*.ods
+*.csv
+!**/test/fixtures/**/*.csv
+!**/test/fixtures/**/*.jsonl
+
+# ---------------------------------------------------------------
+# Dart / Flutter
+# ---------------------------------------------------------------
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+coverage/
+doc/api/
+*.g.dart.bak
+.flutter-plugins
+.flutter-plugins-dependencies
+.fvm/
+pubspec_overrides.yaml
+
+# Binários compilados do servidor
+server/bin/*.exe
+server/bin/server
+server/bin/dbtool
+*.aot
+*.dill
+*.snapshot
+
+# ---------------------------------------------------------------
+# Android
+# ---------------------------------------------------------------
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/**/GeneratedPluginRegistrant.java
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# ---------------------------------------------------------------
+# Web
+# ---------------------------------------------------------------
+.vercel/
+node_modules/
+.lighthouseci/
+lighthouse-report*.html
+lighthouse-report*.json
+
+# ---------------------------------------------------------------
+# IDEs e editores
+# ---------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# ---------------------------------------------------------------
+# Sistema operacional
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------------------------------------------------------------
+# Logs e temporários
+# ---------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.pid
+tmp/
+spikes/**/build/

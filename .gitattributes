@@ -1,0 +1,28 @@
+# O servidor roda em Linux e o desenvolvimento acontece no Windows:
+# LF em tudo evita diff fantasma e script quebrado por CRLF no deploy.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.dart text eol=lf
+*.md   text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.svg  text eol=lf
+
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.gif  binary
+*.ico  binary
+*.ogg  binary
+*.mp3  binary
+*.wav  binary
+*.ttf  binary
+*.otf  binary
+*.woff2 binary
+*.pdf  binary
