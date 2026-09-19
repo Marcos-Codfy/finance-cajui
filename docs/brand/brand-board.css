@@ -1,0 +1,136 @@
+/* Prancha da marca Cajui. Os tokens abaixo espelham docs/brand/color.md:
+   se um valor mudar lá, muda aqui — a prancha não inventa cor própria. */
+:root {
+  --sand: #FBF6EE;
+  --sand-deep: #F3EADC;
+  --paper: #FFFFFF;
+  --ink: #2A1D17;
+  --ink-soft: #5F4E44;
+  --ink-faint: #7A685D;
+  --cajui: #E4572E;
+  --cajui-strong: #B93D17;
+  --gold: #D9A441;
+  --gold-strong: #8A6210;
+  --vereda: #2E6F57;
+  --clay: #8C4A2F;
+  --sky: #2F6F8F;
+  --night: #0F1A1E;
+  --night-raised: #17262C;
+  --night-high: #203239;
+  --moon: #F4ECE0;
+  --moon-soft: #B9AFA3;
+  --moon-faint: #94897E;
+  --cajui-light: #FF8A5C;
+  --gold-light: #F0C26A;
+  --vereda-light: #6FCBA6;
+  --clay-light: #E0A07F;
+  --display: "Fraunces", Georgia, serif;
+  --ui: "Geist", system-ui, sans-serif;
+  --radius: 28px;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  background: var(--sand);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+main { max-width: 1120px; margin: 0 auto; padding: 0 16px 96px; }
+
+h1, h2, h3 { font-family: var(--display); font-weight: 540; letter-spacing: -0.02em; line-height: 1.08; }
+h2 { font-size: clamp(30px, 4.4vw, 46px); margin-bottom: 10px; }
+h3 { font-size: 22px; margin-bottom: 6px; }
+
+.eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--cajui-strong); margin-bottom: 14px;
+}
+.lede { color: var(--ink-soft); max-width: 62ch; margin-bottom: 32px; }
+section { padding-top: 88px; }
+
+/* Abertura */
+.hero {
+  min-height: 86vh; display: grid; place-items: center; text-align: center;
+  padding: 72px 0 24px;
+}
+.hero img { width: min(560px, 82vw); height: auto; }
+.hero h1 { font-size: clamp(40px, 7vw, 84px); margin: 28px 0 14px; }
+.hero h1 em { font-style: italic; color: var(--cajui-strong); }
+.hero p { color: var(--ink-soft); max-width: 54ch; margin: 0 auto; }
+
+/* Grades reutilizadas */
+.grid { display: grid; gap: 16px; }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 760px) { .grid.three { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+.grid.four { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+.tile {
+  border-radius: var(--radius); padding: 28px; background: var(--paper);
+  border: 1px solid rgba(42, 29, 23, 0.08);
+  transition: transform 420ms var(--spring), box-shadow 420ms ease;
+}
+.tile:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -22px rgba(42, 29, 23, 0.4); }
+.tile.dark { background: var(--night); color: var(--moon); border-color: rgba(244, 236, 224, 0.08); }
+.tile.deep { background: var(--sand-deep); }
+.tile.logo { display: grid; place-items: center; min-height: 220px; }
+.tile.logo img { max-width: 78%; max-height: 150px; }
+.tile.logo.icon img { max-height: 170px; filter: drop-shadow(0 18px 28px rgba(15, 26, 30, 0.35)); }
+.tile small { display: block; margin-top: 16px; font-size: 13px; color: var(--ink-faint); text-align: center; }
+.tile.dark small { color: var(--moon-faint); }
+/* Máscara em vez de SVG inline: a geometria do símbolo fica num arquivo só. */
+.mono-mark {
+  width: 150px; height: 150px; background: var(--vereda);
+  -webkit-mask: url("assets/symbol-mono.svg") center / contain no-repeat;
+  mask: url("assets/symbol-mono.svg") center / contain no-repeat;
+}
+
+/* Paleta */
+.swatch { border-radius: 22px; overflow: hidden; border: 1px solid rgba(42, 29, 23, 0.08); background: var(--paper); }
+.swatch i { display: block; height: 112px; }
+.swatch div { padding: 14px 16px 16px; }
+.swatch b { display: block; font-size: 15px; }
+.swatch code { font-size: 12.5px; color: var(--ink-faint); font-family: var(--ui); letter-spacing: 0.04em; }
+.swatch span { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+
+/* Tipografia */
+.specimen-display { font-family: var(--display); font-size: clamp(54px, 9vw, 116px); line-height: 0.98; letter-spacing: -0.035em; }
+.specimen-display em { color: var(--cajui-strong); }
+.figures { font-variant-numeric: tabular-nums; font-size: clamp(34px, 5vw, 58px); font-weight: 600; letter-spacing: -0.03em; }
+.figures sup { font-size: 0.42em; font-weight: 500; color: var(--ink-faint); margin-right: 6px; letter-spacing: 0; vertical-align: 0.9em; }
+.scale { list-style: none; padding: 0; }
+.scale li { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid rgba(42, 29, 23, 0.08); }
+.scale li span { width: 96px; flex: none; font-size: 12px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Voz */
+.voice { display: grid; gap: 12px; }
+.say, .avoid { border-radius: 20px; padding: 18px 20px; font-size: 16px; }
+.say { background: rgba(46, 111, 87, 0.1); border: 1px solid rgba(46, 111, 87, 0.28); }
+.avoid { background: rgba(42, 29, 23, 0.04); border: 1px dashed rgba(42, 29, 23, 0.25); color: var(--ink-faint); text-decoration: line-through; text-decoration-color: rgba(42, 29, 23, 0.35); }
+.say::before, .avoid::before { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; text-decoration: none; }
+.say::before { content: "Cajui diz"; color: var(--vereda); }
+.avoid::before { content: "Cajui não diz"; color: var(--ink-faint); }
+
+/* Ícones */
+.icons { display: flex; flex-wrap: wrap; gap: 14px; }
+.icons svg {
+  width: 60px; height: 60px; padding: 16px; border-radius: 20px; background: var(--sand-deep);
+  fill: none; stroke: var(--ink); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform 380ms var(--spring), background 200ms ease;
+}
+.icons svg:hover { transform: scale(1.1) rotate(-4deg); background: #F8DCCB; }
+.hero3d { display: grid; place-items: center; background: radial-gradient(circle at 50% 38%, #FFF3E2, var(--sand-deep)); min-height: 320px; }
+.hero3d img { width: min(280px, 70%); animation: float 5.5s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-12px) rotate(2deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero3d img { animation: none; }
+  .tile, .icons svg { transition: none; }
+  .tile:hover, .icons svg:hover { transform: none; }
+}
