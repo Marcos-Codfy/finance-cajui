@@ -14,7 +14,7 @@ O centro desta área é a separação que dá sentido ao produto: **o que foi co
 | RN-204 | Um lançamento pode ser pago por mais de uma forma de pagamento | O caso típico é o vale que acaba no meio da compra (RN-122) | modelagem |
 | RN-205 | Toda linha de pagamento aponta para uma forma de pagamento, e a moeda da linha é a moeda dessa forma | Linha paga com "Vale" é `mealVoucher`; com "Pix", "débito", "dinheiro vivo", "boleto" ou "cartão de crédito" é `cash` | modelagem |
 | RN-206 | A data da compra não pode estar no futuro, no fuso de negócio. Compromisso futuro é item de plano, não lançamento | Lançar hoje uma compra com data de amanhã é rejeitado | modelagem |
-| RN-207 | Não existe categoria, bloco ou lançamento que represente cartão de crédito ou fatura | Uma proposta de classificação "fatura do cartão" como despesa é inválida por construção (RN-301, RN-310) | prompt |
+| RN-207 | Não existe categoria, bloco ou lançamento que represente cartão de crédito ou fatura | Uma proposta de classificação "fatura do cartão" como despesa é inválida por construção (RN-301, RN-343) | prompt |
 
 ## Correção e estorno
 
@@ -37,7 +37,7 @@ O centro desta área é a separação que dá sentido ao produto: **o que foi co
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
 | RN-230 | Saque e transferência entre contas próprias não são lançamentos: o dinheiro não saiu do domicílio | Sacar R$ 100 não gera nada; o que for comprado com eles gera lançamento pago em "dinheiro vivo" | modelagem |
-| RN-231 | Pagamento de fatura de cartão não é lançamento: é liquidação (RN-308) | — | prompt |
+| RN-231 | Pagamento de fatura de cartão não é lançamento: é liquidação (RN-340) | — | prompt |
 | RN-232 | Recebimento de renda não é lançamento (RN-132) | — | modelagem |
 | RN-233 | Ajuste de saldo do vale não é lançamento (RN-123) | — | modelagem |
 
@@ -53,5 +53,5 @@ O centro desta área é a separação que dá sentido ao produto: **o que foi co
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
 | RN-250 | Linha de pagamento em dinheiro vivo, Pix, débito, boleto ou vale conta no mês da data da compra | Pix em 30/09 conta em setembro | modelagem |
-| RN-251 | Linha de pagamento em cartão de crédito segue as regras RN-304 (à vista) e RN-305 (parcelada) | — | decisão 2026-09-19 |
-| RN-252 | Lançamento com data em mês já fechado é aceito como **lançamento tardio** e gera uma revisão do fechamento (RN-411); o fechamento original é preservado | Em 03/10, lançar uma compra de 28/09: setembro ganha a revisão 2 | modelagem |
+| RN-251 | Linha de pagamento em cartão de crédito segue as regras RN-310 (à vista) e RN-311 (parcelada) | — | decisão 2026-09-19 |
+| RN-252 | Lançamento com data em mês já fechado é aceito como **lançamento tardio** e gera uma revisão do fechamento (RN-441); o fechamento original é preservado | Em 03/10, lançar uma compra de 28/09: setembro ganha a revisão 2 | modelagem |

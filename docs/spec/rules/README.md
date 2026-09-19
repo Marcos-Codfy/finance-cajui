@@ -1,6 +1,6 @@
 # Regras de negócio
 
-Cada regra tem um identificador estável (`RN-NNN`), é verificável e aponta para sua origem. O identificador aparece no nome do teste que a cobre (`test('RN-304 compra à vista no cartão conta na data da compra', …)`), de modo que regra sem teste e teste sem regra ficam visíveis.
+Cada regra tem um identificador estável (`RN-NNN`), é verificável e aponta para sua origem. O identificador aparece no nome do teste que a cobre (`test('RN-310 compra à vista no cartão conta na data da compra', …)`), de modo que regra sem teste e teste sem regra ficam visíveis.
 
 ## Numeração
 
