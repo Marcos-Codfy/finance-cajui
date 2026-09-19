@@ -108,7 +108,7 @@ Buscado e não achado em literatura revisada por pares. Nenhuma citação foi cr
 | D-UX-22 | Voz | Regra dura no guia de voz, no prompt de sistema, no fallback por regras e no catálogo de erros: nenhuma mensagem atribui falha à pessoa. Falta é fato e distância a percorrer, seguida de ao menos uma opção concreta. A validação da saída da IA rejeita a lista de termos proibidos. Sem sequência punitiva | Gladstone2021, Golman2017 | Análoga |
 | D-UX-23 | Chat | Toda resposta com número diz de onde ele veio (período, blocos e eventos), calculado pelo backend de forma determinística, não pela IA; linguagem de incerteza quando a base é estimativa | Amershi2019 | Análoga |
 
-Estas decisões confirmam e detalham o guia de voz e a paleta já aprovados em `docs/brand/`. O que elas acrescentam de novo: D-UX-01 (o que é o herói do painel), D-UX-05 (data da compra, que responde a uma pendência da Fase 2), D-UX-20 (contexto de caixa no lembrete) e D-UX-09 (requisito de processo em vez de meta de acurácia).
+Estas decisões confirmam e detalham o guia de voz e a paleta já aprovados em `docs/brand/`. O que elas acrescentam de novo: D-UX-01 (o que é o herói do painel), D-UX-05 (data da compra: é o que a literatura sustenta para a pendência do parcelado, que continua sendo decidida na Fase 2), D-UX-20 (contexto de caixa no lembrete) e D-UX-09 (requisito de processo em vez de meta de acurácia).
 
 ## Referências
 
