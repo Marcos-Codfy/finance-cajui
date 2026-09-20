@@ -62,7 +62,7 @@ Nunca: "você deveria", "cuidado!", "atenção!", "infelizmente", "parabéns!!!"
 |---|---|---|
 | Moeda | `R$`, espaço, milhar com ponto, centavos com vírgula | R$ 1.284,50 |
 | Centavos em destaque | Omitir quando zero em títulos grandes | Sobram R$ 412 |
-| Data | Por extenso e curta | sex., 19 de set. |
+| Data | Por extenso e curta | sáb., 19 de set. |
 | Prazo | Relativo quando próximo | até domingo · em 3 dias |
 | Porcentagem | Sem casa decimal, salvo quando muda a leitura | 37% |
 | Caixa | Frase com inicial maiúscula; nunca TUDO EM MAIÚSCULA em texto | Ver os ajustes |

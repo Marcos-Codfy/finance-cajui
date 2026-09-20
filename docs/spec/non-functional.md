@@ -1,0 +1,194 @@
+# Requisitos não-funcionais
+
+Cada requisito tem identificador estável (`RNF-<ÁREA>-NN`), enunciado que pode ser medido, número-alvo, jeito de medir, fase em que é verificado e a decisão de onde veio. O identificador aparece no nome do teste, da asserção de CI ou do item de checklist que o cobre, como nas [regras de negócio](rules/README.md). Termos em [glossary.md](glossary.md).
+
+Este arquivo cobre desempenho, IA, confiabilidade, custo, manutenibilidade, operação e compatibilidade. Segurança e privacidade estão em [non-functional-security.md](non-functional-security.md); acessibilidade, em [non-functional-accessibility.md](non-functional-accessibility.md). A tabela de [exceções e riscos aceitos](#exceções-e-riscos-aceitos), no fim, vale para os três.
+
+## Como ler
+
+| Marca | Significa |
+|---|---|
+| **proposto** | Alvo de projeto, ainda sem medição. Vale como meta até o spike indicado; o valor medido substitui o proposto por PR neste arquivo, nunca em silêncio |
+| **confirma no spike** | Depende de medição da Fase 4: BL-002 (Flutter Web + Lighthouse), BL-004 (compartilhamento e OCR em aparelho real), BL-009 (latência de áudio), BL-019 (semântica na web), BL-021 (cache e CSP) |
+| **⚑ validar** | Decisão de modelagem que o dono do produto ainda não viu |
+| p90 · p95 | 90% ou 95% das medições ficam no alvo ou abaixo dele |
+| Fase | 3 design system · 4 arquitetura e spikes · 5 segurança · 6 implementação e CI · 7 deploy e operação · 8 custo da IA · 9 abertura do repositório |
+| Origem | `prompt`, `decisão AAAA-MM-DD`, `marca` (documento aprovado em `docs/brand/`), um `D-…` da [pesquisa](../research/README.md), um `BL-…` do [backlog](../../BACKLOG.md) ou `modelagem` |
+
+**Aparelho de referência**: o celular de uso do dono do produto, com modelo, versão do Android e memória registrados na ADR de compatibilidade (Fase 4). Todo número de Android abaixo é medido nele, em build `--profile` ou `--release`; emulador e modo debug não contam.
+
+**Carga de referência** do backend e do domínio: 24 meses de histórico, 300 lançamentos e 150 comprovantes por mês — folgada, de propósito, para um domicílio.
+
+## Desempenho no Android
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-PERF-01 | A interface roda a 60 quadros por segundo estáveis nos níveis `full` e `lite`, em cinco percursos: abrir o painel, rolar 1.000 lançamentos, abrir a confirmação, abrir e fechar folha inferior, trocar de mês | Orçamento de 16,6 ms por quadro: p90 ≤ 16,6 ms e ≤ 1% dos quadros acima de 33 ms; alvo interno de 8 ms de build + 8 ms de raster — **proposto** | Teste de integração em `--profile` no aparelho de referência, lendo `FrameTiming` (build e raster) de cada quadro; relatório arquivado por release | 4 · 6 | prompt · marca |
+| RNF-PERF-02 | O nível de qualidade de movimento é escolhido por medição no aparelho, nunca por modelo: cai de `full` para `lite` quando a janela de medição perde quadros e não volta a subir na mesma sessão. `reduced` só entra por ajuste do sistema ou escolha manual (RNF-A11Y-07). O efeito degrada; o app não trava | Queda para `lite` com > 5% dos quadros acima de 16,6 ms numa janela de 120 quadros — **proposto**, confirma na gallery da Fase 3, no aparelho (BL-010) | Teste com carga artificial de raster força a queda e confere que shader, desfoque e paralaxe somem e que as molas ficam; nível em uso visível nas configurações | 3 · 6 | marca · D-WCAG-13 |
+| RNF-PERF-03 | Abertura a frio em dois trechos: do toque no ícone ao pedido de biometria, e da biometria aceita ao painel com o resta na semana (RN-670) lido do snapshot local, sem esperar rede | ≤ 1,5 s até a biometria · ≤ 0,5 s da biometria ao número · abertura a morno ≤ 1,0 s — **proposto · confirma no spike (BL-004)**. Nunca ≥ 5 s, limiar de abertura a frio excessiva do Android vitals | `adb shell am start -W` (`TotalTime`), mediana de 10 aberturas com o processo encerrado; marca de tempo própria no primeiro quadro com dado | 4 · 6 | prompt |
+| RNF-PERF-04 | Todo toque tem resposta visual antes de qualquer espera: o estado pressionado aparece no quadro seguinte, e nenhuma resposta a toque depende de rede, disco ou IA | < 100 ms do toque ao primeiro quadro com a resposta; alvo interno ≤ 2 quadros (33 ms) | Teste de integração mede do `PointerDown` ao primeiro quadro rasterizado com o estado novo, em todo componente tocável do design system | 3 · 6 | marca |
+| RNF-PERF-05 | O som acompanha o toque; todos os sons ficam pré-carregados em memória. Som atrasado é pior que nenhum som | ≤ 80 ms do toque ao início do som — **proposto · confirma no spike (BL-009)**. Se a medição passar de 100 ms, os sons de toque (`sound.tap`, `sound.toggle`) ficam desligados naquele aparelho e só as confirmações tocam ⚑ validar | Gravação com microfone: intervalo entre o estalo do dedo no vidro e o início do som na forma de onda, mediana de 20 toques | 3 · 4 | marca · BL-009 |
+| RNF-PERF-06 | O OCR roda no aparelho, com progresso real: a linha de varredura segue o trabalho, não um laço | ≤ 2 s por página de imagem de até 12 MP, p90 · ≤ 0,5 s por página de PDF com camada de texto — **proposto · confirma no spike (BL-004, BL-005)**. Página que passa de 10 s é interrompida, com texto próprio que oferece digitar | Cronômetro interno por página sobre um conjunto fixo de 30 comprovantes reais (foto, captura de tela, PDF) | 4 · 6 | prompt |
+| RNF-PERF-07 | Do toque em "Cajui" na folha de compartilhamento do Android até a tela de confirmação preenchida | Tela do Cajui com a miniatura do comprovante em ≤ 1 s (≤ 2 s se o app estava fechado). Confirmação preenchida em ≤ 3 s sem IA (regra aprendida, classificador por regras ou sem rede) e ≤ 6 s com IA, p90, uma página — **proposto · confirma no spike (BL-004)** | Marcas de tempo por etapa (recebido, OCR, proposta, tela) sobre os 30 comprovantes, em Wi-Fi e em rede móvel | 4 · 6 | prompt |
+| RNF-PERF-08 | A espera pela IA tem teto: passado o prazo, a confirmação abre com a proposta do classificador por regras, e a resposta da IA que chegar depois é descartada | 8 s do fim do OCR à tela de confirmação, no pior caso ⚑ validar (casar com as regras de captura, RN-7xx) | Teste com o adaptador de IA atrasado em 30 s: a tela abre em ≤ 8 s com o texto de IA indisponível | 6 | D-UX-06 · D-TOP10-10 |
+| RNF-PERF-09 | O recálculo dos indicadores do mês (RN-601) cabe num quadro, ou sai da thread de interface | ≤ 10 ms para um mês com 500 lançamentos no runner de CI · ≤ 16 ms no aparelho de referência; acima disso, roda em isolate — **proposto** | Benchmark em `packages/domain` com dados fixos, como asserção de CI | 6 | modelagem |
+| RNF-PERF-10 | Painel, listas e captura funcionam sem rede: a leitura vem do armazenamento local e a escrita entra na fila offline (RNF-REL-01). Servidor fora do ar atrasa a sincronização, não o uso | 0 chamadas de rede no caminho de abrir o app e de lançar | Suíte de integração inteira em modo avião | 6 | prompt · modelagem |
+| RNF-PERF-11 | Tamanho do APK de release e memória de pico na captura | APK `arm64-v8a` ≤ 40 MB · pico ≤ 300 MB ao processar foto de 12 MP — **proposto · confirma no spike (BL-004)** | `flutter build apk --analyze-size`; perfil de memória no percurso de compartilhamento | 4 · 6 | prompt |
+
+## Desempenho na web
+
+Configuração de referência: Lighthouse 13.x pelo `@lhci/cli` 0.15.x, `preset: desktop`, throttling simulado, mediana de 5 execuções, cache frio, URL de produção e **semântica ligada**. O orçamento vale para Chrome e Edge no desktop.
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-WEB-01 | Lighthouse ≥ 90 em performance, acessibilidade e boas práticas | Mediana ≥ 0,90 nas três; asserção de CI mais dura em acessibilidade e boas práticas (≥ 0,95); no PR, performance < 0,85 é erro e < 0,90 é aviso — **confirma no spike (BL-002, BL-019)** | LHCI com versões fixadas, um job por vez, `benchmarkIndex` registrado, dispersão ≤ 5 pontos; medição oficial pós-deploy; relatório como artefato privado, nunca em armazenamento público | 4 · 6 · 7 | decisão 2026-09-19 · D-LH-01 · D-LH-02 · D-LH-14 · D-LH-15 |
+| RNF-WEB-02 | SEO é exceção documentada: a web envia `noindex`, e a categoria é medida só como informação, sem gate. A decisão do dono substitui a D-LH-13 | Toda resposta com `X-Robots-Tag: noindex`; nota de SEO esperada entre 60 e 70 | `curl -sI` na produção; relatório arquivado sem asserção | 7 | decisão 2026-09-19 · BL-020 |
+| RNF-WEB-03 | A semântica do Flutter Web fica sempre ligada, e toda medição de desempenho é feita com ela ligada | Árvore `flt-semantics` presente sem nenhum clique; custo de ligar medido e registrado | Teste de integração web; Lighthouse antes e depois, no mesmo spike | 4 · 6 | D-LH-10 · D-APG-03 · D-WCAG-23 · BL-019 |
+| RNF-WEB-04 | Métricas de carregamento | FCP ≤ 0,8 s · LCP ≤ 1,2 s · CLS ≤ 0,05 · Speed Index ≤ 1,8 s · TBT ≤ 150 ms (aviso) e ≤ 250 ms (erro) — **proposto · confirma no spike (BL-002)**. O TBT é a métrica que decide a nota | `lhci assert` com `maxNumericValue` | 4 · 6 | D-LH-03 · D-LH-09 |
+| RNF-WEB-05 | Primeiro quadro do Flutter, porque FCP e LCP medem o shell, não o painel | `cajui:first-frame` ≤ 2,5 s a frio · ≤ 1,0 s com cache — **proposto · confirma no spike (BL-002)** | `performance.mark` em `cajui:entrypoint`, `cajui:engine` e `cajui:first-frame`, lidas em "User Timing" | 4 · 6 | D-LH-06 · D-LH-09 |
+| RNF-WEB-06 | Orçamento de tamanho do build, em transferência inicial comprimida | ≤ 2,5 MB no total · código do app ≤ 1,0 MB · `index.html` ≤ 15 KB · fontes ≤ 200 KB · ≤ 20 requisições até o primeiro quadro — **proposto**: calibra na primeira medição real e só então congela aqui | Asserções de bytes do LHCI (erro direto); conversa, relatórios e gráficos atrás de carregamento adiado | 4 · 6 | prompt · D-LH-07 · D-LH-09 |
+| RNF-WEB-07 | Nada de rede nem espera cara antes do primeiro quadro; a sessão se restaura depois dele. A carga inicial não deixa erro no console: a checagem de sessão anônima responde 200 com `authenticated: false` | 0 requisições antes de `cajui:first-frame`; auditoria `errors-in-console` passa | Trace de rede; teste de contrato da rota | 6 | D-LH-08 · D-LH-19 |
+| RNF-WEB-08 | Nenhum recurso de terceiros: runtime (CanvasKit/skwasm), fontes e sons saem da própria origem | 0 hosts externos na aba de rede; `crossOriginIsolated === true` em produção | Teste ponta a ponta; script pós-deploy | 6 · 7 | D-LH-05 · D-VERCEL-10 · D-MDN-04 |
+| RNF-WEB-09 | Cache honesto para arquivo sem hash no nome: nada de `immutable`; HTML, JS, wasm e JSON revalidam sempre; fontes e imagens de `assets/` por 1 h. Nenhum `.map` publicado | Depois de um deploy, recarregar sem forçar traz a versão nova | `curl` nos três tipos de recurso; `version.json` conferido; CI falha com `*.map` em `build/web` | 4 · 7 | D-VERCEL-11 · D-LH-17 · BL-021 |
+| RNF-WEB-10 | Se o app não sobe, a tela não fica em branco: o shell mostra a carga desde o primeiro byte e troca por texto com ação quando o primeiro quadro não chega ou falta WebAssembly/WebGL | Texto visível em 10 s sem primeiro quadro — **proposto** | Teste ponta a ponta bloqueando `main.dart.wasm` e `main.dart.js`: o texto aparece e o botão recebe foco | 3 · 6 | D-HTML-10 |
+| RNF-WEB-11 | Depois de carregado, o modo consulta responde como o app | Resposta a clique < 100 ms · troca para rota já visitada ≤ 300 ms · 60 quadros por segundo na rolagem de relatório — **proposto** | Traço de desempenho do navegador em três percursos: painel, relatório, conversa | 6 | marca · modelagem |
+| RNF-WEB-12 | Firefox e Safari não rodam o build wasm e caem no caminho em JavaScript, mais pesado: abrem e funcionam, sem promessa de nota nem de tempo | Percursos de consulta completos nos quatro navegadores | Roteiro manual por release | 7 | D-LH-04 |
+| RNF-WEB-13 | A meta não se maquia: é proibido medir só o shell, desligar a semântica na medição ou medir página diferente da usada. Exceção à meta só por ADR aprovada em checkpoint | — | Revisão do `lighthouserc.json` em PR | 4 | D-LH-16 |
+
+## Backend
+
+Tempos medidos **no servidor**, do primeiro byte recebido ao último enviado, na VM ARM de produção ou no runner `ubuntu-24.04-arm`, com a carga de referência. A latência de rede até o Brasil depende da região da VM e é medida à parte, na Fase 7.
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-API-01 | Tempo de resposta por tipo de rota, p95 | Saúde e checagem de sessão ≤ 50 ms · leitura de painel, mês e listas, a partir do snapshot ≤ 200 ms · gravação de comando (validar, travar, anexar ao log, sincronizar em disco, atualizar índice e snapshot) ≤ 300 ms · relatório que cruza até 12 meses ≤ 1 s · reconstrução do snapshot de um mês a partir do log ≤ 2 s — **proposto**, confirma na Fase 4 (BL-003, BL-015) | Teste de carga curto no CI: 200 requisições em sequência e 5 concorrentes por tipo de rota; duração por rota no log estruturado, sem dado financeiro | 4 · 6 · 7 | prompt |
+| RNF-API-02 | Classificação de um texto extraído | Sem IA (regra aprendida ou classificador por regras) ≤ 150 ms p95 · com IA ≤ 4 s p90, com teto de 8 s (RNF-AI-01) — **proposto**. O tempo da IA depende do provedor: é meta observada, não garantia | Cronômetro por etapa no log; conjunto de 30 textos extraídos | 6 | prompt |
+| RNF-API-03 | Todo pedido tem prazo | Rota comum: 10 s no total · conversa: 100 s, abaixo dos 120 s do proxy da Vercel · cabeçalhos do cliente: 10 s · após `SIGTERM`, pedidos em curso terminam em ≤ 10 s | Testes com cliente lento e com `SIGTERM` no meio de uma gravação | 6 | D-TOP10-10 · D-VERCEL-15 |
+| RNF-API-04 | Limite de taxa por sessão e global, aplicado antes do trabalho caro; resposta 429 com `Retry-After` e código do catálogo. Na web o limite é por sessão, não por IP | API autenticada: 120 pedidos/min por sessão · pareamento e login: 5 tentativas por 10 min por origem e 20/h no total, com atraso progressivo de 1, 2, 4 … até 60 s · classificação com IA: 30/h · conversa: 20 mensagens/h — **proposto** | Teste de carga curta dispara o bloqueio; teste de força bruta simulado | 6 | D-ASVS-05 · D-TOP10-07 · D-VERCEL-16 |
+| RNF-API-05 | Tamanho máximo do que entra | Corpo JSON ≤ 128 KB · texto extraído ≤ 20.000 caracteres por comprovante · mensagem da conversa ≤ 2.000 caracteres · comprovante original ≤ 10 MB, só `image/jpeg`, `image/png` e `application/pdf`, em rota própria e só de sessão Android ⚑ validar (depende da decisão sobre comprovantes em [data-model.md](data-model.md)) | Testes de contrato: corpo acima do limite, `multipart` fora da rota de comprovante e tipo fora da lista devolvem 4xx | 6 | D-ASVS-10 · D-TOP10-05 · D-TOP10-10 |
+| RNF-API-06 | Função cara tem concorrência máxima | Chamadas à DeepSeek: 2 · reconstrução de snapshot: 1 · relatório: 1 · exportação: 1 | Teste de concorrência | 6 | D-ASVS-15 |
+| RNF-API-07 | Pegada do processo na VM gratuita | Memória residente ≤ 256 MB em regime · partida ≤ 5 s, incluída a conferência da cadeia do mês corrente — **proposto** | Medição no teste de carga; marca de tempo na partida | 7 | modelagem |
+| RNF-API-08 | Toda resposta sai com `Cache-Control: no-store` e `Content-Type: application/json; charset=utf-8`; a borda da Vercel nunca guarda resposta de `/api` | `x-vercel-cache` nunca é `HIT` em `/api` | Teste de contrato | 6 | D-VERCEL-14 · D-MDN-06 |
+
+## IA
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-AI-01 | Toda chamada à DeepSeek tem prazo próprio | Conexão 5 s · classificação 8 s no total, já contadas as tentativas · conversa 90 s, com comentário de heartbeat a cada 25 s no SSE | Teste com servidor falso lento | 6 | D-VERCEL-15 · D-TOP10-10 |
+| RNF-AI-02 | Nova tentativa só para 429, 5xx e queda de rede, com recuo exponencial e variação aleatória; `Retry-After` é respeitado até 10 s. Resposta 4xx que não seja 429 (pedido malformado, chave, saldo) nunca repete | No máximo 3 tentativas, com espera de 1 s e depois 3 s, ± 20%. Na classificação vale o que couber nos 8 s. Na conversa, só antes do primeiro trecho; depois que o texto começou, não repete | Teste com servidor falso devolvendo 429, 500, 503 e 401 em sequência programada | 6 | prompt · D-TOP10-10 |
+| RNF-AI-03 | Disjuntor: depois de tentativas seguidas sem resposta, a IA é dada como fora do ar e o app para de esperar por ela | 3 seguidas abrem o disjuntor por 5 min — **proposto** | Com o disjuntor aberto, nenhuma chamada sai e a classificação responde no tempo "sem IA" (RNF-API-02) | 6 | D-ASVS-16 · modelagem |
+| RNF-AI-04 | Orçamento de tokens aplicado **antes** da chamada, em três níveis: por pedido, por dia e por mês. Esgotado, nenhuma chamada externa sai, e a classificação segue pelo classificador por regras | Classificação: ≤ 1.500 de entrada e ≤ 300 de saída · conversa: contexto do assistente ≤ 6.000 de entrada e ≤ 800 de saída por mensagem · dia: 150.000 · mês: 2.000.000 — **proposto ⚑ validar**. O teto em reais sai na Fase 8, com o preço lido na fonte (BL-001) | Teste que esgota o contador e confere que nenhuma chamada sai; cada uso vira `AiUsageRecorded` | 6 · 8 | D-TOP10-12 · BL-001 |
+| RNF-AI-05 | O consumo é visível: tokens de entrada, de saída e em cache, por operação, no mês corrente; aviso ao chegar a 80% do teto | Número na tela = soma dos `AiUsageRecorded` do mês | Teste de integração | 6 | D-TOP10-09 |
+| RNF-AI-06 | O app funciona inteiro sem IA. Captura, confirmação, painel, relatórios e fechamento não dependem dela; só a conversa fica indisponível, com texto próprio. Ordem de recuo: regra aprendida → IA → classificador por regras → campo vazio com seletor, sem pular validação | 100% dos casos de uso, menos a conversa, concluídos com o adaptador de IA desligado | Suíte ponta a ponta com a IA forçada a não responder | 6 | prompt · D-UX-06 · D-TOP10-10 |
+| RNF-AI-07 | Saída da IA fora do esquema fechado conta como tentativa perdida e vai para o recuo, sem nova pergunta paga ao provedor | 0 propostas fora do esquema chegam à tela | Suíte de comprovantes adversariais | 6 | D-TOP10-11 · D-ASVS-04 |
+| RNF-AI-08 | Modelo, endereço e limites ficam em configuração, não em código. O prefixo do prompt é estável, para aproveitar o cache do provedor, e a taxa de acerto do cache é registrada | — | Revisão; campo de cache em `AiUsageRecorded` | 6 · 8 | modelagem |
+| RNF-AI-09 | A especificação não presume acurácia: o requisito é de processo. Toda proposta passa pela confirmação, e o app conta sugestões aceitas e corrigidas por categoria. A IA nunca calcula indicador (RN-602) | Taxa exibida = aceitas ÷ propostas, por categoria | Teste de integração | 6 | D-UX-09 |
+
+## Confiabilidade
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-REL-01 | Nenhum comprovante se perde sem rede. Comprovante, texto extraído e lançamento confirmado são gravados no aparelho **antes** de qualquer chamada de rede e sobrevivem a app encerrado e a aparelho reiniciado | 20 compartilhamentos em modo avião, app encerrado à força, aparelho reiniciado, rede de volta: 20 lançamentos no servidor, 0 repetidos. A fila offline guarda ao menos 500 comandos e nunca descarta: cheia, avisa | Teste de integração no aparelho; roteiro manual por release | 6 | prompt |
+| RNF-REL-02 | Todo comando leva chave de idempotência: repetir o envio devolve o mesmo resultado e não cria evento. A chave vale enquanto o evento existir | 100 reenvios do mesmo comando = 1 evento | Teste de reenvio; teste com queda injetada entre o envio e a confirmação | 6 | D-ASVS-05 |
+| RNF-REL-03 | A fila offline sobe sozinha, e o que ainda não subiu fica marcado na tela | Com o app aberto e rede, o envio começa em ≤ 5 s; em segundo plano, por tarefa agendada com restrição de rede, sem promessa de horário. Novas tentativas em 5 s, 15 s, 60 s, 5 min e depois a cada 15 min — **proposto** | Teste de integração com rede intermitente | 6 | modelagem |
+| RNF-REL-04 | Gravação à prova de queda: o cliente só recebe confirmação depois de o evento estar sincronizado em disco, no log. Queda em qualquer ponto deixa o log íntegro; índice e snapshot atrasados são refeitos na partida | `kill -9` entre cada passo da gravação, 100 rodadas: 0 eventos confirmados perdidos, 0 linhas pela metade | Teste de queda injetada; teste de partida depois da queda | 6 | D-TOP10-10 · BL-015 |
+| RNF-REL-05 | Um escritor por vez: escritas simultâneas são serializadas ou recusadas com erro próprio, nunca sobrescritas | 50 escritas simultâneas: todas gravadas ou recusadas, nenhuma perdida | Teste de concorrência | 6 | D-ASVS-15 |
+| RNF-REL-06 | Corrupção e adulteração são detectadas pela cadeia do log (`prev`), conferida na leitura de cada mês, na partida e, inteira, todo dia antes do backup. Cadeia quebrada fecha a leitura com o ponto exato; nada é gravado sobre ela | 100% de detecção para byte alterado, linha removida e linha reordenada | Testes de adulteração sobre arquivos de fixture | 6 | D-TOP10-08 · D-ASVS-11 |
+| RNF-REL-07 | Backup diário, cifrado **antes** de sair da VM, com destino externo e gratuito (BL-014) e rotação. Leva eventos, comprovantes, cadastro de aparelhos e logs de segurança; **não** leva as chaves. As chaves de dados e de backup têm cópia fora da VM, sob guarda do dono | 1 por dia · rotação de 7 diários + 4 semanais + 12 mensais ⚑ validar · backup de cadeia quebrada não substitui o anterior | Tarefa agendada registra sucesso e tamanho; conferência mensal (RNF-OPS-08) | 4 · 7 | prompt · D-TOP10-04 · D-TOP10-09 · D-ASVS-16 · BL-014 |
+| RNF-REL-08 | Ponto e tempo de recuperação na perda da VM | RPO ≤ 24 h para o que só existia no servidor. O que nasceu no Android não se perde: o aparelho guarda os comandos confirmados dos últimos 35 dias e os reenvia depois da restauração, sem duplicar (RNF-REL-02) — **proposto**, decide-se na ADR-004/005. RTO ≤ 4 h entre decidir restaurar e a API responder em VM nova ⚑ validar | Ensaio cronometrado (RNF-REL-09) | 4 · 7 | prompt · modelagem |
+| RNF-REL-09 | Backup só vale depois de ensaio de restauração: restaurar o último backup em ambiente limpo, conferir a cadeia e recalcular o snapshot de um mês fechado, centavo a centavo (RN-601) | Antes do lançamento e a cada 3 meses ⚑ validar; tempo e resultado anotados no runbook | Ensaio no runbook | 7 | D-TOP10-08 |
+| RNF-REL-10 | Backup parado não passa em silêncio | Último backup bom há mais de 36 h gera aviso visível no app | Teste com relógio adiantado | 6 · 7 | D-TOP10-09 |
+| RNF-REL-11 | Os mesmos eventos dão os mesmos números em qualquer máquina e fuso (RN-601) | Suíte do domínio idêntica com o fuso da máquina em UTC, `America/Araguaina` e `Asia/Tokyo` | Matriz de fuso no CI | 6 | modelagem |
+| RNF-REL-12 | O JSON tem limite conhecido ([data-model.md](data-model.md#limites-honestos-do-json)), e o crescimento é vigiado | Aviso operacional quando o log de um mês passa de 10 MB ou o disco de dados passa de 70% | Conferência mensal | 7 | modelagem |
+
+## Custo
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-COST-01 | Custo fixo de R$ 0 por mês. Todo serviço usado tem camada gratuita suficiente e consta de um inventário: VM, web (Vercel Hobby), repositório e CI (GitHub Free), certificado, nome do backend (BL-007), destino do backup (BL-014) | R$ 0,00 em todas as contas | Conferência mensal (RNF-OPS-08) | 7 | decisão 2026-09-19 |
+| RNF-COST-02 | Nenhuma forma de pagamento cadastrada onde a cota esgotada bloqueia o uso em vez de cobrar: é a parada segura do custo zero | 0 cartões no GitHub Actions e na Vercel | Conferência mensal | 7 | D-GHS-06 |
+| RNF-COST-03 | O único custo variável são os tokens da DeepSeek, com teto mensal (RNF-AI-04) | 2.000.000 de tokens por mês — **proposto ⚑ validar**; o valor em reais entra aqui na Fase 8 (BL-001) | Soma dos `AiUsageRecorded` do mês | 8 | decisão 2026-09-19 · D-TOP10-12 |
+| RNF-COST-04 | A web fica dentro do plano Hobby e do uso não comercial: sem anúncio, cobrança ou afiliado | Teto interno de 5 GB de transferência por mês (a cota é 100 GB); investigar acima de 10% de qualquer cota | Painel de uso da Vercel | 7 | D-VERCEL-01 · D-VERCEL-03 |
+| RNF-COST-05 | Minutos de CI dentro da cota gratuita | ≤ 1.200 min por mês: 60% dos 2.000 da conta | Painel de cobrança do Actions | 6 · 7 | D-GHS-06 · BL-023 |
+| RNF-COST-06 | Só dependência, fonte, som e ícone com licença livre ou de autoria própria, registrados em `assets/CREDITS.md` | 0 pacotes com licença comercial restritiva | Conferência de licenças no CI | 6 | BL-005 · BL-010 · marca |
+
+## Manutenibilidade
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-MAINT-01 | Limites de tamanho em todo Dart escrito à mão, testes incluídos; arquivo gerado fica de fora por lista versionada | ≤ 300 linhas por arquivo · ≤ 30 linhas por função · ≤ 3 níveis de indentação · 1 classe pública por arquivo | Verificador próprio no CI; um PR de fixture por limite violado tem de reprovar | 6 | prompt · D-GHS-05 |
+| RNF-MAINT-02 | Cobertura de testes do domínio | > 80% das linhas de `packages/domain`, com piso no CI; cobertura de ramos registrada; demais pacotes registrados sem piso na primeira versão | Relatório de cobertura como artefato de retenção curta | 6 | prompt · D-GHS-16 |
+| RNF-MAINT-03 | Análise estática sem avisos | 0 erros, 0 avisos e 0 infos com `very_good_analysis` estrito; formatação conferida; todo `// ignore:` leva o motivo na mesma linha | `dart analyze --fatal-infos`, `flutter analyze` e `dart format --set-exit-if-changed` no CI | 6 | prompt · D-GHS-14 |
+| RNF-MAINT-04 | Toda RN tem teste nomeado pelo ID, e todo teste que cita um ID aponta para RN que existe; regra revogada fica de fora. RNF automatizável segue a mesma convenção | 0 RN sem teste · 0 IDs pendurados | Script que extrai os IDs de `docs/spec/rules/*.md` e dos nomes de teste e compara | 6 | prompt |
+| RNF-MAINT-05 | Cada RN que rejeita algo tem ao menos um teste de abuso: valor negativo, data absurda, vale em categoria não elegível, fatura como despesa | ≥ 1 por RN com rejeição | Suíte de abuso rastreada por ID | 5 · 6 | D-TOP10-06 |
+| RNF-MAINT-06 | O domínio é puro e o design system é fonte única: `packages/domain` não importa Flutter, Shelf, JSON nem rede; `app/` não usa cor nem widget Material cru; `GestureDetector` só dentro do design system | 0 violações | Lints próprios e conferência de `pubspec.yaml` no CI | 6 | decisão 2026-09-19 · D-WCAG-10 |
+| RNF-MAINT-07 | Nenhum `TODO` solto: pendência vira item do [BACKLOG](../../BACKLOG.md) | 0 ocorrências de `TODO` ou `FIXME` | Busca no CI | 6 | prompt |
+| RNF-MAINT-08 | Evento antigo continua legível para sempre: todo par `type` + `v` já lançado tem fixture lida no CI | 100% dos esquemas já lançados | Teste de leitura de fixtures | 6 | modelagem |
+| RNF-MAINT-09 | Toda mudança entra por PR, com Conventional Commits validados e o check único `ci-ok` verde; mudança de comportamento altera a RN no mesmo PR | 100% dos commits de topo de `main` são merge de PR | Job `main-guard` | 6 | D-GHS-01 · D-GHS-03 · D-GHS-20 |
+| RNF-MAINT-10 | Build reprodutível: versões do Flutter e do Dart fixadas, `pubspec.lock` versionado, e o binário testado é o mesmo publicado | 1 build por release, reaproveitado por teste, Lighthouse e deploy | Revisão do workflow | 6 · 7 | D-VERCEL-04 · D-TOP10-03 |
+| RNF-MAINT-11 | A suíte do domínio é rápida o bastante para rodar antes de cada commit | ≤ 60 s na máquina de desenvolvimento — **proposto** | Tempo no CI e no hook | 6 | modelagem |
+
+## Operação
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-OPS-01 | Deploy idempotente: `scripts/deploy.sh` aplica firewall, unit do systemd, Caddyfile e binário; rodar duas vezes seguidas dá o mesmo estado. O script roda da máquina do desenvolvedor, baixa o binário da release e confere o SHA-256; nenhuma chave SSH fica no GitHub | 2ª execução: 0 mudanças, código de saída 0 | Ensaio na Fase 7, repetido a cada mudança do script | 7 | prompt · D-TOP10-02 · D-GHS-11 |
+| RNF-OPS-02 | O backend é binário `linux/arm64`, compilado em runner arm64 padrão, sem emulação e sem runner próprio na VM de produção | `file` acusa `aarch64`; teste de fumaça no próprio runner | Job de release | 4 · 6 | D-GHS-07 · BL-003 |
+| RNF-OPS-03 | Deploy e retorno rápidos: a versão anterior fica na VM | Indisponibilidade por deploy ≤ 30 s · volta à versão anterior ≤ 5 min — **proposto**; o app atravessa a janela pela fila offline | Ensaio cronometrado no runbook | 7 | modelagem |
+| RNF-OPS-04 | Verificação pós-deploy automática | Portas abertas = 22, 80 e 443 · SSH sem senha · cabeçalhos presentes · resposta 500 sem detalhe interno · saúde responde · duração ≤ 2 min | Script pós-deploy | 7 | D-TOP10-02 |
+| RNF-OPS-05 | CI em duas velocidades, para caber na cota. PR (leve): formatação, análise, testes, verificadores e gitleaks. `main` e tags (pesado): build Android, build web em wasm, job arm64 e Lighthouse. Execução superada é cancelada; PR que só toca `docs/` pula build; sem runner Windows ou macOS | PR em ≤ 8 min, p90 — **proposto** | Tempo por job no histórico do Actions | 6 | BL-023 · D-GHS-05 · D-GHS-06 |
+| RNF-OPS-06 | Release rastreável: tag anotada e assinada `vMAJOR.MINOR.PATCH`, com binário arm64, APK assinado e pacote web anexados, cada um com SHA-256. A chave do APK fica fora do repositório | `git tag -v` passa; 3 artefatos e suas somas | Job de release | 7 | D-GHS-12 · D-TOP10-08 |
+| RNF-OPS-07 | Observação a custo zero, dentro do próprio app: tela de estado do sistema com última sincronização, último backup, situação da IA, consumo de tokens e avisos de segurança ⚑ validar. Alerta que ninguém vê não conta | Todo aviso de RNF-REL-10, RNF-AI-05 e RNF-SEC-13 aparece nela | Teste de integração | 6 | D-TOP10-09 |
+| RNF-OPS-08 | Rotina mensal de operação curta e escrita | ≤ 15 min: uso da Vercel, minutos do Actions, disco, idade do backup, tokens, alertas do Dependabot, datas de rotação de segredos | Checklist no runbook | 7 | D-VERCEL-03 · D-GHS-06 |
+| RNF-OPS-09 | A web tem plano de saída: o mesmo `build/web` pode ser servido pelo Caddy da VM, com os mesmos cabeçalhos. Ambiente de preview nunca fala com dado real | Simulado uma vez na Fase 7 | Runbook "Vercel pausada ou removida" | 7 | D-VERCEL-02 · D-VERCEL-18 |
+
+## Compatibilidade
+
+| ID | Requisito | Alvo | Como se mede | Fase | Origem |
+|---|---|---|---|---|---|
+| RNF-COMPAT-01 | A versão mínima do Android é definida na Fase 4, com justificativa escrita. Critérios: o aparelho de referência; chave em hardware com uso condicionado à biometria (BL-012); exigências do OCR local (BL-004); mínimo suportado pela versão fixada do Flutter | Candidata: Android 9 (API 28), a primeira com `BiometricPrompt` nativo — **proposto**, confirma nos spikes. `targetSdk` = o mais recente estável na data da release | ADR de compatibilidade | 4 | prompt · BL-012 |
+| RNF-COMPAT-02 | Telas do Android | Layout conferido em 360×640 dp e 412×915 dp, em retrato e paisagem (a orientação não é travada), com fonte de 100% a 200% | Testes de widget por tamanho | 3 · 6 | D-WCAG-06 |
+| RNF-COMPAT-03 | Navegadores | Chrome e Edge no desktop, duas últimas versões estáveis: suporte completo e orçamento de desempenho (exigem WasmGC, Chrome 119+). Firefox e Safari no desktop, última versão: funcional, pelo caminho em JavaScript. Navegador de celular não é alvo — o uso móvel é o app —, mas a página abre no layout compacto | Roteiro manual por release | 7 | D-LH-04 |
+| RNF-COMPAT-04 | Janela da web | De 320 px lógicos (zoom de 400% em 1280 px) a 1920 px ou mais, só com rolagem vertical; referência de medição 1350×940 | Testes de widget em 320×800 e 1280×720 | 3 · 6 | D-WCAG-08 · D-LH-01 |
+| RNF-COMPAT-05 | App e backend são lançados separados. A API tem prefixo de versão; o backend reconhece app antigo demais e responde com texto próprio, e a fila offline atravessa a atualização sem perda | 0 lançamentos perdidos ao atualizar com 20 comandos pendentes | Teste de atualização | 6 | modelagem |
+| RNF-COMPAT-06 | Um idioma e uma moeda corrente: `pt-BR` e real. Formatação pelo `intl` em `pt_BR`; testes normalizam o espaço não separável (U+00A0). Temas claro e escuro em toda tela | `R$ 1.234,56` em toda saída | Teste unitário de formatação; goldens nos dois temas | 3 · 6 | D-MDN-20 |
+
+## Textos de tela ligados a estes requisitos
+
+Exemplos no [guia de voz](../brand/voice-and-tone.md): o que aconteceu, o que significa, o que dá para fazer agora. A redação final entra no catálogo de erros, na Fase 3.
+
+| Situação | Texto |
+|---|---|
+| IA passou do prazo (RNF-PERF-08) | A classificação automática demorou mais que o normal. Usei as regras locais — confira a categoria antes de salvar. |
+| Página além de 10 s no OCR (RNF-PERF-06) | Não consegui ler esta página a tempo. O comprovante está guardado. Quer tentar de novo ou digitar o valor? |
+| Teto de tokens do mês (RNF-AI-04) | O uso da IA chegou ao teto de setembro. A classificação segue pelas regras locais, e a conversa volta no dia 1º. Quer rever o teto? |
+| Fila offline com itens (RNF-REL-03) | 3 lançamentos ainda não enviados. Estão salvos no aparelho e sobem sozinhos quando a conexão voltar. Quer tentar agora? |
+| Backup parado (RNF-REL-10) | O último backup foi há 2 dias. Seus dados seguem no servidor, sem cópia recente fora dele. Ver o que aconteceu |
+| Limite de taxa (RNF-API-04) | Foram muitos pedidos em pouco tempo. Nada se perdeu. Dá para tentar de novo em 40 segundos. |
+| Web sem primeiro quadro (RNF-WEB-10) | Não consegui abrir o painel. O carregamento parou no meio. Tentar de novo |
+| App antigo demais (RNF-COMPAT-05) | Esta versão do app ficou antiga para falar com o servidor. Seus lançamentos pendentes continuam guardados. Instale a versão 1.4 para enviar. |
+
+## Exceções e riscos aceitos
+
+O que o projeto **não** cumpre, ou cumpre com ressalva, dito de frente. Cada linha nova aqui passa por checkpoint com o dono do produto.
+
+| # | Exceção ou risco | Por que é aceito | O que compensa | Origem |
+|---|---|---|---|---|
+| E-01 | **SEO do Lighthouse abaixo de 90** (esperado entre 60 e 70) | A web envia `noindex`: painel financeiro pessoal não aparece em buscador | Medido e arquivado, sem gate; as outras três categorias mantêm ≥ 90 | decisão 2026-09-19 · BL-020 |
+| E-02 | **ASVS nível 2 com exceções**: 13.3.1 (cofre de segredos), 16.4.3 (log em sistema separado), 12.3.3 (TLS entre serviços internos) e 11.2.1 (biblioteca criptográfica validada) | Uma VM, custo fixo zero, ecossistema Dart | [Detalhe e controles](non-functional-security.md#exceções-ao-asvs-nível-2). A redação pública é "autoavaliado", nunca "certificado" | BL-013 · D-ASVS-11 · D-ASVS-12 · D-ASVS-13 · D-ASVS-16 |
+| E-03 | **WCAG 2.2 AA com ressalvas na web**: 1.4.5 e 1.4.12 em canvas; experiência com leitor de tela mais pobre que a de um HTML equivalente, porque faltam ao Flutter os papéis de medidor, feed, listbox e grid | É o preço da base única em canvas | Tamanho de texto ajustável no app, espaçamento por token, nome + valor em texto onde falta o papel, roteiro manual por release | D-WCAG-01 · D-APG-02 |
+| E-04 | **Ferramenta automática não enxerga o canvas**: Lighthouse e axe só medem o shell e a árvore de semântica | Limite da tecnologia | Testes próprios de contraste, alvo e teclado (RNF-A11Y-02, -05, -11); a nota é necessária, nunca prova | D-LH-11 · D-WCAG-27 |
+| E-05 | **Repositório privado gratuito sem proteção de branch**, sem regras, sem ambientes e sem varredura de segredos do GitHub | GitHub Pro fere o custo zero | Hook `pre-push`, job `main-guard`, check único `ci-ok`, gitleaks em três camadas, nenhum segredo em workflow de PR. No dia da abertura: ruleset e varredura do histórico inteiro | D-GHS-03 · D-GHS-04 · D-GHS-08 · D-GHS-11 · BL-022 |
+| E-06 | **Lighthouse medido em runner gratuito e compartilhado**, contra a recomendação da própria ferramenta | Custo zero não deixa alternativa | Mediana de 5, um job por vez, piso de 0,85 no PR, calibração na máquina local | D-LH-15 |
+| E-07 | **Orçamento de desempenho só em Chrome e Edge**; Firefox e Safari funcionam, sem meta | O build wasm não roda neles | Roteiro manual por release | D-LH-04 |
+| E-08 | **Parte da nota de boas práticas não depende de nós**: `deprecations` e `inspector-issues` vêm do motor do Flutter | Atualização do Flutter pode derrubar ou recuperar nota | Versão fixada; medição a cada atualização | lighthouse.md, atenção 7 |
+| E-09 | **Infraestrutura gratuita sem garantia**: a VM pode ser recuperada pelo provedor, e a Vercel pode remover projeto Hobby sem aviso | Custo fixo zero | Backup externo, RTO ≤ 4 h, plano de saída da web (RNF-OPS-09); o Android segue funcionando sem servidor | D-VERCEL-02 · owasp-top-10.md, atenção 4 |
+| E-10 | **RPO de até 24 h** para o que só existe no servidor | Backup diário | Reenvio idempotente a partir do aparelho (RNF-REL-08) | modelagem |
+| E-11 | **Sem monitoração externa**: alerta só dentro do app; se o dono não abre, ninguém vê | Usuário único, custo zero | Tela de estado do sistema; rotina mensal | D-TOP10-09 |
+| E-12 | **O que vai para a DeepSeek forma perfil de consumo**: valor, estabelecimento e data seguem no texto, mesmo mascarado; a retenção do provedor está fora do nosso controle | Sem isso não há classificação nem conversa | Só texto, só o necessário, dados pessoais mascarados; aceite escrito do dono; tudo funciona sem IA | D-ASVS-14 · owasp-asvs.md, atenção 6 |
+| E-13 | **Segredos estáticos de vida longa**: chave da DeepSeek e token da Vercel, sem OIDC | Os provedores não oferecem credencial curta | Escopo mínimo, rotação de 90 dias, varredura | D-VERCEL-05 · owasp-top-10.md, atenção 2 |
+| E-14 | **A topologia entre web e API tem custo nos dois caminhos**, e a escolha é da Fase 4: rewrite em mesma origem faz o TLS terminar na Vercel; token só em memória derruba a sessão ao recarregar a aba | Não há opção sem custo | O caminho escolhido entra no modelo de ameaças; o retorno à sessão é desenhado na Fase 3 | D-VERCEL-12 · D-MDN-10 · BL-007 · BL-011 |
+| E-15 | **Pinning pode trancar o app do lado de fora** numa troca de chave mal feita | É o custo de recusar interceptação | Pin de reserva, ensaio de troca, APK novo como saída | owasp-top-10.md, atenção 8 |
+| E-16 | **Sem meta de acurácia para a classificação** | Não há base medida para comprovante em português | Requisito de processo: tudo passa pela confirmação, é reversível, e a taxa real é exibida | D-UX-09 |
+| E-17 | **Sem HSM, sem preparação pós-quântica, proteção de binário mínima** | Fora de proporção para usuário único, fora de loja | Ofuscação do build de release; chave em hardware no aparelho | D-ASVS-17 · D-TOP10-13 |
+| E-18 | **CodeQL fora do plano**: não analisa Dart | — | Analisador estrito, lints próprios, verificadores | D-GHS-14 |
