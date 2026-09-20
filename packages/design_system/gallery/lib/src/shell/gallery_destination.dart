@@ -27,7 +27,13 @@ enum GalleryDestination {
   fields('Campos', GalleryGroup.components),
 
   /// Aviso, vazio, esqueleto, carregando e ícone-herói.
-  states('Estados', GalleryGroup.components);
+  states('Estados', GalleryGroup.components),
+
+  /// O painel, em todos os estados.
+  dashboard('Painel', GalleryGroup.screens),
+
+  /// A confirmação de captura, nos 17 estados do compartilhamento.
+  capture('Captura', GalleryGroup.screens);
 
   new(this.title, this.group);
 

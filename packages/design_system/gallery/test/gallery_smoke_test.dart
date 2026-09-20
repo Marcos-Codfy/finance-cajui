@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gallery/src/app/gallery_app.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
+import 'package:gallery/src/shell/gallery_group.dart';
 
 /// Tocador mudo: o teste não tem dispositivo de áudio.
 class _MutePlayer implements SoundPlayer {
@@ -53,6 +54,34 @@ void main() {
       await _settle(tester);
 
       expect(tester.takeException(), isNull, reason: destination.title);
+    }
+  });
+
+  testWidgets('cada estado de cada tela abre sem erro', (tester) async {
+    await _open(tester, const Size(1280, 900));
+    const global = {'Tema escuro', 'Som'};
+    final screens = GalleryDestination.inGroup(GalleryGroup.screens);
+
+    for (final destination in screens) {
+      await tester.tap(find.text(destination.title).first);
+      await _settle(tester);
+      final labels = tester
+          .widgetList<CajuiChip>(find.byType(CajuiChip))
+          .map((chip) => chip.label)
+          .where((label) => !global.contains(label))
+          .toList();
+
+      expect(labels, isNotEmpty, reason: destination.title);
+      for (final label in labels) {
+        await tester.tap(find.widgetWithText(CajuiChip, label));
+        await _settle(tester);
+
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${destination.title} · $label',
+        );
+      }
     }
   });
 
