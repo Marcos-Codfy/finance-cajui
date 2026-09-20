@@ -19,7 +19,8 @@ Os dois temas são desenhados separadamente. O escuro não é o claro invertido:
 | Papel | `#FFFFFF` | — | Cartão e folha elevada |
 | Castanha | `#2A1D17` | A castanha do cajuí | Texto principal |
 | Castanha suave | `#5F4E44` | — | Texto secundário |
-| Castanha tênue | `#7A685D` | — | Legenda, rótulo, placeholder |
+| Castanha tênue | `#726157` | — | Legenda, rótulo, texto de apoio. Era `#7A685D`; escurecida para passar de 4,5:1 também sobre a areia funda |
+| Contorno de campo | `#8F8073` | — | Contorno de campo: 3:1 contra areia, areia funda e papel. A areia funda sozinha (1,11:1 contra a areia) não delimita um campo |
 | **Cajuí** | `#E4572E` | O fruto maduro | Acento de marca: só áreas grandes, gráficos, ilustração |
 | **Cajuí forte** | `#B93D17` | — | Botão primário, link, número em destaque |
 | Capim dourado | `#D9A441` | Capim dourado do Jalapão | Conquista e deleite; nunca cor de texto |
@@ -37,7 +38,10 @@ Os dois temas são desenhados separadamente. O escuro não é o claro invertido:
 | Noite alta | `#203239` | Folha, menu, campo |
 | Luar | `#F4ECE0` | Texto principal |
 | Luar suave | `#B9AFA3` | Texto secundário |
-| Luar tênue | `#94897E` | Legenda, rótulo |
+| Luar tênue | `#A3988D` | Legenda, rótulo. Era `#94897E`; clareado para passar de 4,5:1 também sobre a noite alta |
+| Contorno de campo | `#6E7F84` | Contorno de campo: 3:1 contra as três superfícies escuras |
+| Noite funda | `#0B1417` | Área rebaixada |
+| Vermelho claro | `#FF8A80` | Só erro de sistema e ação destrutiva |
 | Cajuí claro | `#FF8A5C` | Acento, botão primário (texto em noite) |
 | Capim claro | `#F0C26A` | Conquista |
 | Vereda clara | `#6FCBA6` | Sobra, progresso |
@@ -90,7 +94,18 @@ Razão de contraste pela fórmula de luminância relativa da WCAG 2.2. Metas: **
 | Barro claro | Noite elevada | 7,04 | AAA |
 | Céu claro | Noite | 8,94 | AAA |
 
-Na Fase 3 esta tabela deixa de ser mantida à mão: vira um teste automatizado que percorre todos os pares de token usados juntos, nos dois temas, e quebra o build se algum cair abaixo da meta.
+Desde a Fase 3 esta tabela **não é mais a fonte da verdade**: o que vale é o teste automatizado `packages/design_system/test/accessibility/contrast_audit_test.dart`, que percorre todos os pares de token usados juntos — lista em `ContrastAudit` —, nos dois temas e nas duas versões da falta do mês, e quebra o build se algum cair abaixo da meta. A gallery exibe a mesma lista, calculada ao vivo.
+
+### O que o teste corrigiu
+
+| Par | Antes | Depois | Correção |
+|---|---|---|---|
+| Castanha tênue sobre areia funda | 4,44 | 4,94 | Tinta de `#7A685D` para `#726157` |
+| Luar tênue sobre noite alta | 3,89 | 4,71 | Tinta de `#94897E` para `#A3988D` |
+| Areia funda sobre areia (limite de campo) | 1,11 | 3,55 | Campo ganha contorno próprio, `#8F8073` |
+| Anel de foco "céu" contra botão "cajuí forte" | 1,01 | 5,22 e 5,15 | O anel é desenhado afastado, com folga na cor da superfície: folga × botão 5,22; anel × folga 5,15 |
+| Cajuí do medidor contra o trilho | 2,79 | 3,09 | Trilho passa a areia funda |
+| Vereda contra barro | 1,12 | — | Não se corrige na cor: os dois precisam de 4,5:1 sobre o mesmo fundo, então têm luminância parecida. Nunca aparecem como preenchimentos vizinhos, e sobra e falta sempre levam sinal, rótulo e ícone |
 
 ## Regras de uso
 
