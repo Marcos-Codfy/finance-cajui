@@ -32,7 +32,7 @@ Termos em [glossary.md](glossary.md); regras em [rules/](rules/README.md).
 | `Reversal` | lançamento de origem, valor, data | Soma dos estornos ≤ valor (RN-210) |
 | `FixedExpense` | nome, valor, dia, categoria, forma habitual, vigência | RN-410 a RN-415 |
 | `VariableBudget` | categoria, faixa, vigência | RN-420 a RN-427 |
-| `Debt` | credor, tipo, parcela, total de parcelas, pagas, dia, início, juros opcionais, lançamento de origem opcional | `pagas ≤ total` (RN-501 a RN-503) |
+| `Debt` | credor, tipo, parcela, total de parcelas, pagas, dia, início, juros opcionais, lançamento de origem opcional, cartão opcional | `pagas ≤ total` (RN-501 a RN-503). Dívida `cardInstallment` aponta para o cartão, para compor a fatura (RN-330) mesmo quando a compra é anterior ao uso do app |
 | `Settlement` | cartão, ciclo, valor, data | Não é despesa (RN-340) |
 | `Receipt` | resumo SHA-256, tipo, tamanho, recebido em | Único por resumo (RN-220) |
 | `LearnedRule` | estabelecimento normalizado, categoria, criada por qual correção | RN-7xx |
