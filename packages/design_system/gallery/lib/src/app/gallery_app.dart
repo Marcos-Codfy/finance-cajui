@@ -72,6 +72,7 @@ class _GalleryAppState extends State<GalleryApp> {
       ),
       builder: (context, child) => GalleryScope(
         controller: _controller,
+        player: _player,
         child: _Themed(feedback: _feedback, child: child!),
       ),
       home: const GalleryShell(),

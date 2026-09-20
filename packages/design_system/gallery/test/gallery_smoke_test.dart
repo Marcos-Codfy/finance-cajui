@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gallery/src/app/gallery_app.dart';
+import 'package:gallery/src/pages/senses/sound_notes.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
 import 'package:gallery/src/shell/gallery_group.dart';
 
@@ -10,8 +11,11 @@ class _MutePlayer implements SoundPlayer {
   @override
   Future<void> preload() async {}
 
+  final List<CajuiSound> played = [];
+
   @override
-  void play(CajuiSound sound, {required double volume, required double rate}) {}
+  void play(CajuiSound sound, {required double volume, required double rate}) =>
+      played.add(sound);
 
   @override
   Future<void> dispose() async {}
@@ -87,6 +91,26 @@ void main() {
         );
       }
     }
+  });
+
+  test('todo som tem nota na mesa de som', () {
+    expect(SoundNotes.all.keys.toSet(), CajuiSound.values.toSet());
+  });
+
+  testWidgets('a mesa de som toca o som pedido, mesmo com o som desligado', (
+    tester,
+  ) async {
+    final player = _MutePlayer();
+    tester.view.physicalSize = _desktop;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(GalleryApp(player: player));
+    await tester.tap(find.text('Mesa de som'));
+    await _settle(tester);
+
+    await tester.tap(find.text('Tocar').first);
+
+    expect(player.played, [CajuiSound.tap]);
   });
 
   testWidgets('o chip de tema troca o tema da gallery inteira', (tester) async {

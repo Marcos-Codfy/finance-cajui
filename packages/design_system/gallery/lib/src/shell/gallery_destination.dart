@@ -48,7 +48,13 @@ enum GalleryDestination {
   assistant('Assistente', GalleryGroup.screens),
 
   /// A falta do mês em barro e em vermelho, lado a lado.
-  shortfall('Falta: barro × vermelho', GalleryGroup.decisions);
+  shortfall('Falta: barro × vermelho', GalleryGroup.decisions),
+
+  /// A mesa de som: ouvir e aprovar cada som.
+  soundDesk('Mesa de som', GalleryGroup.senses),
+
+  /// A mesa de movimento: curvas, durações e os três níveis.
+  motionDesk('Mesa de movimento', GalleryGroup.senses);
 
   new(this.title, this.group);
 
