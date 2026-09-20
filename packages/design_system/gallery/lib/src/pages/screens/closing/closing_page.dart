@@ -30,7 +30,7 @@ class ClosingPage extends StatelessWidget {
         CommonVariants.offline(_title, _summary(leftover: 55800)),
         _tooEarly(),
         _openItems(),
-        _withShortfall(),
+        shortfall(),
         _closed(),
         _revised(),
       ],
@@ -153,7 +153,9 @@ class ClosingPage extends StatelessWidget {
     ],
   );
 
-  ScreenVariant _withShortfall() => _variant(
+  /// O fechamento com falta. É público porque a página de comparação das
+  /// duas versões da falta mostra exatamente esta tela, lado a lado.
+  ScreenVariant shortfall() => _variant(
     'Com falta',
     'RN-443: a falta é informada; o que fazer com ela é decisão de quem usa.',
     [

@@ -59,7 +59,7 @@ class _ShortfallChoice extends StatelessWidget {
       title: 'Versão em vigor da falta do mês',
       description:
           'Vale para todas as páginas. A comparação lado a lado fica em '
-          'Telas.',
+          'Decisões.',
       child: Wrap(
         spacing: CajuiSpacing.sm,
         runSpacing: CajuiSpacing.sm,

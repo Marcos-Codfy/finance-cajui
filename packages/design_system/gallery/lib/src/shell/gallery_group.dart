@@ -9,6 +9,9 @@ enum GalleryGroup {
   /// Telas inteiras em cada estado.
   screens('Telas'),
 
+  /// O que ainda espera uma escolha, com as opções lado a lado.
+  decisions('Decisões'),
+
   /// Movimento e som.
   senses('Sentidos');
 

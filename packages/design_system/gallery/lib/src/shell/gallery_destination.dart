@@ -45,7 +45,10 @@ enum GalleryDestination {
   debts('Dívidas', GalleryGroup.screens),
 
   /// A conversa com o assistente e as falhas da IA.
-  assistant('Assistente', GalleryGroup.screens);
+  assistant('Assistente', GalleryGroup.screens),
+
+  /// A falta do mês em barro e em vermelho, lado a lado.
+  shortfall('Falta: barro × vermelho', GalleryGroup.decisions);
 
   new(this.title, this.group);
 

@@ -9,6 +9,7 @@ import 'package:gallery/src/pages/screens/capture/capture_page.dart';
 import 'package:gallery/src/pages/screens/closing/closing_page.dart';
 import 'package:gallery/src/pages/screens/dashboard/dashboard_page.dart';
 import 'package:gallery/src/pages/screens/debts/debts_page.dart';
+import 'package:gallery/src/pages/screens/shortfall/shortfall_compare_page.dart';
 import 'package:gallery/src/pages/screens/statement/statement_page.dart';
 import 'package:gallery/src/pages/tokens/colors_page.dart';
 import 'package:gallery/src/pages/tokens/contrast_page.dart';
@@ -130,6 +131,7 @@ class _GalleryShellState extends State<GalleryShell> {
           GalleryDestination.closing => const ClosingPage(),
           GalleryDestination.debts => const DebtsPage(),
           GalleryDestination.assistant => const AssistantPage(),
+          GalleryDestination.shortfall => const ShortfallComparePage(),
         },
       ),
     );
