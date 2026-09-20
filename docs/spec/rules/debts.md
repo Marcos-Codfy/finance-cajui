@@ -26,7 +26,7 @@ Dívida, aqui, é toda obrigação **com fim**: tem parcelas contadas e um dia e
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
 | RN-520 | Pagar uma parcela é um lançamento do bloco de dívidas ligado à dívida; ele incrementa as parcelas pagas | Pagar a 6ª parcela: 6 de 12 pagas | modelagem |
-| RN-521 | Parcela de `cardInstallment` não gera lançamento novo quando vence: o lançamento é a compra original. A parcela conta no plano do mês e é cobrada na fatura (RN-330) | A parcela 3 da geladeira aparece no plano de dezembro e na fatura que vence em dezembro, sem novo lançamento | modelagem |
+| RN-521 | Parcela de `cardInstallment` não gera lançamento novo quando vence: o lançamento é a compra original. A parcela conta no plano do mês e é cobrada na fatura (RN-330) | A parcela 3 da geladeira aparece no plano de setembro e na fatura que vence em setembro, sem novo lançamento | modelagem |
 | RN-522 | Pagamento **extra** é um lançamento marcado como amortização. O efeito — reduzir o prazo ou reduzir a parcela — é o que o credor aplicou, informado pelo usuário | Amortização de R$ 424 reduzindo prazo: 2 parcelas a menos no fim | modelagem |
 | RN-523 | Multa e juros por atraso são lançamento à parte, na categoria "juros e tarifas", nunca somados ao valor da parcela | Parcela de R$ 212 paga com R$ 8,40 de multa: dois lançamentos | modelagem |
 | RN-524 | Parcela vencida sem lançamento aparece como "em aberto", sem estimativa automática de multa | — | modelagem |
