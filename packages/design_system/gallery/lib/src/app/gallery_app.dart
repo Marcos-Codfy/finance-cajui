@@ -31,11 +31,11 @@ class _GalleryAppState extends State<GalleryApp> {
   void initState() {
     super.initState();
     _controller.addListener(_syncSound);
-    unawaited(_preloadSounds());
   }
 
-  /// Som é reforço: se o áudio não carregar, a gallery abre do mesmo jeito,
-  /// só que muda.
+  /// Os sons só são baixados quando o som é ligado: ele nasce desligado, e
+  /// baixar dez arquivos para não tocar nenhum atrasava a abertura à toa.
+  /// Som é reforço: se o áudio não carregar, a gallery segue, só que muda.
   Future<void> _preloadSounds() async {
     try {
       await _player.preload();
@@ -44,7 +44,10 @@ class _GalleryAppState extends State<GalleryApp> {
     }
   }
 
-  void _syncSound() => _feedback.settings = _controller.sound;
+  void _syncSound() {
+    _feedback.settings = _controller.sound;
+    if (_controller.sound.soundEnabled) unawaited(_preloadSounds());
+  }
 
   @override
   void dispose() {

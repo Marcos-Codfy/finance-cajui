@@ -117,3 +117,6 @@ $RECYCLE.BIN/
 *.pid
 tmp/
 spikes/**/build/
+
+# Relatórios crus do Lighthouse: o resumo fica em docs/architecture/spikes/
+spikes/web-lighthouse/reports/
