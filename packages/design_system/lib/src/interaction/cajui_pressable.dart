@@ -8,8 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Monta a aparência de um controle a partir dos estados em que ele está.
-typedef PressableBuilder =
-    Widget Function(BuildContext context, Set<WidgetState> states);
+typedef PressableBuilder = Widget Function(
+  BuildContext context,
+  Set<WidgetState> states,
+);
 
 /// A base de todo controle tocável do Cajui: botão, chip, chave, cartão.
 ///
@@ -132,11 +134,7 @@ class _CajuiPressableState extends State<CajuiPressable> {
         minWidth: CajuiSpacing.touchTarget,
         minHeight: CajuiSpacing.touchTarget,
       ),
-      child: Center(
-        widthFactor: 1,
-        heightFactor: 1,
-        child: _spring(context),
-      ),
+      child: Center(widthFactor: 1, heightFactor: 1, child: _spring(context)),
     );
   }
 

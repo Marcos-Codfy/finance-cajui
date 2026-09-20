@@ -33,7 +33,9 @@ class _CajuiHeroFruitState extends State<CajuiHeroFruit>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final decorative = CajuiTheme.of(context).motionLevel.allowsDecorativeMotion;
+    final decorative = CajuiTheme.of(context)
+        .motionLevel
+        .allowsDecorativeMotion;
     decorative ? _float.repeat() : _float.stop();
   }
 

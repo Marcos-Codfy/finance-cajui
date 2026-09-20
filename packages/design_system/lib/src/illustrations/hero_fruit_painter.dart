@@ -40,7 +40,11 @@ class HeroFruitPainter extends CustomPainter {
       ..color = const Color(0xFF2A1D17).withValues(alpha: 0.28 - lift * 0.1)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
     canvas.drawOval(
-      Rect.fromCenter(center: const Offset(262, 474), width: spread * 2, height: 30),
+      Rect.fromCenter(
+        center: const Offset(262, 474),
+        width: spread * 2,
+        height: 30,
+      ),
       paint,
     );
   }

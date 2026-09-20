@@ -1,6 +1,7 @@
 import 'package:design_system/src/components/field/cajui_field_frame.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
-import 'package:flutter/material.dart' show InputDecoration, Material, MaterialType, TextField;
+import 'package:flutter/material.dart'
+    show InputDecoration, Material, MaterialType, TextField;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 

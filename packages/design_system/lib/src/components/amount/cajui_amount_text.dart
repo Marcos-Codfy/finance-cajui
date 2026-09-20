@@ -42,7 +42,10 @@ class CajuiAmountText extends StatelessWidget {
       TextSpan(
         children: [
           _currency(base, faint: theme.colors.text.faint, same: color, sign),
-          TextSpan(text: number, style: base.copyWith(color: color)),
+          TextSpan(
+            text: number,
+            style: base.copyWith(color: color),
+          ),
         ],
       ),
       semanticsLabel: BrlFormatter.format(cents),

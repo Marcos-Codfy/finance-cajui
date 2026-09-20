@@ -170,8 +170,16 @@ void _sound(Path p) {
     ..lineTo(12, 6)
     ..lineTo(7, 10)
     ..close()
-    ..addArc(Rect.fromCircle(center: const Offset(13, 12), radius: 4.5), -math.pi / 3.2, math.pi / 1.6)
-    ..addArc(Rect.fromCircle(center: const Offset(13, 12), radius: 8), -math.pi / 3.6, math.pi / 1.8);
+    ..addArc(
+      Rect.fromCircle(center: const Offset(13, 12), radius: 4.5),
+      -math.pi / 3.2,
+      math.pi / 1.6,
+    )
+    ..addArc(
+      Rect.fromCircle(center: const Offset(13, 12), radius: 8),
+      -math.pi / 3.6,
+      math.pi / 1.8,
+    );
 }
 
 void _check(Path p) => p
@@ -202,8 +210,16 @@ void _info(Path p) {
 
 void _offline(Path p) {
   p
-    ..addArc(Rect.fromCircle(center: const Offset(12, 18), radius: 11), -math.pi * 0.78, math.pi * 0.56)
-    ..addArc(Rect.fromCircle(center: const Offset(12, 18), radius: 6.5), -math.pi * 0.78, math.pi * 0.56);
+    ..addArc(
+      Rect.fromCircle(center: const Offset(12, 18), radius: 11),
+      -math.pi * 0.78,
+      math.pi * 0.56,
+    )
+    ..addArc(
+      Rect.fromCircle(center: const Offset(12, 18), radius: 6.5),
+      -math.pi * 0.78,
+      math.pi * 0.56,
+    );
   _line(p, 12, 18, 12, 18.1);
   _line(p, 4, 4, 20, 20);
 }

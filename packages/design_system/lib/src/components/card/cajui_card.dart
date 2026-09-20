@@ -52,10 +52,8 @@ class CajuiCard extends StatelessWidget {
       onPressed: tap,
       radius: _radius,
       semanticLabel: semanticLabel!,
-      builder: (context, states) => _surface(
-        context,
-        lifted: states.contains(WidgetState.hovered),
-      ),
+      builder: (context, states) =>
+          _surface(context, lifted: states.contains(WidgetState.hovered)),
     );
   }
 

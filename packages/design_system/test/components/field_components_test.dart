@@ -79,30 +79,31 @@ void main() {
   });
 
   group('CajuiSelectField', () {
-    testWidgets('vazio é um estado de primeira classe, dito ao leitor de tela', (
-      tester,
-    ) async {
-      var opened = 0;
-      await tester.pumpWidget(
-        host(
-          SizedBox(
-            width: 300,
-            child: CajuiSelectField(
-              label: 'Categoria',
-              onPressed: () => opened++,
+    testWidgets(
+      'vazio é um estado de primeira classe, dito ao leitor de tela',
+      (tester) async {
+        var opened = 0;
+        await tester.pumpWidget(
+          host(
+            SizedBox(
+              width: 300,
+              child: CajuiSelectField(
+                label: 'Categoria',
+                onPressed: () => opened++,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Escolher'));
+        await tester.tap(find.text('Escolher'));
 
-      expect(opened, 1);
-      expect(
-        find.bySemanticsLabel('Categoria: nada escolhido'),
-        findsOneWidget,
-      );
-    });
+        expect(opened, 1);
+        expect(
+          find.bySemanticsLabel('Categoria: nada escolhido'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('CajuiOptionList', () {

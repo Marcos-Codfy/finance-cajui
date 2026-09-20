@@ -42,8 +42,11 @@ class CajuiThemeData {
   final MotionLevel motionLevel;
 
   /// Devolve o mesmo tema com outro nível de movimento.
-  CajuiThemeData withMotionLevel(MotionLevel level) =>
-      CajuiThemeData(colors: colors, typography: typography, motionLevel: level);
+  CajuiThemeData withMotionLevel(MotionLevel level) => CajuiThemeData(
+    colors: colors,
+    typography: typography,
+    motionLevel: level,
+  );
 
   @override
   bool operator ==(Object other) =>

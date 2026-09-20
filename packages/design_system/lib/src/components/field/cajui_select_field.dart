@@ -76,7 +76,11 @@ class CajuiSelectField extends StatelessWidget {
             style: theme.typography.body.copyWith(color: ink),
           ),
         ),
-        CajuiIcon(CajuiIconData.chevronRight, size: 20, color: colors.text.muted),
+        CajuiIcon(
+          CajuiIconData.chevronRight,
+          size: 20,
+          color: colors.text.muted,
+        ),
       ],
     );
   }

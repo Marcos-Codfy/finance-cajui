@@ -15,16 +15,20 @@ class CajuiTypography {
   static const _package = 'design_system';
 
   /// 40/44 — o número-manchete do painel, em frase.
-  TextStyle get displayLarge => _voice(size: 40, height: 44, weight: 520, tracking: -0.025);
+  TextStyle get displayLarge =>
+      _voice(size: 40, height: 44, weight: 520, tracking: -0.025);
 
   /// 32/36 — título de abertura de tela.
-  TextStyle get displayMedium => _voice(size: 32, height: 36, weight: 520, tracking: -0.02);
+  TextStyle get displayMedium =>
+      _voice(size: 32, height: 36, weight: 520, tracking: -0.02);
 
   /// 24/30 — título de seção.
-  TextStyle get headline => _voice(size: 24, height: 30, weight: 540, tracking: -0.015);
+  TextStyle get headline =>
+      _voice(size: 24, height: 30, weight: 540, tracking: -0.015);
 
   /// 18/24 — título de cartão.
-  TextStyle get title => _data(size: 18, height: 24, weight: 600, tracking: -0.005);
+  TextStyle get title =>
+      _data(size: 18, height: 24, weight: 600, tracking: -0.005);
 
   /// 16/24 — corpo. É o piso de tamanho para texto corrido.
   TextStyle get body => _data(size: 16, height: 24, weight: 400);
@@ -36,11 +40,13 @@ class CajuiTypography {
   TextStyle get label => _data(size: 14, height: 20, weight: 500);
 
   /// 12,5/16 — legenda. Nada no app é menor que isto.
-  TextStyle get caption => _data(size: 12.5, height: 16, weight: 400, tracking: 0.01);
+  TextStyle get caption =>
+      _data(size: 12.5, height: 16, weight: 400, tracking: 0.01);
 
   /// 12/16 em caixa alta — sobrelinha de seção. O chamador passa o texto já
   /// em maiúsculas; o estilo só abre o espaçamento.
-  TextStyle get overline => _data(size: 12, height: 16, weight: 600, tracking: 0.12);
+  TextStyle get overline =>
+      _data(size: 12, height: 16, weight: 600, tracking: 0.12);
 
   /// 28/32 tabular — valor em destaque.
   TextStyle get amountLarge =>
@@ -48,7 +54,8 @@ class CajuiTypography {
 
   /// 16/24 tabular — valor em lista e tabela. Algarismos tabulares alinham
   /// casa com casa numa coluna de dinheiro.
-  TextStyle get amount => _data(size: 16, height: 24, weight: 600, tabular: true);
+  TextStyle get amount =>
+      _data(size: 16, height: 24, weight: 600, tabular: true);
 
   /// Fraunces com cantos macios (SOFT 100), sem formas excêntricas (WONK 0) e
   /// tamanho óptico igual ao tamanho de uso, que o Flutter não ajusta sozinho.

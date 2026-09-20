@@ -103,7 +103,9 @@ class CajuiFieldFrame extends StatelessWidget {
     if (message == null) return const SizedBox.shrink();
     final theme = CajuiTheme.of(context);
     final isError = error != null;
-    final color = isError ? theme.colors.intent.notice : theme.colors.text.faint;
+    final color = isError
+        ? theme.colors.intent.notice
+        : theme.colors.text.faint;
     return Padding(
       padding: const EdgeInsets.only(top: CajuiSpacing.xs + CajuiSpacing.xxs),
       child: Semantics(

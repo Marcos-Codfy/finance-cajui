@@ -69,10 +69,7 @@ class CajuiListRow extends StatelessWidget {
             const SizedBox(width: CajuiSpacing.md),
           ],
           Expanded(child: _texts(context)),
-          if (after != null) ...[
-            const SizedBox(width: CajuiSpacing.md),
-            after,
-          ],
+          if (after != null) ...[const SizedBox(width: CajuiSpacing.md), after],
         ],
       ),
     );

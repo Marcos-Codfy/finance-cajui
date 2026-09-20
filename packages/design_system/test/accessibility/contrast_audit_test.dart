@@ -39,9 +39,10 @@ void main() {
 
     for (final MapEntry(key: name, value: colors) in themes.entries) {
       test('tema $name', () {
-        final failures = ContrastAudit.pairsFor(
-          colors,
-        ).where((pair) => !pair.passes).map((pair) => pair.toString()).toList();
+        final failures = ContrastAudit.pairsFor(colors)
+            .where((pair) => !pair.passes)
+            .map((pair) => pair.toString())
+            .toList();
 
         expect(failures, isEmpty, reason: failures.join('\n'));
       });
