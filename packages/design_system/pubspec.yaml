@@ -1,0 +1,32 @@
+name: design_system
+description: Tokens, tema e componentes do Cajui. Fonte única de tudo o que é visual, sonoro e de movimento.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+  flutter: ">=3.47.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^11.0.0
+
+flutter:
+  uses-material-design: false
+
+  # Fontes empacotadas: o app nunca busca fonte na rede em uso (RNF-PRIV-05).
+  # As duas são variáveis; peso e eixos são escolhidos por FontVariation.
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces.ttf
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist.ttf
