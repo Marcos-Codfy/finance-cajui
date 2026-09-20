@@ -96,14 +96,19 @@ class _Version extends StatelessWidget {
               onSelected: (_) => controller.useShortfallStyle(style),
             ),
             const SizedBox(height: CajuiSpacing.lg),
-            CajuiTheme(
-              data: theme,
-              child: PhoneFrame(
-                child: Builder(builder: const ClosingPage().shortfall().builder),
-              ),
-            ),
+            _preview(theme),
           ],
         ),
+      ),
+    );
+  }
+
+  /// A tela de fechamento com falta, sob o tema desta versão.
+  Widget _preview(CajuiThemeData theme) {
+    return CajuiTheme(
+      data: theme,
+      child: PhoneFrame(
+        child: Builder(builder: const ClosingPage().shortfall().builder),
       ),
     );
   }

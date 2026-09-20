@@ -52,13 +52,17 @@ class _CaptureFormState extends State<CaptureForm> {
         const SizedBox(height: CajuiSpacing.sm),
         CajuiConfidenceIndicator(widget.confidence),
         gap,
-        CajuiSelectField(
-          label: 'Por onde pagou',
-          value: 'Vale alimentação',
-          helper: 'Saldo do vale depois: ${BrlFormatter.format(22620)}',
-          onPressed: () {},
-        ),
+        _paidWith(),
       ],
+    );
+  }
+
+  Widget _paidWith() {
+    return CajuiSelectField(
+      label: 'Por onde pagou',
+      value: 'Vale alimentação',
+      helper: 'Saldo do vale depois: ${BrlFormatter.format(22620)}',
+      onPressed: () {},
     );
   }
 }

@@ -38,19 +38,22 @@ class ChatBubble extends StatelessWidget {
             borderRadius: const BorderRadius.all(CajuiRadius.md),
             border: Border.all(color: colors.border.subtle),
           ),
-          child: thinking
-              ? CajuiLoadingDots(
-                  color: colors.text.muted,
-                  semanticLabel: 'Cajui está respondendo',
-                )
-              : Text(
-                  text,
-                  style: theme.typography.body.copyWith(
-                    color: colors.text.primary,
-                  ),
-                ),
+          child: _content(theme),
         ),
       ),
+    );
+  }
+
+  Widget _content(CajuiThemeData theme) {
+    if (thinking) {
+      return CajuiLoadingDots(
+        color: theme.colors.text.muted,
+        semanticLabel: 'Cajui está respondendo',
+      );
+    }
+    return Text(
+      text,
+      style: theme.typography.body.copyWith(color: theme.colors.text.primary),
     );
   }
 }

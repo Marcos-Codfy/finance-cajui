@@ -1,6 +1,7 @@
 import 'package:design_system/src/components/button/cajui_button.dart';
 import 'package:design_system/src/components/notice/cajui_notice_action.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
+import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
 import 'package:flutter/widgets.dart';
 
@@ -46,21 +47,7 @@ class CajuiEmptyState extends StatelessWidget {
             picture,
             const SizedBox(height: CajuiSpacing.xxl),
           ],
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: theme.typography.headline.copyWith(
-              color: theme.colors.text.primary,
-            ),
-          ),
-          const SizedBox(height: CajuiSpacing.sm),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: theme.typography.body.copyWith(
-              color: theme.colors.text.muted,
-            ),
-          ),
+          ..._texts(theme),
           if (next != null) ...[
             const SizedBox(height: CajuiSpacing.xxl),
             CajuiButton(label: next.label, onPressed: next.onPressed),
@@ -69,4 +56,20 @@ class CajuiEmptyState extends StatelessWidget {
       ),
     );
   }
+
+  List<Widget> _texts(CajuiThemeData theme) => [
+    Text(
+      title,
+      textAlign: TextAlign.center,
+      style: theme.typography.headline.copyWith(
+        color: theme.colors.text.primary,
+      ),
+    ),
+    const SizedBox(height: CajuiSpacing.sm),
+    Text(
+      message,
+      textAlign: TextAlign.center,
+      style: theme.typography.body.copyWith(color: theme.colors.text.muted),
+    ),
+  ];
 }

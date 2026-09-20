@@ -10,6 +10,7 @@ environment:
 workspace:
   - packages/design_system
   - packages/design_system/gallery
+  - tool/code_metrics
 
 dev_dependencies:
   very_good_analysis: ^11.0.0

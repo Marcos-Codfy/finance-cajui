@@ -20,6 +20,18 @@ class GallerySection extends StatelessWidget {
   /// O conteúdo.
   final Widget child;
 
+  Widget _heading(CajuiThemeData theme) {
+    return Semantics(
+      header: true,
+      child: Text(
+        title,
+        style: theme.typography.title.copyWith(
+          color: theme.colors.text.primary,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
@@ -29,15 +41,7 @@ class GallerySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(
-            header: true,
-            child: Text(
-              title,
-              style: theme.typography.title.copyWith(
-                color: theme.colors.text.primary,
-              ),
-            ),
-          ),
+          _heading(theme),
           if (note != null) ...[
             const SizedBox(height: CajuiSpacing.xs),
             Text(

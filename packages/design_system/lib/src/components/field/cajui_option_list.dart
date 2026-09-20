@@ -2,6 +2,7 @@ import 'package:design_system/src/icons/cajui_icon.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
 import 'package:design_system/src/interaction/cajui_pressable.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
+import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_radius.dart';
 import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
 import 'package:flutter/widgets.dart';
@@ -66,7 +67,6 @@ class CajuiOptionList<T> extends StatelessWidget {
   }) {
     final theme = CajuiTheme.of(context);
     final colors = theme.colors;
-    final weight = FontVariation('wght', selected ? 600 : 400);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: lifted || selected ? colors.surface.sunken : null,
@@ -79,19 +79,22 @@ class CajuiOptionList<T> extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                labelOf(option),
-                style: theme.typography.body.copyWith(
-                  color: colors.text.primary,
-                  fontVariations: [weight],
-                ),
-              ),
-            ),
+            Expanded(child: _label(theme, option, selected: selected)),
             if (selected)
               CajuiIcon(CajuiIconData.check, color: colors.action.primary),
           ],
         ),
+      ),
+    );
+  }
+
+  /// O selecionado ganha peso, além do ícone: dois sinais, nenhum deles cor.
+  Widget _label(CajuiThemeData theme, T option, {required bool selected}) {
+    return Text(
+      labelOf(option),
+      style: theme.typography.body.copyWith(
+        color: theme.colors.text.primary,
+        fontVariations: [FontVariation('wght', selected ? 600 : 400)],
       ),
     );
   }

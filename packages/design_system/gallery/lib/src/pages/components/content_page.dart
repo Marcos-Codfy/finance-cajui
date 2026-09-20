@@ -87,7 +87,6 @@ class ContentPage extends StatelessWidget {
     bool sunken = false,
     VoidCallback? onPressed,
   }) {
-    final theme = CajuiTheme.of(context);
     return GallerySpecimen(
       state: state,
       width: _cardWidth,
@@ -95,20 +94,24 @@ class ContentPage extends StatelessWidget {
         sunken: sunken,
         onPressed: onPressed,
         semanticLabel: onPressed == null ? null : title,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: theme.typography.label.copyWith(
-                color: theme.colors.text.muted,
-              ),
-            ),
-            const SizedBox(height: CajuiSpacing.xs),
-            const CajuiAmountText(55800),
-          ],
-        ),
+        child: _cardBody(CajuiTheme.of(context), title),
       ),
+    );
+  }
+
+  Widget _cardBody(CajuiThemeData theme, String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.typography.label.copyWith(
+            color: theme.colors.text.muted,
+          ),
+        ),
+        const SizedBox(height: CajuiSpacing.xs),
+        const CajuiAmountText(55800),
+      ],
     );
   }
 

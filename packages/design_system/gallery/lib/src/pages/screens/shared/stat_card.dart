@@ -53,20 +53,24 @@ class StatCard extends StatelessWidget {
             Text(label, style: _muted(theme, theme.typography.label)),
             const SizedBox(height: CajuiSpacing.xs),
             _amount(theme),
-            if (used != null) ...[
-              const SizedBox(height: CajuiSpacing.md),
-              CajuiMeter(
-                value: used,
-                semanticLabel: label,
-                semanticValue: support ?? '',
-              ),
-            ],
+            if (used != null) _meter(used),
             if (support != null) ...[
               const SizedBox(height: CajuiSpacing.sm),
               Text(support, style: _muted(theme, theme.typography.caption)),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _meter(double used) {
+    return Padding(
+      padding: const EdgeInsets.only(top: CajuiSpacing.md),
+      child: CajuiMeter(
+        value: used,
+        semanticLabel: label,
+        semanticValue: caption ?? '',
       ),
     );
   }

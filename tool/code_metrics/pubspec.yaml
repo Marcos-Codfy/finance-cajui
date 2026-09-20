@@ -1,0 +1,17 @@
+name: code_metrics
+description: Confere os limites de tamanho do código do Cajui - linhas por arquivo, linhas por função, aninhamento e tipos públicos por arquivo.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+resolution: workspace
+
+dependencies:
+  analyzer: ^13.3.0
+  path: ^1.9.0
+
+dev_dependencies:
+  test: ^1.31.0
+  very_good_analysis: ^11.0.0
