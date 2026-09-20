@@ -72,6 +72,12 @@ abstract final class ContrastAudit {
     };
     return [
       for (final MapEntry(:key, :value) in pairs.entries) ...[
+        // O aviso escreve o texto comum sobre o fundo sutil da intenção.
+        ..._cross(
+          {'text.primary': c.text.primary, 'text.muted': c.text.muted},
+          {'${key}Subtle': value.$2},
+          ContrastRequirement.text,
+        ),
         ..._cross(
           {key: value.$1},
           {
