@@ -87,7 +87,12 @@ abstract final class ContrastAudit {
 
   static List<ContrastPair> _componentEdges(CajuiColors c) => [
     ..._cross(
-      {'border.field': c.border.field},
+      {
+        'border.field': c.border.field,
+        // Contorno de campo com foco e com erro.
+        'border.strong': c.border.strong,
+        'intent.notice (contorno)': c.intent.notice,
+      },
       _surfaces(c),
       ContrastRequirement.largeTextOrComponent,
     ),

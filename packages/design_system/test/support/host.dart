@@ -1,9 +1,11 @@
 import 'package:design_system/design_system.dart';
+import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:flutter/widgets.dart';
 
-/// Monta o que um componente precisa para viver num teste: um app de verdade
-/// — com direção de texto e os atalhos de teclado padrão, inclusive o Tab —,
-/// o tema e, se pedido, uma resposta sonora para espiar.
+/// Monta o que um componente precisa para viver num teste: um app de verdade,
+/// com navegador de rotas — que dá o foco inicial para o Tab, a camada de
+/// sobreposição que o campo de texto usa e os atalhos de teclado padrão —, o
+/// tema e, se pedido, uma resposta sonora para espiar.
 Widget host(
   Widget child, {
   CajuiThemeData? theme,
@@ -12,13 +14,20 @@ Widget host(
   return WidgetsApp(
     color: const Color(0xFFFBF6EE),
     debugShowCheckedModeBanner: false,
-    builder: (context, _) => CajuiTheme(
+    // O campo de texto usa o do Material por dentro, que pede estes textos.
+    localizationsDelegates: const [
+      DefaultMaterialLocalizations.delegate,
+      DefaultWidgetsLocalizations.delegate,
+    ],
+    pageRouteBuilder: <T>(settings, builder) => PageRouteBuilder<T>(
+      settings: settings,
+      pageBuilder: (context, _, _) => builder(context),
+    ),
+    home: CajuiTheme(
       data: theme ?? CajuiThemeData.light(),
       child: CajuiFeedbackScope(
         feedback: feedback,
-        // Num app, quem dá o foco inicial é o navegador de rotas. Aqui não há
-        // rotas, então o escopo pede o foco para o Tab ter de onde partir.
-        child: FocusScope(autofocus: true, child: Center(child: child)),
+        child: Center(child: child),
       ),
     ),
   );
