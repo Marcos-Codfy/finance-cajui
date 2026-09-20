@@ -84,6 +84,9 @@ class _CajuiPressableState extends State<CajuiPressable> {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
+      // O controle é a única fonte do próprio nome. Sem isto, o texto visível
+      // viraria um segundo nó e o leitor de tela diria o rótulo duas vezes.
+      excludeSemantics: true,
       button: widget.toggled == null,
       enabled: _enabled,
       toggled: widget.toggled,

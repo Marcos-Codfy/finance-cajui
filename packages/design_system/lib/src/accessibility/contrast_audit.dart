@@ -31,6 +31,9 @@ abstract final class ContrastAudit {
       'text.muted': c.text.muted,
       'text.faint': c.text.faint,
       'text.link': c.text.link,
+      // O botão discreto escreve o rótulo com a cor de ação.
+      'action.primary (texto)': c.action.primary,
+      'shortfall': c.shortfall,
     };
     return _cross(texts, _surfaces(c), ContrastRequirement.text);
   }
@@ -42,6 +45,8 @@ abstract final class ContrastAudit {
         'action.primary': c.action.primary,
         'action.primaryHover': c.action.primaryHover,
         'action.primaryPressed': c.action.primaryPressed,
+        // Botão destrutivo.
+        'intent.danger': c.intent.danger,
       },
       ContrastRequirement.text,
     ),
