@@ -15,7 +15,19 @@ enum GalleryDestination {
   typography('Tipografia', GalleryGroup.foundations),
 
   /// Espaçamento, raio e elevação.
-  layout('Espaço, raio e sombra', GalleryGroup.foundations);
+  layout('Espaço, raio e sombra', GalleryGroup.foundations),
+
+  /// Botão, botão de ícone, chip e chave.
+  action('Ação', GalleryGroup.components),
+
+  /// Valor, cartão, linha de lista, medidor e confiança.
+  content('Conteúdo', GalleryGroup.components),
+
+  /// Campo de texto, de valor e de escolha.
+  fields('Campos', GalleryGroup.components),
+
+  /// Aviso, vazio, esqueleto, carregando e ícone-herói.
+  states('Estados', GalleryGroup.components);
 
   new(this.title, this.group);
 

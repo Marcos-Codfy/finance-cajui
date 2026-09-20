@@ -16,12 +16,19 @@ class _MutePlayer implements SoundPlayer {
   Future<void> dispose() async {}
 }
 
+/// Algumas páginas têm animação em laço (carregando, esqueleto), então
+/// esperar "até parar" nunca termina: o teste avança um tempo fixo.
+Future<void> _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
 Future<void> _open(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(GalleryApp(player: _MutePlayer()));
-  await tester.pumpAndSettle();
+  await _settle(tester);
 }
 
 void main() {
@@ -30,7 +37,7 @@ void main() {
 
     for (final destination in GalleryDestination.values) {
       await tester.tap(find.text(destination.title).first);
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
       expect(tester.takeException(), isNull, reason: destination.title);
     }
@@ -43,7 +50,7 @@ void main() {
       final chip = find.text(destination.title).first;
       await tester.ensureVisible(chip);
       await tester.tap(chip);
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
       expect(tester.takeException(), isNull, reason: destination.title);
     }
@@ -57,7 +64,7 @@ void main() {
 
     expect(brightness(), Brightness.light);
     await tester.tap(find.text('Tema escuro'));
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(brightness(), Brightness.dark);
   });
@@ -67,7 +74,7 @@ void main() {
   ) async {
     await _open(tester, const Size(1280, 900));
     await tester.tap(find.text('Contraste'));
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(find.text('falha'), findsNothing);
     expect(find.textContaining('passam no nível AA'), findsOneWidget);

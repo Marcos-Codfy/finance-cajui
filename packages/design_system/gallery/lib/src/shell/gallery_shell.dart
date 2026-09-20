@@ -1,5 +1,9 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/components/action_page.dart';
+import 'package:gallery/src/pages/components/content_page.dart';
+import 'package:gallery/src/pages/components/field_page.dart';
+import 'package:gallery/src/pages/components/state_page.dart';
 import 'package:gallery/src/pages/tokens/colors_page.dart';
 import 'package:gallery/src/pages/tokens/contrast_page.dart';
 import 'package:gallery/src/pages/tokens/layout_page.dart';
@@ -110,6 +114,10 @@ class _GalleryShellState extends State<GalleryShell> {
           GalleryDestination.contrast => const ContrastPage(),
           GalleryDestination.typography => const TypographyPage(),
           GalleryDestination.layout => const LayoutPage(),
+          GalleryDestination.action => const ActionPage(),
+          GalleryDestination.content => const ContentPage(),
+          GalleryDestination.fields => const FieldPage(),
+          GalleryDestination.states => const StatePage(),
         },
       ),
     );
