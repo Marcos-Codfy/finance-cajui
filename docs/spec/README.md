@@ -102,7 +102,7 @@ As questões Q1 a Q10, com o contexto de cada uma, estão em [personas-and-journ
 
 | Assunto | Fase | Referência |
 |---|---|---|
-| Catálogo de erros definitivo, a partir dos códigos provisórios | 3 | [use-cases.md](use-cases.md#códigos-de-erro-provisórios) |
+| Catálogo de erros definitivo, a partir dos códigos provisórios — **feito**: [error-catalog.md](error-catalog.md) | 3 | [use-cases.md](use-cases.md#códigos-de-erro-provisórios) |
 | Desenho de cada tela e de cada estado | 3 | [use-cases.md](use-cases.md#telas-e-seus-estados) |
 | Falta do mês em vermelho (padrão de mercado) ou em "barro": as duas versões lado a lado | 3 | D-UX-02 |
 | Correção dos quatro furos de contraste da paleta | 3 | BL-016 |

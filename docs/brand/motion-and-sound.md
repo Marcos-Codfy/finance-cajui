@@ -58,7 +58,7 @@ Segue a configuração de vibração do sistema e tem chave própria no app. Nã
 
 ### Paleta sonora
 
-Sons curtos, secos e próximos — o tipo que dá gosto de ouvir de novo. O material vem do Cerrado, não do sintetizador:
+Sons curtos, secos e próximos — o tipo que dá gosto de ouvir de novo. O timbre imita material do Cerrado, não bipe eletrônico:
 
 | Família | Material | Onde |
 |---|---|---|
@@ -77,7 +77,7 @@ Não existe `sound.error`. O aviso (`sound.notice`) é uma nota grave e macia de
 ### Regras
 
 1. **Desligado por padrão, com controle visível.** A primeira tela do onboarding oferece ligar, com prévia audível; um toque e está ligado.
-2. **Curto e baixo.** Menos de 300 ms (laços à parte), volume bem abaixo de notificação do sistema, sem agudo áspero — passa-baixa em todos.
+2. **Curto e baixo.** Menos de 300 ms, volume bem abaixo de notificação do sistema, sem agudo áspero — passa-baixa em todos. A única exceção é o som de conquista (580 ms), que é raro por natureza.
 3. **Nunca igual duas vezes seguidas.** Variação leve de altura a cada disparo; repetição mecânica é o que transforma som gostoso em irritante.
 4. **Latência importa mais que fidelidade.** Som atrasado em relação ao toque é pior que nenhum som; tudo pré-carregado em memória.
 5. **Nunca é o único sinal.** Toda informação dada por som também está na tela (WCAG 1.3.3).
@@ -87,4 +87,6 @@ Não existe `sound.error`. O aviso (`sound.notice`) é uma nota grave e macia de
 
 ### Origem e licença
 
-Somente material em domínio público (CC0) ou gravado para o projeto. Cada arquivo é registrado em `assets/CREDITS.md` com autor, endereço de origem e licença, antes de entrar no repositório. Tratamento padronizado: corte, fade de entrada e saída, filtro passa-baixa, normalização de volume, exportação em OGG.
+Os sons atuais são **sintetizados pelo próprio projeto**: `tool/sound/build_sounds.py` monta cada um com seno e ruído filtrado — batida de madeira, grão de semente, gota d'água —, com semente fixa, de modo que rodar o script reproduz exatamente os mesmos arquivos. Não há amostra de terceiros, então não há licença externa a cumprir.
+
+Se um som gravado vier a substituir um sintetizado, só entra material em domínio público (CC0) ou gravado para o projeto, registrado em `assets/CREDITS.md` com autor, endereço de origem e licença antes de entrar no repositório. O tratamento é o mesmo do script: fade nas pontas, filtro passa-baixa e pico normalizado bem abaixo do volume de uma notificação.
