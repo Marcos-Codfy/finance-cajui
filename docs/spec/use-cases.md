@@ -38,6 +38,8 @@ Tudo o que o usuário faz no Cajui, com critérios de aceitação verificáveis.
 
 ## Códigos de erro provisórios
 
+> **Substituído.** O catálogo definitivo está em [error-catalog.md](error-catalog.md): os códigos abaixo foram mantidos, ganharam texto, saída e origem, e entraram nove novos. Esta tabela fica como registro de qual caso de uso originou cada código.
+
 | Código | Situação | Caso |
 |---|---|---|
 | `E-ENTRY-01` | Soma das linhas de pagamento diferente do valor | UC-ENTRY-02 |

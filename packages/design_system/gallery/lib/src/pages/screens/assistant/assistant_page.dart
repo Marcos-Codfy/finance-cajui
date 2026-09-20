@@ -111,8 +111,7 @@ class AssistantPage extends StatelessWidget {
   CajuiNotice _aiDown() => CajuiNotice(
     what: 'O assistente está fora do ar.',
     meaning:
-        'O serviço de IA não respondeu em 20 segundos. Seus números '
-        'continuam no painel, e lançar funciona normalmente.',
+        'Seus números continuam no painel, e lançar funciona normalmente.',
     primaryAction: CajuiNoticeAction(
       label: 'Perguntar de novo',
       onPressed: () {},
@@ -128,12 +127,15 @@ class AssistantPage extends StatelessWidget {
 
   CajuiNotice _outOfTokens() => CajuiNotice(
     intent: CajuiNoticeIntent.info,
-    what: 'O assistente chegou ao teto de uso de setembro.',
+    what: 'O uso da IA chegou ao teto de setembro.',
     meaning:
-        'É o limite que você definiu para não ter surpresa na conta da IA. '
-        'Volta em 01/10, ou dá para aumentar em Ajustes. O resto do app '
-        'funciona normalmente.',
-    primaryAction: CajuiNoticeAction(label: 'Ver o consumo', onPressed: () {}),
+        'A classificação segue pelas regras locais, e a conversa volta no '
+        'dia 1º.',
+    primaryAction: CajuiNoticeAction(label: 'Rever o teto', onPressed: () {}),
+    secondaryAction: CajuiNoticeAction(
+      label: 'Ver o consumo',
+      onPressed: () {},
+    ),
   );
 
   CajuiNotice _offline() => const CajuiNotice(

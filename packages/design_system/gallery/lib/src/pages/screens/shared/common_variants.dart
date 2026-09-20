@@ -46,7 +46,9 @@ abstract final class CommonVariants {
   static ScreenVariant offline(String title, List<Widget> cached) {
     return ScreenVariant(
       label: 'Sem rede',
-      note: 'E-NET-02. Mostra a última cópia guardada, com a hora dela.',
+      note:
+          'Classe rede. Nesta tela, ficar sem rede não é erro: mostra a '
+          'última cópia guardada, com a hora dela.',
       builder: (_) => MockScreen(
         title: title,
         children: [
