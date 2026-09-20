@@ -10,6 +10,10 @@ environment:
 resolution: workspace
 
 dependencies:
+  # Tocador de áudio da gallery e da primeira versão do app. A medição de
+  # latência contra alternativas, em aparelho real, fecha a escolha na
+  # ADR-016 (BL-009); por isso ele fica atrás da interface SoundPlayer.
+  audioplayers: ^6.8.1
   flutter:
     sdk: flutter
 
@@ -20,6 +24,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: false
+
+  # Sons sintetizados por tool/sound/build_sounds.py. Autoria do projeto.
+  assets:
+    - assets/sounds/
 
   # Fontes empacotadas: o app nunca busca fonte na rede em uso (RNF-PRIV-05).
   # As duas são variáveis; peso e eixos são escolhidos por FontVariation.
