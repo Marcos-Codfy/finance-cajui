@@ -117,6 +117,25 @@ void main() {
       await tester.pumpWidget(chip(selected: true));
       expect(find.byType(CajuiIcon), findsOneWidget);
     });
+
+    testWidgets('RNF-A11Y rótulo longo em espaço estreito não estoura', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: 160,
+            child: CajuiChip(
+              label: 'Barro, com ênfase na ação',
+              selected: true,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('CajuiSwitch', () {

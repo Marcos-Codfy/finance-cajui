@@ -76,7 +76,11 @@ class CajuiChip extends StatelessWidget {
           const CajuiIcon(CajuiIconData.check, size: 16),
           const SizedBox(width: CajuiSpacing.xs),
         ],
-        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        // Flexível para a reticência valer: com rótulo longo ou fonte
+        // ampliada, o chip encolhe o texto em vez de estourar a linha.
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
       ],
     );
   }

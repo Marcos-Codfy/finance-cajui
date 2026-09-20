@@ -17,17 +17,17 @@ class AudioplayersSoundPlayer implements SoundPlayer {
   @override
   Future<void> preload() async {
     for (final sound in CajuiSound.values) {
-      final player = AudioPlayer(playerId: 'cajui_${sound.name}');
+      // O `audioplayers` prefixa `assets/` por conta própria, o que quebra
+      // arquivo de pacote: a chave certa começa em `packages/`. Sem prefixo,
+      // o caminho do token já é a chave inteira.
+      final player = AudioPlayer(playerId: 'cajui_${sound.name}')
+        ..audioCache = AudioCache(prefix: '');
       await player.setPlayerMode(PlayerMode.lowLatency);
       await player.setReleaseMode(ReleaseMode.stop);
-      await player.setSource(AssetSource(_relative(sound.asset)));
+      await player.setSource(AssetSource(sound.asset));
       _players[sound] = player;
     }
   }
-
-  /// O `audioplayers` já prefixa `assets/`; o caminho do token inclui o
-  /// pacote, então aqui ele é ajustado ao que a biblioteca espera.
-  String _relative(String asset) => asset.replaceFirst('assets/', '');
 
   @override
   void play(CajuiSound sound, {required double volume, required double rate}) {
