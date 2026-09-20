@@ -91,6 +91,26 @@ Vocabulário único do projeto. A coluna **Código** é o identificador em ingl�
 | Redação de dados pessoais | `PiiRedaction` | — | Mascaramento de CPF, conta e chave Pix antes de qualquer envio à IA |
 | Contexto do assistente | `AssistantContext` | — | Os resumos e agregados enviados ao chat. Nunca o banco inteiro |
 
+## Retorno, ajustes e acesso
+
+| Termo | Código | Na tela | Definição |
+|---|---|---|---|
+| Resumo | `Summary` | resumo do dia · da semana · do mês | A visão periódica do que aconteceu. Recalcula-se sempre; nunca é um texto congelado |
+| Modelo de frase | `SummaryTemplate` | — | O texto determinístico de cada resumo. Assume quando a IA não redige, com os mesmos números |
+| Lembrete | `Reminder` | — | Aviso de vencimento, sempre com contexto de caixa |
+| Captura pendente | `PendingCapture` | para conferir | Comprovante recebido e ainda não confirmado. Vive só no aparelho e não conta em indicador |
+| Zona de confiança | `ConfidenceZone` | — | A faixa — alta, média, baixa — que decide como um campo da proposta aparece |
+| Lançamento tardio | `lateEntry` | — | Lançamento com data em mês já fechado. Gera revisão do fechamento |
+| Em aberto | `overdue` | em aberto desde | Fixo ou parcela vencidos e ainda sem lançamento. Sem multa estimada, sem bronca |
+| Plano de ajuste | `AdjustmentPlan` | ajustes | As reduções de variável escolhidas pelo usuário para o mês fechar |
+| Ajuste de saldo | `VoucherBalanceAdjustment` | ajustar saldo | Correção do saldo do vale informada pelo usuário. Não é renda nem despesa |
+| Provisão de fora do padrão | `exceptionalProvision` | reservar para fora do padrão | Valor mensal sugerido a partir da média de 12 meses desses gastos |
+| Pareamento | `Pairing` | parear este aparelho | O registro de um aparelho no servidor, com código gerado por SSH |
+| Nível de movimento | `MotionLevel` | movimento | `full`, `lite` ou `reduced`: quanto de animação o app usa, por medição ou por escolha |
+| Modo consulta | `readOnlyMode` | — | O que a web oferece: ver e conversar, nunca gravar |
+
+**Mês tranquilo** e **mês apertado** aparecem só na especificação, para descrever os dois modos da mesma pessoa; nunca são texto de tela. **Primeiro uso** é o estado do app antes de existir qualquer dado.
+
 ## Infraestrutura de dados
 
 | Termo | Código | Na tela | Definição |

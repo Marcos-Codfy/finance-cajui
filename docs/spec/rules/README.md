@@ -41,4 +41,4 @@ Todo cálculo é função pura dos eventos do log: os mesmos eventos produzem se
 - **Mês de competência** é o mês de calendário, do dia 1 ao último dia, no fuso de negócio.
 - **Semana** é a de calendário, de segunda a domingo.
 - **Arredondamento.** Onde uma divisão não é exata, a regra diz como arredonda. Sem indicação, vale RN-102.
-- **Rejeitar é diferente de avisar.** "É rejeitado" significa que a operação não acontece e o usuário recebe um erro do [catálogo](../error-catalog.md). "Avisa" significa que a operação acontece e o app sinaliza.
+- **Rejeitar é diferente de avisar.** "É rejeitado" significa que a operação não acontece e o usuário recebe um erro do catálogo de erros (`docs/spec/error-catalog.md`, escrito na Fase 3 a partir dos [códigos provisórios](../use-cases.md#códigos-de-erro-provisórios)). "Avisa" significa que a operação acontece e o app sinaliza.

@@ -8,7 +8,7 @@ Formato e convenções em [README.md](README.md). Termos em [glossary.md](../glo
 |---|---|---|---|
 | RN-401 | Toda despesa pertence a exatamente um de três blocos: **fixos**, **variáveis** ou **dívidas** | Não existe despesa "sem bloco" nem bloco "outros" | prompt |
 | RN-402 | Cada bloco tem limite e acompanhamento próprios. Nenhuma tela usa um saldo único consolidado como número principal | O painel mostra três partições, não "gastos totais" | D-UX-04 |
-| RN-403 | Folga de um bloco não cobre estouro de outro automaticamente. Cobrir é um **remanejamento**: ação explícita do usuário, registrada como evento, com origem, destino, valor e mês | Mover R$ 80 da folga de "lazer" para "transporte" em setembro fica no log e aparece no fechamento | D-UX-04 |
+| RN-403 | Folga de um bloco não cobre automaticamente o que passou do plano em outro. Cobrir é um **remanejamento**: ação explícita do usuário, registrada como evento, com origem, destino, valor e mês | Mover R$ 80 da folga de "lazer" para "transporte" em setembro fica no log e aparece no fechamento | D-UX-04 |
 
 ## Fixos
 
