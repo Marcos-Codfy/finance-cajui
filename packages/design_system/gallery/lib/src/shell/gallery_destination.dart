@@ -33,7 +33,19 @@ enum GalleryDestination {
   dashboard('Painel', GalleryGroup.screens),
 
   /// A confirmação de captura, nos 17 estados do compartilhamento.
-  capture('Captura', GalleryGroup.screens);
+  capture('Captura', GalleryGroup.screens),
+
+  /// A fatura do cartão: visão calculada, nunca despesa.
+  statement('Fatura', GalleryGroup.screens),
+
+  /// O fechamento do mês, com sobra e com falta.
+  closing('Fechamento', GalleryGroup.screens),
+
+  /// As dívidas e o marco de quitação.
+  debts('Dívidas', GalleryGroup.screens),
+
+  /// A conversa com o assistente e as falhas da IA.
+  assistant('Assistente', GalleryGroup.screens);
 
   new(this.title, this.group);
 

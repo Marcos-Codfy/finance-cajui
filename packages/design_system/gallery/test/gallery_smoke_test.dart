@@ -24,6 +24,10 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 500));
 }
 
+/// Alto o bastante para o menu lateral inteiro caber: a lista é preguiçosa e
+/// não constrói o item que está fora da tela.
+const _desktop = Size(1280, 1600);
+
 Future<void> _open(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -34,7 +38,7 @@ Future<void> _open(WidgetTester tester, Size size) async {
 
 void main() {
   testWidgets('cada página abre sem erro, em tela larga', (tester) async {
-    await _open(tester, const Size(1280, 900));
+    await _open(tester, _desktop);
 
     for (final destination in GalleryDestination.values) {
       await tester.tap(find.text(destination.title).first);
@@ -58,7 +62,7 @@ void main() {
   });
 
   testWidgets('cada estado de cada tela abre sem erro', (tester) async {
-    await _open(tester, const Size(1280, 900));
+    await _open(tester, _desktop);
     const global = {'Tema escuro', 'Som'};
     final screens = GalleryDestination.inGroup(GalleryGroup.screens);
 
@@ -86,7 +90,7 @@ void main() {
   });
 
   testWidgets('o chip de tema troca o tema da gallery inteira', (tester) async {
-    await _open(tester, const Size(1280, 900));
+    await _open(tester, _desktop);
     Brightness brightness() => CajuiTheme.of(
       tester.element(find.text('Cajui')),
     ).colors.brightness;
@@ -101,7 +105,7 @@ void main() {
   testWidgets('RNF-A11Y-02 a página de contraste não mostra par reprovado', (
     tester,
   ) async {
-    await _open(tester, const Size(1280, 900));
+    await _open(tester, _desktop);
     await tester.tap(find.text('Contraste'));
     await _settle(tester);
 

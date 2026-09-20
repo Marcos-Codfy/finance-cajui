@@ -4,8 +4,12 @@ import 'package:gallery/src/pages/components/action_page.dart';
 import 'package:gallery/src/pages/components/content_page.dart';
 import 'package:gallery/src/pages/components/field_page.dart';
 import 'package:gallery/src/pages/components/state_page.dart';
+import 'package:gallery/src/pages/screens/assistant/assistant_page.dart';
 import 'package:gallery/src/pages/screens/capture/capture_page.dart';
+import 'package:gallery/src/pages/screens/closing/closing_page.dart';
 import 'package:gallery/src/pages/screens/dashboard/dashboard_page.dart';
+import 'package:gallery/src/pages/screens/debts/debts_page.dart';
+import 'package:gallery/src/pages/screens/statement/statement_page.dart';
 import 'package:gallery/src/pages/tokens/colors_page.dart';
 import 'package:gallery/src/pages/tokens/contrast_page.dart';
 import 'package:gallery/src/pages/tokens/layout_page.dart';
@@ -122,6 +126,10 @@ class _GalleryShellState extends State<GalleryShell> {
           GalleryDestination.states => const StatePage(),
           GalleryDestination.dashboard => const DashboardPage(),
           GalleryDestination.capture => const CapturePage(),
+          GalleryDestination.statement => const StatementPage(),
+          GalleryDestination.closing => const ClosingPage(),
+          GalleryDestination.debts => const DebtsPage(),
+          GalleryDestination.assistant => const AssistantPage(),
         },
       ),
     );
