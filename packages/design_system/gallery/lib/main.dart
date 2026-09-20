@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/app/gallery_app.dart';
 
-/// Ponto de entrada da gallery. A casca navegável entra no item F3-14; até lá
-/// a tela fica vazia de propósito, só para o pacote compilar de ponta a ponta.
+/// Ponto de entrada da gallery, o sample navegável do design system.
 void main() {
-  runApp(const SizedBox.shrink());
+  runApp(const GalleryApp());
 }

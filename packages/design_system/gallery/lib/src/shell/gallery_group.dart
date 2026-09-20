@@ -1,0 +1,19 @@
+/// Os grupos do menu da gallery, na ordem em que aparecem.
+enum GalleryGroup {
+  /// Tokens: cor, contraste, tipo, espaço.
+  foundations('Fundação'),
+
+  /// Os componentes, cada um com todos os estados.
+  components('Componentes'),
+
+  /// Telas inteiras em cada estado.
+  screens('Telas'),
+
+  /// Movimento e som.
+  senses('Sentidos');
+
+  new(this.title);
+
+  /// O nome do grupo no menu.
+  final String title;
+}
