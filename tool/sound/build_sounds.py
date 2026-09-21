@@ -21,7 +21,15 @@ import wave
 from pathlib import Path
 
 RATE = 44_100
-PEAK = 0.22  # bem abaixo de uma notificação do sistema
+# O pico do arquivo. Quem decide o quanto o som aparece é o volume do app
+# (`SoundSettings.volume`), e não o arquivo: gravar baixo demais só tira
+# alcance — no aparelho, com 0,22 o som sumia fora do volume máximo.
+PEAK = 0.95
+# Saturação macia antes do pico. Estes sons são quase só ataque: o pico manda
+# no arquivo, e o corpo — que é o que o ouvido chama de volume — fica 15 dB
+# abaixo. A tangente hiperbólica levanta esse corpo sem passar do pico e sem
+# o estalo do corte reto. Acima de 2 começa a endurecer a madeira.
+DRIVE = 1.6
 OUT_DIR = Path(__file__).resolve().parents[2] / "packages" / "design_system" / "assets" / "sounds"
 
 
@@ -89,7 +97,10 @@ def finish(samples: list[float]) -> list[float]:
         smooth[n] *= n / fade
         smooth[-1 - n] *= n / fade
     loudest = max(abs(sample) for sample in smooth) or 1.0
-    return [sample / loudest * PEAK for sample in smooth]
+    warmth = math.tanh(DRIVE)
+    return [
+        math.tanh(DRIVE * sample / loudest) / warmth * PEAK for sample in smooth
+    ]
 
 
 def build(rng: random.Random) -> dict[str, list[float]]:
