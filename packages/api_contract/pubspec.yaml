@@ -1,0 +1,16 @@
+name: api_contract
+description: O que atravessa a rede entre o app e o servidor do Cajui - os códigos de erro do catálogo, o corpo de erro da API e os DTOs. Compartilhado pelos dois lados.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+resolution: workspace
+
+dependencies:
+  meta: ^1.16.0
+
+dev_dependencies:
+  test: ^1.31.0
+  very_good_analysis: ^11.0.0
