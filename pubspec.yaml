@@ -9,6 +9,7 @@ environment:
 # versões, que é o que permite compartilhar o domínio sem surpresa.
 workspace:
   - packages/domain
+  - packages/persistence
   - packages/design_system
   - packages/design_system/gallery
   - tool/code_metrics

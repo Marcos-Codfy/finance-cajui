@@ -68,6 +68,7 @@ A **suíte de comprovantes maliciosos** (RNF-SEC-17) é o teste desta fronteira:
 |---|---|---|---|---|---|
 | T-30 | Spoofing | Força bruta no SSH | Só chave, senha desligada, `fail2ban`, atualização automática | RNF-SEC-15 | Fase 7 |
 | T-31 | Tampering | Alguém com acesso ao disco altera, remove ou reordena eventos | Envelope autenticado por registro + cadeia de hash; `dbtool verify` aponta o registro exato (`E-DATA-01`) | ADR-005 | F6-02 |
+| T-39 | Tampering | Alguém com acesso ao disco **corta o fim** do registro: a cadeia continua válida, só mais curta | Âncora fora do disco: o app guarda o maior `seq` que já viu e estranha um servidor que sabe menos (`E-DATA-02`); o backup de ontem é prefixo do de hoje | ADR-005 | F6-03 |
 | T-32 | Tampering | Queda de energia no meio de uma escrita corrompe o registro | `append` + `fsync`; linha incompleta detectada e descartada ao subir; resumos por `rename` atômico | ADR-004 | F6-02 |
 | T-33 | Information disclosure | Cópia do disco ou do backup cai em mãos erradas | Registro cifrado por registro; backup cifrado com `age` para chave que **não está no servidor** | ADR-005 · RNF-SEC-14 | F6-02 · Fase 7 |
 | T-34 | Information disclosure | A Vercel enxerga o tráfego da web | Aceito e limitado: a web é só leitura e recebe agregados; o Android fala direto com o backend | ADR-011 | Fase 7 |
