@@ -62,6 +62,7 @@ Result<Entry> tryEntry({
   String id = 'e1',
   String description = 'Mercado Boa Compra',
   bool isExceptional = false,
+  InstallmentPlan? plan,
 }) => Entry.create(
   id: id,
   description: description,
@@ -71,6 +72,7 @@ Result<Entry> tryEntry({
   paymentLines: lines,
   today: today,
   isExceptional: isExceptional,
+  installmentPlan: plan,
 );
 
 /// Cria um lançamento que o teste sabe ser válido.
@@ -82,6 +84,7 @@ Entry entry({
   String id = 'e1',
   String description = 'Mercado Boa Compra',
   bool isExceptional = false,
+  InstallmentPlan? plan,
 }) => tryEntry(
   cents: cents,
   lines: lines,
@@ -90,4 +93,42 @@ Entry entry({
   id: id,
   description: description,
   isExceptional: isExceptional,
+  plan: plan,
 ).valueOrNull!;
+
+/// O cartão do cenário: fecha dia 25, vence dia 5 do mês seguinte.
+final CreditCard card = CreditCard.create(
+  id: 'card',
+  name: 'Cartão roxo',
+  closingDay: 25,
+  dueDay: 5,
+).valueOrNull!;
+
+/// Uma compra parcelada no cartão [card], em [count] vezes.
+Entry parceled({
+  required String id,
+  required int cents,
+  required int count,
+  required LocalDate on,
+  Category category = leisure,
+  int? installmentCents,
+  CreditCard? onCard,
+}) {
+  final used = onCard ?? card;
+  return entry(
+    id: id,
+    cents: cents,
+    lines: [credit(cents, cardId: used.id)],
+    category: category,
+    on: on,
+    plan: InstallmentPlan.forPurchase(
+      card: used,
+      purchasedOn: on,
+      principal: Money.fromCents(cents),
+      count: count,
+      installmentAmount: installmentCents == null
+          ? null
+          : Money.fromCents(installmentCents),
+    ),
+  );
+}

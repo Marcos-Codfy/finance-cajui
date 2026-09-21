@@ -64,6 +64,25 @@ final class ReversalExceedsRemaining extends Failure {
   final Money requested;
 }
 
+/// `E-CARD-01` · Dia de fechamento ou de vencimento fora de 1 a 31.
+final class InvalidCardDay extends Failure {
+  /// Cria a falha com o dia recusado.
+  const new(this.day);
+
+  /// O dia que se tentou usar.
+  final int day;
+}
+
+/// `E-CARD-02` · O nome da categoria representa um cartão ou uma fatura
+/// (RN-207 e RN-301).
+final class CategoryRepresentsCard extends Failure {
+  /// Cria a falha com o nome recusado, para o texto do erro.
+  const new(this.name);
+
+  /// O nome que se tentou dar à categoria.
+  final String name;
+}
+
 /// `E-VOUCHER-02` · A categoria não pode ser paga com vale (RN-112).
 final class CategoryNotVoucherEligible extends Failure {
   /// Cria a falha com o nome da categoria, para o texto do erro.

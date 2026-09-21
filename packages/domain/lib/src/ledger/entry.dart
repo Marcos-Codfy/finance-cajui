@@ -1,4 +1,6 @@
+import 'package:domain/src/calendar/budget_month.dart';
 import 'package:domain/src/calendar/local_date.dart';
+import 'package:domain/src/card/installment_plan.dart';
 import 'package:domain/src/ledger/category.dart';
 import 'package:domain/src/ledger/entry_origin.dart';
 import 'package:domain/src/ledger/payment_line.dart';
@@ -20,7 +22,7 @@ import 'package:meta/meta.dart';
 /// existe é um lançamento válido.
 @immutable
 final class Entry {
-  const new _({
+  new _({
     required this.id,
     required this.description,
     required this.amount,
@@ -29,7 +31,11 @@ final class Entry {
     required this.paymentLines,
     required this.isExceptional,
     required this.origin,
-  });
+    required this.installmentPlan,
+  }) : assert(
+         installmentPlan == null || _planMatches(installmentPlan, paymentLines),
+         'O parcelamento precisa valer exatamente a linha do cartão parcelado.',
+       );
 
   /// O identificador do lançamento.
   final String id;
@@ -56,8 +62,28 @@ final class Entry {
   /// Como o lançamento nasceu.
   final EntryOrigin origin;
 
+  /// O parcelamento, quando a linha do cartão foi parcelada.
+  final InstallmentPlan? installmentPlan;
+
   /// Quanto saiu em dinheiro e quanto saiu em vale, separados (RN-111).
-  TenderAmounts get paidByTender => paymentLines.fold(
+  TenderAmounts get paidByTender => _sum(paymentLines);
+
+  /// Quanto do lançamento conta como **gasto da categoria** em [month].
+  ///
+  /// Tudo o que não foi parcelado conta no mês da compra — inclusive a compra
+  /// à vista no cartão, embora o dinheiro só saia na fatura (RN-250 e
+  /// RN-310). A linha parcelada fica de fora: ela conta parcela a parcela, no
+  /// bloco de dívidas (RN-311 e RN-312).
+  TenderAmounts spentIn(BudgetMonth month) {
+    if (occurredOn.budgetMonth != month) return TenderAmounts.zero;
+    return _sum(paymentLines.where((line) => !_isInstallmentLine(line)));
+  }
+
+  bool _isInstallmentLine(PaymentLine line) =>
+      line.kind.isCreditCard &&
+      line.paymentMethodId == installmentPlan?.cardId;
+
+  static TenderAmounts _sum(Iterable<PaymentLine> lines) => lines.fold(
     TenderAmounts.zero,
     (sum, line) => sum + TenderAmounts.single(line.tender, line.amount),
   );
@@ -73,24 +99,45 @@ final class Entry {
     required LocalDate today,
     bool isExceptional = false,
     EntryOrigin origin = EntryOrigin.manual,
+    InstallmentPlan? installmentPlan,
   }) {
+    return _validate(amount, paymentLines, occurredOn, today, category) ??
+        Ok(
+          Entry._(
+            id: id,
+            description: description.trim(),
+            amount: amount,
+            occurredOn: occurredOn,
+            categoryId: category.id,
+            paymentLines: List.unmodifiable(paymentLines),
+            isExceptional: isExceptional,
+            origin: origin,
+            installmentPlan: installmentPlan,
+          ),
+        );
+  }
+
+  static bool _planMatches(InstallmentPlan plan, List<PaymentLine> lines) =>
+      lines.any(
+        (line) =>
+            line.kind.isCreditCard &&
+            line.paymentMethodId == plan.cardId &&
+            line.amount == plan.principal,
+      );
+
+  /// A primeira regra que recusa o lançamento, ou nulo se todas aceitam.
+  static Err<Entry>? _validate(
+    Money amount,
+    List<PaymentLine> lines,
+    LocalDate occurredOn,
+    LocalDate today,
+    Category category,
+  ) {
     final failure =
-        _amountFailure(amount, paymentLines) ??
+        _amountFailure(amount, lines) ??
         _dateFailure(occurredOn, today) ??
-        _voucherFailure(category, paymentLines);
-    if (failure != null) return Err(failure);
-    return Ok(
-      Entry._(
-        id: id,
-        description: description.trim(),
-        amount: amount,
-        occurredOn: occurredOn,
-        categoryId: category.id,
-        paymentLines: List.unmodifiable(paymentLines),
-        isExceptional: isExceptional,
-        origin: origin,
-      ),
-    );
+        _voucherFailure(category, lines);
+    return failure == null ? null : Err(failure);
   }
 
   /// RN-104 e RN-203: valor positivo, linhas positivas, soma exata.
