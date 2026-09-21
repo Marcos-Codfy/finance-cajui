@@ -118,7 +118,13 @@ class DebtsPage extends StatelessWidget {
       _gap,
       // Março de 2027, o mês da última parcela da geladeira: o empréstimo,
       // que estava em 8 de 24 em setembro, chegou a 14.
-      _debt('Empréstimo pessoal', 21200, paid: 14, total: 24, ends: 'jan. 2028'),
+      _debt(
+        'Empréstimo pessoal',
+        21200,
+        paid: 14,
+        total: 24,
+        ends: 'jan. 2028',
+      ),
     ],
   );
 }

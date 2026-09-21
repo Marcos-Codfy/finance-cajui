@@ -65,9 +65,7 @@ class ClosingPage extends StatelessWidget {
       label: leftover < 0 ? 'Faltou em setembro' : 'Sobrou em setembro',
       cents: leftover,
       large: true,
-      tone: leftover < 0
-          ? CajuiAmountTone.shortfall
-          : CajuiAmountTone.positive,
+      tone: leftover < 0 ? CajuiAmountTone.shortfall : CajuiAmountTone.positive,
     ),
     CajuiCard(
       child: Column(

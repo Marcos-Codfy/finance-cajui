@@ -176,10 +176,7 @@ class _ActionPageState extends State<ActionPage> {
           'o único sinal.',
       child: GallerySpecimens(
         children: [
-          GallerySpecimen(
-            state: 'Escolha única, ao vivo',
-            child: _liveChips(),
-          ),
+          GallerySpecimen(state: 'Escolha única, ao vivo', child: _liveChips()),
           const GallerySpecimen(
             state: 'Inativo',
             child: CajuiChip(

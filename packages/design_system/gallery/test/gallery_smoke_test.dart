@@ -115,9 +115,8 @@ void main() {
 
   testWidgets('o chip de tema troca o tema da gallery inteira', (tester) async {
     await _open(tester, _desktop);
-    Brightness brightness() => CajuiTheme.of(
-      tester.element(find.text('Cajui')),
-    ).colors.brightness;
+    Brightness brightness() =>
+        CajuiTheme.of(tester.element(find.text('Cajui'))).colors.brightness;
 
     expect(brightness(), Brightness.light);
     await tester.tap(find.text('Tema escuro'));

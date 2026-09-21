@@ -110,8 +110,7 @@ class AssistantPage extends StatelessWidget {
 
   CajuiNotice _aiDown() => CajuiNotice(
     what: 'O assistente está fora do ar.',
-    meaning:
-        'Seus números continuam no painel, e lançar funciona normalmente.',
+    meaning: 'Seus números continuam no painel, e lançar funciona normalmente.',
     primaryAction: CajuiNoticeAction(
       label: 'Perguntar de novo',
       onPressed: () {},
