@@ -3,8 +3,9 @@ import 'package:domain/domain.dart';
 /// Peças prontas para os testes do domínio, com os nomes e valores do cenário
 /// único da especificação (setembro de 2026).
 
-/// O dia em que os testes "acontecem".
-final LocalDate today = LocalDate(2026, 9, 20);
+/// O dia em que os testes "acontecem": o último de setembro, para que o mês
+/// inteiro do cenário já possa ter lançamentos.
+final LocalDate today = LocalDate(2026, 9, 30);
 
 /// Categoria do bloco variável, elegível ao vale.
 const Category groceries = Category(

@@ -5,6 +5,7 @@
 library;
 
 export 'src/budget/amount_range.dart';
+export 'src/budget/budget_adjustment.dart';
 export 'src/budget/fixed_expense.dart';
 export 'src/budget/fixed_occurrence.dart';
 export 'src/budget/month_close.dart';
@@ -30,6 +31,11 @@ export 'src/debts/payoff_simulation.dart';
 export 'src/income/income_receipt.dart';
 export 'src/income/income_source.dart';
 export 'src/income/month_income.dart';
+export 'src/indicators/budget_week.dart';
+export 'src/indicators/month_indicators.dart';
+export 'src/indicators/month_spending.dart';
+export 'src/indicators/percent.dart';
+export 'src/indicators/weekly_limit.dart';
 export 'src/ledger/block.dart';
 export 'src/ledger/category.dart';
 export 'src/ledger/category_name_policy.dart';

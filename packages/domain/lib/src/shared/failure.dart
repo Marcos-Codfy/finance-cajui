@@ -101,6 +101,25 @@ final class MonthNotOver extends Failure {
   final LocalDate closableFrom;
 }
 
+/// `E-BUDG-03` · O ajuste deixaria a categoria abaixo do mínimo da faixa.
+final class AdjustmentBelowMinimum extends Failure {
+  /// Cria a falha com a categoria, o mínimo dela e onde o ajuste a deixaria.
+  const new({
+    required this.categoryId,
+    required this.minimum,
+    required this.result,
+  });
+
+  /// A categoria que se tentou ajustar.
+  final String categoryId;
+
+  /// O mínimo da faixa: o que a pessoa disse que não dá para cortar.
+  final Money minimum;
+
+  /// O valor em que a categoria ficaria depois do ajuste.
+  final Money result;
+}
+
 /// `E-BUDG-04` · Remanejamento maior que a folga da origem (RN-403).
 final class ReallocationExceedsSlack extends Failure {
   /// Cria a falha com a folga da origem e o valor pedido.
