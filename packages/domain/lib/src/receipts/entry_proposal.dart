@@ -19,6 +19,7 @@ final class EntryProposal {
     required this.category,
     required this.paymentKind,
     this.merchant,
+    this.description,
     this.installments,
     this.warnings = const [],
   });
@@ -43,6 +44,14 @@ final class EntryProposal {
   /// O estabelecimento, como lido.
   final String? merchant;
 
+  /// Uma descrição mais amigável que o estabelecimento cru, quando a IA
+  /// sugeriu uma e ela passou pelo filtro da RN-775. Sem ela, a tela mostra
+  /// o [merchant].
+  final String? description;
+
+  /// O que a tela de conferência mostra em "O que foi".
+  String? get displayDescription => description ?? merchant;
+
   /// Em quantas vezes, quando o texto fala em parcelas.
   final int? installments;
 
@@ -55,8 +64,10 @@ final class EntryProposal {
     ProposedField<String>? category,
     ProposedField<Money>? amount,
     ProposedField<DocumentKind>? documentKind,
+    String? description,
     List<String>? warnings,
   }) => EntryProposal(
+    description: description ?? this.description,
     documentKind: documentKind ?? this.documentKind,
     amount: amount ?? this.amount,
     occurredOn: occurredOn,

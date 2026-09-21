@@ -58,6 +58,7 @@ export 'src/receipts/field_source.dart';
 export 'src/receipts/pii_redactor.dart';
 export 'src/receipts/proposed_field.dart';
 export 'src/receipts/receipt_classifier.dart';
+export 'src/receipts/receipt_description_policy.dart';
 export 'src/receipts/receipt_field_reader.dart';
 export 'src/receipts/receipt_text.dart';
 export 'src/receipts/rule_based_classifier.dart';
