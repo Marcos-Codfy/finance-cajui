@@ -1,0 +1,14 @@
+name: server_arm64_spike
+description: Spike B - backend Dart + Shelf mínimo, para medir a compilação cruzada para linux/arm64. Código de medição, fora do workspace.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+
+dev_dependencies:
+  very_good_analysis: ^11.0.0

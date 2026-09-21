@@ -17,24 +17,33 @@ class AudioplayersSoundPlayer implements SoundPlayer {
   @override
   Future<void> preload() async {
     for (final sound in CajuiSound.values) {
-      // O `audioplayers` prefixa `assets/` por conta própria, o que quebra
-      // arquivo de pacote: a chave certa começa em `packages/`. Sem prefixo,
-      // o caminho do token já é a chave inteira.
-      final player = AudioPlayer(playerId: 'cajui_${sound.name}')
-        ..audioCache = AudioCache(prefix: '');
-      await player.setPlayerMode(PlayerMode.lowLatency);
-      await player.setReleaseMode(ReleaseMode.stop);
-      await player.setSource(AssetSource(sound.asset));
-      _players[sound] = player;
+      await _load(sound);
     }
   }
 
+  /// Carrega um som, se ainda não estiver carregado, e devolve o tocador dele.
+  Future<AudioPlayer> _load(CajuiSound sound) async {
+    final loaded = _players[sound];
+    if (loaded != null) return loaded;
+    // O `audioplayers` prefixa `assets/` por conta própria, o que quebra
+    // arquivo de pacote: a chave certa começa em `packages/`. Sem prefixo,
+    // o caminho do token já é a chave inteira.
+    final player = AudioPlayer(playerId: 'cajui_${sound.name}')
+      ..audioCache = AudioCache(prefix: '');
+    await player.setPlayerMode(PlayerMode.lowLatency);
+    await player.setReleaseMode(ReleaseMode.stop);
+    await player.setSource(AssetSource(sound.asset));
+    return _players[sound] = player;
+  }
+
+  /// Som pedido antes do [preload] é carregado na hora: sai atrasado dessa
+  /// vez e no tempo certo nas seguintes. É o que deixa o app não baixar som
+  /// nenhum enquanto o som está desligado — que é como ele nasce.
   @override
   void play(CajuiSound sound, {required double volume, required double rate}) {
-    final player = _players[sound];
-    if (player == null) return;
     // Falha de áudio nunca pode derrubar uma interação: som é reforço.
     Future<void>(() async {
+      final player = await _load(sound);
       await player.stop();
       await player.setVolume(volume);
       await player.setPlaybackRate(rate);

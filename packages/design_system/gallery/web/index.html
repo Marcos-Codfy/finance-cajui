@@ -1,46 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="gallery">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sample navegável do design system do Cajui: tokens, componentes, telas de estado, som e movimento.">
+  <meta name="theme-color" content="#FBF6EE">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
+  <title>Cajui · design system</title>
+  <!--
+    O primeiro quadro não espera o Flutter: a cor da marca e o nome aparecem
+    assim que o HTML chega, e somem quando o app desenha por cima.
+  -->
+  <style>
+    html, body { height: 100%; margin: 0; background: #FBF6EE; }
+    #shell {
+      position: fixed; inset: 0; display: grid; place-content: center;
+      text-align: center; color: #2A1D17;
+      font: 600 2rem/1.2 Georgia, "Times New Roman", serif;
+    }
+    #shell small {
+      display: block; margin-top: .5rem; color: #5F4E44;
+      font: 400 .875rem/1.4 system-ui, sans-serif;
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <main id="shell" aria-live="polite">
+    Cajui
+    <small>Carregando o design system…</small>
+  </main>
+  <noscript>O sample do design system do Cajui precisa de JavaScript para abrir.</noscript>
+  <script>
+    // O Flutter avisa quando desenhou o primeiro quadro; só então a casca sai.
+    window.addEventListener('flutter-first-frame', function () {
+      var shell = document.getElementById('shell');
+      if (shell) shell.remove();
+      performance.mark('cajui:first-frame');
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
