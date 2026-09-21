@@ -1,9 +1,10 @@
+import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
 
-/// O livro de lançamentos como está agora: o resultado de aplicar, em ordem,
-/// todos os fatos gravados.
+/// O livro da casa como está agora: o resultado de aplicar, em ordem, todos
+/// os fatos gravados.
 ///
 /// É imutável. Aplicar um fato devolve um livro novo, o que deixa a tela
 /// comparar "antes" e "depois" sem efeito colateral.
@@ -14,6 +15,7 @@ final class LedgerBook {
     required this.categories,
     required this.paymentMethods,
     this.entries = const [],
+    this.setup = MonthSetup.empty,
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
 
@@ -25,6 +27,9 @@ final class LedgerBook {
 
   /// Os lançamentos, na ordem em que foram gravados.
   final List<Entry> entries;
+
+  /// O plano do mês em vigor.
+  final MonthSetup setup;
 
   /// A conta do vale, com o saldo em vigor.
   final VoucherAccount voucher;
@@ -43,15 +48,25 @@ final class LedgerBook {
     VoucherBalanceAdjusted(:final adjustment) => _with(
       voucher: voucher.adjust(adjustment),
     ),
+    PlanDefined(:final setup) => _with(setup: setup),
   };
 
-  LedgerBook _with({List<Entry>? entries, VoucherAccount? voucher}) =>
-      LedgerBook(
-        categories: categories,
-        paymentMethods: paymentMethods,
-        entries: entries ?? this.entries,
-        voucher: voucher ?? this.voucher,
-      );
+  LedgerBook _with({
+    List<Entry>? entries,
+    VoucherAccount? voucher,
+    MonthSetup? setup,
+  }) => LedgerBook(
+    categories: categories,
+    paymentMethods: paymentMethods,
+    entries: entries ?? this.entries,
+    setup: setup ?? this.setup,
+    voucher: voucher ?? this.voucher,
+  );
+
+  /// As categorias pelo identificador, como o domínio pede para somar o mês.
+  Map<String, Category> get categoriesById => {
+    for (final category in categories) category.id: category,
+  };
 
   /// Os lançamentos de [month], do mais recente para o mais antigo.
   List<Entry> entriesIn(BudgetMonth month) =>

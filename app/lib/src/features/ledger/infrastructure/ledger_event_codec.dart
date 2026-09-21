@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/budget/infrastructure/month_setup_codec.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:domain/domain.dart';
 
@@ -17,6 +18,9 @@ final class LedgerEventCodec {
   /// O tipo do fato "despesa lançada" — o mesmo do servidor.
   static const entryCreated = 'entry.created';
 
+  /// O tipo do fato "plano do mês cadastrado".
+  static const planDefined = 'plan.defined';
+
   /// O tipo do fato "saldo do vale corrigido".
   static const voucherAdjusted = 'voucher.adjusted';
 
@@ -32,6 +36,10 @@ final class LedgerEventCodec {
     EntryRecorded(:final entry) => (
       type: entryCreated,
       payload: EntryCodec.fromEntry(entry).toJson(),
+    ),
+    PlanDefined(:final setup) => (
+      type: planDefined,
+      payload: MonthSetupCodec.encode(setup),
     ),
     VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => (
       type: voucherAdjusted,
@@ -49,6 +57,10 @@ final class LedgerEventCodec {
   LedgerEvent? decode(String id, String type, Map<String, Object?> payload) {
     return switch (type) {
       entryCreated => _entry(payload),
+      planDefined => PlanDefined(
+        id: id,
+        setup: MonthSetupCodec.decode(payload),
+      ),
       voucherAdjusted => VoucherBalanceAdjusted(
         id: id,
         adjustment: Money.fromCents(payload['adjustmentCents']! as int),

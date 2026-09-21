@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
 
@@ -21,6 +22,19 @@ final class EntryRecorded extends LedgerEvent {
 
   /// O lançamento, já aceito pelas regras do domínio.
   final Entry entry;
+}
+
+/// O plano do mês foi cadastrado ou alterado.
+///
+/// O fato carrega o cadastro **inteiro**, e o mais recente vale. É a forma
+/// mais simples que não perde nada: o registro guarda cada versão do plano,
+/// na ordem, e dá para saber com que plano cada mês foi vivido.
+final class PlanDefined extends LedgerEvent {
+  /// Registra o cadastro [setup].
+  const new({required super.id, required this.setup});
+
+  /// O cadastro que passa a valer.
+  final MonthSetup setup;
 }
 
 /// O saldo do vale foi corrigido para bater com o da operadora (RN-123).
