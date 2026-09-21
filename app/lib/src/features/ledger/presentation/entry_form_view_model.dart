@@ -56,7 +56,11 @@ class EntryFormViewModel extends Notifier<EntryFormState> {
     if (!draft.isComplete || state is EntryFormSaving) return;
     state = EntryFormSaving(draft);
     try {
-      final result = await ref.read(ledgerProvider.notifier).record(draft);
+      final ledger = ref.read(ledgerProvider.notifier);
+      // O mesmo formulário lança e corrige: o rascunho sabe qual dos dois.
+      final result = await (draft.correctionOf == null
+          ? ledger.record(draft)
+          : ledger.correct(draft));
       state = _after(draft, result);
       // Falha que não é de regra — disco cheio, defeito do próprio app. A tela
       // não pode ficar presa em "gravando": volta a editar, com o que foi
