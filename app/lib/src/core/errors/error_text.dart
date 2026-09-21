@@ -25,6 +25,20 @@ class ErrorText {
       for (final match in _placeholder.allMatches(text)) match.group(1)!,
   };
 
+  /// A frase desta tela, quando o catálogo traz uma por tela no mesmo código:
+  /// "Na captura: … · No assistente: …". [label] é o rótulo da tela — "No
+  /// assistente". Erro de frase única volta como está.
+  ErrorText inContext(String label) {
+    final start = message.indexOf('$label: ');
+    if (start < 0) return this;
+    final rest = message.substring(start + label.length + 2);
+    final next = rest.indexOf(' · N');
+    return ErrorText(
+      next < 0 ? rest : rest.substring(0, next),
+      actions: actions,
+    );
+  }
+
   /// O mesmo texto com cada `{chave}` trocada pelo valor dela em [values].
   ///
   /// Chave sem valor é defeito de quem chama, e o teste da tela pega. Em

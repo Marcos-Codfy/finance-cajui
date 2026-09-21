@@ -1,3 +1,5 @@
+import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
@@ -35,6 +37,11 @@ abstract final class Composition {
         ),
       ),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
+      // Até o aparelho ser cadastrado no servidor (passo de biometria), não
+      // há com quem o assistente conversar — e a tela diz isso.
+      assistantGatewayProvider.overrideWithValue(
+        const UnpairedAssistantGateway(),
+      ),
       receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
       receiptReaderProvider.overrideWithValue(
         inbox == null
