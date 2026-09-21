@@ -14,6 +14,11 @@ abstract final class Authenticate {
   static const _publicPrefix = 'v1/auth/';
   static const _readMethods = {'GET', 'HEAD'};
 
+  /// A única rota que não é de leitura e é permitida à sessão da web
+  /// (RN-906): conversar não grava fato financeiro nenhum. O código que a
+  /// atende não tem porta de escrita no registro (RN-904).
+  static const _chatPath = 'v1/assistant/ask';
+
   /// A sessão da requisição [request], posta pelo middleware.
   static Session sessionOf(Request request) =>
       request.context[sessionKey]! as Session;
@@ -31,7 +36,9 @@ abstract final class Authenticate {
         if (session == null) {
           return Responses.error(request, ErrorCode.auth03, status: 401);
         }
-        final writing = !_readMethods.contains(request.method);
+        final writing =
+            !_readMethods.contains(request.method) &&
+            request.url.path != _chatPath;
         if (writing && session.scope == SessionScope.webReadOnly) {
           return Responses.error(request, ErrorCode.auth03, status: 403);
         }

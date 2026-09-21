@@ -8,6 +8,7 @@ import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/deepseek_chat_client.dart';
 import 'package:server/src/ai/token_budget.dart';
 import 'package:server/src/app.dart';
+import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/system_clock.dart';
@@ -54,9 +55,17 @@ String _keyFile(List<String> arguments) {
   return path;
 }
 
-/// Com a credencial da DeepSeek, a IA entra por cima das regras locais; sem
-/// ela, o servidor sobe só com as regras, e tudo continua funcionando.
-ReceiptClassifier _classifier(EventStore store) {
+/// As duas peças que falam com a IA: o classificador de comprovantes e o
+/// assistente.
+typedef _Ai = ({ReceiptClassifier classifier, AssistantService? assistant});
+
+/// Com a credencial da DeepSeek, a IA entra por cima das regras locais e o
+/// assistente responde; sem ela, o servidor sobe só com as regras, o
+/// assistente diz que está fora do ar, e tudo o mais continua funcionando.
+///
+/// O orçamento de tokens e o disjuntor são **um só** para as duas peças
+/// (RN-960): conversa e classificação gastam do mesmo teto.
+_Ai _ai(EventStore store) {
   final directory = Platform.environment['CREDENTIALS_DIRECTORY'];
   final keyFile = directory == null
       ? null
@@ -65,12 +74,22 @@ ReceiptClassifier _classifier(EventStore store) {
     stdout.writeln(
       'sem credencial da IA: classificando só pelas regras locais',
     );
-    return const RuleBasedClassifier();
+    return (classifier: const RuleBasedClassifier(), assistant: null);
   }
-  return AiReceiptClassifier(
-    client: DeepSeekChatClient(apiKey: keyFile.readAsStringSync().trim()),
-    budget: TokenBudget(store, monthlyLimit: 2000000),
-    breaker: CircuitBreaker(),
+  final client = DeepSeekChatClient(apiKey: keyFile.readAsStringSync().trim());
+  final budget = TokenBudget(store, monthlyLimit: 2000000);
+  final breaker = CircuitBreaker();
+  return (
+    classifier: AiReceiptClassifier(
+      client: client,
+      budget: budget,
+      breaker: breaker,
+    ),
+    assistant: AssistantService(
+      client: client,
+      budget: budget,
+      breaker: breaker,
+    ),
   );
 }
 
@@ -79,13 +98,15 @@ Future<void> _serve(Directory data, String keyFile) async {
     data,
     AesGcmRecordCipher(DataKey.read(keyFile)),
   );
+  final ai = _ai(store);
   final app = App(
     store: store,
     dataDirectory: data,
     clock: const SystemClock(),
     log: stdout.writeln,
     sessions: SessionBook(),
-    classifier: _classifier(store),
+    classifier: ai.classifier,
+    assistant: ai.assistant,
   );
   // Só na própria máquina: quem recebe a internet é o Caddy (ADR-003 · T-36).
   final host = Platform.environment['HOST'] ?? '127.0.0.1';

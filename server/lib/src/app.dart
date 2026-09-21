@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/ai/receipt_routes.dart';
+import 'package:server/src/assistant/assistant_routes.dart';
+import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/auth_routes.dart';
 import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/auth/challenge_book.dart';
@@ -30,6 +32,7 @@ final class App {
     required this.sessions,
     RateLimiter? rateLimiter,
     this.classifier = const RuleBasedClassifier(),
+    this.assistant,
   }) : _clock = clock,
        _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
        _auth = AuthRoutes(
@@ -52,6 +55,10 @@ final class App {
   /// e o servidor funciona inteiro assim.
   final ReceiptClassifier classifier;
 
+  /// Quem atende a conversa com o assistente; `null` num servidor sem a
+  /// credencial da IA, que responde `E-AI-01` às perguntas.
+  final AssistantService? assistant;
+
   final Clock _clock;
   final void Function(String line) _log;
   final RateLimiter _limiter;
@@ -64,6 +71,12 @@ final class App {
     clock: _clock,
   );
 
+  late final AssistantRoutes _assistant = AssistantRoutes(
+    state: _ledger.state,
+    clock: _clock,
+    service: assistant,
+  );
+
   /// O tratador de requisições, pronto para o `shelf_io`.
   ///
   /// A ordem importa: o identificador nasce primeiro, para todo o resto poder
@@ -74,6 +87,7 @@ final class App {
     final routes = Router()
       ..mount('/v1/auth', _auth.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
+      ..mount('/v1/assistant', _assistant.router.call)
       ..mount('/v1', _ledger.router.call);
     return const Pipeline()
         .addMiddleware(Middlewares.requestRef())
