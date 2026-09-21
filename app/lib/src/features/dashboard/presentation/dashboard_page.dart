@@ -5,6 +5,8 @@ import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_blocks.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_state.dart';
+import 'package:cajui/src/features/insights/application/insights.dart';
+import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -75,6 +77,7 @@ class DashboardPage extends ConsumerWidget {
       children: [
         ..._notices(context, ref, state),
         ...DashboardBlocks.of(overview),
+        _summaries(context, ref),
       ],
     );
   }
@@ -94,6 +97,18 @@ class DashboardPage extends ConsumerWidget {
         gap,
       ],
     ];
+  }
+
+  /// A porta para os resumos, já com a frase de hoje à vista (RN-810).
+  Widget _summaries(BuildContext context, WidgetRef ref) {
+    final today = ref.watch(insightsProvider)?.daily.lines.first;
+    return CajuiListRow(
+      title: 'Resumos',
+      subtitle: today ?? 'Hoje, semana e mês',
+      trailing: const CajuiIcon(CajuiIconData.chevronRight),
+      semanticLabel: 'Resumos do dia, da semana e do mês, abrir',
+      onPressed: () => InsightsPage.open(context),
+    );
   }
 
   Widget _missingIncome(BuildContext context) => CajuiNotice(
