@@ -2,7 +2,11 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
 /// Um grupo de papéis de cor, com o nome que aparece na página.
-typedef ColorRoleGroup = ({String title, String note, Map<String, Color> roles});
+typedef ColorRoleGroup = ({
+  String title,
+  String note,
+  Map<String, Color> roles,
+});
 
 /// Lista os papéis de cor de um tema pelo nome que o código usa.
 ///
@@ -109,9 +113,6 @@ abstract final class ColorRoles {
     note:
         'Um papel só, com duas versões em avaliação. O componente pede '
         '`colors.shortfall` e não sabe qual está em vigor.',
-    roles: {
-      'shortfall': c.shortfall,
-      'shortfallSubtle': c.shortfallSubtle,
-    },
+    roles: {'shortfall': c.shortfall, 'shortfallSubtle': c.shortfallSubtle},
   );
 }

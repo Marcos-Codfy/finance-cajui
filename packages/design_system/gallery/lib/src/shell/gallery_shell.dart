@@ -47,7 +47,9 @@ class _GalleryShellState extends State<GalleryShell> {
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= _wideFrom;
-    return SafeArea(child: wide ? _wideLayout(context) : _narrowLayout(context));
+    return SafeArea(
+      child: wide ? _wideLayout(context) : _narrowLayout(context),
+    );
   }
 
   Widget _wideLayout(BuildContext context) {
@@ -60,7 +62,9 @@ class _GalleryShellState extends State<GalleryShell> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _Masthead(),
-              Expanded(child: GalleryNav(selected: _selected, onSelect: _select)),
+              Expanded(
+                child: GalleryNav(selected: _selected, onSelect: _select),
+              ),
               const Padding(
                 padding: EdgeInsets.all(CajuiSpacing.xxl),
                 child: GalleryToolbar(),

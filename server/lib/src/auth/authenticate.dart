@@ -21,19 +21,20 @@ abstract final class Authenticate {
   /// O middleware. Sem token, com token desconhecido ou vencido: `E-AUTH-03`,
   /// igual nos três casos. Sessão da web tentando escrever: `E-AUTH-03`
   /// também — o servidor não explica a quem não devia estar tentando (T-12).
-  static Middleware middleware(SessionBook sessions) => (inner) => (request) {
-    if (request.url.path.startsWith(_publicPrefix)) return inner(request);
-    final header = request.headers['authorization'] ?? '';
-    final session = header.startsWith('Bearer ')
-        ? sessions.find(header.substring(7))
-        : null;
-    if (session == null) {
-      return Responses.error(request, ErrorCode.auth03, status: 401);
-    }
-    final writing = !_readMethods.contains(request.method);
-    if (writing && session.scope == SessionScope.webReadOnly) {
-      return Responses.error(request, ErrorCode.auth03, status: 403);
-    }
-    return inner(request.change(context: {sessionKey: session}));
-  };
+  static Middleware middleware(SessionBook sessions) =>
+      (inner) => (request) {
+        if (request.url.path.startsWith(_publicPrefix)) return inner(request);
+        final header = request.headers['authorization'] ?? '';
+        final session = header.startsWith('Bearer ')
+            ? sessions.find(header.substring(7))
+            : null;
+        if (session == null) {
+          return Responses.error(request, ErrorCode.auth03, status: 401);
+        }
+        final writing = !_readMethods.contains(request.method);
+        if (writing && session.scope == SessionScope.webReadOnly) {
+          return Responses.error(request, ErrorCode.auth03, status: 403);
+        }
+        return inner(request.change(context: {sessionKey: session}));
+      };
 }

@@ -16,16 +16,17 @@ abstract final class Middlewares {
   /// Dá a cada requisição um identificador curto (`ref`), devolvido no corpo
   /// de erro e gravado no registro: é o que liga "o erro que eu vi" a "o que
   /// aconteceu no servidor", sem registrar dado nenhum da pessoa.
-  static Middleware requestRef() => (inner) => (request) async {
-    final ref = [
-      for (var i = 0; i < 3; i++)
-        _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ].join();
-    final response = await inner(
-      request.change(context: {Responses.refKey: ref}),
-    );
-    return response.change(headers: {'x-request-ref': ref});
-  };
+  static Middleware requestRef() =>
+      (inner) => (request) async {
+        final ref = [
+          for (var i = 0; i < 3; i++)
+            _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+        ].join();
+        final response = await inner(
+          request.change(context: {Responses.refKey: ref}),
+        );
+        return response.change(headers: {'x-request-ref': ref});
+      };
 
   /// Registra cada requisição em uma linha JSON: instante, `ref`, método,
   /// caminho **sem a query**, status e duração.
@@ -51,16 +52,17 @@ abstract final class Middlewares {
 
   /// Recusa com `E-RATE-01` o que passar do limite, dizendo em quantos
   /// segundos dá para tentar de novo.
-  static Middleware rateLimit(RateLimiter limiter) => (inner) => (request) {
-    final wait = limiter.retryAfterSeconds(_originOf(request));
-    if (wait == null) return inner(request);
-    return Responses.error(
-      request,
-      ErrorCode.rate01,
-      detail: {'seconds': wait},
-      retryAfterSeconds: wait,
-    );
-  };
+  static Middleware rateLimit(RateLimiter limiter) =>
+      (inner) => (request) {
+        final wait = limiter.retryAfterSeconds(_originOf(request));
+        if (wait == null) return inner(request);
+        return Responses.error(
+          request,
+          ErrorCode.rate01,
+          detail: {'seconds': wait},
+          retryAfterSeconds: wait,
+        );
+      };
 
   /// A origem da requisição. `X-Forwarded-For` só vale quando quem conecta é
   /// a própria máquina — o Caddy. Vindo de fora, o cabeçalho é ignorado: o

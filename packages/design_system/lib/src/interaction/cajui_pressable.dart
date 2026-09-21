@@ -27,10 +27,14 @@ class CajuiPressable extends StatefulWidget {
     required this.semanticLabel,
     this.radius = BorderRadius.zero,
     this.toggled,
+    this.selected,
     this.busy = false,
     this.autofocus = false,
     super.key,
-  });
+  }) : assert(
+         toggled == null || selected == null,
+         'Ligado/desligado e escolhido são papéis diferentes: use um só.',
+       );
 
   /// Desenha o controle conforme os estados.
   final PressableBuilder builder;
@@ -46,6 +50,13 @@ class CajuiPressable extends StatefulWidget {
 
   /// Para chave e chip selecionável: ligado ou desligado. `null` em botão.
   final bool? toggled;
+
+  /// Para destino de navegação e aba: se é o escolhido entre os irmãos.
+  ///
+  /// Não é o mesmo que [toggled]. Uma chave liga e desliga sozinha; um
+  /// destino só deixa de ser o escolhido quando outro passa a ser. O leitor
+  /// de tela anuncia "selecionado", e não "ligado".
+  final bool? selected;
 
   /// Ocupado: continua visível e focável, mas não dispara de novo.
   final bool busy;
@@ -92,25 +103,31 @@ class _CajuiPressableState extends State<CajuiPressable> {
       button: widget.toggled == null,
       enabled: _enabled,
       toggled: widget.toggled,
+      selected: widget.selected,
       label: widget.semanticLabel,
       // O gesto fica fora da semântica para não virar um segundo nó; quem
       // entrega a ação de tocar ao leitor de tela é este.
       onTap: _enabled ? _activate : null,
-      child: FocusableActionDetector(
-        enabled: _enabled,
-        autofocus: widget.autofocus,
-        mouseCursor: _enabled ? SystemMouseCursors.click : MouseCursor.defer,
-        shortcuts: _activationKeys,
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (_) => _activate(),
-          ),
-        },
-        onShowHoverHighlight: (on) => _set(WidgetState.hovered, active: on),
-        onFocusChange: (on) => _set(WidgetState.focused, active: on),
-        onShowFocusHighlight: (on) => setState(() => _keyboardFocus = on),
-        child: _gesture(context),
-      ),
+      child: _focusable(context),
+    );
+  }
+
+  /// Foco, teclado e mouse: Enter e espaço ativam, como num botão de verdade.
+  Widget _focusable(BuildContext context) {
+    return FocusableActionDetector(
+      enabled: _enabled,
+      autofocus: widget.autofocus,
+      mouseCursor: _enabled ? SystemMouseCursors.click : MouseCursor.defer,
+      shortcuts: _activationKeys,
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) => _activate(),
+        ),
+      },
+      onShowHoverHighlight: (on) => _set(WidgetState.hovered, active: on),
+      onFocusChange: (on) => _set(WidgetState.focused, active: on),
+      onShowFocusHighlight: (on) => setState(() => _keyboardFocus = on),
+      child: _gesture(context),
     );
   }
 

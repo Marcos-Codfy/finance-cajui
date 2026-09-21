@@ -47,7 +47,10 @@ class LayoutPage extends StatelessWidget {
           'feitas em dias diferentes saem com o mesmo ritmo.',
       sections: [
         _spacingSection(),
-        GallerySection(title: 'Raio', child: _wrap(_radii.entries.map(_radius))),
+        GallerySection(
+          title: 'Raio',
+          child: _wrap(_radii.entries.map(_radius)),
+        ),
         GallerySection(
           title: 'Sombra',
           description:
@@ -82,7 +85,9 @@ class LayoutPage extends StatelessWidget {
 
   Widget _radius(MapEntry<String, Radius> entry) => _ShapeSample(
     name: entry.key,
-    detail: entry.value == CajuiRadius.pill ? 'total' : '${entry.value.x.round()}',
+    detail: entry.value == CajuiRadius.pill
+        ? 'total'
+        : '${entry.value.x.round()}',
     radius: BorderRadius.all(entry.value),
   );
 

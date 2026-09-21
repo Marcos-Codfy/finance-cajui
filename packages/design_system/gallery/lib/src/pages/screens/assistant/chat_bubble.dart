@@ -7,7 +7,12 @@ import 'package:flutter/widgets.dart';
 /// tela — nunca só pela cor.
 class ChatBubble extends StatelessWidget {
   /// Cria a fala [text]. Com [fromUser], é de quem pergunta.
-  const new(this.text, {this.fromUser = false, this.thinking = false, super.key});
+  const new(
+    this.text, {
+    this.fromUser = false,
+    this.thinking = false,
+    super.key,
+  });
 
   /// O que foi dito.
   final String text;

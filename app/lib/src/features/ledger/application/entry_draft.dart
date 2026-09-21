@@ -1,0 +1,134 @@
+import 'package:domain/domain.dart';
+import 'package:meta/meta.dart';
+
+/// O que a pessoa já preencheu de um lançamento, antes de qualquer regra.
+///
+/// Pode estar incompleto e pode estar errado — é rascunho. Quem decide se
+/// vira lançamento é o domínio, na hora de gravar.
+@immutable
+final class EntryDraft {
+  /// Cria o rascunho de uma compra feita em [occurredOn].
+  const new({
+    required this.occurredOn,
+    this.amountCents = 0,
+    this.description = '',
+    this.category,
+    this.method,
+    this.secondMethod,
+    this.firstCents = 0,
+    this.secondCents = 0,
+    this.isSplit = false,
+  });
+
+  /// O valor da compra, em centavos.
+  final int amountCents;
+
+  /// O que foi comprado, ou onde.
+  final String description;
+
+  /// A categoria escolhida.
+  final Category? category;
+
+  /// A data da compra.
+  final LocalDate occurredOn;
+
+  /// A forma de pagamento — a primeira, quando o pagamento é dividido.
+  final PaymentMethod? method;
+
+  /// Se o pagamento está dividido em duas formas (RN-204).
+  final bool isSplit;
+
+  /// A segunda forma de pagamento, quando dividido.
+  final PaymentMethod? secondMethod;
+
+  /// Quanto a primeira forma paga, quando dividido.
+  final int firstCents;
+
+  /// Quanto a segunda forma paga, quando dividido.
+  ///
+  /// É um campo, e não "o resto": a pessoa digita os dois valores como estão
+  /// no comprovante, e se a soma não fechar é o domínio que recusa (RN-203),
+  /// dizendo quanto falta.
+  final int secondCents;
+
+  /// Quanto falta para as duas linhas fecharem o valor. Negativo se passaram.
+  int get unassignedCents => amountCents - firstCents - secondCents;
+
+  /// Se já há o bastante para tentar gravar.
+  bool get isComplete =>
+      description.trim().isNotEmpty &&
+      category != null &&
+      method != null &&
+      (!isSplit || secondMethod != null);
+
+  /// As linhas de pagamento que o rascunho descreve.
+  List<PaymentLine> get lines {
+    final first = method;
+    final second = secondMethod;
+    if (first == null) return const [];
+    if (!isSplit || second == null) {
+      return [first.line(Money.fromCents(amountCents))];
+    }
+    return [
+      first.line(Money.fromCents(firstCents)),
+      second.line(Money.fromCents(secondCents)),
+    ];
+  }
+
+  /// O mesmo rascunho com os campos dados trocados.
+  ///
+  /// Para **limpar** categoria ou forma de pagamento, use [without]: aqui,
+  /// `null` quer dizer "não mexa".
+  EntryDraft copyWith({
+    int? amountCents,
+    String? description,
+    Category? category,
+    LocalDate? occurredOn,
+    PaymentMethod? method,
+    PaymentMethod? secondMethod,
+    int? firstCents,
+    int? secondCents,
+    bool? isSplit,
+  }) {
+    return EntryDraft(
+      secondCents: secondCents ?? this.secondCents,
+      amountCents: amountCents ?? this.amountCents,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      occurredOn: occurredOn ?? this.occurredOn,
+      method: method ?? this.method,
+      secondMethod: secondMethod ?? this.secondMethod,
+      firstCents: firstCents ?? this.firstCents,
+      isSplit: isSplit ?? this.isSplit,
+    );
+  }
+
+  /// O mesmo rascunho com a segunda forma de pagamento no lugar da primeira.
+  EntryDraft get swapped => EntryDraft(
+    amountCents: amountCents,
+    description: description,
+    category: category,
+    occurredOn: occurredOn,
+    method: secondMethod,
+    secondMethod: method,
+    firstCents: secondCents,
+    secondCents: firstCents,
+    isSplit: isSplit,
+  );
+
+  /// O mesmo rascunho sem a categoria e/ou sem a forma de pagamento. Tirar a
+  /// forma de pagamento desfaz também a divisão.
+  EntryDraft without({bool category = false, bool method = false}) {
+    return EntryDraft(
+      amountCents: amountCents,
+      description: description,
+      occurredOn: occurredOn,
+      category: category ? null : this.category,
+      method: method ? null : this.method,
+      secondMethod: method ? null : secondMethod,
+      firstCents: method ? 0 : firstCents,
+      secondCents: method ? 0 : secondCents,
+      isSplit: !method && isSplit,
+    );
+  }
+}

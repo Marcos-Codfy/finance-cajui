@@ -1,20 +1,21 @@
 import 'package:cajui/src/app/cajui_app.dart';
-import 'package:cajui/src/core/feedback/sound_player_provider.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/mute_player.dart';
+import 'support/test_scope.dart';
 
 Future<MutePlayer> _open(WidgetTester tester) async {
   final player = MutePlayer();
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [soundPlayerProvider.overrideWithValue(player)],
+      overrides: testOverrides(player: player),
       child: const CajuiApp(),
     ),
   );
+  await tester.pump();
   return player;
 }
 

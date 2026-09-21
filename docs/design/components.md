@@ -12,7 +12,7 @@ Tudo o que se toca — botão, chip, chave, cartão e linha tocáveis, campo de 
 | Alvo de 48 (WCAG 2.5.8) | Área mínima de toque, mesmo quando o desenho é menor |
 | Teclado | Foco por Tab, ativa com Enter e Espaço |
 | Foco visível (WCAG 2.4.7 e 2.4.11) | `FocusRing`: anel afastado, com uma folga que o separa do fundo; só aparece na navegação por teclado |
-| Leitor de tela | Um nome obrigatório (`semanticLabel`), papel de botão e estado ligado/selecionado quando existe; o rótulo visual não é lido duas vezes |
+| Leitor de tela | Um nome obrigatório (`semanticLabel`), papel de botão e o estado que existir; o rótulo visual não é lido duas vezes. **Ligado** (`toggled`) e **escolhido** (`selected`) são papéis diferentes e não se misturam: chave e chip ligam e desligam sozinhos; destino de navegação e item de lista só deixam de ser o escolhido quando outro passa a ser |
 | Os cinco estados | Repouso, mouse em cima, pressionado, em foco, inativo — mais "ocupado", que bloqueia o segundo toque |
 | Som e toque | Avisa o `CajuiFeedback` em vigor; o componente nunca toca som por conta própria |
 | Movimento | Mola ao pressionar; no nível `reduced`, só troca de cor |

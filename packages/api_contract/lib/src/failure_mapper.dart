@@ -67,14 +67,15 @@ abstract final class FailureMapper {
       ErrorCode.budg02,
       {'month': '$month', 'closableFrom': '$closableFrom'},
     ),
-    AdjustmentBelowMinimum(:final categoryId, :final minimum, :final result) => (
-      ErrorCode.budg03,
-      {
-        'categoryId': categoryId,
-        'minimumCents': minimum.cents,
-        'resultCents': result.cents,
-      },
-    ),
+    AdjustmentBelowMinimum(:final categoryId, :final minimum, :final result) =>
+      (
+        ErrorCode.budg03,
+        {
+          'categoryId': categoryId,
+          'minimumCents': minimum.cents,
+          'resultCents': result.cents,
+        },
+      ),
     ReallocationExceedsSlack(:final slack, :final requested) => (
       ErrorCode.budg04,
       {'slackCents': slack.cents, 'requestedCents': requested.cents},

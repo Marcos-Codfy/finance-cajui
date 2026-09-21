@@ -43,10 +43,5 @@ abstract final class DashboardBlocks {
   );
 
   /// Os blocos de um mês andando normalmente.
-  static List<Widget> regular() => [
-    week(),
-    leftover(),
-    voucher(),
-    committed(),
-  ];
+  static List<Widget> regular() => [week(), leftover(), voucher(), committed()];
 }

@@ -62,7 +62,9 @@ ReceiptClassifier _classifier(EventStore store) {
       ? null
       : File(p.join(directory, DeepSeekChatClient.credentialName));
   if (keyFile == null || !keyFile.existsSync()) {
-    stdout.writeln('sem credencial da IA: classificando só pelas regras locais');
+    stdout.writeln(
+      'sem credencial da IA: classificando só pelas regras locais',
+    );
     return const RuleBasedClassifier();
   }
   return AiReceiptClassifier(

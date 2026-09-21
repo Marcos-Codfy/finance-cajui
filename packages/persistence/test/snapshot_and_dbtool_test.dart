@@ -14,52 +14,57 @@ void main() {
       final directory = tempDirectory();
       final store = FileSnapshotStore(directory, testCipher());
 
-      await store.write('month-2026-09', {'lastSeq': 42, 'surplusCents': 55800});
+      await store.write('month-2026-09', {
+        'lastSeq': 42,
+        'surplusCents': 55800,
+      });
 
       expect(await store.read('month-2026-09'), {
         'lastSeq': 42,
         'surplusCents': 55800,
       });
-      final onDisk = File(
-        p.join(directory.path, 'month-2026-09.snapshot'),
-      ).readAsStringSync();
+      final onDisk = File(p.join(directory.path, 'month-2026-09.snapshot'))
+          .readAsStringSync();
       expect(onDisk, isNot(contains('surplusCents')));
     });
 
-    test('ADR-004 regravar troca o arquivo inteiro, sem deixar temporário',
-        () async {
-      final directory = tempDirectory();
-      final store = FileSnapshotStore(directory, testCipher());
+    test(
+      'ADR-004 regravar troca o arquivo inteiro, sem deixar temporário',
+      () async {
+        final directory = tempDirectory();
+        final store = FileSnapshotStore(directory, testCipher());
 
-      await store.write('s', {'lastSeq': 1});
-      await store.write('s', {'lastSeq': 2});
+        await store.write('s', {'lastSeq': 1});
+        await store.write('s', {'lastSeq': 2});
 
-      expect(await store.read('s'), {'lastSeq': 2});
-      expect(directory.listSync().map((e) => p.basename(e.path)), [
-        's.snapshot',
-      ]);
-    });
+        expect(await store.read('s'), {'lastSeq': 2});
+        expect(directory.listSync().map((e) => p.basename(e.path)), [
+          's.snapshot',
+        ]);
+      },
+    );
 
-    test('resumo que não existe, ilegível ou adulterado volta como nulo',
-        () async {
-      final directory = tempDirectory();
-      final store = FileSnapshotStore(directory, testCipher());
-      await store.write('s', {'lastSeq': 1});
+    test(
+      'resumo que não existe, ilegível ou adulterado volta como nulo',
+      () async {
+        final directory = tempDirectory();
+        final store = FileSnapshotStore(directory, testCipher());
+        await store.write('s', {'lastSeq': 1});
 
-      expect(await store.read('outro'), isNull);
+        expect(await store.read('outro'), isNull);
 
-      File(p.join(directory.path, 's.snapshot')).writeAsStringSync('{lixo');
-      expect(await store.read('s'), isNull);
-    });
+        File(p.join(directory.path, 's.snapshot')).writeAsStringSync('{lixo');
+        expect(await store.read('s'), isNull);
+      },
+    );
 
     test('um resumo não abre no lugar de outro', () async {
       final directory = tempDirectory();
       final store = FileSnapshotStore(directory, testCipher());
       await store.write('a', {'lastSeq': 1});
 
-      File(
-        p.join(directory.path, 'a.snapshot'),
-      ).copySync(p.join(directory.path, 'b.snapshot'));
+      File(p.join(directory.path, 'a.snapshot'))
+          .copySync(p.join(directory.path, 'b.snapshot'));
 
       expect(await store.read('b'), isNull);
     });
@@ -80,14 +85,18 @@ void main() {
       expect(() => DataKey.read(file.path), throwsFormatException);
     });
 
-    test('T-27 o ambiente guarda só o caminho da credencial, nunca a chave',
-        () {
-      expect(DataKey.systemdCredentialPath(const {}), isNull);
-      expect(
-        DataKey.systemdCredentialPath(const {'CREDENTIALS_DIRECTORY': '/run/c'}),
-        endsWith('cajui-data-key'),
-      );
-    });
+    test(
+      'T-27 o ambiente guarda só o caminho da credencial, nunca a chave',
+      () {
+        expect(DataKey.systemdCredentialPath(const {}), isNull);
+        expect(
+          DataKey.systemdCredentialPath(const {
+            'CREDENTIALS_DIRECTORY': '/run/c',
+          }),
+          endsWith('cajui-data-key'),
+        );
+      },
+    );
   });
 
   group('dbtool', () {
@@ -124,7 +133,14 @@ void main() {
       expect(out.toString(), contains('"description":"Compra 2"'));
 
       out.clear();
-      await run(['cat', data.path, '--key-file', keyFile, '--month', '2025-01']);
+      await run([
+        'cat',
+        data.path,
+        '--key-file',
+        keyFile,
+        '--month',
+        '2025-01',
+      ]);
       expect(out.toString(), isEmpty);
     });
 
