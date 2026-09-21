@@ -43,6 +43,7 @@ export 'src/ledger/entry.dart';
 export 'src/ledger/entry_origin.dart';
 export 'src/ledger/exceptional_spending.dart';
 export 'src/ledger/payment_line.dart';
+export 'src/ledger/payment_method.dart';
 export 'src/ledger/payment_method_kind.dart';
 export 'src/ledger/possible_duplicate.dart';
 export 'src/ledger/reversal.dart';
