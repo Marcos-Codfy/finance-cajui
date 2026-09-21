@@ -97,7 +97,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       context,
       title: 'Por onde foi pago',
       // A mesma forma duas vezes não é dividir: é uma linha só.
-      options: [...book.paymentMethods.where((method) => method != taken)],
+      options: [...book.methods.where((method) => method != taken)],
       labelOf: (method) => method.name,
       selected: second ? draft.secondMethod : draft.method,
     );
@@ -107,6 +107,30 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
           ? d.copyWith(secondMethod: picked)
           : d.copyWith(method: picked),
     );
+  }
+
+  /// Em quantas vezes, no cartão. Até doze: mais que isso é raro, e lista
+  /// comprida esconde o "à vista", que é o caso comum.
+  Future<void> _pickInstallments() async {
+    final draft = ref.read(entryFormProvider).draft;
+    final total = Money.fromCents(draft.amountCents);
+    final picked = await OptionPickerPage.open<int>(
+      context,
+      title: 'Em quantas vezes',
+      options: [for (var count = 1; count <= _maxInstallments; count++) count],
+      labelOf: (count) => _installmentLabel(count, total),
+      selected: draft.installmentCount,
+    );
+    if (picked != null) _form.edit((d) => d.copyWith(installments: picked));
+  }
+
+  static const _maxInstallments = 12;
+
+  static String _installmentLabel(int count, Money total) {
+    if (count == 1) return 'À vista';
+    if (!total.isPositive) return '${count}x';
+    final each = total.split(count).first;
+    return '${count}x de ${BrlFormatter.format(each.cents)}';
   }
 
   /// Troca o rascunho por iniciativa do app — um candidato de valor tocado,
@@ -228,6 +252,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       lineError: draft.amountCents > 0 ? fieldError : null,
       onPickMethod: ({required second}) => _pickMethod(book, second: second),
       onToggleSplit: () => _byApp(_form.toggleSplit),
+      onPickInstallments: _pickInstallments,
       onLineCents: (cents, {required second}) => _form.edit(
         (d) => second
             ? d.copyWith(secondCents: cents)

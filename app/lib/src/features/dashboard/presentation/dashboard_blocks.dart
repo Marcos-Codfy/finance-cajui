@@ -16,8 +16,20 @@ abstract final class DashboardBlocks {
     _week(overview),
     _result(overview),
     _voucher(overview),
+    if (overview.hasCards) _reserve(overview),
     _committed(overview),
   ];
+
+  /// A reserva da fatura: compra à vista no cartão já contou no dia em que
+  /// foi feita (RN-310), mas o dinheiro ainda não saiu da conta. O cartão
+  /// lembra que ele tem dono — e evita gastar duas vezes o mesmo dinheiro.
+  static Widget _reserve(MonthOverview overview) => CajuiStatCard(
+    label: 'Reserva da fatura',
+    cents: overview.statementReserve.cents,
+    caption:
+        'Já comprado à vista no cartão, e ainda a pagar. Já está contado '
+        'nos gastos: não é despesa nova.',
+  );
 
   static String _brl(int cents) => BrlFormatter.format(cents);
 

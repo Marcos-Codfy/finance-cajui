@@ -37,6 +37,10 @@ final class JsonReader {
   /// Um inteiro obrigatório.
   int integer(String field) => _read<int>(field);
 
+  /// Um inteiro opcional; ausente ou nulo devolve `null`.
+  int? optionalInteger(String field) =>
+      _json[field] == null ? null : _read<int>(field);
+
   /// Um booleano opcional; ausente vale [orElse].
   bool boolean(String field, {required bool orElse}) =>
       _json.containsKey(field) ? _read<bool>(field) : orElse;

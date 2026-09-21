@@ -62,6 +62,86 @@ void main() {
       expect(result.failureOrNull, isA<PurchaseDateInFuture>());
     });
 
+    test('RN-311 · compra parcelada viaja só com o número de parcelas, e as '
+        'parcelas são recalculadas a partir do cartão', () {
+      final card = CreditCard.create(
+        id: 'card-1',
+        name: 'Cartão',
+        closingDay: 25,
+        dueDay: 5,
+      ).valueOrNull!;
+      final stove = Entry.create(
+        id: 'stove',
+        description: 'Fogão',
+        amount: const Money.fromCents(96000),
+        occurredOn: LocalDate(2026, 9, 19),
+        category: _groceries,
+        today: _today,
+        paymentLines: const [
+          PaymentLine(
+            paymentMethodId: 'card-1',
+            kind: PaymentMethodKind.creditCard,
+            amount: Money.fromCents(96000),
+          ),
+        ],
+        installmentPlan: InstallmentPlan.forPurchase(
+          card: card,
+          purchasedOn: LocalDate(2026, 9, 19),
+          principal: const Money.fromCents(96000),
+          count: 6,
+        ),
+      ).valueOrNull!;
+
+      final json = EntryCodec.fromEntry(stove).toJson();
+      final back = EntryCodec.toEntry(
+        CreateEntryRequest.fromJson(json),
+        category: _groceries,
+        today: _today,
+        cardOf: (id) => id == 'card-1' ? card : null,
+      ).valueOrNull!;
+
+      expect(json['installments'], 6);
+      expect(json.toString(), isNot(contains('16000')));
+      expect(back.installmentPlan!.count, 6);
+      expect(
+        back.installmentPlan!.installments.first.dueMonth,
+        const BudgetMonth(2026, 10),
+      );
+      expect(back.installmentPlan!.installments.first.amount.cents, 16000);
+    });
+
+    test('pedido à vista continua sem o campo de parcelas', () {
+      expect(
+        EntryCodec.fromEntry(_split()).toJson().containsKey('installments'),
+        isFalse,
+      );
+    });
+
+    test('parcelamento sem cartão conhecido, ou com parcelas demais, é '
+        'pedido malformado', () {
+      CreateEntryRequest parceled(int count) => CreateEntryRequest.fromJson({
+        ...EntryCodec.fromEntry(_split()).toJson(),
+        'installments': count,
+      });
+
+      expect(
+        () => EntryCodec.toEntry(
+          parceled(3),
+          category: _groceries,
+          today: _today,
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => EntryCodec.toEntry(
+          parceled(EntryCodec.maxInstallments + 1),
+          category: _groceries,
+          today: _today,
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('data que não existe e tipo desconhecido são pedido malformado', () {
       expect(() => EntryCodec.parseDate('2026-02-30'), throwsFormatException);
       expect(() => EntryCodec.parseDate('12/09/2026'), throwsFormatException);

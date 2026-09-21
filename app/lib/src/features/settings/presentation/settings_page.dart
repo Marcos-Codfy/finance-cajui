@@ -1,5 +1,6 @@
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
+import 'package:cajui/src/features/cards/presentation/cards_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,13 @@ class SettingsPage extends ConsumerWidget {
           trailing: const CajuiIcon(CajuiIconData.chevronRight),
           semanticLabel: 'Plano do mês, abrir',
           onPressed: () => PlanPage.open(context),
+        ),
+        CajuiListRow(
+          title: 'Cartões de crédito',
+          subtitle: 'Por onde se paga — e a fatura de cada um',
+          trailing: const CajuiIcon(CajuiIconData.chevronRight),
+          semanticLabel: 'Cartões de crédito, abrir',
+          onPressed: () => CardsPage.open(context),
         ),
         ..._feedback(ref),
       ],

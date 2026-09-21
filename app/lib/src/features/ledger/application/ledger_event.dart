@@ -37,6 +37,30 @@ final class PlanDefined extends LedgerEvent {
   final MonthSetup setup;
 }
 
+/// Um cartão de crédito foi cadastrado, ou teve os dados alterados.
+///
+/// Cartão é **forma de pagamento**, nunca despesa (RN-301): o fato guarda por
+/// onde se paga e quando a fatura fecha e vence — nada de valor.
+final class CardDefined extends LedgerEvent {
+  /// Registra o cartão [card]. Alterar um cartão é um fato novo, com [id]
+  /// próprio: o registro guarda cada versão, e a mais recente vale.
+  const new({required super.id, required this.card});
+
+  /// O cartão, já aceito pelo domínio.
+  final CreditCard card;
+}
+
+/// A fatura de um cartão foi paga. É uma **liquidação** (RN-340): não é
+/// lançamento, não entra em bloco nenhum e não muda indicador de despesa — as
+/// compras já contaram quando foram feitas.
+final class StatementSettled extends LedgerEvent {
+  /// Registra a liquidação [settlement].
+  new(this.settlement) : super(id: 'settlement-${settlement.id}');
+
+  /// O pagamento: cartão, mês de vencimento, valor e data.
+  final Settlement settlement;
+}
+
 /// O saldo do vale foi corrigido para bater com o da operadora (RN-123).
 ///
 /// Não é renda nem despesa, e não entra em indicador: é só o app admitindo

@@ -43,10 +43,10 @@ abstract final class CaptureDraft {
     return null;
   }
 
-  /// A primeira forma cadastrada do tipo lido. Cartão de crédito ainda não
-  /// tem cadastro, então "crédito" no comprovante deixa o campo para a pessoa.
+  /// A primeira forma cadastrada do tipo lido. Sem cartão de crédito
+  /// cadastrado, "crédito" no comprovante deixa o campo para a pessoa.
   static PaymentMethod? _methodOf(LedgerBook book, PaymentMethodKind? kind) {
-    for (final method in book.paymentMethods) {
+    for (final method in book.methods) {
       if (method.kind == kind) return method;
     }
     return null;

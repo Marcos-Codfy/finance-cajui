@@ -4,7 +4,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
 /// "Por onde foi pago": uma forma de pagamento, ou duas com o valor de cada
-/// (RN-204).
+/// (RN-204) — e, no cartão de crédito, em quantas vezes.
 class PaymentSection extends StatelessWidget {
   /// Cria a seção para [draft].
   const new({
@@ -14,6 +14,7 @@ class PaymentSection extends StatelessWidget {
     required this.onPickMethod,
     required this.onToggleSplit,
     required this.onLineCents,
+    required this.onPickInstallments,
     this.lineError,
     super.key,
   });
@@ -38,6 +39,9 @@ class PaymentSection extends StatelessWidget {
   /// Um valor de linha foi digitado.
   final void Function(int cents, {required bool second}) onLineCents;
 
+  /// Pede a escolha do número de parcelas.
+  final VoidCallback onPickInstallments;
+
   /// O erro de campo a mostrar sob a linha que está zerada, se houver.
   final String? lineError;
 
@@ -45,6 +49,9 @@ class PaymentSection extends StatelessWidget {
     if (method?.tender != Tender.mealVoucher) return null;
     return 'Saldo do vale: ${BrlFormatter.format(voucherBalance.cents)}';
   }
+
+  bool get _canBeParceled =>
+      (draft.method?.kind.isCreditCard ?? false) && !draft.isSplit;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +64,7 @@ class PaymentSection extends StatelessWidget {
           helper: _helperFor(draft.method),
           onPressed: () => onPickMethod(second: false),
         ),
+        if (_canBeParceled) ..._installments(),
         if (draft.isSplit) ..._splitFields(context),
         const SizedBox(height: CajuiSpacing.sm),
         Align(
@@ -72,6 +80,29 @@ class PaymentSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Em quantas vezes, no cartão de crédito. A parcela nunca aparece sem o
+  /// **total comprometido** ao lado (RN-313): "3x de R$ 320" esconde que são
+  /// R$ 960 que já têm dono.
+  List<Widget> _installments() {
+    final count = draft.installmentCount;
+    final total = Money.fromCents(draft.amountCents);
+    final each = total.isPositive ? total.split(count).first : Money.zero;
+    return [
+      const SizedBox(height: CajuiSpacing.lg),
+      CajuiSelectField(
+        label: 'Em quantas vezes',
+        value: count == 1
+            ? 'À vista'
+            : '${count}x de ${BrlFormatter.format(each.cents)}',
+        helper: count == 1
+            ? 'Conta no mês da compra, não no da fatura'
+            : 'Total comprometido: ${BrlFormatter.format(total.cents)}. '
+                  'Cada parcela conta no mês em que a fatura vence',
+        onPressed: onPickInstallments,
+      ),
+    ];
   }
 
   List<Widget> _splitFields(BuildContext context) {

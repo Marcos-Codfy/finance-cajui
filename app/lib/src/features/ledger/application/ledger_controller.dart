@@ -38,6 +38,7 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       category: draft.category!,
       paymentLines: draft.lines,
       today: ref.read(clockProvider).today(),
+      installmentPlan: _planOf(draft, book),
     );
     final entry = result.valueOrNull;
     if (entry == null) return result;
@@ -47,6 +48,69 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     if (paid.failureOrNull case final failure?) return Err(failure);
     await _commit(book, EntryRecorded(entry));
     return result;
+  }
+
+  /// O parcelamento de [draft], quando a compra foi feita em mais de uma vez
+  /// num cartão cadastrado. As parcelas saem do domínio, a partir do ciclo
+  /// do cartão: a primeira é cobrada na fatura do ciclo da compra (RN-311).
+  InstallmentPlan? _planOf(EntryDraft draft, LedgerBook book) {
+    final card = book.cardOf(draft.method?.id ?? '');
+    if (card == null || draft.installmentCount < 2) return null;
+    return InstallmentPlan.forPurchase(
+      card: card,
+      purchasedOn: draft.occurredOn,
+      principal: Money.fromCents(draft.amountCents),
+      count: draft.installmentCount,
+    );
+  }
+
+  /// Cadastra ou altera um cartão de crédito. Dia inválido volta como falha
+  /// do domínio (`E-CARD-01`), e nada é gravado.
+  Future<Result<CreditCard>> defineCard({
+    required String name,
+    required int closingDay,
+    required int dueDay,
+    String? id,
+    Money? creditLimit,
+  }) async {
+    final book = await future;
+    final result = CreditCard.create(
+      id: id ?? 'card-${ref.read(newIdProvider)()}',
+      name: name.trim(),
+      closingDay: closingDay,
+      dueDay: dueDay,
+      creditLimit: creditLimit,
+    );
+    final card = result.valueOrNull;
+    if (card == null) return result;
+    await _commit(
+      book,
+      CardDefined(id: 'card-fact-${ref.read(newIdProvider)()}', card: card),
+    );
+    return result;
+  }
+
+  /// Registra o pagamento da fatura de [card] que vence em [dueMonth]. É uma
+  /// liquidação, não um lançamento (RN-340): as compras já contaram quando
+  /// foram feitas, e pagar a fatura não é gastar de novo.
+  Future<void> settleStatement({
+    required CreditCard card,
+    required BudgetMonth dueMonth,
+    required Money amount,
+  }) async {
+    final book = await future;
+    await _commit(
+      book,
+      StatementSettled(
+        Settlement(
+          id: ref.read(newIdProvider)(),
+          cardId: card.id,
+          dueMonth: dueMonth,
+          amount: amount,
+          paidOn: ref.read(clockProvider).today(),
+        ),
+      ),
+    );
   }
 
   /// Corrige o saldo do vale para [actual], o que a operadora mostra

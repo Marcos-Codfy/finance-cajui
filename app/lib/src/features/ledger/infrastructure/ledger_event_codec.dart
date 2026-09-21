@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/infrastructure/month_setup_codec.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
+import 'package:cajui/src/features/ledger/infrastructure/card_codec.dart';
 import 'package:domain/domain.dart';
 
 /// O tipo e o conteúdo com que um fato do livro é gravado.
@@ -20,6 +21,12 @@ final class LedgerEventCodec {
 
   /// O tipo do fato "plano do mês cadastrado".
   static const planDefined = 'plan.defined';
+
+  /// O tipo do fato "cartão cadastrado".
+  static const cardDefined = 'card.defined';
+
+  /// O tipo do fato "fatura paga".
+  static const statementSettled = 'statement.settled';
 
   /// O tipo do fato "saldo do vale corrigido".
   static const voucherAdjusted = 'voucher.adjusted';
@@ -41,6 +48,14 @@ final class LedgerEventCodec {
       type: planDefined,
       payload: MonthSetupCodec.encode(setup),
     ),
+    CardDefined(:final card) => (
+      type: cardDefined,
+      payload: CardCodec.encodeCard(card),
+    ),
+    StatementSettled(:final settlement) => (
+      type: statementSettled,
+      payload: CardCodec.encodeSettlement(settlement),
+    ),
     VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => (
       type: voucherAdjusted,
       payload: {
@@ -54,13 +69,23 @@ final class LedgerEventCodec {
   /// O fato gravado com [id], [type] e [payload]; `null` para um tipo que
   /// esta versão do app não conhece — versão mais nova pode ter gravado
   /// algo a mais, e isso não impede de abrir o resto.
-  LedgerEvent? decode(String id, String type, Map<String, Object?> payload) {
+  ///
+  /// [cardOf] acha um cartão **já lido** do registro: compra parcelada
+  /// recalcula as parcelas a partir dele.
+  LedgerEvent? decode(
+    String id,
+    String type,
+    Map<String, Object?> payload, {
+    CreditCard? Function(String id)? cardOf,
+  }) {
     return switch (type) {
-      entryCreated => _entry(payload),
+      entryCreated => _entry(payload, cardOf),
       planDefined => PlanDefined(
         id: id,
         setup: MonthSetupCodec.decode(payload),
       ),
+      cardDefined => CardDefined(id: id, card: CardCodec.decodeCard(payload)),
+      statementSettled => StatementSettled(CardCodec.decodeSettlement(payload)),
       voucherAdjusted => VoucherBalanceAdjusted(
         id: id,
         adjustment: Money.fromCents(payload['adjustmentCents']! as int),
@@ -71,12 +96,16 @@ final class LedgerEventCodec {
     };
   }
 
-  LedgerEvent _entry(Map<String, Object?> payload) {
+  LedgerEvent _entry(
+    Map<String, Object?> payload,
+    CreditCard? Function(String id)? cardOf,
+  ) {
     final request = CreateEntryRequest.fromJson(payload);
     final entry = EntryCodec.toEntry(
       request,
       category: categoryOf(request.categoryId),
       today: _endOfTime,
+      cardOf: cardOf,
     );
     return EntryRecorded(entry.valueOrNull!);
   }

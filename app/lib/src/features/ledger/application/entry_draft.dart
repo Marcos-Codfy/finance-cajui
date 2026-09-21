@@ -18,6 +18,7 @@ final class EntryDraft {
     this.firstCents = 0,
     this.secondCents = 0,
     this.isSplit = false,
+    this.installments = 1,
     this.captureId,
   });
 
@@ -51,6 +52,18 @@ final class EntryDraft {
   /// no comprovante, e se a soma não fechar é o domínio que recusa (RN-203),
   /// dizendo quanto falta.
   final int secondCents;
+
+  /// Em quantas vezes a compra foi feita no cartão de crédito. Uma vez é à
+  /// vista. Só vale com uma forma de pagamento só, e ela sendo cartão de
+  /// crédito: [installmentCount] é o que de fato vai para o domínio.
+  final int installments;
+
+  /// As parcelas que contam: mais de uma, só em compra paga inteira num
+  /// cartão de crédito. Em qualquer outro caso a compra é à vista.
+  int get installmentCount {
+    final onCard = method?.kind.isCreditCard ?? false;
+    return onCard && !isSplit && installments > 1 ? installments : 1;
+  }
 
   /// O identificador da captura de onde o rascunho nasceu; `null` quando foi
   /// digitado à mão. É a chave de idempotência do lançamento (RN-781): o
@@ -99,8 +112,10 @@ final class EntryDraft {
     int? firstCents,
     int? secondCents,
     bool? isSplit,
+    int? installments,
   }) {
     return EntryDraft(
+      installments: installments ?? this.installments,
       amountCents: amountCents ?? this.amountCents,
       description: description ?? this.description,
       category: category ?? this.category,
@@ -125,6 +140,7 @@ final class EntryDraft {
     firstCents: secondCents,
     secondCents: firstCents,
     isSplit: isSplit,
+    installments: installments,
     captureId: captureId,
   );
 
@@ -141,6 +157,7 @@ final class EntryDraft {
       firstCents: method ? 0 : firstCents,
       secondCents: method ? 0 : secondCents,
       isSplit: !method && isSplit,
+      installments: method ? 1 : installments,
       captureId: captureId,
     );
   }
