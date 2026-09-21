@@ -1,3 +1,4 @@
+import 'package:design_system/src/components/field/cajui_field_label.dart';
 import 'package:design_system/src/icons/cajui_icon.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
@@ -54,20 +55,13 @@ class CajuiFieldFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
-    final labelColor = enabled
-        ? theme.colors.text.muted
-        : theme.colors.text.disabled;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        ExcludeSemantics(
-          child: Text(
-            label,
-            style: theme.typography.label.copyWith(color: labelColor),
-          ),
-        ),
-        const SizedBox(height: CajuiSpacing.xs + CajuiSpacing.xxs),
+        // O campo já se anuncia com este nome: repetido, soaria duplicado.
+        CajuiFieldLabel(label, enabled: enabled, excludeSemantics: true),
+        CajuiFieldLabel.gap,
         _box(theme.colors),
         _support(context),
       ],

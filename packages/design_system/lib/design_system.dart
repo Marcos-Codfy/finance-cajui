@@ -31,6 +31,7 @@ export 'src/components/empty/cajui_empty_state.dart';
 export 'src/components/feedback/cajui_loading_dots.dart';
 export 'src/components/field/cajui_amount_field.dart';
 export 'src/components/field/cajui_field_frame.dart';
+export 'src/components/field/cajui_field_label.dart';
 export 'src/components/field/cajui_option_list.dart';
 export 'src/components/field/cajui_select_field.dart';
 export 'src/components/field/cajui_text_field.dart';
