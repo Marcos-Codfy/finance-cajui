@@ -43,6 +43,7 @@ export 'src/components/notice/cajui_notice_action.dart';
 export 'src/components/notice/cajui_notice_intent.dart';
 export 'src/components/screen/cajui_screen.dart';
 export 'src/components/skeleton/cajui_skeleton.dart';
+export 'src/components/stat/cajui_stat_card.dart';
 export 'src/components/switch/cajui_switch.dart';
 export 'src/feedback/cajui_feedback.dart';
 export 'src/feedback/cajui_feedback_scope.dart';
