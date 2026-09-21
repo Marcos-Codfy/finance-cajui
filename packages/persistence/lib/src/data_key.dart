@@ -39,6 +39,8 @@ abstract final class DataKey {
   /// Gera uma chave nova com o gerador criptográfico do sistema, em base64.
   static String generate() {
     final random = Random.secure();
-    return base64Encode([for (var i = 0; i < _length; i++) random.nextInt(256)]);
+    return base64Encode([
+      for (var i = 0; i < _length; i++) random.nextInt(256),
+    ]);
   }
 }

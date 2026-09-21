@@ -18,33 +18,38 @@ Matcher _brokenAt(int seq) =>
 
 void main() {
   group('gravar e reabrir', () {
-    test('o que foi gravado volta igual, na ordem, depois de reabrir', () async {
-      final directory = tempDirectory();
-      await appendEntries(await openStore(directory), 3);
+    test(
+      'o que foi gravado volta igual, na ordem, depois de reabrir',
+      () async {
+        final directory = tempDirectory();
+        await appendEntries(await openStore(directory), 3);
 
-      final reopened = await openStore(directory);
+        final reopened = await openStore(directory);
 
-      expect(reopened.events.map((e) => e.seq), [1, 2, 3]);
-      expect(reopened.events.last.payload['amountCents'], 1003);
-      expect(reopened.events.last.at, DateTime.utc(2026, 9, 12, 15, 30));
-    });
+        expect(reopened.events.map((e) => e.seq), [1, 2, 3]);
+        expect(reopened.events.last.payload['amountCents'], 1003);
+        expect(reopened.events.last.at, DateTime.utc(2026, 9, 12, 15, 30));
+      },
+    );
 
-    test('ADR-004 um arquivo por ano, com a cadeia atravessando a virada',
-        () async {
-      final directory = tempDirectory();
-      var year = 2026;
-      final store = await FileEventStore.open(
-        directory,
-        testCipher(),
-        now: () => DateTime.utc(year, 12, 31),
-      );
-      await appendEntries(store, 2);
-      year = 2027;
-      await store.append(id: 'novo-ano', type: 'entry.created', payload: {});
+    test(
+      'ADR-004 um arquivo por ano, com a cadeia atravessando a virada',
+      () async {
+        final directory = tempDirectory();
+        var year = 2026;
+        final store = await FileEventStore.open(
+          directory,
+          testCipher(),
+          now: () => DateTime.utc(year, 12, 31),
+        );
+        await appendEntries(store, 2);
+        year = 2027;
+        await store.append(id: 'novo-ano', type: 'entry.created', payload: {});
 
-      expect(LogReader.filesIn(directory), hasLength(2));
-      expect((await openStore(directory)).events, hasLength(3));
-    });
+        expect(LogReader.filesIn(directory), hasLength(2));
+        expect((await openStore(directory)).events, hasLength(3));
+      },
+    );
 
     test('T-33 nada legível vai para o disco', () async {
       final directory = tempDirectory();
@@ -57,16 +62,18 @@ void main() {
       expect(onDisk, contains('"seq":1'));
     });
 
-    test('ADR-005 a mesma mensagem cifrada duas vezes dá linhas diferentes',
-        () async {
-      final cipher = testCipher();
+    test(
+      'ADR-005 a mesma mensagem cifrada duas vezes dá linhas diferentes',
+      () async {
+        final cipher = testCipher();
 
-      final first = await cipher.seal([1, 2, 3], associated: [9]);
-      final second = await cipher.seal([1, 2, 3], associated: [9]);
+        final first = await cipher.seal([1, 2, 3], associated: [9]);
+        final second = await cipher.seal([1, 2, 3], associated: [9]);
 
-      expect(first.nonce, isNot(second.nonce));
-      expect(first.sealed, isNot(second.sealed));
-    });
+        expect(first.nonce, isNot(second.nonce));
+        expect(first.sealed, isNot(second.sealed));
+      },
+    );
 
     test('ADR-012 o mesmo id gravado duas vezes vira um evento só', () async {
       final directory = tempDirectory();
@@ -90,7 +97,10 @@ void main() {
       ]);
 
       final reopened = await openStore(directory);
-      expect(reopened.events.map((e) => e.seq), List.generate(20, (i) => i + 1));
+      expect(
+        reopened.events.map((e) => e.seq),
+        List.generate(20, (i) => i + 1),
+      );
     });
   });
 
@@ -114,18 +124,20 @@ void main() {
       expect(() => LogReader.scan(directory), _brokenAt(2));
     });
 
-    test('conteúdo alterado é detectado ao abrir, mesmo com a cadeia refeita',
-        () async {
-      // Quem tem acesso ao disco pode recalcular os hashes; o que não pode é
-      // produzir um conteúdo cifrado válido sem a chave.
-      _rewrite(directory, (lines) {
-        final forged = jsonDecode(lines[3]) as Map<String, Object?>;
-        forged['c'] = (jsonDecode(lines[2]) as Map<String, Object?>)['c'];
-        return [...lines.take(3), jsonEncode(forged)];
-      });
+    test(
+      'conteúdo alterado é detectado ao abrir, mesmo com a cadeia refeita',
+      () async {
+        // Quem tem acesso ao disco pode recalcular os hashes; o que não pode é
+        // produzir um conteúdo cifrado válido sem a chave.
+        _rewrite(directory, (lines) {
+          final forged = jsonDecode(lines[3]) as Map<String, Object?>;
+          forged['c'] = (jsonDecode(lines[2]) as Map<String, Object?>)['c'];
+          return [...lines.take(3), jsonEncode(forged)];
+        });
 
-      await expectLater(openStore(directory), _brokenAt(4));
-    });
+        await expectLater(openStore(directory), _brokenAt(4));
+      },
+    );
 
     test('registro truncado no meio da cadeia não passa despercebido', () {
       // Cortar as últimas linhas inteiras deixa uma cadeia válida, porém mais
@@ -143,20 +155,22 @@ void main() {
   });
 
   group('T-32 queda no meio de uma escrita', () {
-    test('a linha pela metade é descartada, e a cadeia continua íntegra',
-        () async {
-      final directory = tempDirectory();
-      await appendEntries(await openStore(directory), 2);
-      logFile(directory).writeAsStringSync(
-        '{"v":1,"seq":3,"prev":"abc","n":"AAA',
-        mode: FileMode.append,
-      );
+    test(
+      'a linha pela metade é descartada, e a cadeia continua íntegra',
+      () async {
+        final directory = tempDirectory();
+        await appendEntries(await openStore(directory), 2);
+        logFile(directory).writeAsStringSync(
+          '{"v":1,"seq":3,"prev":"abc","n":"AAA',
+          mode: FileMode.append,
+        );
 
-      final reopened = await openStore(directory);
-      await reopened.append(id: 'depois', type: 't', payload: {});
+        final reopened = await openStore(directory);
+        await reopened.append(id: 'depois', type: 't', payload: {});
 
-      expect(reopened.events.map((e) => e.seq), [1, 2, 3]);
-      expect((await openStore(directory)).events.last.id, 'depois');
-    });
+        expect(reopened.events.map((e) => e.seq), [1, 2, 3]);
+        expect((await openStore(directory)).events.last.id, 'depois');
+      },
+    );
   });
 }

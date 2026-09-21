@@ -51,7 +51,8 @@ final class FileSnapshotStore implements SnapshotStore {
     final file = _fileOf(name);
     if (!file.existsSync()) return null;
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, Object?>;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, Object?>;
       final opened = await _cipher.open(
         nonce: base64Decode(json['n']! as String),
         sealed: base64Decode(json['c']! as String),
