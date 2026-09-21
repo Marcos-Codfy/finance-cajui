@@ -1,6 +1,6 @@
 # ADR-004 — Persistência em registro de eventos JSON, com porta para SQLite
 
-- **Estado:** proposta · aguarda o checkpoint da Fase 4
+- **Estado:** aceita em 2026-09-20, no checkpoint da Fase 4
 - **Data:** 2026-09-20
 - **Responde:** BL-015 (em conjunto com a [ADR-005](ADR-005-criptografia-em-repouso-e-dbtool.md))
 

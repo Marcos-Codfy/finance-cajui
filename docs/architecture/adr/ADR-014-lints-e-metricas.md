@@ -1,6 +1,6 @@
 # ADR-014 — Análise estática, métricas e travas de commit
 
-- **Estado:** proposta · aguarda o checkpoint da Fase 4 · parte já em vigor desde a Fase 3
+- **Estado:** aceita em 2026-09-20, no checkpoint da Fase 4 · parte já em vigor desde a Fase 3
 - **Data:** 2026-09-20
 
 ## Contexto

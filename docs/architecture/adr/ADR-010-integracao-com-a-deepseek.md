@@ -1,8 +1,9 @@
 # ADR-010 — Integração com a DeepSeek
 
-- **Estado:** proposta · aguarda o checkpoint da Fase 4
+- **Estado:** aceita em 2026-09-20, no checkpoint da Fase 4
 - **Data:** 2026-09-20
-- **Preço:** nenhum assumido. A leitura da página oficial é o BL-001, na Fase 8
+- **Preço:** lido na página oficial em 2026-09-20 (BL-001) — modelo `deepseek-flash`, por milhão de tokens: entrada US$ 0,15 fora do pico e US$ 0,30 no pico (US$ 0,003 e US$ 0,006 com cache), saída US$ 0,60 e US$ 1,20. A estimativa com tokens medidos é da Fase 8
+- **Modo:** o modelo responde em modo "pensando" por padrão. A classificação usa o modo **sem raciocínio estendido**: a tarefa é escolher numa lista, e o modo padrão custaria mais tokens de saída e mais tempo contra o teto de 8 s
 
 ## Contexto
 

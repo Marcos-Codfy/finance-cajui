@@ -1,6 +1,6 @@
 # ADR-009 — Fixação de certificado no Android
 
-- **Estado:** proposta · aguarda o checkpoint da Fase 4
+- **Estado:** aceita em 2026-09-20, no checkpoint da Fase 4
 - **Data:** 2026-09-20
 
 ## Contexto
