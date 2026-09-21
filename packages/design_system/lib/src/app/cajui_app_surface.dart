@@ -30,17 +30,23 @@ class CajuiAppSurface extends StatelessWidget {
   /// O app.
   final Widget child;
 
-  /// O tema que segue o aparelho: claro ou escuro conforme o sistema, e com
-  /// menos movimento quando a pessoa pediu isso nas configurações dele.
+  /// O tema em vigor, com menos movimento quando a pessoa pediu isso nas
+  /// configurações do aparelho.
+  ///
+  /// [dark] é a escolha de quem usa: `true` força o escuro, `false` o claro.
+  /// Sem escolha, segue o aparelho — é o padrão de quem incorpora a superfície
+  /// sem oferecer o ajuste.
   ///
   /// [framesAreDropping] vem de quem mede os quadros no aparelho: quando ele
   /// não dá conta, o movimento baixa um nível em vez de travar.
   static CajuiThemeData themeOf(
     BuildContext context, {
+    bool? dark,
     bool framesAreDropping = false,
   }) {
-    final dark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-    final theme = dark ? CajuiThemeData.dark() : CajuiThemeData.light();
+    final isDark =
+        dark ?? MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    final theme = isDark ? CajuiThemeData.dark() : CajuiThemeData.light();
     return theme.withMotionLevel(
       MotionLevelResolver.resolve(
         preferred: MotionLevel.full,
