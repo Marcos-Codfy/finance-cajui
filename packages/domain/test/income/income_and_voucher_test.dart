@@ -25,7 +25,7 @@ const _voucher = IncomeSource(
 );
 const List<IncomeSource> _sources = [_salary, _second, _voucher];
 
-IncomeReceipt _receipt(String? source, int cents, CalendarDay day) =>
+IncomeReceipt _receipt(String? source, int cents, LocalDate day) =>
     IncomeReceipt(
       id: 'r-$cents',
       sourceId: source,
@@ -95,7 +95,7 @@ void main() {
     });
 
     test('RN-131 o recebido substitui o esperado só naquele mês', () {
-      final receipts = [_receipt('salary', 231000, CalendarDay(2026, 9, 5))];
+      final receipts = [_receipt('salary', 231000, LocalDate(2026, 9, 5))];
 
       final september = MonthIncome.of(
         _september,
@@ -113,7 +113,7 @@ void main() {
     });
 
     test('RN-133 entrada avulsa conta no mês e não se projeta', () {
-      final receipts = [_receipt(null, 15000, CalendarDay(2026, 9, 18))];
+      final receipts = [_receipt(null, 15000, LocalDate(2026, 9, 18))];
 
       final september = MonthIncome.of(
         _september,

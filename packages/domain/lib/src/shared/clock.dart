@@ -1,4 +1,4 @@
-import 'package:domain/src/calendar/calendar_day.dart';
+import 'package:domain/src/calendar/local_date.dart';
 
 /// De onde o domínio sabe que dia é hoje.
 ///
@@ -8,5 +8,5 @@ import 'package:domain/src/calendar/calendar_day.dart';
 /// por causa do fuso de cada um.
 abstract interface class Clock {
   /// O dia de hoje, no fuso de quem usa o app.
-  CalendarDay today();
+  LocalDate today();
 }

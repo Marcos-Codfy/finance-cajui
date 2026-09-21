@@ -1,4 +1,4 @@
-import 'package:domain/src/calendar/calendar_day.dart';
+import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:domain/src/money/tender.dart';
 import 'package:meta/meta.dart';
@@ -33,7 +33,7 @@ final class IncomeReceipt {
   final Money amount;
 
   /// O dia em que entrou; define o mês de competência.
-  final CalendarDay receivedOn;
+  final LocalDate receivedOn;
 
   /// É uma entrada avulsa, sem fonte.
   bool get isOneOff => sourceId == null;

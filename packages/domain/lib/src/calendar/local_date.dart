@@ -7,7 +7,7 @@ import 'package:meta/meta.dart';
 /// convidaria o defeito clássico: o lançamento das 23h30 que cai no dia
 /// seguinte — e às vezes no mês seguinte — quando o fuso muda.
 @immutable
-final class CalendarDay implements Comparable<CalendarDay> {
+final class LocalDate implements Comparable<LocalDate> {
   /// Cria o dia. Data que não existe (30 de fevereiro) é erro de programa.
   new(this.year, this.month, this.day)
     : assert(
@@ -17,7 +17,7 @@ final class CalendarDay implements Comparable<CalendarDay> {
 
   /// O dia do calendário de um instante, no fuso em que ele já está.
   factory fromDateTime(DateTime moment) =>
-      CalendarDay(moment.year, moment.month, moment.day);
+      LocalDate(moment.year, moment.month, moment.day);
 
   /// O ano, com quatro dígitos.
   final int year;
@@ -37,24 +37,24 @@ final class CalendarDay implements Comparable<CalendarDay> {
   int get weekday => _utc.weekday;
 
   /// Este dia mais [days] dias; negativo volta no tempo.
-  CalendarDay addDays(int days) =>
-      CalendarDay.fromDateTime(_utc.add(Duration(days: days)));
+  LocalDate addDays(int days) =>
+      LocalDate.fromDateTime(_utc.add(Duration(days: days)));
 
   /// Quantos dias vão deste dia até [other]. Negativo se [other] vem antes.
-  int daysUntil(CalendarDay other) => other._utc.difference(_utc).inDays;
+  int daysUntil(LocalDate other) => other._utc.difference(_utc).inDays;
 
   /// Vem antes de [other].
-  bool isBefore(CalendarDay other) => compareTo(other) < 0;
+  bool isBefore(LocalDate other) => compareTo(other) < 0;
 
   /// Vem depois de [other].
-  bool isAfter(CalendarDay other) => compareTo(other) > 0;
+  bool isAfter(LocalDate other) => compareTo(other) > 0;
 
   @override
-  int compareTo(CalendarDay other) => _utc.compareTo(other._utc);
+  int compareTo(LocalDate other) => _utc.compareTo(other._utc);
 
   @override
   bool operator ==(Object other) =>
-      other is CalendarDay &&
+      other is LocalDate &&
       other.year == year &&
       other.month == month &&
       other.day == day;

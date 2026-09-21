@@ -1,4 +1,4 @@
-import 'package:domain/src/calendar/calendar_day.dart';
+import 'package:domain/src/calendar/local_date.dart';
 import 'package:meta/meta.dart';
 
 /// O mês de competência: a unidade em que o Cajui planeja e fecha as contas.
@@ -33,10 +33,10 @@ final class BudgetMonth implements Comparable<BudgetMonth> {
   int monthsUntil(BudgetMonth other) => other._index - _index;
 
   /// O primeiro dia do mês.
-  CalendarDay get firstDay => CalendarDay(year, month, 1);
+  LocalDate get firstDay => LocalDate(year, month, 1);
 
   /// O último dia do mês.
-  CalendarDay get lastDay => next.firstDay.addDays(-1);
+  LocalDate get lastDay => next.firstDay.addDays(-1);
 
   /// Quantos dias o mês tem.
   int get length => lastDay.day;
@@ -45,13 +45,13 @@ final class BudgetMonth implements Comparable<BudgetMonth> {
   ///
   /// É a regra de quem tem vencimento no dia 31: em fevereiro, vence no
   /// último dia do mês.
-  CalendarDay dayClamped(int day) {
+  LocalDate dayClamped(int day) {
     final last = length;
-    return CalendarDay(year, month, day > last ? last : day);
+    return LocalDate(year, month, day > last ? last : day);
   }
 
   /// O dia [day] pertence a este mês.
-  bool contains(CalendarDay day) => day.year == year && day.month == month;
+  bool contains(LocalDate day) => day.year == year && day.month == month;
 
   /// Vem antes de [other].
   bool isBefore(BudgetMonth other) => _index < other._index;
