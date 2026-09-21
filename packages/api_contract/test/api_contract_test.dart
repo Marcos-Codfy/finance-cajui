@@ -88,17 +88,22 @@ void main() {
       expect(() => CreateEntryRequest.fromJson(json), throwsFormatException);
     });
 
-    test('RNF-SEC-09 tipo errado, campo faltando e texto enorme são recusados',
-        () {
-      final wrongType = _entryJson()..['amountCents'] = '8600';
-      final missing = _entryJson()..remove('categoryId');
-      final huge = _entryJson()..['description'] = 'x' * 201;
-      final noLines = _entryJson()..['paymentLines'] = <Object?>[];
+    test(
+      'RNF-SEC-09 tipo errado, campo faltando e texto enorme são recusados',
+      () {
+        final wrongType = _entryJson()..['amountCents'] = '8600';
+        final missing = _entryJson()..remove('categoryId');
+        final huge = _entryJson()..['description'] = 'x' * 201;
+        final noLines = _entryJson()..['paymentLines'] = <Object?>[];
 
-      for (final json in [wrongType, missing, huge, noLines]) {
-        expect(() => CreateEntryRequest.fromJson(json), throwsFormatException);
-      }
-    });
+        for (final json in [wrongType, missing, huge, noLines]) {
+          expect(
+            () => CreateEntryRequest.fromJson(json),
+            throwsFormatException,
+          );
+        }
+      },
+    );
 
     test('o que não é objeto é recusado', () {
       expect(() => CreateEntryRequest.fromJson('texto'), throwsFormatException);

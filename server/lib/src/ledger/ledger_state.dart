@@ -43,7 +43,7 @@ final class LedgerState {
   static Category categoryFrom(Map<String, Object?> json) => Category(
     id: json['id']! as String,
     name: json['name']! as String,
-    block: _named(Block.values, json['block']! as String),
+    block: EntryCodec.named(Block.values, json['block']! as String),
     groupId: json['groupId']! as String,
     voucherEligible: json['voucherEligible'] as bool? ?? false,
   );
@@ -62,42 +62,14 @@ final class LedgerState {
     CreateEntryRequest request, {
     required LocalDate today,
   }) {
-    return Entry.create(
-      id: request.id,
-      description: request.description,
-      amount: Money.fromCents(request.amountCents),
-      occurredOn: parseDate(request.occurredOn),
+    return EntryCodec.toEntry(
+      request,
       category: _categories[request.categoryId]!,
       today: today,
-      isExceptional: request.isExceptional,
-      paymentLines: [
-        for (final line in request.paymentLines)
-          PaymentLine(
-            paymentMethodId: line.paymentMethodId,
-            kind: _named(PaymentMethodKind.values, line.kind),
-            amount: Money.fromCents(line.amountCents),
-          ),
-      ],
     );
   }
 
-  /// Uma data `AAAA-MM-DD` que existe no calendário. `DateTime.parse` aceita
-  /// "30 de fevereiro" e o transforma em março; aqui isso é pedido malformado.
-  static LocalDate parseDate(String text) {
-    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(text);
-    if (match == null) throw FormatException('data: $text');
-    final [year, month, day] = [
-      for (var i = 1; i <= 3; i++) int.parse(match.group(i)!),
-    ];
-    final real = DateTime.utc(year, month, day);
-    if (real.month != month || real.day != day) {
-      throw FormatException('data inexistente: $text');
-    }
-    return LocalDate(year, month, day);
-  }
-
-  /// O valor de [values] chamado [name]; nome desconhecido é pedido
-  /// malformado (`E-REQ-01`), não erro do servidor.
-  static T _named<T extends Enum>(List<T> values, String name) =>
-      values.asNameMap()[name] ?? (throw FormatException('valor: $name'));
+  /// A mesma leitura de data do contrato; fica aqui para as rotas que
+  /// recebem data fora de um lançamento.
+  static LocalDate parseDate(String text) => EntryCodec.parseDate(text);
 }

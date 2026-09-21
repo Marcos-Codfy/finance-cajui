@@ -123,7 +123,10 @@ final class AiReceiptClassifier implements ReceiptClassifier {
         source: FieldSource.ai,
       );
     }
-    return ProposedField.undecided([read, fromAi], source: FieldSource.fixedRule);
+    return ProposedField.undecided([
+      read,
+      fromAi,
+    ], source: FieldSource.fixedRule);
   }
 
   /// Divergência sobre o tipo do documento vira pergunta: nenhum caminho
@@ -135,6 +138,9 @@ final class AiReceiptClassifier implements ReceiptClassifier {
   ) {
     final read = local.value!;
     if (fromAi == null || fromAi == read) return local;
-    return ProposedField.undecided([read, fromAi], source: FieldSource.fixedRule);
+    return ProposedField.undecided([
+      read,
+      fromAi,
+    ], source: FieldSource.fixedRule);
   }
 }
