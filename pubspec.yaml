@@ -8,6 +8,7 @@ environment:
 # Um único pubspec.lock na raiz: app, servidor e pacotes resolvem as mesmas
 # versões, que é o que permite compartilhar o domínio sem surpresa.
 workspace:
+  - packages/domain
   - packages/design_system
   - packages/design_system/gallery
   - tool/code_metrics

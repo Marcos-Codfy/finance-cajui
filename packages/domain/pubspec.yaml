@@ -1,0 +1,16 @@
+name: domain
+description: As regras do Cajui, em Dart puro. Roda igual no aparelho e no servidor - não importa Flutter, dart:io nem pacote com efeito colateral.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+resolution: workspace
+
+dependencies:
+  meta: ^1.16.0
+
+dev_dependencies:
+  test: ^1.31.0
+  very_good_analysis: ^11.0.0

@@ -108,10 +108,11 @@ class FileChecker {
     CompilationUnit unit,
     LineInfo lines,
   ) {
+    final sealed = _sealedNames(unit);
     final public = [
       for (final declaration in unit.declarations)
         if (_typeName(declaration) case final name? when !name.startsWith('_'))
-          declaration,
+          if (!_isSealedCase(declaration, sealed)) declaration,
     ];
     if (public.length <= limits.maxPublicTypes) return const [];
     final extra = public[limits.maxPublicTypes];
@@ -125,6 +126,25 @@ class FileChecker {
             '${limits.maxPublicTypes}',
       ),
     ];
+  }
+
+  /// Os tipos selados declarados no arquivo.
+  Set<String> _sealedNames(CompilationUnit unit) => {
+    for (final declaration in unit.declarations)
+      if (declaration is ClassDeclaration && declaration.sealedKeyword != null)
+        declaration.namePart.typeName.lexeme,
+  };
+
+  /// Um caso de hierarquia selada não conta como tipo à parte: o Dart obriga
+  /// os casos a morar na biblioteca do tipo selado, e a família inteira é um
+  /// conceito só — `Result` com `Ok` e `Err`, `Failure` com as suas falhas.
+  bool _isSealedCase(CompilationUnitMember declaration, Set<String> sealed) {
+    if (declaration is! ClassDeclaration) return false;
+    final parents = [
+      ?declaration.extendsClause?.superclass,
+      ...?declaration.implementsClause?.interfaces,
+    ];
+    return parents.any((parent) => sealed.contains(parent.name.lexeme));
   }
 
   /// O nome do tipo declarado, ou nulo quando a declaração não é um tipo

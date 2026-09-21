@@ -99,6 +99,17 @@ void f(int x) {
       expect(_rules('class A {}\nenum B { x }\n'), ['public-types']);
     });
 
+    test('os casos de uma hierarquia selada contam como um tipo só', () {
+      const family = '''
+sealed class Result {}
+final class Ok extends Result {}
+final class Err implements Result {}
+''';
+
+      expect(_rules(family), isEmpty);
+      expect(_rules('$family\nclass Other {}\n'), ['public-types']);
+    });
+
     test('typedef e extensão não contam como tipo', () {
       const content = 'class A {}\ntypedef F = void Function();\n'
           'extension on A {}\n';
