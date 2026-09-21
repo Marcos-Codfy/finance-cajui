@@ -88,7 +88,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return CajuiPressable(
       onPressed: onPressed,
-      toggled: selected,
+      selected: selected,
       radius: _radius,
       semanticLabel: destination.label,
       builder: _surface,

@@ -47,7 +47,9 @@ class CajuiOptionList<T> extends StatelessWidget {
     final isSelected = option == selected;
     return CajuiPressable(
       onPressed: () => onSelected(option),
-      toggled: isSelected,
+      // Escolhido entre os irmãos, e não "ligado": o leitor de tela anuncia
+      // um item de lista selecionado, não uma chave.
+      selected: isSelected,
       radius: const BorderRadius.all(CajuiRadius.md),
       semanticLabel: labelOf(option),
       builder: (context, states) => _surface(

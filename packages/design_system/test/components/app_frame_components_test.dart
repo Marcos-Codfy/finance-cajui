@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,10 +52,10 @@ void main() {
       final current = tester.getSemantics(find.bySemanticsLabel('Lançamentos'));
       final other = tester.getSemantics(find.bySemanticsLabel('Painel'));
 
-      expect(
-        current.flagsCollection.isToggled,
-        isNot(other.flagsCollection.isToggled),
-      );
+      // Destino é "selecionado", não "ligado": ele não desliga sozinho.
+      expect(current.flagsCollection.isSelected, Tristate.isTrue);
+      expect(other.flagsCollection.isSelected, Tristate.isFalse);
+      expect(current.flagsCollection.isToggled, Tristate.none);
       handle.dispose();
     });
 
