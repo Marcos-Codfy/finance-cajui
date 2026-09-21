@@ -98,3 +98,63 @@ final class VoucherBalanceAdjusted extends LedgerEvent {
   /// Por que o saldo foi corrigido, nas palavras de quem corrigiu.
   final String reason;
 }
+
+/// Um lançamento foi corrigido (RN-208).
+///
+/// O fato carrega o lançamento **como ele passa a valer**, com o mesmo
+/// identificador do original. O original continua no registro: corrigir é
+/// acrescentar, nunca reescrever — e dá para saber o que mudou, quando e em
+/// quê.
+final class EntryCorrected extends LedgerEvent {
+  /// Registra que [entry] passa a valer no lugar da versão anterior.
+  const new({
+    required super.id,
+    required this.entry,
+    required this.on,
+    required this.reason,
+  });
+
+  /// O lançamento corrigido, já aceito pelas regras do domínio.
+  final Entry entry;
+
+  /// O dia da correção.
+  final LocalDate on;
+
+  /// O que mudou: "categoria", "valor e data".
+  final String reason;
+}
+
+/// Um lançamento foi cancelado (RN-208).
+///
+/// Não existe apagar: o lançamento sai de toda visão e de toda conta, mas o
+/// fato original fica no registro cifrado (RN-995).
+final class EntryCancelled extends LedgerEvent {
+  /// Registra o cancelamento do lançamento [entryId].
+  const new({
+    required super.id,
+    required this.entryId,
+    required this.on,
+    required this.reason,
+  });
+
+  /// O lançamento cancelado.
+  final String entryId;
+
+  /// O dia do cancelamento.
+  final LocalDate on;
+
+  /// Por que foi cancelado, nas palavras que a tela ofereceu.
+  final String reason;
+}
+
+/// O dinheiro de uma compra voltou, inteiro ou em parte (RN-209).
+///
+/// O estorno **não altera a compra**: é um registro próprio, que conta no mês
+/// em que o dinheiro voltou e volta pela mesma forma de pagamento (RN-211).
+final class EntryReversed extends LedgerEvent {
+  /// Registra o estorno [reversal].
+  new(this.reversal) : super(id: 'reversal-${reversal.id}');
+
+  /// O estorno, já aceito pelo domínio.
+  final Reversal reversal;
+}

@@ -20,7 +20,32 @@ final class EntryDraft {
     this.isSplit = false,
     this.installments = 1,
     this.captureId,
+    this.correctionOf,
   });
+
+  /// O rascunho que abre a correção de [entry]: tudo como está gravado, para
+  /// a pessoa mexer só no que está errado (RN-208).
+  factory correcting(
+    Entry entry, {
+    required Category category,
+    required PaymentMethod Function(String id) methodOf,
+  }) {
+    final lines = entry.paymentLines;
+    final isSplit = lines.length > 1;
+    return EntryDraft(
+      correctionOf: entry.id,
+      occurredOn: entry.occurredOn,
+      amountCents: entry.amount.cents,
+      description: entry.description,
+      category: category,
+      method: methodOf(lines.first.paymentMethodId),
+      secondMethod: isSplit ? methodOf(lines.last.paymentMethodId) : null,
+      firstCents: isSplit ? lines.first.amount.cents : 0,
+      secondCents: isSplit ? lines.last.amount.cents : 0,
+      isSplit: isSplit,
+      installments: entry.installmentPlan?.installments.length ?? 1,
+    );
+  }
 
   /// O valor da compra, em centavos.
   final int amountCents;
@@ -69,6 +94,9 @@ final class EntryDraft {
   /// digitado à mão. É a chave de idempotência do lançamento (RN-781): o
   /// mesmo comprovante confirmado duas vezes grava um fato só.
   final String? captureId;
+
+  /// O lançamento que este rascunho corrige; `null` quando é lançamento novo.
+  final String? correctionOf;
 
   /// De onde o lançamento vem.
   EntryOrigin get origin =>
@@ -126,6 +154,7 @@ final class EntryDraft {
       secondCents: secondCents ?? this.secondCents,
       isSplit: isSplit ?? this.isSplit,
       captureId: captureId,
+      correctionOf: correctionOf,
     );
   }
 
@@ -142,6 +171,7 @@ final class EntryDraft {
     isSplit: isSplit,
     installments: installments,
     captureId: captureId,
+    correctionOf: correctionOf,
   );
 
   /// O mesmo rascunho sem a categoria e/ou sem a forma de pagamento. Tirar a
@@ -159,6 +189,7 @@ final class EntryDraft {
       isSplit: !method && isSplit,
       installments: method ? 1 : installments,
       captureId: captureId,
+      correctionOf: correctionOf,
     );
   }
 }

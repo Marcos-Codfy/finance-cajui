@@ -26,6 +26,7 @@ final class MonthOverview {
     final spending = MonthSpending.of(
       month,
       entries: book.entries,
+      reversals: book.reversals,
       categories: book.categoriesById,
     );
     return MonthOverview._(
@@ -62,6 +63,7 @@ final class MonthOverview {
         StatementReserve.of(
           card,
           entries: book.entries,
+          reversals: book.reversals,
           settlements: book.settlements,
         ),
   );

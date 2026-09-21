@@ -18,10 +18,11 @@ final class EventStoreLedgerJournal implements LedgerJournal {
 
   @override
   Future<List<LedgerEvent>> readAll() async {
-    // Os fatos são lidos em ordem, e o cartão vem sempre antes da compra
-    // feita nele: a compra parcelada recalcula as parcelas a partir do
-    // cartão que já passou.
+    // Os fatos são lidos em ordem, e o que um fato precisa vem sempre antes
+    // dele: o cartão antes da compra parcelada, que recalcula as parcelas a
+    // partir dele; o lançamento antes do estorno que se liga a ele.
     final cards = <String, CreditCard>{};
+    final entries = <String, Entry>{};
     final events = <LedgerEvent>[];
     for (final stored in store.events) {
       final event = codec.decode(
@@ -29,12 +30,29 @@ final class EventStoreLedgerJournal implements LedgerJournal {
         stored.type,
         stored.payload,
         cardOf: (id) => cards[id],
+        entryOf: (id) => entries[id],
       );
       if (event == null) continue;
-      if (event is CardDefined) cards[event.card.id] = event.card;
+      _remember(event, cards, entries);
       events.add(event);
     }
     return events;
+  }
+
+  static void _remember(
+    LedgerEvent event,
+    Map<String, CreditCard> cards,
+    Map<String, Entry> entries,
+  ) {
+    switch (event) {
+      case CardDefined(:final card):
+        cards[card.id] = card;
+      case EntryRecorded(:final entry) || EntryCorrected(:final entry):
+        entries[entry.id] = entry;
+      case EntryCancelled(:final entryId):
+        entries.remove(entryId);
+      default:
+    }
   }
 
   @override

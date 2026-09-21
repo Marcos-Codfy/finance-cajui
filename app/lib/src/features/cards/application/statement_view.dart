@@ -14,7 +14,11 @@ final class StatementView {
   factory of(LedgerBook book, CreditCard card, StatementCycle cycle) {
     return StatementView._(
       cycle: cycle,
-      statement: CardStatement.of(cycle, entries: book.entries),
+      statement: CardStatement.of(
+        cycle,
+        entries: book.entries,
+        reversals: book.reversals,
+      ),
       paid: book.settlements
           .where((s) => s.cardId == card.id && s.dueMonth == cycle.dueMonth)
           .fold(Money.zero, (sum, settlement) => sum + settlement.amount),

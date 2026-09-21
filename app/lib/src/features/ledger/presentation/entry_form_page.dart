@@ -9,6 +9,7 @@ import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
+import 'package:cajui/src/features/ledger/presentation/installments_picker.dart';
 import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
 import 'package:cajui/src/features/ledger/presentation/payment_section.dart';
 import 'package:design_system/design_system.dart';
@@ -30,10 +31,12 @@ class EntryFormPage extends ConsumerStatefulWidget {
   ///
   /// Os parâmetros existem para a conferência de um comprovante reaproveitar
   /// este formulário inteiro — mesmos campos, mesmas regras, mesmos erros —
-  /// mudando só a moldura: [title], o que vai acima dos campos ([header]), as
-  /// ações a mais no pé ([extraActions]) e o que acontece depois de gravar.
+  /// mudando só a moldura: [title], [submitLabel], o que vai acima dos campos
+  /// ([header]), as ações a mais no pé ([extraActions]) e o que acontece
+  /// depois de gravar. A correção de um lançamento faz o mesmo.
   const new({
     this.title = 'Nova despesa',
+    this.submitLabel = 'Lançar',
     this.header,
     this.extraActions = const [],
     this.onSaved,
@@ -43,6 +46,9 @@ class EntryFormPage extends ConsumerStatefulWidget {
 
   /// O título da tela.
   final String title;
+
+  /// O que o botão principal diz: "Lançar", ou "Guardar correção".
+  final String submitLabel;
 
   /// O que aparece acima dos campos. Recebe [EntryFormEdit], para trocar o
   /// rascunho **e** fazer os campos de valor mostrarem o número novo.
@@ -109,28 +115,14 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     );
   }
 
-  /// Em quantas vezes, no cartão. Até doze: mais que isso é raro, e lista
-  /// comprida esconde o "à vista", que é o caso comum.
   Future<void> _pickInstallments() async {
     final draft = ref.read(entryFormProvider).draft;
-    final total = Money.fromCents(draft.amountCents);
-    final picked = await OptionPickerPage.open<int>(
+    final picked = await InstallmentsPicker.open(
       context,
-      title: 'Em quantas vezes',
-      options: [for (var count = 1; count <= _maxInstallments; count++) count],
-      labelOf: (count) => _installmentLabel(count, total),
+      total: Money.fromCents(draft.amountCents),
       selected: draft.installmentCount,
     );
     if (picked != null) _form.edit((d) => d.copyWith(installments: picked));
-  }
-
-  static const _maxInstallments = 12;
-
-  static String _installmentLabel(int count, Money total) {
-    if (count == 1) return 'À vista';
-    if (!total.isPositive) return '${count}x';
-    final each = total.split(count).first;
-    return '${count}x de ${BrlFormatter.format(each.cents)}';
   }
 
   /// Troca o rascunho por iniciativa do app — um candidato de valor tocado,
@@ -276,7 +268,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
         ],
         WeekEffectLine(draft: state.draft),
         CajuiButton(
-          label: 'Lançar',
+          label: widget.submitLabel,
           expand: true,
           loading: state is EntryFormSaving,
           onPressed: state.draft.isComplete ? _form.submit : null,

@@ -17,7 +17,7 @@ abstract final class PlanSections {
     VoidCallback onIncome,
     VoidCallback onDebts,
   ) => [
-    const _SectionTitle('Renda e dívidas'),
+    const CajuiSectionTitle('Renda e dívidas'),
     CajuiListRow(
       title: 'Renda em dinheiro',
       subtitle: 'O vale fica de fora: é outra moeda',
@@ -43,7 +43,7 @@ abstract final class PlanSections {
     final byDueDay = [...setup.fixedExpenses]
       ..sort((a, b) => a.dueDay.compareTo(b.dueDay));
     return [
-      const _SectionTitle('Contas fixas'),
+      const CajuiSectionTitle('Contas fixas'),
       for (final expense in byDueDay)
         CajuiListRow(
           title: expense.name,
@@ -68,7 +68,7 @@ abstract final class PlanSections {
     LedgerBook book,
     void Function([VariableBudget? existing]) onEdit,
   ) => [
-    const _SectionTitle('Gastos variáveis'),
+    const CajuiSectionTitle('Gastos variáveis'),
     for (final budget in book.setup.variableBudgets)
       CajuiListRow(
         title: book.categoryOf(budget.categoryId).name,
@@ -87,25 +87,4 @@ abstract final class PlanSections {
       onPressed: onEdit,
     ),
   ];
-}
-
-class _SectionTitle extends StatelessWidget {
-  const new(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = CajuiTheme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: CajuiSpacing.section,
-        bottom: CajuiSpacing.sm,
-      ),
-      child: Semantics(
-        header: true,
-        child: Text(text, style: theme.typography.title),
-      ),
-    );
-  }
 }

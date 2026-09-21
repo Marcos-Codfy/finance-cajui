@@ -2,6 +2,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/infrastructure/month_setup_codec.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/infrastructure/card_codec.dart';
+import 'package:cajui/src/features/ledger/infrastructure/entry_fact_codec.dart';
 import 'package:domain/domain.dart';
 
 /// O tipo e o conteúdo com que um fato do livro é gravado.
@@ -18,6 +19,15 @@ final class LedgerEventCodec {
 
   /// O tipo do fato "despesa lançada" — o mesmo do servidor.
   static const entryCreated = 'entry.created';
+
+  /// O tipo do fato "lançamento corrigido".
+  static const entryCorrected = 'entry.corrected';
+
+  /// O tipo do fato "lançamento cancelado".
+  static const entryCancelled = 'entry.cancelled';
+
+  /// O tipo do fato "compra estornada".
+  static const entryReversed = 'entry.reversed';
 
   /// O tipo do fato "plano do mês cadastrado".
   static const planDefined = 'plan.defined';
@@ -42,35 +52,37 @@ final class LedgerEventCodec {
   static final _endOfTime = LocalDate(9999, 12, 31);
 
   /// O que gravar para [event].
-  EncodedEvent encode(LedgerEvent event) => switch (event) {
-    EntryRecorded(:final entry) => (
-      type: entryCreated,
-      payload: EntryCodec.fromEntry(entry).toJson(),
+  EncodedEvent encode(LedgerEvent event) =>
+      (type: _typeOf(event), payload: _payloadOf(event));
+
+  static String _typeOf(LedgerEvent event) => switch (event) {
+    EntryRecorded() => entryCreated,
+    EntryCorrected() => entryCorrected,
+    EntryCancelled() => entryCancelled,
+    EntryReversed() => entryReversed,
+    PlanDefined() => planDefined,
+    CardDefined() => cardDefined,
+    StatementSettled() => statementSettled,
+    IncomeReceived() => incomeReceived,
+    VoucherBalanceAdjusted() => voucherAdjusted,
+  };
+
+  static Map<String, Object?> _payloadOf(LedgerEvent event) => switch (event) {
+    EntryRecorded(:final entry) => EntryCodec.fromEntry(entry).toJson(),
+    EntryCorrected() => EntryFactCodec.encodeCorrection(event),
+    EntryCancelled() => EntryFactCodec.encodeCancellation(event),
+    EntryReversed(:final reversal) => EntryFactCodec.encodeReversal(reversal),
+    PlanDefined(:final setup) => MonthSetupCodec.encode(setup),
+    CardDefined(:final card) => CardCodec.encodeCard(card),
+    StatementSettled(:final settlement) => CardCodec.encodeSettlement(
+      settlement,
     ),
-    PlanDefined(:final setup) => (
-      type: planDefined,
-      payload: MonthSetupCodec.encode(setup),
-    ),
-    CardDefined(:final card) => (
-      type: cardDefined,
-      payload: CardCodec.encodeCard(card),
-    ),
-    StatementSettled(:final settlement) => (
-      type: statementSettled,
-      payload: CardCodec.encodeSettlement(settlement),
-    ),
-    IncomeReceived(:final receipt) => (
-      type: incomeReceived,
-      payload: _encodeReceipt(receipt),
-    ),
-    VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => (
-      type: voucherAdjusted,
-      payload: {
-        'adjustmentCents': adjustment.cents,
-        'on': '$on',
-        'reason': reason,
-      },
-    ),
+    IncomeReceived(:final receipt) => _encodeReceipt(receipt),
+    VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => {
+      'adjustmentCents': adjustment.cents,
+      'on': '$on',
+      'reason': reason,
+    },
   };
 
   static Map<String, Object?> _encodeReceipt(IncomeReceipt receipt) => {
@@ -95,16 +107,22 @@ final class LedgerEventCodec {
   /// esta versão do app não conhece — versão mais nova pode ter gravado
   /// algo a mais, e isso não impede de abrir o resto.
   ///
-  /// [cardOf] acha um cartão **já lido** do registro: compra parcelada
-  /// recalcula as parcelas a partir dele.
+  /// [cardOf] e [entryOf] acham um cartão e um lançamento **já lidos** do
+  /// registro: compra parcelada recalcula as parcelas a partir do cartão, e
+  /// estorno se liga ao lançamento de origem.
   LedgerEvent? decode(
     String id,
     String type,
     Map<String, Object?> payload, {
     CreditCard? Function(String id)? cardOf,
+    Entry? Function(String id)? entryOf,
   }) {
+    Entry toEntry(Map<String, Object?> entry) => _entry(entry, cardOf);
     return switch (type) {
-      entryCreated => _entry(payload, cardOf),
+      entryCreated => EntryRecorded(toEntry(payload)),
+      entryCorrected => EntryFactCodec.decodeCorrection(id, payload, toEntry),
+      entryCancelled => EntryFactCodec.decodeCancellation(id, payload),
+      entryReversed => EntryFactCodec.decodeReversal(payload, entryOf),
       planDefined => PlanDefined(
         id: id,
         setup: MonthSetupCodec.decode(payload),
@@ -122,17 +140,16 @@ final class LedgerEventCodec {
     };
   }
 
-  LedgerEvent _entry(
+  Entry _entry(
     Map<String, Object?> payload,
     CreditCard? Function(String id)? cardOf,
   ) {
     final request = CreateEntryRequest.fromJson(payload);
-    final entry = EntryCodec.toEntry(
+    return EntryCodec.toEntry(
       request,
       category: categoryOf(request.categoryId),
       today: _endOfTime,
       cardOf: cardOf,
-    );
-    return EntryRecorded(entry.valueOrNull!);
+    ).valueOrNull!;
   }
 }

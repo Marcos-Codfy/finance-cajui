@@ -26,6 +26,9 @@ class WeekEffectLine extends ConsumerWidget {
     final week = overview.week.week;
     final day = draft.occurredOn;
     return overview.plan.variables.isNotEmpty &&
+        // Na correção, o "antes" já conta a versão antiga: a linha diria um
+        // efeito que não existe.
+        draft.correctionOf == null &&
         draft.category?.block == Block.variable &&
         _cashPart.isPositive &&
         // Compra parcelada não mexe no limite da semana: cada parcela entra

@@ -168,4 +168,34 @@ void main() {
       expect(theme.motionLevel, MotionLevel.lite);
     });
   });
+
+  group('CajuiSectionTitle', () {
+    testWidgets('é cabeçalho para o leitor de tela, e traz o próprio respiro', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(const CajuiSectionTitle('Contas fixas')));
+
+      expect(
+        tester.getSemantics(find.text('Contas fixas')),
+        isSemantics(label: 'Contas fixas', isHeader: true),
+      );
+      final padding = tester.widget<Padding>(
+        find
+            .ancestor(
+              of: find.text('Contas fixas'),
+              matching: find.byType(Padding),
+            )
+            .first,
+      );
+      expect(
+        padding.padding,
+        const EdgeInsets.only(
+          top: CajuiSpacing.section,
+          bottom: CajuiSpacing.sm,
+        ),
+      );
+      handle.dispose();
+    });
+  });
 }
