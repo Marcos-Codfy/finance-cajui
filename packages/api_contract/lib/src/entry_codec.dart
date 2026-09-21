@@ -17,6 +17,7 @@ abstract final class EntryCodec {
     occurredOn: '${entry.occurredOn}',
     categoryId: entry.categoryId,
     isExceptional: entry.isExceptional,
+    installments: entry.installmentPlan?.count,
     paymentLines: [
       for (final line in entry.paymentLines)
         PaymentLineDto(
@@ -32,29 +33,64 @@ abstract final class EntryCodec {
   /// Lança [FormatException] quando o pedido não faz sentido como pedido —
   /// data que não existe, tipo de pagamento desconhecido. Regra de negócio
   /// recusada não é exceção: volta como falha no resultado.
+  ///
+  /// [cardOf] acha o cartão de uma compra parcelada. O parcelamento é
+  /// **recalculado** a partir do cartão e da data da compra (RN-311): o
+  /// pedido traz só quantas parcelas, nunca o valor de cada uma.
   static Result<Entry> toEntry(
     CreateEntryRequest request, {
     required Category category,
     required LocalDate today,
+    CreditCard? Function(String id)? cardOf,
   }) {
+    final occurredOn = parseDate(request.occurredOn);
+    final lines = [
+      for (final line in request.paymentLines)
+        PaymentLine(
+          paymentMethodId: line.paymentMethodId,
+          kind: named(PaymentMethodKind.values, line.kind),
+          amount: Money.fromCents(line.amountCents),
+        ),
+    ];
     return Entry.create(
       id: request.id,
       description: request.description,
       amount: Money.fromCents(request.amountCents),
-      occurredOn: parseDate(request.occurredOn),
+      occurredOn: occurredOn,
       category: category,
       today: today,
       isExceptional: request.isExceptional,
-      paymentLines: [
-        for (final line in request.paymentLines)
-          PaymentLine(
-            paymentMethodId: line.paymentMethodId,
-            kind: named(PaymentMethodKind.values, line.kind),
-            amount: Money.fromCents(line.amountCents),
-          ),
-      ],
+      paymentLines: lines,
+      installmentPlan: _plan(request.installments, lines, occurredOn, cardOf),
     );
   }
+
+  /// O parcelamento de uma compra em [count] vezes; `null` quando é à vista.
+  /// Parcelar exige uma linha no cartão de crédito e um cartão conhecido —
+  /// sem isso o pedido é malformado.
+  static InstallmentPlan? _plan(
+    int? count,
+    List<PaymentLine> lines,
+    LocalDate purchasedOn,
+    CreditCard? Function(String id)? cardOf,
+  ) {
+    if (count == null || count < 2) return null;
+    if (count > maxInstallments) throw const FormatException('parcelas');
+    final onCard = lines.where((line) => line.kind.isCreditCard).firstOrNull;
+    final card = onCard == null ? null : cardOf?.call(onCard.paymentMethodId);
+    if (onCard == null || card == null) {
+      throw const FormatException('parcelamento sem cartão conhecido');
+    }
+    return InstallmentPlan.forPurchase(
+      card: card,
+      purchasedOn: purchasedOn,
+      principal: onCard.amount,
+      count: count,
+    );
+  }
+
+  /// O maior número de parcelas aceito.
+  static const maxInstallments = 24;
 
   /// Uma data `AAAA-MM-DD` que existe no calendário. `DateTime.parse` aceita
   /// "30 de fevereiro" e o transforma em março; aqui isso é pedido malformado.

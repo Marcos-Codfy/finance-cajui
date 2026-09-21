@@ -18,6 +18,7 @@ final class CreateEntryRequest {
     required this.categoryId,
     required this.paymentLines,
     this.isExceptional = false,
+    this.installments,
   });
 
   /// Lê o comando, recusando o que estiver fora do formato (`E-REQ-01`).
@@ -32,6 +33,7 @@ final class CreateEntryRequest {
         'categoryId',
         'paymentLines',
         'isExceptional',
+        'installments',
       },
     );
     return CreateEntryRequest(
@@ -45,6 +47,7 @@ final class CreateEntryRequest {
           .map(PaymentLineDto.fromJson)
           .toList(),
       isExceptional: reader.boolean('isExceptional', orElse: false),
+      installments: reader.optionalInteger('installments'),
     );
   }
 
@@ -69,6 +72,11 @@ final class CreateEntryRequest {
   /// Gasto fora do padrão.
   final bool isExceptional;
 
+  /// Em quantas parcelas a compra foi feita no cartão de crédito; `null`
+  /// quando é à vista. As parcelas são recalculadas a partir do cartão e da
+  /// data: o pedido não carrega valor de parcela que alguém pudesse forjar.
+  final int? installments;
+
   /// O comando em JSON.
   Map<String, Object?> toJson() => {
     'id': id,
@@ -78,5 +86,8 @@ final class CreateEntryRequest {
     'categoryId': categoryId,
     'paymentLines': [for (final line in paymentLines) line.toJson()],
     'isExceptional': isExceptional,
+    // Só viaja quando a compra é parcelada: pedido à vista continua igual
+    // ao de antes, e quem grava hoje lê amanhã.
+    'installments': ?installments,
   };
 }
