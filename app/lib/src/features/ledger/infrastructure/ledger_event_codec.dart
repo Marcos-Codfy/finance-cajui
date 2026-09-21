@@ -2,7 +2,9 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/infrastructure/month_setup_codec.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/infrastructure/card_codec.dart';
+import 'package:cajui/src/features/ledger/infrastructure/debt_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/entry_fact_codec.dart';
+import 'package:cajui/src/features/ledger/infrastructure/month_close_codec.dart';
 import 'package:domain/domain.dart';
 
 /// O tipo e o conteúdo com que um fato do livro é gravado.
@@ -38,6 +40,15 @@ final class LedgerEventCodec {
   /// O tipo do fato "fatura paga".
   static const statementSettled = 'statement.settled';
 
+  /// O tipo do fato "dívida cadastrada".
+  static const debtDefined = 'debt.defined';
+
+  /// O tipo do fato "parcela de dívida paga".
+  static const debtInstallmentPaid = 'debt.installment-paid';
+
+  /// O tipo do fato "mês fechado".
+  static const monthClosed = 'month.closed';
+
   /// O tipo do fato "renda recebida".
   static const incomeReceived = 'income.received';
 
@@ -64,6 +75,9 @@ final class LedgerEventCodec {
     CardDefined() => cardDefined,
     StatementSettled() => statementSettled,
     IncomeReceived() => incomeReceived,
+    DebtDefined() => debtDefined,
+    DebtInstallmentPaid() => debtInstallmentPaid,
+    MonthClosed() => monthClosed,
     VoucherBalanceAdjusted() => voucherAdjusted,
   };
 
@@ -78,6 +92,9 @@ final class LedgerEventCodec {
       settlement,
     ),
     IncomeReceived(:final receipt) => _encodeReceipt(receipt),
+    DebtDefined(:final debt) => DebtCodec.encodeDebt(debt),
+    DebtInstallmentPaid() => DebtCodec.encodePayment(event),
+    MonthClosed(:final close) => MonthCloseCodec.encode(close),
     VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => {
       'adjustmentCents': adjustment.cents,
       'on': '$on',
@@ -130,14 +147,24 @@ final class LedgerEventCodec {
       cardDefined => CardDefined(id: id, card: CardCodec.decodeCard(payload)),
       statementSettled => StatementSettled(CardCodec.decodeSettlement(payload)),
       incomeReceived => IncomeReceived(_decodeReceipt(payload)),
-      voucherAdjusted => VoucherBalanceAdjusted(
-        id: id,
-        adjustment: Money.fromCents(payload['adjustmentCents']! as int),
-        on: EntryCodec.parseDate(payload['on']! as String),
-        reason: payload['reason']! as String,
-      ),
+      debtDefined => DebtDefined(id: id, debt: DebtCodec.decodeDebt(payload)),
+      debtInstallmentPaid => DebtCodec.decodePayment(payload),
+      monthClosed => MonthClosed(MonthCloseCodec.decode(payload)),
+      voucherAdjusted => _decodeVoucher(id, payload),
       _ => null,
     };
+  }
+
+  static VoucherBalanceAdjusted _decodeVoucher(
+    String id,
+    Map<String, Object?> payload,
+  ) {
+    return VoucherBalanceAdjusted(
+      id: id,
+      adjustment: Money.fromCents(payload['adjustmentCents']! as int),
+      on: EntryCodec.parseDate(payload['on']! as String),
+      reason: payload['reason']! as String,
+    );
   }
 
   Entry _entry(

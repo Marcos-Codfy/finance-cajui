@@ -1,5 +1,6 @@
 import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
+import 'package:cajui/src/features/ledger/application/ledger_projection.dart';
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
 
@@ -19,6 +20,9 @@ final class LedgerBook {
     this.settlements = const [],
     this.receipts = const [],
     this.reversals = const [],
+    this.debts = const [],
+    this.debtPayments = const {},
+    this.closes = const [],
     this.setup = MonthSetup.empty,
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
@@ -45,6 +49,15 @@ final class LedgerBook {
   /// Os estornos: dinheiro de compra que voltou (RN-209).
   final List<Reversal> reversals;
 
+  /// As dívidas cadastradas, com as parcelas pagas em dia (RN-501).
+  final List<Debt> debts;
+
+  /// Qual dívida cada lançamento de parcela pagou: lançamento → dívida.
+  final Map<String, String> debtPayments;
+
+  /// Os meses já fechados, cada um na revisão mais recente (RN-440).
+  final List<MonthClose> closes;
+
   /// O plano do mês em vigor.
   final MonthSetup setup;
 
@@ -63,93 +76,20 @@ final class LedgerBook {
       ),
   ];
 
-  /// O livro depois de [event].
-  LedgerBook apply(LedgerEvent event) => switch (event) {
-    EntryRecorded(:final entry) => _recorded(entry),
-    EntryCorrected(:final entry) => _corrected(entry),
-    EntryCancelled(:final entryId) => _cancelled(entryId),
-    EntryReversed(:final reversal) => _reversed(reversal),
-    VoucherBalanceAdjusted(:final adjustment) => _with(
-      voucher: voucher.adjust(adjustment),
-    ),
-    PlanDefined(:final setup) => _with(setup: setup),
-    // A versão mais recente do cartão toma o lugar da anterior.
-    CardDefined(:final card) => _with(
-      cards: [...cards.where((known) => known.id != card.id), card],
-    ),
-    StatementSettled(:final settlement) => _with(
-      settlements: [...settlements, settlement],
-    ),
-    IncomeReceived(:final receipt) => _received(receipt),
-  };
+  /// O livro depois de [event]. Como cada fato muda o livro está em
+  /// [LedgerProjection].
+  LedgerBook apply(LedgerEvent event) => LedgerProjection.apply(this, event);
 
-  /// O fato já foi aceito quando aconteceu. Se o registro antigo disser que
-  /// o vale pagou mais do que tinha, o saldo para em zero: é melhor abrir
-  /// com saldo zerado do que não abrir.
-  VoucherAccount _paying(VoucherAccount account, Entry entry) =>
-      account.pay(entry.paidByTender.mealVoucher).valueOrNull ??
-      VoucherAccount();
-
-  LedgerBook _recorded(Entry entry) =>
-      _with(entries: [...entries, entry], voucher: _paying(voucher, entry));
-
-  /// A versão corrigida entra **no lugar** da anterior, na mesma posição. O
-  /// vale devolve o que a versão antiga tinha pago e paga o da nova.
-  LedgerBook _corrected(Entry next) {
-    final previous = entryOf(next.id);
-    if (previous == null) return this;
-    return _with(
-      entries: [
-        for (final entry in entries)
-          if (entry.id == next.id) next else entry,
-      ],
-      voucher: _paying(
-        voucher.reverse(previous.paidByTender.mealVoucher),
-        next,
-      ),
-    );
-  }
-
-  /// O lançamento cancelado sai de toda visão, e os estornos dele vão junto.
-  /// O vale recebe de volta o que ainda não tinha voltado por estorno.
-  LedgerBook _cancelled(String entryId) {
-    final entry = entryOf(entryId);
-    if (entry == null) return this;
-    final alreadyBack = reversedOf(entryId)
-        .where((reversal) => reversal.line.tender == Tender.mealVoucher)
-        .fold(Money.zero, (sum, reversal) => sum + reversal.line.amount);
-    final stillOut = entry.paidByTender.mealVoucher - alreadyBack;
-    return _with(
-      entries: [...entries.where((known) => known.id != entryId)],
-      reversals: [...reversals.where((r) => r.entryId != entryId)],
-      voucher: voucher.reverse(stillOut),
-    );
-  }
-
-  /// O estorno volta pela mesma forma de pagamento: o de compra no vale
-  /// devolve saldo ao vale (RN-211).
-  LedgerBook _reversed(Reversal reversal) => _with(
-    reversals: [...reversals, reversal],
-    voucher: reversal.line.tender == Tender.mealVoucher
-        ? voucher.reverse(reversal.line.amount)
-        : voucher,
-  );
-
-  /// O crédito do vale entra no saldo (RN-120); renda em dinheiro só fica
-  /// registrada — o app não conhece o saldo da conta de ninguém.
-  LedgerBook _received(IncomeReceipt receipt) => _with(
-    receipts: [...receipts, receipt],
-    voucher: receipt.tender == Tender.mealVoucher
-        ? voucher.credit(receipt.amount)
-        : voucher,
-  );
-
-  LedgerBook _with({
+  /// O mesmo livro com as partes dadas trocadas.
+  LedgerBook copyWith({
     List<Entry>? entries,
     List<CreditCard>? cards,
     List<Settlement>? settlements,
     List<IncomeReceipt>? receipts,
     List<Reversal>? reversals,
+    List<Debt>? debts,
+    Map<String, String>? debtPayments,
+    List<MonthClose>? closes,
     VoucherAccount? voucher,
     MonthSetup? setup,
   }) => LedgerBook(
@@ -160,6 +100,9 @@ final class LedgerBook {
     settlements: settlements ?? this.settlements,
     receipts: receipts ?? this.receipts,
     reversals: reversals ?? this.reversals,
+    debts: debts ?? this.debts,
+    debtPayments: debtPayments ?? this.debtPayments,
+    closes: closes ?? this.closes,
     setup: setup ?? this.setup,
     voucher: voucher ?? this.voucher,
   );
@@ -232,15 +175,40 @@ final class LedgerBook {
     receipts: receipts,
   ).amounts.cash;
 
-  /// As parcelas de compras no cartão que vencem em [month]: entram no mês
-  /// como compromisso do bloco de dívidas, e não como gasto variável
-  /// (RN-311 e RN-312).
-  Money installmentsDueIn(BudgetMonth month) => entries.fold(
-    Money.zero,
-    (sum, entry) =>
-        sum +
-        (entry.installmentPlan?.installmentDueIn(month)?.amount ?? Money.zero),
-  );
+  /// As parcelas que vencem em [month]: as das dívidas cadastradas (RN-504)
+  /// e as das compras parceladas no cartão, que entram no mês como
+  /// compromisso do bloco de dívidas, e não como gasto variável (RN-311 e
+  /// RN-312). A conta é do domínio, que nunca conta a mesma parcela duas
+  /// vezes.
+  Money installmentsDueIn(BudgetMonth month) =>
+      DebtSchedule.dueIn(month, debts: debts, entries: entries);
+
+  /// A dívida de identificador [id], ou `null`.
+  Debt? debtOf(String id) => debts.where((debt) => debt.id == id).firstOrNull;
+
+  /// O fechamento de [month] na revisão mais recente, ou `null` se o mês
+  /// ainda não foi fechado.
+  MonthClose? closeOf(BudgetMonth month) =>
+      closes.where((close) => close.month == month).firstOrNull;
+
+  /// A renda em dinheiro que **de fato entrou** em [month]: só os
+  /// recebimentos registrados.
+  ///
+  /// Não é a mesma conta de [cashIncomeIn], que vale o esperado do plano
+  /// enquanto o recebimento não chega. Aqui, o que não foi registrado não
+  /// entrou: é o que o fechamento precisa saber (RN-623).
+  Money cashReceivedIn(BudgetMonth month) => receipts
+      .where(
+        (receipt) =>
+            receipt.tender == Tender.cash && month.contains(receipt.receivedOn),
+      )
+      .fold(Money.zero, (sum, receipt) => sum + receipt.amount);
+
+  /// O **resultado realizado** de [month]: a renda em dinheiro que entrou
+  /// menos as despesas em dinheiro contadas no mês (RN-623). É o número que
+  /// o fechamento congela.
+  Money cashResultIn(BudgetMonth month) =>
+      cashReceivedIn(month) - spentIn(month).cash;
 
   /// A categoria de identificador [id].
   Category categoryOf(String id) =>

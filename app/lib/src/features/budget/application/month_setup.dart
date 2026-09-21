@@ -23,7 +23,9 @@ final class MonthSetup {
   /// moeda, e nenhum total soma as duas (RN-111).
   final Money cashIncome;
 
-  /// O que sai por mês em parcelas de dívida.
+  /// As parcelas que saem todo mês e **não têm dívida cadastrada**: um valor
+  /// só, para quem não quer cadastrar uma a uma. As dívidas cadastradas
+  /// entram por fora (RN-504), somadas pelo domínio.
   final Money debtInstallments;
 
   /// As contas fixas.
@@ -41,13 +43,14 @@ final class MonthSetup {
 
   /// O plano de [month], com [voucherAvailable] de vale para gastar nele.
   ///
-  /// [cardInstallments] são as parcelas de compras no cartão que vencem no
-  /// mês: entram ao lado das parcelas de dívida, como compromisso, e não
-  /// consomem o orçamento dos variáveis (RN-312).
+  /// [installmentsDue] são as parcelas que vencem no mês — das dívidas
+  /// cadastradas e das compras parceladas no cartão. Entram ao lado das
+  /// parcelas sem cadastro, como compromisso, e não consomem o orçamento dos
+  /// variáveis (RN-312).
   MonthPlan planFor(
     BudgetMonth month, {
     required Money voucherAvailable,
-    Money cardInstallments = Money.zero,
+    Money installmentsDue = Money.zero,
     Money? receivedCashIncome,
   }) => MonthPlan.of(
     month: month,
@@ -57,7 +60,7 @@ final class MonthSetup {
     voucherAvailable: voucherAvailable,
     fixedExpenses: fixedExpenses,
     variableBudgets: variableBudgets,
-    debtInstallments: debtInstallments + cardInstallments,
+    debtInstallments: debtInstallments + installmentsDue,
   );
 
   /// O mesmo cadastro com a renda e as parcelas trocadas.
