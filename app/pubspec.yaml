@@ -1,0 +1,30 @@
+name: cajui
+description: Cajui - controle financeiro pessoal. Android é o app de uso; a web é modo consulta.
+version: 0.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+  flutter: ">=3.47.0"
+
+resolution: workspace
+
+dependencies:
+  api_contract:
+    path: ../packages/api_contract
+  design_system:
+    path: ../packages/design_system
+  domain:
+    path: ../packages/domain
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.0.0
+  meta: ^1.16.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^11.0.0
+
+flutter:
+  uses-material-design: false
