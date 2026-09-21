@@ -90,6 +90,13 @@ final class Debt {
     return _copy(paidInstallments: paidInstallments + 1);
   }
 
+  /// A dívida depois que o pagamento de uma parcela foi cancelado (RN-208):
+  /// o lançamento saiu de toda visão, e a parcela volta a estar em aberto.
+  Debt withInstallmentReverted() {
+    assert(paidInstallments > 0, 'Não há parcela paga para desfazer.');
+    return _copy(paidInstallments: paidInstallments - 1);
+  }
+
   /// A dívida com o valor para quitar informado pela pessoa.
   Debt withPayoffQuote(PayoffQuote quote) => _copy(payoffQuote: quote);
 

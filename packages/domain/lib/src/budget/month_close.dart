@@ -21,6 +21,22 @@ final class MonthClose {
     required this.closedOn,
   });
 
+  /// O fechamento **como já foi gravado**, de volta do registro.
+  ///
+  /// Não revalida nada: o fato foi aceito quando aconteceu, e relê-lo não
+  /// pode falhar por causa do relógio de hoje (RN-440).
+  factory restore({
+    required BudgetMonth month,
+    required int revision,
+    required Money cashResult,
+    required LocalDate closedOn,
+  }) => MonthClose._(
+    month: month,
+    revision: revision,
+    cashResult: cashResult,
+    closedOn: closedOn,
+  );
+
   /// O mês fechado.
   final BudgetMonth month;
 
