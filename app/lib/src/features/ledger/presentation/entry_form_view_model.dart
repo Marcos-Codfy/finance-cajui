@@ -17,8 +17,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// é do domínio, e a tela só mostra o que ele respondeu.
 class EntryFormViewModel extends Notifier<EntryFormState> {
   @override
-  EntryFormState build() =>
-      EntryFormEditing(EntryDraft(occurredOn: ref.read(clockProvider).today()));
+  EntryFormState build() => EntryFormEditing(
+    ref.watch(initialDraftProvider) ??
+        EntryDraft(occurredOn: ref.read(clockProvider).today()),
+  );
 
   EntryDraft get _draft => state.draft;
 
@@ -124,4 +126,14 @@ class EntryFormViewModel extends Notifier<EntryFormState> {
 /// O ViewModel da tela de lançar. Descartado ao fechar a tela: cada abertura
 /// começa de um rascunho em branco.
 final NotifierProvider<EntryFormViewModel, EntryFormState> entryFormProvider =
-    NotifierProvider.autoDispose(EntryFormViewModel.new);
+    NotifierProvider.autoDispose(
+      EntryFormViewModel.new,
+      dependencies: [initialDraftProvider],
+    );
+
+/// O rascunho com que o formulário abre. Em branco por padrão; a conferência
+/// de um comprovante o troca, no próprio escopo, pelo que a leitura propôs.
+final initialDraftProvider = Provider<EntryDraft?>(
+  (ref) => null,
+  dependencies: const [],
+);

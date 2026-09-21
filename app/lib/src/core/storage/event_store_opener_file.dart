@@ -1,35 +1,24 @@
 import 'dart:io';
 
-import 'package:cajui/src/features/ledger/application/default_catalog.dart';
-import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
-import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
-import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
-import 'package:domain/domain.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:persistence/persistence.dart';
 
-/// No aparelho, o livro é o registro de eventos cifrado, na pasta privada do
-/// app — a que o Android não mostra a nenhum outro app.
-Future<LedgerJournal> openLedgerJournal() async {
+/// No aparelho, o registro é o arquivo de eventos cifrado, na pasta privada
+/// do app — a que o Android não mostra a nenhum outro app.
+Future<EventStore> openEventStore() async {
   final support = await getApplicationSupportDirectory();
-  return await openLedgerJournalAt(Directory(p.join(support.path, 'ledger')));
+  return await openEventStoreAt(Directory(p.join(support.path, 'ledger')));
 }
 
 /// O mesmo, numa pasta dada. Existe para o teste usar uma pasta temporária.
-Future<LedgerJournal> openLedgerJournalAt(Directory directory) async {
+Future<EventStore> openEventStoreAt(Directory directory) {
   directory.createSync(recursive: true);
-  final store = await FileEventStore.open(
+  return FileEventStore.open(
     directory,
     AesGcmRecordCipher(_dataKey(directory)),
   );
-  return EventStoreLedgerJournal(
-    store: store,
-    codec: const LedgerEventCodec(categoryOf: _defaultCategory),
-  );
 }
-
-Category _defaultCategory(String id) => DefaultCatalog.emptyBook.categoryOf(id);
 
 /// A chave que cifra o registro, criada na primeira abertura.
 ///

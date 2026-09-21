@@ -18,6 +18,7 @@ final class EntryDraft {
     this.firstCents = 0,
     this.secondCents = 0,
     this.isSplit = false,
+    this.captureId,
   });
 
   /// O valor da compra, em centavos.
@@ -50,6 +51,15 @@ final class EntryDraft {
   /// no comprovante, e se a soma não fechar é o domínio que recusa (RN-203),
   /// dizendo quanto falta.
   final int secondCents;
+
+  /// O identificador da captura de onde o rascunho nasceu; `null` quando foi
+  /// digitado à mão. É a chave de idempotência do lançamento (RN-781): o
+  /// mesmo comprovante confirmado duas vezes grava um fato só.
+  final String? captureId;
+
+  /// De onde o lançamento vem.
+  EntryOrigin get origin =>
+      captureId == null ? EntryOrigin.manual : EntryOrigin.share;
 
   /// Quanto falta para as duas linhas fecharem o valor. Negativo se passaram.
   int get unassignedCents => amountCents - firstCents - secondCents;
@@ -91,7 +101,6 @@ final class EntryDraft {
     bool? isSplit,
   }) {
     return EntryDraft(
-      secondCents: secondCents ?? this.secondCents,
       amountCents: amountCents ?? this.amountCents,
       description: description ?? this.description,
       category: category ?? this.category,
@@ -99,7 +108,9 @@ final class EntryDraft {
       method: method ?? this.method,
       secondMethod: secondMethod ?? this.secondMethod,
       firstCents: firstCents ?? this.firstCents,
+      secondCents: secondCents ?? this.secondCents,
       isSplit: isSplit ?? this.isSplit,
+      captureId: captureId,
     );
   }
 
@@ -114,6 +125,7 @@ final class EntryDraft {
     firstCents: secondCents,
     secondCents: firstCents,
     isSplit: isSplit,
+    captureId: captureId,
   );
 
   /// O mesmo rascunho sem a categoria e/ou sem a forma de pagamento. Tirar a
@@ -129,6 +141,7 @@ final class EntryDraft {
       firstCents: method ? 0 : firstCents,
       secondCents: method ? 0 : secondCents,
       isSplit: !method && isSplit,
+      captureId: captureId,
     );
   }
 }

@@ -27,7 +27,10 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
   Future<Result<Entry>> record(EntryDraft draft) async {
     final book = await future;
     final result = Entry.create(
-      id: ref.read(newIdProvider)(),
+      // Lançamento que nasce de um comprovante usa a chave gerada na chegada
+      // dele: confirmar duas vezes o mesmo comprovante grava um fato só.
+      id: draft.captureId ?? ref.read(newIdProvider)(),
+      origin: draft.origin,
       description: draft.description.trim(),
       amount: Money.fromCents(draft.amountCents),
       occurredOn: draft.occurredOn,
@@ -37,6 +40,8 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     );
     final entry = result.valueOrNull;
     if (entry == null) return result;
+    // Já gravado: repetir a confirmação não lança de novo (RN-781).
+    if (book.entries.any((known) => known.id == entry.id)) return result;
     final paid = book.voucher.pay(entry.paidByTender.mealVoucher);
     if (paid.failureOrNull case final failure?) return Err(failure);
     await _commit(book, EntryRecorded(entry));

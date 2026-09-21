@@ -3,18 +3,40 @@ import 'package:cajui/src/app/home_tab_controller.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_page.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_page.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:cajui/src/features/settings/presentation/settings_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// A casca do app: a área em vigor em cima, a barra de navegação embaixo.
+/// A casca do app: a área em vigor em cima, a barra de navegação embaixo —
+/// e, por cima de tudo, a captura, quando chega um comprovante.
 class HomeShell extends ConsumerWidget {
   /// Cria a casca.
   const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final capturing = ref.watch(captureProvider) is! CaptureIdle;
+    return Stack(
+      children: [
+        // A casca continua montada por baixo: quem estava no meio de algo
+        // volta para onde estava depois de conferir o comprovante.
+        ExcludeSemantics(excluding: capturing, child: _areas(ref)),
+        if (capturing)
+          Positioned.fill(
+            child: ColoredBox(
+              color: CajuiTheme.of(context).colors.surface.base,
+              child: const CapturePage(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _areas(WidgetRef ref) {
     final current = ref.watch(homeTabProvider);
     return Column(
       children: [
