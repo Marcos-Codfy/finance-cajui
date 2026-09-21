@@ -113,6 +113,33 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     );
   }
 
+  /// Registra uma renda recebida. Em dinheiro, [fromPlan] diz se é a renda do
+  /// plano — que passa a valer no lugar da esperada no mês (RN-131) — ou uma
+  /// entrada avulsa, contada só no mês em que entrou (RN-133). No vale, é o
+  /// crédito que entra no saldo (RN-120). Valor zero não gera fato.
+  Future<void> receiveIncome({
+    required Tender tender,
+    required Money amount,
+    required LocalDate receivedOn,
+    bool fromPlan = true,
+  }) async {
+    if (!amount.isPositive) return;
+    final book = await future;
+    final ofPlan = fromPlan && tender == Tender.cash;
+    await _commit(
+      book,
+      IncomeReceived(
+        IncomeReceipt(
+          id: ref.read(newIdProvider)(),
+          sourceId: ofPlan ? LedgerBook.cashIncomeSourceId : null,
+          tender: tender,
+          amount: amount,
+          receivedOn: receivedOn,
+        ),
+      ),
+    );
+  }
+
   /// Corrige o saldo do vale para [actual], o que a operadora mostra
   /// (RN-123). Saldo que já bate não gera fato nenhum.
   Future<void> setVoucherBalance(Money actual, {required String reason}) async {
