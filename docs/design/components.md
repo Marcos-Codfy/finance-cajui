@@ -46,6 +46,7 @@ Um componente novo que se toca **não reimplementa** nada disso.
 | `CajuiCard` | Agrupar | Padrão · rebaixado (`sunken`) · tocável. Tocável exige nome para o leitor de tela |
 | `CajuiListRow` | Lançamento, parcela, item de ajuste | **Título é o que foi comprado; subtítulo, por onde foi pago** — a regra central do produto, na estrutura do componente |
 | `CajuiMeter` | Parte de um todo | Um dos dois únicos gráficos do app (RN-862). Exige o número equivalente em texto. Passar do limite enche a barra e troca para a cor da falta, sem alarme |
+| `CajuiStatCard` | Um número do painel: o que mede, o valor e quanto do todo já tomou | Nasceu na gallery e foi promovido quando o painel do app precisou dele. Sem valor, mostra um travessão — nunca zero (RN-604). Não existe cartão "vermelho": o tom é o papel do número, e a frase de apoio diz o que fazer com ele. A barra exige a frase, que é o mesmo dado em texto |
 | `CajuiConfidenceIndicator` | Quanto a leitura do comprovante confia na categoria | Três níveis, sempre com a frase: alta · "Fiquei entre estas" · "Não consegui identificar". Confiança baixa vira pergunta, não palpite |
 
 `BrlFormatter` (`lib/src/format/`) é o único lugar que formata real: `R$ 1.234,56`, a partir de centavos inteiros. Nunca `double`.

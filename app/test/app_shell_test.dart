@@ -51,10 +51,12 @@ void main() {
     expect(_screen('Painel'), findsNothing);
   });
 
-  testWidgets('o painel vazio leva aos lançamentos', (tester) async {
+  testWidgets('lançamentos vazios dizem o que fazer, e não "sem dados"', (
+    tester,
+  ) async {
     await _open(tester);
 
-    await tester.tap(find.text('Ver lançamentos'));
+    await tester.tap(find.bySemanticsLabel('Lançamentos'));
     await tester.pump();
 
     expect(_screen('Lançamentos'), findsOneWidget);

@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -62,6 +63,16 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
         on: ref.read(clockProvider).today(),
         reason: reason,
       ),
+    );
+  }
+
+  /// Passa a valer o plano [setup]. Plano igual ao que já vale não gera fato.
+  Future<void> definePlan(MonthSetup setup) async {
+    final book = await future;
+    if (identical(setup, book.setup)) return;
+    await _commit(
+      book,
+      PlanDefined(id: 'plan-${ref.read(newIdProvider)()}', setup: setup),
     );
   }
 
