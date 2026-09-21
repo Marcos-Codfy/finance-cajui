@@ -8,8 +8,8 @@ Gerado por `tool/security/build_asvs_checklist.py` a partir do CSV oficial, para
 
 | Situação | Requisitos | Significa |
 |---|---|---|
-| atende | 13 | O controle já existe, com a evidência indicada |
-| planejado | 150 | O controle está decidido numa ADR e nasce no passo indicado. Vira "atende" no PR daquele passo |
+| atende | 70 | O controle já existe, com a evidência indicada |
+| planejado | 93 | O controle está decidido numa ADR e nasce no passo indicado. Vira "atende" no PR daquele passo |
 | não se aplica | 86 | A tecnologia ou o cenário não existe no Cajui |
 | **exceção** | 4 | O nível 2 pede algo que não cabe numa VM a custo zero. Há controle compensatório, por escrito |
 | **Total, níveis 1 e 2** | **253** | |
@@ -24,31 +24,31 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 |---|---|---|---|---|---|---|
 | 1.1.1 | L2 | Encoding and Sanitization Architecture | planejado | Entrada decodificada uma vez, na borda da API | ADR-015 | F6-03 |
 | 1.1.2 | L2 | Encoding and Sanitization Architecture | planejado | Entrada decodificada uma vez, na borda da API | ADR-015 | F6-03 |
-| 1.2.1 | L1 | Injection Prevention | planejado | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | F6-04 |
-| 1.2.2 | L1 | Injection Prevention | planejado | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | F6-04 |
-| 1.2.3 | L1 | Injection Prevention | planejado | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | F6-04 |
+| 1.2.1 | L1 | Injection Prevention | atende | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | PR #11 |
+| 1.2.2 | L1 | Injection Prevention | atende | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | PR #11 |
+| 1.2.3 | L1 | Injection Prevention | atende | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | PR #11 |
 | 1.2.4 | L1 | Injection Prevention | não se aplica | Não há SQL | — | — |
-| 1.2.5 | L1 | Injection Prevention | planejado | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | F6-04 |
+| 1.2.5 | L1 | Injection Prevention | atende | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | PR #11 |
 | 1.2.6 | L2 | Injection Prevention | não se aplica | Não há LDAP | — | — |
 | 1.2.7 | L2 | Injection Prevention | não se aplica | Não há XPath | — | — |
 | 1.2.8 | L2 | Injection Prevention | não se aplica | Não há LaTeX | — | — |
-| 1.2.9 | L2 | Injection Prevention | planejado | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | F6-04 |
-| 1.3.1 | L1 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
-| 1.3.2 | L1 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
-| 1.3.3 | L2 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
-| 1.3.4 | L2 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
-| 1.3.5 | L2 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
-| 1.3.6 | L2 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
-| 1.3.7 | L2 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
+| 1.2.9 | L2 | Injection Prevention | atende | Sem SQL nem shell; regex do mascaramento com tempo limitado; texto do OCR nunca é interpretado | ADR-010 · T-20 | PR #11 |
+| 1.3.1 | L1 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
+| 1.3.2 | L1 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
+| 1.3.3 | L2 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
+| 1.3.4 | L2 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
+| 1.3.5 | L2 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
+| 1.3.6 | L2 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
+| 1.3.7 | L2 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
 | 1.3.8 | L2 | Sanitization | não se aplica | Não há JNDI | — | — |
 | 1.3.9 | L2 | Sanitization | não se aplica | Não há memcache | — | — |
-| 1.3.10 | L2 | Sanitization | planejado | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | F6-04 |
+| 1.3.10 | L2 | Sanitization | atende | Texto de OCR limpo de caracteres de controle e limitado em tamanho; servidor sem busca de URL vinda de dado | ADR-007 · ADR-010 | PR #11 |
 | 1.3.11 | L2 | Sanitization | não se aplica | O servidor não envia e-mail | — | — |
 | 1.4.1 | L2 | Memory, String, and Unmanaged Code | não se aplica | Dart tem gerência automática de memória | — | — |
 | 1.4.2 | L2 | Memory, String, and Unmanaged Code | não se aplica | Dart tem gerência automática de memória | — | — |
 | 1.4.3 | L2 | Memory, String, and Unmanaged Code | não se aplica | Dart tem gerência automática de memória | — | — |
 | 1.5.1 | L1 | Safe Deserialization | não se aplica | Não há XML | — | — |
-| 1.5.2 | L2 | Safe Deserialization | planejado | Só JSON, lido para tipos fechados e validado contra esquema | ADR-015 · RNF-SEC-09 | F6-03 |
+| 1.5.2 | L2 | Safe Deserialization | atende | Só JSON, lido para tipos fechados e validado contra esquema | ADR-015 · RNF-SEC-09 | PR #10 |
 
 ## V2 Validation and Business Logic
 
@@ -57,14 +57,14 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 | 2.1.1 | L1 | Validation and Business Logic Documentation | atende | As 345 regras RN-xxx são a documentação de validação | docs/spec/rules | feito |
 | 2.1.2 | L2 | Validation and Business Logic Documentation | atende | As 345 regras RN-xxx são a documentação de validação | docs/spec/rules | feito |
 | 2.1.3 | L2 | Validation and Business Logic Documentation | atende | As 345 regras RN-xxx são a documentação de validação | docs/spec/rules | feito |
-| 2.2.1 | L1 | Input Validation | planejado | O servidor revalida tudo com o mesmo domínio do app | ADR-001 · T-05 | F6-03 |
-| 2.2.2 | L1 | Input Validation | planejado | O servidor revalida tudo com o mesmo domínio do app | ADR-001 · T-05 | F6-03 |
-| 2.2.3 | L2 | Input Validation | planejado | O servidor revalida tudo com o mesmo domínio do app | ADR-001 · T-05 | F6-03 |
-| 2.3.1 | L1 | Business Logic Security | planejado | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | F6-02 |
-| 2.3.2 | L2 | Business Logic Security | planejado | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | F6-02 |
-| 2.3.3 | L2 | Business Logic Security | planejado | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | F6-02 |
-| 2.3.4 | L2 | Business Logic Security | planejado | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | F6-02 |
-| 2.4.1 | L2 | Anti-automation | planejado | Limite de taxa por origem e global | RNF-SEC-08 · T-11 | F6-03 |
+| 2.2.1 | L1 | Input Validation | atende | O servidor revalida tudo com o mesmo domínio do app | ADR-001 · T-05 | PR #10 |
+| 2.2.2 | L1 | Input Validation | atende | O servidor revalida tudo com o mesmo domínio do app | ADR-001 · T-05 | PR #10 |
+| 2.2.3 | L2 | Input Validation | atende | O servidor revalida tudo com o mesmo domínio do app | ADR-001 · T-05 | PR #10 |
+| 2.3.1 | L1 | Business Logic Security | atende | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | PR #9 |
+| 2.3.2 | L2 | Business Logic Security | atende | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | PR #9 |
+| 2.3.3 | L2 | Business Logic Security | atende | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | PR #9 |
+| 2.3.4 | L2 | Business Logic Security | atende | Limites de negócio no domínio; escrita tudo-ou-nada; chave de idempotência | ADR-004 · ADR-012 | PR #9 |
+| 2.4.1 | L2 | Anti-automation | atende | Limite de taxa por origem e global | RNF-SEC-08 · T-11 | PR #10 |
 
 ## V3 Web Frontend Security
 
@@ -146,11 +146,11 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 | 6.4.2 | L1 | Authentication Factor Lifecycle and Recovery | planejado | Trocar ou recuperar aparelho exige SSH na VM: é a prova de identidade | ADR-008 · T-03 | F6-03 |
 | 6.4.3 | L2 | Authentication Factor Lifecycle and Recovery | planejado | Trocar ou recuperar aparelho exige SSH na VM: é a prova de identidade | ADR-008 · T-03 | F6-03 |
 | 6.4.4 | L2 | Authentication Factor Lifecycle and Recovery | planejado | Trocar ou recuperar aparelho exige SSH na VM: é a prova de identidade | ADR-008 · T-03 | F6-03 |
-| 6.5.1 | L2 | General Multi-factor authentication requirements | planejado | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | F6-03 |
-| 6.5.2 | L2 | General Multi-factor authentication requirements | planejado | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | F6-03 |
-| 6.5.3 | L2 | General Multi-factor authentication requirements | planejado | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | F6-03 |
-| 6.5.4 | L2 | General Multi-factor authentication requirements | planejado | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | F6-03 |
-| 6.5.5 | L2 | General Multi-factor authentication requirements | planejado | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | F6-03 |
+| 6.5.1 | L2 | General Multi-factor authentication requirements | atende | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | PR #10 |
+| 6.5.2 | L2 | General Multi-factor authentication requirements | atende | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | PR #10 |
+| 6.5.3 | L2 | General Multi-factor authentication requirements | atende | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | PR #10 |
+| 6.5.4 | L2 | General Multi-factor authentication requirements | atende | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | PR #10 |
+| 6.5.5 | L2 | General Multi-factor authentication requirements | atende | Códigos de uso único, de gerador criptográfico, com validade curta | ADR-008 | PR #10 |
 | 6.6.1 | L2 | Out-of-Band authentication mechanisms | planejado | O código de pareamento nasce no aparelho autenticado e vale 2 minutos, uma vez | ADR-008 | F6-11 |
 | 6.6.2 | L2 | Out-of-Band authentication mechanisms | planejado | O código de pareamento nasce no aparelho autenticado e vale 2 minutos, uma vez | ADR-008 | F6-11 |
 | 6.6.3 | L2 | Out-of-Band authentication mechanisms | planejado | O código de pareamento nasce no aparelho autenticado e vale 2 minutos, uma vez | ADR-008 | F6-11 |
@@ -166,10 +166,10 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 | 7.1.1 | L2 | Session Management Documentation | atende | Tempos de sessão documentados: 15 min no app, 30 min de inatividade e 12 h na web | ADR-008 | feito |
 | 7.1.2 | L2 | Session Management Documentation | atende | Tempos de sessão documentados: 15 min no app, 30 min de inatividade e 12 h na web | ADR-008 | feito |
 | 7.1.3 | L2 | Session Management Documentation | atende | Tempos de sessão documentados: 15 min no app, 30 min de inatividade e 12 h na web | ADR-008 | feito |
-| 7.2.1 | L1 | Fundamental Session Management Security | planejado | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | F6-03 |
-| 7.2.2 | L1 | Fundamental Session Management Security | planejado | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | F6-03 |
-| 7.2.3 | L1 | Fundamental Session Management Security | planejado | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | F6-03 |
-| 7.2.4 | L1 | Fundamental Session Management Security | planejado | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | F6-03 |
+| 7.2.1 | L1 | Fundamental Session Management Security | atende | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | PR #10 |
+| 7.2.2 | L1 | Fundamental Session Management Security | atende | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | PR #10 |
+| 7.2.3 | L1 | Fundamental Session Management Security | atende | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | PR #10 |
+| 7.2.4 | L1 | Fundamental Session Management Security | atende | Token opaco de 128+ bits, validado no servidor, novo a cada autenticação | ADR-008 | PR #10 |
 | 7.3.1 | L2 | Session Timeout | planejado | Tempo de inatividade e tempo absoluto aplicados no servidor | ADR-008 | F6-03 |
 | 7.3.2 | L2 | Session Timeout | planejado | Tempo de inatividade e tempo absoluto aplicados no servidor | ADR-008 | F6-03 |
 | 7.4.1 | L1 | Session Termination | planejado | Encerrar sessão apaga o token no servidor; o celular encerra as sessões da web | ADR-008 · T-10 | F6-11 |
@@ -188,10 +188,10 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 |---|---|---|---|---|---|---|
 | 8.1.1 | L1 | Authorization Documentation | atende | Uma regra: autenticado é o dono; sessão da web é só leitura | ADR-008 | feito |
 | 8.1.2 | L2 | Authorization Documentation | atende | Uma regra: autenticado é o dono; sessão da web é só leitura | ADR-008 | feito |
-| 8.2.1 | L1 | General Authorization Design | planejado | Aplicado no servidor, por rota | ADR-008 · T-12 | F6-03 |
-| 8.2.2 | L1 | General Authorization Design | planejado | Aplicado no servidor, por rota | ADR-008 · T-12 | F6-03 |
-| 8.2.3 | L2 | General Authorization Design | planejado | Aplicado no servidor, por rota | ADR-008 · T-12 | F6-03 |
-| 8.3.1 | L1 | Operation Level Authorization | planejado | Autorização decidida no servidor, nunca no cliente | ADR-008 | F6-03 |
+| 8.2.1 | L1 | General Authorization Design | atende | Aplicado no servidor, por rota | ADR-008 · T-12 | PR #10 |
+| 8.2.2 | L1 | General Authorization Design | atende | Aplicado no servidor, por rota | ADR-008 · T-12 | PR #10 |
+| 8.2.3 | L2 | General Authorization Design | atende | Aplicado no servidor, por rota | ADR-008 · T-12 | PR #10 |
+| 8.3.1 | L1 | Operation Level Authorization | atende | Autorização decidida no servidor, nunca no cliente | ADR-008 | PR #10 |
 | 8.4.1 | L2 | Other Authorization Considerations | não se aplica | Usuário único: não há multilocação | — | — |
 
 ## V9 Self-contained Tokens
@@ -249,14 +249,14 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 | 11.2.1 | L2 | Secure Cryptography Implementation | **exceção** | Não há biblioteca criptográfica validada formalmente em Dart puro. Compensação: Só algoritmos padrão (AES-256-GCM, SHA-256, ECDSA P-256), conferidos contra vetores de teste publicados; envelope versionado para trocar de implementação (ADR-005) | BL-013 | — |
 | 11.2.2 | L2 | Secure Cryptography Implementation | planejado | Algoritmos padrão atrás de uma porta, com versão no envelope para poder trocar | ADR-005 | F6-02 |
 | 11.2.3 | L2 | Secure Cryptography Implementation | planejado | Algoritmos padrão atrás de uma porta, com versão no envelope para poder trocar | ADR-005 | F6-02 |
-| 11.3.1 | L1 | Encryption Algorithms | planejado | AES-256-GCM: cifra autenticada, nonce único por registro | ADR-005 · T-31 | F6-02 |
-| 11.3.2 | L1 | Encryption Algorithms | planejado | AES-256-GCM: cifra autenticada, nonce único por registro | ADR-005 · T-31 | F6-02 |
-| 11.3.3 | L2 | Encryption Algorithms | planejado | AES-256-GCM: cifra autenticada, nonce único por registro | ADR-005 · T-31 | F6-02 |
-| 11.4.1 | L1 | Hashing and Hash-based Functions | planejado | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | F6-02 |
-| 11.4.2 | L2 | Hashing and Hash-based Functions | planejado | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | F6-02 |
-| 11.4.3 | L2 | Hashing and Hash-based Functions | planejado | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | F6-02 |
-| 11.4.4 | L2 | Hashing and Hash-based Functions | planejado | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | F6-02 |
-| 11.5.1 | L2 | Random Values | planejado | Gerador criptográfico do sistema para nonce, token e código | ADR-005 · ADR-008 | F6-02 |
+| 11.3.1 | L1 | Encryption Algorithms | atende | AES-256-GCM: cifra autenticada, nonce único por registro | ADR-005 · T-31 | PR #9 |
+| 11.3.2 | L1 | Encryption Algorithms | atende | AES-256-GCM: cifra autenticada, nonce único por registro | ADR-005 · T-31 | PR #9 |
+| 11.3.3 | L2 | Encryption Algorithms | atende | AES-256-GCM: cifra autenticada, nonce único por registro | ADR-005 · T-31 | PR #9 |
+| 11.4.1 | L1 | Hashing and Hash-based Functions | atende | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | PR #9 |
+| 11.4.2 | L2 | Hashing and Hash-based Functions | atende | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | PR #9 |
+| 11.4.3 | L2 | Hashing and Hash-based Functions | atende | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | PR #9 |
+| 11.4.4 | L2 | Hashing and Hash-based Functions | atende | SHA-256 na cadeia do registro; nenhuma chave derivada de senha | ADR-005 | PR #9 |
+| 11.5.1 | L2 | Random Values | atende | Gerador criptográfico do sistema para nonce, token e código | ADR-005 · ADR-008 | PR #9 |
 | 11.6.1 | L2 | Public Key Cryptography | planejado | ECDSA P-256 para a chave do aparelho | ADR-008 | F6-11 |
 
 ## V12 Secure Communication
@@ -315,24 +315,24 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 | 15.2.1 | L1 | Security Architecture and Dependencies | planejado | Versões travadas num `pubspec.lock` único; nada de teste no build de produção | ADR-014 · T-37 | contínuo |
 | 15.2.2 | L2 | Security Architecture and Dependencies | planejado | Versões travadas num `pubspec.lock` único; nada de teste no build de produção | ADR-014 · T-37 | contínuo |
 | 15.2.3 | L2 | Security Architecture and Dependencies | planejado | Versões travadas num `pubspec.lock` único; nada de teste no build de produção | ADR-014 · T-37 | contínuo |
-| 15.3.1 | L1 | Defensive Coding | planejado | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | F6-03 |
-| 15.3.2 | L2 | Defensive Coding | planejado | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | F6-03 |
-| 15.3.3 | L2 | Defensive Coding | planejado | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | F6-03 |
-| 15.3.4 | L2 | Defensive Coding | planejado | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | F6-03 |
-| 15.3.5 | L2 | Defensive Coding | planejado | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | F6-03 |
+| 15.3.1 | L1 | Defensive Coding | atende | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | PR #10 |
+| 15.3.2 | L2 | Defensive Coding | atende | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | PR #10 |
+| 15.3.3 | L2 | Defensive Coding | atende | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | PR #10 |
+| 15.3.4 | L2 | Defensive Coding | atende | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | PR #10 |
+| 15.3.5 | L2 | Defensive Coding | atende | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | PR #10 |
 | 15.3.6 | L2 | Defensive Coding | não se aplica | Não há JavaScript próprio | — | — |
-| 15.3.7 | L2 | Defensive Coding | planejado | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | F6-03 |
+| 15.3.7 | L2 | Defensive Coding | atende | DTOs fechados, tipagem estrita, só os campos necessários; cliente HTTP sem seguir redirecionamento | ADR-015 | PR #10 |
 
 ## V16 Security Logging and Error Handling
 
 | Requisito | Nível | Seção | Situação | Controle, ou motivo | Onde está decidido | Nasce em |
 |---|---|---|---|---|---|---|
 | 16.1.1 | L2 | Security Logging Documentation | planejado | Inventário do que se registra, e do que nunca se registra | RNF-SEC-12 | F6-03 |
-| 16.2.1 | L2 | General Logging | planejado | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | F6-03 |
-| 16.2.2 | L2 | General Logging | planejado | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | F6-03 |
-| 16.2.3 | L2 | General Logging | planejado | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | F6-03 |
-| 16.2.4 | L2 | General Logging | planejado | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | F6-03 |
-| 16.2.5 | L2 | General Logging | planejado | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | F6-03 |
+| 16.2.1 | L2 | General Logging | atende | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | PR #10 |
+| 16.2.2 | L2 | General Logging | atende | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | PR #10 |
+| 16.2.3 | L2 | General Logging | atende | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | PR #10 |
+| 16.2.4 | L2 | General Logging | atende | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | PR #10 |
+| 16.2.5 | L2 | General Logging | atende | Registro estruturado, em UTC, com `ref`; sem dado financeiro nem pessoal | ADR-015 · T-09 | PR #10 |
 | 16.3.1 | L2 | Security Events | planejado | Toda autenticação, toda recusa de autorização e todo erro inesperado são registrados | RNF-SEC-13 | F6-03 |
 | 16.3.2 | L2 | Security Events | planejado | Toda autenticação, toda recusa de autorização e todo erro inesperado são registrados | RNF-SEC-13 | F6-03 |
 | 16.3.3 | L2 | Security Events | planejado | Toda autenticação, toda recusa de autorização e todo erro inesperado são registrados | RNF-SEC-13 | F6-03 |
@@ -340,9 +340,9 @@ O ASVS não cobre backup, DNS, CI nem hospedagem, e não tem capítulo de IA gen
 | 16.4.1 | L2 | Log Protection | planejado | Registro codificado contra injeção, legível só pelo serviço e por root | ADR-003 | Fase 7 |
 | 16.4.2 | L2 | Log Protection | planejado | Registro codificado contra injeção, legível só pelo serviço e por root | ADR-003 | Fase 7 |
 | 16.4.3 | L2 | Log Protection | **exceção** | Sistema de registro separado exigiria uma segunda máquina. Compensação: Registro local sem dado sensível, legível só por root; eventos de segurança viram aviso dentro do app (RNF-SEC-13) | BL-013 | — |
-| 16.5.1 | L2 | Error Handling | planejado | Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto | ADR-015 · ADR-010 | F6-03 · F6-04 |
-| 16.5.2 | L2 | Error Handling | planejado | Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto | ADR-015 · ADR-010 | F6-03 · F6-04 |
-| 16.5.3 | L2 | Error Handling | planejado | Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto | ADR-015 · ADR-010 | F6-03 · F6-04 |
+| 16.5.1 | L2 | Error Handling | atende | Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto | ADR-015 · ADR-010 | PR #11 |
+| 16.5.2 | L2 | Error Handling | atende | Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto | ADR-015 · ADR-010 | PR #11 |
+| 16.5.3 | L2 | Error Handling | atende | Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto | ADR-015 · ADR-010 | PR #11 |
 
 ## V17 WebRTC
 

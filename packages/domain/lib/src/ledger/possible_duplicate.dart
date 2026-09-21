@@ -37,9 +37,13 @@ abstract final class PossibleDuplicate {
         .map((char) => _accents[char] ?? char)
         .join()
         .replaceAll(RegExp('[^a-z0-9 ]'), ' ');
-    return plain
-        .split(' ')
-        .where((word) => word.isNotEmpty && !_companySuffixes.contains(word))
-        .join(' ');
+    return plain.split(' ').where(_isMeaningful).join(' ');
   }
+
+  /// Fica de fora o que não identifica o lugar: vazio, sufixo de razão social
+  /// e palavra só de dígitos, como o número da loja (RN-727).
+  static bool _isMeaningful(String word) =>
+      word.isNotEmpty &&
+      !_companySuffixes.contains(word) &&
+      !RegExp(r'^\d+$').hasMatch(word);
 }
