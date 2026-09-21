@@ -1,11 +1,15 @@
+import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
+import 'package:cajui/src/features/budget/presentation/month_close_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/cards/presentation/cards_page.dart';
+import 'package:cajui/src/features/debts/presentation/debts_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// O que a pessoa regula no app: o plano do mês e o retorno sensorial.
+/// O que a pessoa regula no app: o plano do mês, as dívidas, o fechamento e
+/// o retorno sensorial.
 class SettingsPage extends ConsumerWidget {
   /// Cria a tela de ajustes.
   const new({super.key});
@@ -15,24 +19,62 @@ class SettingsPage extends ConsumerWidget {
     return CajuiScreen(
       title: 'Ajustes',
       children: [
-        CajuiListRow(
-          title: 'Plano do mês',
-          subtitle: 'Renda, contas fixas, gastos variáveis e dívidas',
-          trailing: const CajuiIcon(CajuiIconData.chevronRight),
-          semanticLabel: 'Plano do mês, abrir',
-          onPressed: () => PlanPage.open(context),
-        ),
-        CajuiListRow(
-          title: 'Cartões de crédito',
-          subtitle: 'Por onde se paga — e a fatura de cada um',
-          trailing: const CajuiIcon(CajuiIconData.chevronRight),
-          semanticLabel: 'Cartões de crédito, abrir',
-          onPressed: () => CardsPage.open(context),
-        ),
+        ..._cadastros(context),
+        ..._appearance(ref),
         ..._feedback(ref),
       ],
     );
   }
+
+  /// O que a pessoa cadastra uma vez e revisita de vez em quando.
+  List<Widget> _cadastros(BuildContext context) => [
+    _opens(
+      title: 'Plano do mês',
+      subtitle: 'Renda, contas fixas, gastos variáveis e dívidas',
+      onPressed: () => PlanPage.open(context),
+    ),
+    _opens(
+      title: 'Cartões de crédito',
+      subtitle: 'Por onde se paga — e a fatura de cada um',
+      onPressed: () => CardsPage.open(context),
+    ),
+    _opens(
+      title: 'Dívidas',
+      subtitle: 'Quanto falta de cada uma, e quando termina',
+      onPressed: () => DebtsPage.open(context),
+    ),
+    _opens(
+      title: 'Fechar o mês',
+      subtitle: 'O retrato do mês que terminou',
+      onPressed: () => MonthClosePage.open(context),
+    ),
+  ];
+
+  Widget _opens({
+    required String title,
+    required String subtitle,
+    required VoidCallback onPressed,
+  }) => CajuiListRow(
+    title: title,
+    subtitle: subtitle,
+    trailing: const CajuiIcon(CajuiIconData.chevronRight),
+    semanticLabel: '$title, abrir',
+    onPressed: onPressed,
+  );
+
+  /// O tema: o app nasce claro, e o escuro é escolha de quem usa.
+  List<Widget> _appearance(WidgetRef ref) => [
+    CajuiListRow(
+      title: 'Tema escuro',
+      subtitle: 'O app abre no claro; o escuro fica se você ligar',
+      trailing: CajuiSwitch(
+        value: ref.watch(appearanceProvider),
+        semanticLabel: 'Tema escuro',
+        onChanged: (enabled) =>
+            ref.read(appearanceProvider.notifier).setDark(enabled: enabled),
+      ),
+    ),
+  ];
 
   /// Som e vibração: valem na hora, sem botão de salvar.
   List<Widget> _feedback(WidgetRef ref) {
