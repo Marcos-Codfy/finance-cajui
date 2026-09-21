@@ -63,4 +63,5 @@ export 'src/receipts/rule_based_classifier.dart';
 export 'src/shared/clock.dart';
 export 'src/shared/failure.dart';
 export 'src/shared/result.dart';
+export 'src/voice/voice_guide.dart';
 export 'src/voucher/voucher_account.dart';
