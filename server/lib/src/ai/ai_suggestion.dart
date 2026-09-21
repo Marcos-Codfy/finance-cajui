@@ -13,6 +13,7 @@ final class AiSuggestion {
     this.amount,
     this.occurredOn,
     this.documentKind,
+    this.description,
   });
 
   static const _fields = {
@@ -21,6 +22,7 @@ final class AiSuggestion {
     'amountCents',
     'occurredOn',
     'documentKind',
+    'description',
   };
 
   /// A categoria, garantidamente uma das que foram enviadas.
@@ -38,6 +40,10 @@ final class AiSuggestion {
 
   /// O tipo do documento.
   final DocumentKind? documentKind;
+
+  /// A descrição sugerida, já aprovada pelo filtro da RN-775; `null` quando
+  /// a IA não sugeriu ou o filtro recusou.
+  final String? description;
 
   /// Valida [content], a resposta crua da IA, contra o pedido [request].
   ///
@@ -60,6 +66,11 @@ final class AiSuggestion {
       amount: _amount(json['amountCents'], request.text),
       occurredOn: _date(json['occurredOn'], request),
       documentKind: DocumentKind.values.asNameMap()[json['documentKind']],
+      // O único texto livre da IA que pode chegar à tela: só passa o que tem
+      // cara de nome de compra (RN-775).
+      description: ReceiptDescriptionPolicy.accepted(
+        json['description'] as String?,
+      ),
     );
   }
 
@@ -68,7 +79,8 @@ final class AiSuggestion {
       json['confidence'] is num? &&
       json['amountCents'] is int? &&
       json['occurredOn'] is String? &&
-      json['documentKind'] is String?;
+      json['documentKind'] is String? &&
+      json['description'] is String?;
 
   /// Categoria fora da lista enviada não existe (RN-773).
   static String? _category(Object? id, ClassificationRequest request) =>
@@ -82,11 +94,18 @@ final class AiSuggestion {
     return ReceiptFieldReader.amountsIn(text).contains(money) ? money : null;
   }
 
+  /// A data só vale se estiver no texto, em qualquer escrita que o leitor
+  /// entende — `12/09/2026` ou `12/set/2026` (RN-774).
   static LocalDate? _date(Object? iso, ClassificationRequest request) {
-    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch('$iso');
-    if (match == null) return null;
-    final shown = '${match.group(3)}/${match.group(2)}/${match.group(1)}';
-    if (!request.text.contains(shown)) return null;
-    return ReceiptFieldReader.dateIn(shown, today: request.today);
+    final inText = ReceiptFieldReader.datesIn(
+      request.text,
+      today: request.today,
+    );
+    // A comparação é pelo texto `AAAA-MM-DD`: data que a IA inventou, ou que
+    // nem existe no calendário, simplesmente não bate com nenhuma.
+    for (final date in inText) {
+      if ('$date' == iso) return date;
+    }
+    return null;
   }
 }

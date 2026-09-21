@@ -15,7 +15,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "app.cajui"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -31,8 +30,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Assinado com a chave de depuração até a Fase 7, que cria a chave de
+            // publicação fora do repositório (nenhuma chave é versionada).
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -46,4 +45,10 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // OCR no aparelho, com o modelo embutido no APK: lê sem rede desde a
+    // primeira vez e não depende do Google Play Services (ADR-007).
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 }

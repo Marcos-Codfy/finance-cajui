@@ -1,5 +1,6 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
+import 'package:server/src/ai/classification_prompt.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
 import 'package:server/src/ledger/ledger_state.dart';
@@ -29,18 +30,43 @@ final class ReceiptRoutes {
   Router get router => Router()..post('/classify', _classify);
 
   Future<Response> _classify(Request request) async {
-    final body = JsonReader(
-      await JsonBody.read(request),
-      allowed: const {'text'},
-    );
+    final json = await JsonBody.read(request);
+    final body = JsonReader(json, allowed: const {'text', 'examples'});
     final proposal = await classifier.classify(
       ClassificationRequest(
         text: ReceiptText.clean(body.string('text', maxLength: 60000)),
         categories: state.categories.values.toList(),
         today: clock.today(),
+        learnedRules: _examples(json),
       ),
     );
     return Responses.json(_json(proposal));
+  }
+
+  /// O que o aparelho aprendeu com as correções (RN-769): estabelecimento →
+  /// categoria. É opcional e limitado; exemplo de categoria que o servidor
+  /// não conhece é ignorado, e qualquer outra coisa fora do formato é pedido
+  /// malformado.
+  Map<String, String> _examples(Object? json) {
+    final raw = json is Map<String, Object?> ? json['examples'] : null;
+    if (raw == null) return const {};
+    if (raw is! List<Object?> ||
+        raw.length > ClassificationPrompt.maxExamples) {
+      throw const FormatException('campo "examples" fora do formato');
+    }
+    final examples = <String, String>{};
+    for (final item in raw) {
+      final reader = JsonReader(
+        item,
+        allowed: const {'merchant', 'categoryId'},
+      );
+      final categoryId = reader.string('categoryId', maxLength: 64);
+      final merchant = reader.string('merchant', maxLength: 80);
+      if (state.categories.containsKey(categoryId)) {
+        examples[merchant] = categoryId;
+      }
+    }
+    return examples;
   }
 
   Map<String, Object?> _json(EntryProposal proposal) => {
@@ -50,6 +76,7 @@ final class ReceiptRoutes {
     'categoryId': _field(proposal.category, (id) => id),
     'paymentKind': _field(proposal.paymentKind, (kind) => kind.name),
     'merchant': proposal.merchant,
+    'description': proposal.description,
     'installments': proposal.installments,
     'warnings': proposal.warnings,
   };

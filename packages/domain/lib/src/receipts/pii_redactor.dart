@@ -36,8 +36,11 @@ abstract final class PiiRedactor {
     (RegExp(r'\bfinal\s+\d{4}\b', caseSensitive: false), '[CARTAO]'),
     (RegExp(r'\b\d{2}\.?\d{3}\.?\d{3}/\d{4}-?\d{2}\b'), '[CNPJ]'),
     (
+      // O hífen é opcional: a camada de texto de alguns PDFs o perde, e o
+      // CPF "meio mascarado" do banco (***.123.456-**) ainda traz seis dígitos
+      // de verdade — continua sendo dado pessoal.
       RegExp(
-        r'(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})-(?:\d{2}|\*{2})',
+        r'(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})-?(?:\d{2}|\*{2})',
       ),
       '[CPF]',
     ),
@@ -61,7 +64,7 @@ abstract final class PiiRedactor {
     ),
     (
       RegExp(
-        r'\b((?:autentica[cç][aã]o|nsu|protocolo|id da transa[cç][aã]o|controle)\s*:?\s*)[0-9A-Za-z.\-]{6,60}',
+        r'\b((?:autentica[cç][aã]o|nsu|protocolo|id da transa[cç][aã]o|identificador|controle)\s*:?\s*)[0-9A-Za-z.\-]{6,60}',
         caseSensitive: false,
       ),
       '[ID]',
@@ -105,8 +108,46 @@ abstract final class PiiRedactor {
     for (final (pattern, marker) in _labelled) {
       result = result.replaceAllMapped(pattern, (m) => '${m.group(1)}$marker');
     }
-    result = _maskPeople(result.split('\n')).join('\n');
-    return householdNames.fold(result, _maskName);
+    final lines = _maskBlockPeople(_maskPeople(result.split('\n')));
+    return householdNames.fold(lines.join('\n'), _maskName);
+  }
+
+  static final _blockLabel = RegExp(
+    r'^\s*(?:de|para|pagador|recebedor|favorecido|origem|destino|'
+    r'quem pagou|quem recebeu)\s*$',
+    caseSensitive: false,
+  );
+
+  /// Até onde o nome pode ir depois do rótulo: três linhas de nome e a do
+  /// documento.
+  static const _blockReach = 4;
+
+  /// O nome em bloco dos bancos digitais: o rótulo sozinho numa linha ("De"),
+  /// o nome quebrado nas de baixo e, depois, o documento. Se o documento é
+  /// CPF, as linhas do nome viram um `[NOME]` só; se é CNPJ, é o
+  /// estabelecimento, e fica (RN-732).
+  static List<String> _maskBlockPeople(List<String> lines) {
+    final result = <String>[];
+    var index = 0;
+    while (index < lines.length) {
+      final nameLines = _personBlockAfter(lines, index);
+      result.add(lines[index]);
+      if (nameLines > 0) result.add('[NOME]');
+      index += 1 + nameLines;
+    }
+    return result;
+  }
+
+  /// Quantas linhas de nome de pessoa há logo depois do rótulo em [at]; zero
+  /// se ali não há rótulo, ou se o documento que fecha o bloco não é CPF.
+  static int _personBlockAfter(List<String> lines, int at) {
+    if (!_blockLabel.hasMatch(lines[at])) return 0;
+    final after = lines.skip(at + 1).take(_blockReach).toList();
+    final document = after.indexWhere(
+      (line) => line.contains('[CPF]') || line.contains('[CNPJ]'),
+    );
+    if (document <= 0 || !after[document].contains('[CPF]')) return 0;
+    return document;
   }
 
   /// Nome ligado a CPF é pessoa, e é mascarado; nome ligado a CNPJ é o

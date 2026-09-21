@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:cajui/src/core/storage/event_store_opener_file.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
-import 'package:cajui/src/features/ledger/infrastructure/journal_opener_file.dart';
+import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
+import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +25,14 @@ Entry _groceries() {
       book.methodOf('pix').line(const Money.fromCents(5600)),
     ],
   ).valueOrNull!;
+}
+
+/// O livro sobre o registro cifrado da pasta [directory], como o app monta.
+Future<LedgerJournal> openLedgerJournalAt(Directory directory) async {
+  return EventStoreLedgerJournal(
+    store: await openEventStoreAt(directory),
+    codec: LedgerEventCodec(categoryOf: DefaultCatalog.emptyBook.categoryOf),
+  );
 }
 
 void main() {

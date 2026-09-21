@@ -7,6 +7,7 @@ import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_row.dart';
 import 'package:cajui/src/features/ledger/presentation/month_spending_card.dart';
+import 'package:cajui/src/features/receipts/presentation/pending_captures_card.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +64,7 @@ class EntriesPage extends ConsumerWidget {
 
   List<Widget> _ready(EntriesReady state) {
     return [
+      const PendingCapturesCard(),
       MonthSpendingCard(spent: state.spent, voucher: state.book.voucher),
       const SizedBox(height: CajuiSpacing.xl),
       if (state.entries.isEmpty)

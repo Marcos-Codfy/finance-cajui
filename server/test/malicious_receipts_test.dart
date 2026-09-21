@@ -128,10 +128,12 @@ void main() {
         {'categoryId': 'groceries', 'confidence': 0.7, 'description': 'sk-123'},
       );
 
-      // Não existe campo de texto livre na resposta: "description" é campo
-      // desconhecido, e a resposta cai inteira. E as instruções não têm
-      // segredo para vazar.
-      expect(proposal.warnings, ['E-AI-04']);
+      // A descrição é o único texto livre da IA que pode chegar à tela
+      // (RN-775), e esta tem cara de credencial: cai sozinha, sem derrubar o
+      // resto da resposta. E as instruções não têm segredo para vazar.
+      expect(proposal.description, isNull);
+      expect(proposal.warnings, isEmpty);
+      expect(proposal.category.candidates, ['groceries']);
       expect(client.calls.single.system, isNot(contains('sk-')));
       expect(
         client.calls.single.system.toLowerCase(),

@@ -15,13 +15,46 @@ import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Troca o rascunho do formulário a partir de fora dele.
+typedef EntryFormEdit = void Function(
+  EntryDraft Function(EntryDraft draft) change,
+);
+
 /// Lançar uma despesa à mão (UC-ENTRY-01 e UC-ENTRY-02).
 ///
 /// A ordem dos campos é a da lembrança: quanto foi, o que foi, de que tipo,
 /// por onde saiu, quando.
 class EntryFormPage extends ConsumerStatefulWidget {
   /// Cria a tela de lançar.
-  const new({super.key});
+  ///
+  /// Os parâmetros existem para a conferência de um comprovante reaproveitar
+  /// este formulário inteiro — mesmos campos, mesmas regras, mesmos erros —
+  /// mudando só a moldura: [title], o que vai acima dos campos ([header]), as
+  /// ações a mais no pé ([extraActions]) e o que acontece depois de gravar.
+  const new({
+    this.title = 'Nova despesa',
+    this.header,
+    this.extraActions = const [],
+    this.onSaved,
+    this.onBack,
+    super.key,
+  });
+
+  /// O título da tela.
+  final String title;
+
+  /// O que aparece acima dos campos. Recebe [EntryFormEdit], para trocar o
+  /// rascunho **e** fazer os campos de valor mostrarem o número novo.
+  final Widget Function(BuildContext context, EntryFormEdit edit)? header;
+
+  /// As ações abaixo de "Lançar".
+  final List<Widget> extraActions;
+
+  /// Chamado com o lançamento gravado. Sem isto, a tela só fecha.
+  final ValueChanged<Entry>? onSaved;
+
+  /// O que o botão de voltar faz. Sem isto, fecha a tela.
+  final VoidCallback? onBack;
 
   /// Abre a tela.
   static Future<void> open(BuildContext context) {
@@ -75,6 +108,13 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     );
   }
 
+  /// Troca o rascunho por iniciativa do app — um candidato de valor tocado,
+  /// por exemplo — e faz os campos de valor renascerem com o número novo.
+  void _editByApp(EntryDraft Function(EntryDraft draft) change) {
+    _form.edit(change);
+    setState(() => _revision++);
+  }
+
   Future<void> _byApp(Future<void> Function() change) async {
     await change();
     if (mounted) setState(() => _revision++);
@@ -83,7 +123,20 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
   void _closeWhenSaved(EntryFormState? _, EntryFormState next) {
     if (next is! EntryFormSaved) return;
     CajuiFeedbackScope.of(context).saved();
-    Navigator.of(context).pop();
+    final onSaved = widget.onSaved;
+    onSaved == null ? Navigator.of(context).pop() : onSaved(next.entry);
+  }
+
+  /// A descrição que já vem preenchida, quando o rascunho nasce de uma
+  /// captura. Criado uma vez: o campo é de quem digita dali em diante.
+  late final _description = TextEditingController(
+    text: ref.read(entryFormProvider).draft.description,
+  );
+
+  @override
+  void dispose() {
+    _description.dispose();
+    super.dispose();
   }
 
   @override
@@ -96,11 +149,15 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       EntryFormEditing(:final problem) => problem,
       EntryFormSaving() || EntryFormSaved() => null,
     };
+    final header = widget.header;
     return CajuiScreen(
-      title: 'Nova despesa',
-      onBack: Navigator.of(context).pop,
+      title: widget.title,
+      onBack: widget.onBack ?? Navigator.of(context).pop,
       footer: _footer(state, problem),
-      children: _fields(book, state.draft, problem),
+      children: [
+        if (header != null) ...[header(context, _editByApp), _gap],
+        ..._fields(book, state.draft, problem),
+      ],
     );
   }
 
@@ -138,13 +195,16 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
   ) {
     return [
       CajuiAmountField(
+        key: ValueKey(('amount', _revision)),
         label: 'Valor',
+        initialCents: draft.amountCents,
         error: draft.amountCents <= 0 ? fieldError : null,
         onChanged: (cents) => _form.edit((d) => d.copyWith(amountCents: cents)),
       ),
       _gap,
       CajuiTextField(
         label: 'O que foi',
+        controller: _description,
         hint: 'Mercado, ônibus, farmácia',
         onChanged: (text) => _form.edit((d) => d.copyWith(description: text)),
       ),
@@ -194,6 +254,10 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
           loading: state is EntryFormSaving,
           onPressed: state.draft.isComplete ? _form.submit : null,
         ),
+        for (final action in widget.extraActions) ...[
+          const SizedBox(height: CajuiSpacing.sm),
+          action,
+        ],
       ],
     );
   }

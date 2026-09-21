@@ -7,6 +7,7 @@ import 'package:server/src/ai/chat_reply.dart';
 import 'package:server/src/ai/chat_unavailable.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/classification_prompt.dart';
+import 'package:server/src/ai/suggestion_cache.dart';
 import 'package:server/src/ai/token_budget.dart';
 
 /// O classificador que consulta a IA — sempre **por cima** das regras locais,
@@ -25,7 +26,8 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     required this.breaker,
     this.timeout = const Duration(seconds: 8),
     this.categoryAccuracy = const {},
-  });
+    SuggestionCache? cache,
+  }) : cache = cache ?? SuggestionCache();
 
   /// O modelo de linguagem.
   final ChatClient client;
@@ -44,6 +46,10 @@ final class AiReceiptClassifier implements ReceiptClassifier {
   /// correções da pessoa (RN-792).
   final Map<String, double> categoryAccuracy;
 
+  /// As respostas já pagas, para o mesmo comprovante não custar de novo
+  /// (RN-778).
+  final SuggestionCache cache;
+
   static const _rules = RuleBasedClassifier();
 
   /// Os limiares sobre a confiança declarada (RN-743).
@@ -56,15 +62,39 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     // Se as regras já resolveram a categoria, a IA não é chamada: é mais
     // rápido, mais barato, e nada sai do servidor (RN-752).
     if (local.category.confidence == Confidence.high) return local;
+    // O texto é mascarado **de novo** aqui, mesmo que o app já tenha feito:
+    // o servidor não confia em ninguém para isso (RN-730).
+    final redacted = PiiRedactor.redact(
+      request.text,
+      householdNames: request.householdNames,
+    );
+    final key = SuggestionCache.keyOf(redacted, request);
+    final known = cache[key];
+    // Resposta já paga vale mesmo com o orçamento esgotado ou a IA fora do
+    // ar: não custa nada. Só entra no cache o que passou na validação, então
+    // o `!` é seguro.
+    if (known != null) {
+      return _merge(local, AiSuggestion.parse(known, request)!);
+    }
+    return await _consult(local, request, redacted: redacted, cacheKey: key);
+  }
+
+  Future<EntryProposal> _consult(
+    EntryProposal local,
+    ClassificationRequest request, {
+    required String redacted,
+    required String cacheKey,
+  }) async {
     final month = request.today.budgetMonth;
     if (!budget.hasRoomIn(month)) return local.copyWith(warnings: ['E-AI-03']);
     if (!breaker.allowsCall) return local.copyWith(warnings: ['E-AI-01']);
     try {
-      final reply = await _ask(request);
+      final reply = await _ask(redacted, request);
       breaker.recordSuccess();
       await budget.record(month, reply);
       final suggestion = AiSuggestion.parse(reply.content, request);
       if (suggestion == null) return local.copyWith(warnings: ['E-AI-04']);
+      cache[cacheKey] = reply.content;
       return _merge(local, suggestion);
     } on ChatUnavailable {
       breaker.recordFailure();
@@ -75,17 +105,15 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     }
   }
 
-  /// O texto é mascarado **de novo** aqui, mesmo que o app já tenha feito: o
-  /// servidor não confia em ninguém para isso (RN-730).
-  Future<ChatReply> _ask(ClassificationRequest request) {
-    final redacted = PiiRedactor.redact(
-      request.text,
-      householdNames: request.householdNames,
-    );
+  Future<ChatReply> _ask(String redacted, ClassificationRequest request) {
     return client
         .complete(
           system: ClassificationPrompt.system,
-          user: ClassificationPrompt.user(redacted, request.categories),
+          user: ClassificationPrompt.user(
+            redacted,
+            request.categories,
+            examples: request.learnedRules,
+          ),
           maxTokens: 200,
         )
         .timeout(timeout);
@@ -93,6 +121,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
 
   EntryProposal _merge(EntryProposal local, AiSuggestion ai) => local.copyWith(
     category: _category(ai),
+    description: ai.description,
     amount: _amount(local.amount, ai.amount),
     documentKind: _kind(local.documentKind, ai.documentKind),
   );
