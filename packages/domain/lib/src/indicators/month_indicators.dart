@@ -26,8 +26,7 @@ final class MonthIndicators {
 
   /// O **resultado planejado**, em dinheiro: `P = RC − F − D − Vd` (RN-620).
   /// Positivo é sobra; negativo, falta; zero, "o mês fecha no zero" (RN-622).
-  Money get plannedResult =>
-      plan.cashIncome - _committed - plan.variableCash;
+  Money get plannedResult => plan.cashIncome - _committed - plan.variableCash;
 
   /// O **resultado projetado** (RN-621): o planejado, com o real onde ele já
   /// é conhecido. Em cada variável entra o maior entre o gasto e o máximo; o
@@ -77,10 +76,8 @@ final class MonthIndicators {
   /// A **folga ajustável**: quanto de dinheiro ainda dá para economizar nos
   /// variáveis — `máx(0, máximo − máx(gasto, mínimo))`, na parte em dinheiro
   /// (RN-661).
-  Money get adjustableSlack => plan.variables.fold(
-    Money.zero,
-    (sum, line) => sum + slackOf(line),
-  );
+  Money get adjustableSlack =>
+      plan.variables.fold(Money.zero, (sum, line) => sum + slackOf(line));
 
   /// A folga que resta em [line], dado o que já foi gasto nela.
   Money slackOf(PlannedVariable line) {

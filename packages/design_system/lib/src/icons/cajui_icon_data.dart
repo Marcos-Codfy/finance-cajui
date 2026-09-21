@@ -53,6 +53,13 @@ enum CajuiIconData {
   /// Avançar.
   chevronRight(_chevronRight),
 
+  /// Voltar.
+  chevronLeft(_chevronLeft),
+
+  /// Ajustes: dois controles deslizantes, e não engrenagem — o que se faz
+  /// ali é regular, não consertar.
+  sliders(_sliders),
+
   /// Informação e aviso.
   info(_info),
 
@@ -201,6 +208,23 @@ void _chevronRight(Path p) => p
   ..moveTo(9, 5)
   ..lineTo(16, 12)
   ..lineTo(9, 19);
+
+void _chevronLeft(Path p) => p
+  ..moveTo(15, 5)
+  ..lineTo(8, 12)
+  ..lineTo(15, 19);
+
+void _sliders(Path p) {
+  // O trilho para na borda do botão: ícone de traço não tem preenchimento
+  // para esconder a linha que passaria por dentro dele.
+  _line(p, 4, 8, 6.5, 8);
+  _line(p, 11.5, 8, 20, 8);
+  _line(p, 4, 16, 12.5, 16);
+  _line(p, 17.5, 16, 20, 16);
+  p
+    ..addOval(Rect.fromCircle(center: const Offset(9, 8), radius: 2.5))
+    ..addOval(Rect.fromCircle(center: const Offset(15, 16), radius: 2.5));
+}
 
 void _info(Path p) {
   p.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 9));

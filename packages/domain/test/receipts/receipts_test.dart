@@ -70,7 +70,8 @@ void main() {
     });
 
     test('RN-732 nome ligado a CPF é mascarado; ligado a CNPJ, fica', () {
-      const shop = 'Destinatário: MERCADO BOA COMPRA LTDA\nCNPJ 12.345.678/0001-90';
+      const shop =
+          'Destinatário: MERCADO BOA COMPRA LTDA\nCNPJ 12.345.678/0001-90';
 
       expect(redacted, contains('Destinatário: [NOME]'));
       expect(PiiRedactor.redact(shop), contains('MERCADO BOA COMPRA'));
@@ -107,20 +108,22 @@ void main() {
   });
 
   group('ReceiptFieldReader', () {
-    test('RN-753 o valor é o do rótulo TOTAL; subtotal e desconto não contam',
-        () {
-      expect(ReceiptFieldReader.amountCandidates(_coupon), [
-        const Money.fromCents(18640),
-      ]);
-    });
+    test(
+      'RN-753 o valor é o do rótulo TOTAL; subtotal e desconto não contam',
+      () {
+        expect(ReceiptFieldReader.amountCandidates(_coupon), [
+          const Money.fromCents(18640),
+        ]);
+      },
+    );
 
     test('RN-753 sem rótulo, vêm os candidatos, do maior para o menor', () {
       const text = 'Padaria Central\n8,50\n2,00';
 
-      expect(
-        ReceiptFieldReader.amountCandidates(text).map((m) => m.cents),
-        [850, 200],
-      );
+      expect(ReceiptFieldReader.amountCandidates(text).map((m) => m.cents), [
+        850,
+        200,
+      ]);
     });
 
     test('RN-746 data no futuro deixa o campo vazio', () {
@@ -145,29 +148,42 @@ void main() {
       expect(ReceiptFieldReader.installmentsIn(_coupon), isNull);
     });
 
-    test('RN-756 a 759 pagamento de fatura, recebimento e saque não são compra',
-        () {
-      expect(
-        ReceiptFieldReader.documentKindIn(r'Pagamento de fatura — R$ 1.240,00'),
-        DocumentKind.statementPayment,
-      );
-      expect(
-        ReceiptFieldReader.documentKindIn(r'Pix recebido R$ 2.310,00'),
-        DocumentKind.incomeReceipt,
-      );
-      expect(
-        ReceiptFieldReader.documentKindIn(r'Saque 24h R$ 100,00'),
-        DocumentKind.ownTransfer,
-      );
-      expect(ReceiptFieldReader.documentKindIn(_coupon), DocumentKind.purchase);
-    });
+    test(
+      'RN-756 a 759 pagamento de fatura, recebimento e saque não são compra',
+      () {
+        expect(
+          ReceiptFieldReader.documentKindIn(
+            r'Pagamento de fatura — R$ 1.240,00',
+          ),
+          DocumentKind.statementPayment,
+        );
+        expect(
+          ReceiptFieldReader.documentKindIn(r'Pix recebido R$ 2.310,00'),
+          DocumentKind.incomeReceipt,
+        );
+        expect(
+          ReceiptFieldReader.documentKindIn(r'Saque 24h R$ 100,00'),
+          DocumentKind.ownTransfer,
+        );
+        expect(
+          ReceiptFieldReader.documentKindIn(_coupon),
+          DocumentKind.purchase,
+        );
+      },
+    );
 
-    test('RN-727 o estabelecimento normalizado ignora loja, caixa e sufixo', () {
-      final merchant = ReceiptFieldReader.merchantIn(_coupon)!;
+    test(
+      'RN-727 o estabelecimento normalizado ignora loja, caixa e sufixo',
+      () {
+        final merchant = ReceiptFieldReader.merchantIn(_coupon)!;
 
-      expect(PossibleDuplicate.normalize(merchant), 'mercado boa compra');
-      expect(PossibleDuplicate.normalize('Mercado Boa-Compra'), 'mercado boa compra');
-    });
+        expect(PossibleDuplicate.normalize(merchant), 'mercado boa compra');
+        expect(
+          PossibleDuplicate.normalize('Mercado Boa-Compra'),
+          'mercado boa compra',
+        );
+      },
+    );
   });
 
   group('RuleBasedClassifier', () {

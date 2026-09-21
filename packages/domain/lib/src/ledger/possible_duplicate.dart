@@ -8,11 +8,28 @@ import 'package:domain/src/ledger/entry.dart';
 /// bloqueado nem descartado em silêncio.
 abstract final class PossibleDuplicate {
   static const _accents = {
-    'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
-    'é': 'e', 'ê': 'e', 'è': 'e', 'ë': 'e',
-    'í': 'i', 'î': 'i', 'ì': 'i', 'ï': 'i',
-    'ó': 'o', 'ô': 'o', 'õ': 'o', 'ò': 'o', 'ö': 'o',
-    'ú': 'u', 'û': 'u', 'ù': 'u', 'ü': 'u',
+    'á': 'a',
+    'à': 'a',
+    'â': 'a',
+    'ã': 'a',
+    'ä': 'a',
+    'é': 'e',
+    'ê': 'e',
+    'è': 'e',
+    'ë': 'e',
+    'í': 'i',
+    'î': 'i',
+    'ì': 'i',
+    'ï': 'i',
+    'ó': 'o',
+    'ô': 'o',
+    'õ': 'o',
+    'ò': 'o',
+    'ö': 'o',
+    'ú': 'u',
+    'û': 'u',
+    'ù': 'u',
+    'ü': 'u',
     'ç': 'c',
   };
 

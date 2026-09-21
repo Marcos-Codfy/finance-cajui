@@ -42,7 +42,8 @@ class FileChecker {
   }
 
   List<Violation> _fileLength(String path, String content) {
-    final count = '\n'.allMatches(content).length +
+    final count =
+        '\n'.allMatches(content).length +
         (content.isEmpty || content.endsWith('\n') ? 0 : 1);
     if (count <= limits.maxFileLines) return const [];
     return [

@@ -59,14 +59,8 @@ void main() {
     });
 
     test('dia 31 num mês curto vira o último dia do mês', () {
-      expect(
-        const BudgetMonth(2026, 2).dayClamped(31),
-        LocalDate(2026, 2, 28),
-      );
-      expect(
-        const BudgetMonth(2026, 9).dayClamped(5),
-        LocalDate(2026, 9, 5),
-      );
+      expect(const BudgetMonth(2026, 2).dayClamped(31), LocalDate(2026, 2, 28));
+      expect(const BudgetMonth(2026, 9).dayClamped(5), LocalDate(2026, 9, 5));
     });
 
     test('diz se um dia pertence a ele', () {

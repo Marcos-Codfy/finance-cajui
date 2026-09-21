@@ -27,7 +27,11 @@ final class ExceptionalSpending {
       total += entry.paidByTender.cash;
       count++;
     }
-    return ExceptionalSpending._(count: count, total: total, months: upTo.month);
+    return ExceptionalSpending._(
+      count: count,
+      total: total,
+      months: upTo.month,
+    );
   }
 
   const new _({required this.count, required this.total, required this.months});

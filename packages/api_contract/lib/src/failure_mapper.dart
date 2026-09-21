@@ -1,10 +1,14 @@
-import 'package:api_contract/api_contract.dart';
+import 'package:api_contract/src/error_code.dart';
 import 'package:domain/domain.dart';
 
 /// O código do catálogo e os valores que o texto do erro usa.
 typedef MappedFailure = (ErrorCode, Map<String, Object?>);
 
 /// Traduz uma recusa do domínio em erro do catálogo (ADR-015).
+///
+/// Mora no contrato, e não no servidor, porque os dois lados precisam dela: o
+/// servidor para montar o corpo de erro, e o app para chegar ao mesmo texto
+/// quando a regra é recusada **no aparelho**, sem rede.
 ///
 /// Cada `switch` é **exaustivo** sobre uma família selada de `Failure`, e não
 /// há caso curinga: criar uma falha nova no domínio sem dizer aqui que código

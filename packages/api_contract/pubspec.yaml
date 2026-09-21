@@ -9,6 +9,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  domain:
+    path: ../domain
   meta: ^1.16.0
 
 dev_dependencies:

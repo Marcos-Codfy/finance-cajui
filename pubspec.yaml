@@ -12,6 +12,7 @@ workspace:
   - packages/api_contract
   - packages/persistence
   - server
+  - app
   - packages/design_system
   - packages/design_system/gallery
   - tool/code_metrics

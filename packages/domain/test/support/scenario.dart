@@ -10,15 +10,14 @@ import 'package:domain/domain.dart';
 /// Setembro de 2026.
 const BudgetMonth september = BudgetMonth(2026, 9);
 
-FixedExpense _fixed(String id, String name, int cents, int day) =>
-    FixedExpense(
-      id: id,
-      name: name,
-      amount: Money.fromCents(cents),
-      dueDay: day,
-      categoryId: id,
-      paymentMethodId: 'pix',
-    );
+FixedExpense _fixed(String id, String name, int cents, int day) => FixedExpense(
+  id: id,
+  name: name,
+  amount: Money.fromCents(cents),
+  dueDay: day,
+  categoryId: id,
+  paymentMethodId: 'pix',
+);
 
 /// Aluguel, internet, streaming e celular: R$ 1.300.
 final List<FixedExpense> fixedExpenses = [

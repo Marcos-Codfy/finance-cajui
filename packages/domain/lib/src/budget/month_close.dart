@@ -66,6 +66,5 @@ final class MonthClose {
 
   /// Quanto esta revisão mudou o resultado em relação a [previous]:
   /// "− R$ 42,00 em relação à revisão 1".
-  Money differenceFrom(MonthClose previous) =>
-      cashResult - previous.cashResult;
+  Money differenceFrom(MonthClose previous) => cashResult - previous.cashResult;
 }

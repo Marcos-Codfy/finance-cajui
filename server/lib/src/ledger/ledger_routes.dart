@@ -2,7 +2,6 @@ import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/failure_mapper.dart';
 import 'package:server/src/http/json_body.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';

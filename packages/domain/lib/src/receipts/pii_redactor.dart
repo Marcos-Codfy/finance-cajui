@@ -13,15 +13,34 @@ abstract final class PiiRedactor {
   static final List<(RegExp, String)> _patterns = [
     // Linha digitável e código de barras: antes de tudo, porque contêm
     // sequências que parecem CPF, telefone e conta.
-    (RegExp(r'\b\d{5}\.?\d{5}\s\d{5}\.?\d{6}\s\d{5}\.?\d{6}\s\d\s\d{14}\b'), '[BOLETO]'),
+    (
+      RegExp(r'\b\d{5}\.?\d{5}\s\d{5}\.?\d{6}\s\d{5}\.?\d{6}\s\d\s\d{14}\b'),
+      '[BOLETO]',
+    ),
     (RegExp(r'\b\d{44,48}\b'), '[BOLETO]'),
-    (RegExp(r'\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b', caseSensitive: false), '[CHAVE_PIX]'),
+    (
+      RegExp(
+        r'\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b',
+        caseSensitive: false,
+      ),
+      '[CHAVE_PIX]',
+    ),
     (RegExp(r'\bE\d{8}[0-9A-Za-z]{10,40}\b'), '[ID]'),
-    (RegExp(r'(?:\d{4}|\*{4})[ -]?(?:\d{4}|\*{4})[ -]?(?:\d{4}|\*{4})[ -]?\d{4}\b'), '[CARTAO]'),
+    (
+      RegExp(
+        r'(?:\d{4}|\*{4})[ -]?(?:\d{4}|\*{4})[ -]?(?:\d{4}|\*{4})[ -]?\d{4}\b',
+      ),
+      '[CARTAO]',
+    ),
     (RegExp(r'\*{4}\s?\d{4}\b'), '[CARTAO]'),
     (RegExp(r'\bfinal\s+\d{4}\b', caseSensitive: false), '[CARTAO]'),
     (RegExp(r'\b\d{2}\.?\d{3}\.?\d{3}/\d{4}-?\d{2}\b'), '[CNPJ]'),
-    (RegExp(r'(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})-(?:\d{2}|\*{2})'), '[CPF]'),
+    (
+      RegExp(
+        r'(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})-(?:\d{2}|\*{2})',
+      ),
+      '[CPF]',
+    ),
     (RegExp(r'[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,4}'), '[EMAIL]'),
     (RegExp(r'\(\d{2}\)\s?9?\d{4}[-\s]?\d{4}\b'), '[TELEFONE]'),
     (RegExp(r'\b\d{5}-\d{3}\b'), '[ENDERECO]'),
@@ -29,12 +48,46 @@ abstract final class PiiRedactor {
   ];
 
   static final List<(RegExp, String)> _labelled = [
-    (RegExp(r'\b(chave(?:\s+pix)?\s*:?\s*)\S{3,80}', caseSensitive: false), '[CHAVE_PIX]'),
-    (RegExp(r'\b((?:ag[eê]ncia|ag\.?|conta|c/c|cc)\s*:?\s*)\d[\d.\-]{2,14}', caseSensitive: false), '[CONTA]'),
-    (RegExp(r'\b((?:autentica[cç][aã]o|nsu|protocolo|id da transa[cç][aã]o|controle)\s*:?\s*)[0-9A-Za-z.\-]{6,60}', caseSensitive: false), '[ID]'),
-    (RegExp(r'\b(saldo[^\n\d]{0,40})R?\$?\s?[\d.]{1,12},\d{2}', caseSensitive: false), '[SALDO]'),
-    (RegExp(r'^((?:rua|av\.?|avenida|travessa|alameda|quadra|rodovia)\s)[^\n]{3,120}', caseSensitive: false, multiLine: true), '[ENDERECO]'),
-    (RegExp(r'\b((?:pagador|titular|cliente)\s*:\s*)[^\n]{2,80}', caseSensitive: false), '[NOME]'),
+    (
+      RegExp(r'\b(chave(?:\s+pix)?\s*:?\s*)\S{3,80}', caseSensitive: false),
+      '[CHAVE_PIX]',
+    ),
+    (
+      RegExp(
+        r'\b((?:ag[eê]ncia|ag\.?|conta|c/c|cc)\s*:?\s*)\d[\d.\-]{2,14}',
+        caseSensitive: false,
+      ),
+      '[CONTA]',
+    ),
+    (
+      RegExp(
+        r'\b((?:autentica[cç][aã]o|nsu|protocolo|id da transa[cç][aã]o|controle)\s*:?\s*)[0-9A-Za-z.\-]{6,60}',
+        caseSensitive: false,
+      ),
+      '[ID]',
+    ),
+    (
+      RegExp(
+        r'\b(saldo[^\n\d]{0,40})R?\$?\s?[\d.]{1,12},\d{2}',
+        caseSensitive: false,
+      ),
+      '[SALDO]',
+    ),
+    (
+      RegExp(
+        r'^((?:rua|av\.?|avenida|travessa|alameda|quadra|rodovia)\s)[^\n]{3,120}',
+        caseSensitive: false,
+        multiLine: true,
+      ),
+      '[ENDERECO]',
+    ),
+    (
+      RegExp(
+        r'\b((?:pagador|titular|cliente)\s*:\s*)[^\n]{2,80}',
+        caseSensitive: false,
+      ),
+      '[NOME]',
+    ),
   ];
 
   static final _counterparty = RegExp(
