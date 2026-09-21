@@ -43,6 +43,15 @@ final class WeeklyLimit {
     required this.spent,
   });
 
+  /// O limite que esta semana teria se a anterior **não** tivesse passado do
+  /// dela em [previousOverrun]. É o "seria" do resumo semanal: "o limite
+  /// ficou R$ 9,78 menor do que seria" (RN-822).
+  Money limitWithout(Money previousOverrun) {
+    final restored = remainingBudget + previousOverrun;
+    if (!restored.isPositive) return Money.zero;
+    return Money.ratioFloor(restored, week.days, week.daysLeftInMonth);
+  }
+
   /// A semana a que o limite se refere.
   final BudgetWeek week;
 
