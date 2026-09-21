@@ -30,6 +30,17 @@ Arquivo JSON como banco tem limites reais. Esta ADR os escreve, em vez de fingir
 
 Se algum gatilho disparar, o caminho é SQLite (um arquivo, sem servidor), atrás das mesmas portas. O [spike B](../spikes/server-arm64.md) registra o cuidado: a biblioteca nativa precisa existir para arm64.
 
+## Medido na implementação
+
+`packages/persistence/tool/load_benchmark.dart`, no notebook de desenvolvimento, com eventos do tamanho de um lançamento com pagamento dividido:
+
+| Eventos | Equivale a | Conferir a cadeia, sem a chave | Abrir tudo, decifrando | Tamanho |
+|---|---|---|---|---|
+| 5 mil | cerca de 2,5 anos de uso | 83 ms | 271 ms | 2,6 MiB |
+| 50 mil | cerca de 25 anos | 585 ms | **2,4 s** | 25,7 MiB |
+
+O gatilho de 2 s só é tocado com 25 anos de história, e o custo está quase todo em decifrar em Dart puro. A implementação atual decifra o registro inteiro ao abrir, o que é o mais simples e basta por anos; abrir pelo resumo e decifrar só a cauda é o item BL-028, com gatilho mais conservador: **abertura acima de 1 s** — cerca de 20 mil eventos.
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não agora |
