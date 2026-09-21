@@ -1,0 +1,26 @@
+name: server
+description: O backend do Cajui - Dart e Shelf, compilado como executável único. Valida cada comando com o mesmo domínio do app e grava no registro de eventos.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+resolution: workspace
+
+dependencies:
+  api_contract:
+    path: ../packages/api_contract
+  domain:
+    path: ../packages/domain
+  meta: ^1.16.0
+  path: ^1.9.0
+  persistence:
+    path: ../packages/persistence
+  pointycastle: ^4.0.0
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+
+dev_dependencies:
+  test: ^1.31.0
+  very_good_analysis: ^11.0.0

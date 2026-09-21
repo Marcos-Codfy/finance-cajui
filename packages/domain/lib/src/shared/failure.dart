@@ -13,12 +13,41 @@ import 'package:domain/src/money/money.dart';
 /// Só moram aqui as falhas de regra de negócio. Falha de rede, de leitura de
 /// comprovante ou de autenticação nasce nas camadas de fora, em hierarquias
 /// próprias.
+///
+/// As falhas se agrupam por área, em famílias também seladas. Quem traduz
+/// falha em código de erro faz um `switch` por família: cada um é curto, e
+/// todos continuam exaustivos.
 sealed class Failure {
   const new();
 }
 
+/// As recusas de lançamento e de estorno.
+sealed class EntryFailure extends Failure {
+  const new();
+}
+
+/// As recusas do vale alimentação.
+sealed class VoucherFailure extends Failure {
+  const new();
+}
+
+/// As recusas de cartão de crédito.
+sealed class CardFailure extends Failure {
+  const new();
+}
+
+/// As recusas do plano do mês.
+sealed class BudgetFailure extends Failure {
+  const new();
+}
+
+/// As recusas de dívida.
+sealed class DebtFailure extends Failure {
+  const new();
+}
+
 /// `E-DEBT-01` · Mais parcelas pagas do que o total de parcelas (RN-501).
-final class PaidInstallmentsExceedTotal extends Failure {
+final class PaidInstallmentsExceedTotal extends DebtFailure {
   /// Cria a falha com o total e o número de pagas informados.
   const new({required this.total, required this.paid});
 
@@ -30,7 +59,7 @@ final class PaidInstallmentsExceedTotal extends Failure {
 }
 
 /// `E-ENTRY-01` · A soma das linhas de pagamento difere do valor (RN-203).
-final class PaymentLinesMismatch extends Failure {
+final class PaymentLinesMismatch extends EntryFailure {
   /// Cria a falha com o valor do lançamento e a soma das linhas.
   const new({required this.amount, required this.linesTotal});
 
@@ -45,7 +74,7 @@ final class PaymentLinesMismatch extends Failure {
 }
 
 /// `E-ENTRY-02` · A data da compra está no futuro (RN-206).
-final class PurchaseDateInFuture extends Failure {
+final class PurchaseDateInFuture extends EntryFailure {
   /// Cria a falha com a data informada e o dia de hoje.
   const new({required this.occurredOn, required this.today});
 
@@ -57,7 +86,7 @@ final class PurchaseDateInFuture extends Failure {
 }
 
 /// `E-ENTRY-03` · Valor zero ou negativo (RN-104).
-final class NonPositiveAmount extends Failure {
+final class NonPositiveAmount extends EntryFailure {
   /// Cria a falha com o valor recusado.
   const new(this.amount);
 
@@ -66,7 +95,7 @@ final class NonPositiveAmount extends Failure {
 }
 
 /// `E-ENTRY-04` · O estorno passa do que resta estornar (RN-210).
-final class ReversalExceedsRemaining extends Failure {
+final class ReversalExceedsRemaining extends EntryFailure {
   /// Cria a falha com o que resta e o que foi pedido.
   const new({required this.remaining, required this.requested});
 
@@ -78,7 +107,7 @@ final class ReversalExceedsRemaining extends Failure {
 }
 
 /// `E-BUDG-01` · Faixa com mínimo maior que o máximo, ou negativa (RN-420).
-final class RangeMinAboveMax extends Failure {
+final class RangeMinAboveMax extends BudgetFailure {
   /// Cria a falha com os dois limites informados.
   const new({required this.min, required this.max});
 
@@ -90,7 +119,7 @@ final class RangeMinAboveMax extends Failure {
 }
 
 /// `E-BUDG-02` · Tentativa de fechar um mês que ainda não terminou (RN-442).
-final class MonthNotOver extends Failure {
+final class MonthNotOver extends BudgetFailure {
   /// Cria a falha com o mês e o primeiro dia em que ele pode ser fechado.
   const new({required this.month, required this.closableFrom});
 
@@ -102,7 +131,7 @@ final class MonthNotOver extends Failure {
 }
 
 /// `E-BUDG-03` · O ajuste deixaria a categoria abaixo do mínimo da faixa.
-final class AdjustmentBelowMinimum extends Failure {
+final class AdjustmentBelowMinimum extends BudgetFailure {
   /// Cria a falha com a categoria, o mínimo dela e onde o ajuste a deixaria.
   const new({
     required this.categoryId,
@@ -121,7 +150,7 @@ final class AdjustmentBelowMinimum extends Failure {
 }
 
 /// `E-BUDG-04` · Remanejamento maior que a folga da origem (RN-403).
-final class ReallocationExceedsSlack extends Failure {
+final class ReallocationExceedsSlack extends BudgetFailure {
   /// Cria a falha com a folga da origem e o valor pedido.
   const new({required this.slack, required this.requested});
 
@@ -133,7 +162,7 @@ final class ReallocationExceedsSlack extends Failure {
 }
 
 /// `E-CARD-01` · Dia de fechamento ou de vencimento fora de 1 a 31.
-final class InvalidCardDay extends Failure {
+final class InvalidCardDay extends CardFailure {
   /// Cria a falha com o dia recusado.
   const new(this.day);
 
@@ -143,7 +172,7 @@ final class InvalidCardDay extends Failure {
 
 /// `E-CARD-02` · O nome da categoria representa um cartão ou uma fatura
 /// (RN-207 e RN-301).
-final class CategoryRepresentsCard extends Failure {
+final class CategoryRepresentsCard extends CardFailure {
   /// Cria a falha com o nome recusado, para o texto do erro.
   const new(this.name);
 
@@ -152,7 +181,7 @@ final class CategoryRepresentsCard extends Failure {
 }
 
 /// `E-VOUCHER-02` · A categoria não pode ser paga com vale (RN-112).
-final class CategoryNotVoucherEligible extends Failure {
+final class CategoryNotVoucherEligible extends VoucherFailure {
   /// Cria a falha com o nome da categoria, para o texto do erro.
   const new(this.categoryName);
 
@@ -161,7 +190,7 @@ final class CategoryNotVoucherEligible extends Failure {
 }
 
 /// `E-VOUCHER-01` · O pagamento no vale é maior que o saldo (RN-122).
-final class VoucherBalanceExceeded extends Failure {
+final class VoucherBalanceExceeded extends VoucherFailure {
   /// Cria a falha com o saldo disponível e o valor pedido.
   const new({required this.balance, required this.requested});
 
