@@ -1,27 +1,94 @@
+import 'package:cajui/src/features/assistant/presentation/assistant_composer.dart';
+import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
+import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
+import 'package:cajui/src/features/assistant/presentation/assistant_view_model.dart';
+import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// A conversa com o assistente.
-///
-/// A conversa chega com a feature do assistente. A tela não finge um chat:
-/// diz o que vai existir ali e que nada do que já foi lançado se perde.
-class AssistantPage extends StatelessWidget {
+/// A conversa com o assistente: ele olha os números do mês e responde com a
+/// conta na mão — nunca com conselho de investimento, nunca julgando gasto.
+class AssistantPage extends ConsumerWidget {
   /// Cria a tela do assistente.
   const new({super.key});
 
+  /// Três perguntas que o assistente sabe responder bem: a primeira conversa
+  /// não começa diante de um campo vazio.
+  static const _suggestions = [
+    'Quanto dá para gastar nesta semana?',
+    'Para onde foi o dinheiro deste mês?',
+    'Como o mês está fechando?',
+  ];
+
   @override
-  Widget build(BuildContext context) {
-    return const CajuiScreen(
-      title: 'Assistente',
-      children: [
-        CajuiEmptyState(
-          title: 'A conversa entra aqui',
-          message:
-              'Perguntas como "quanto ainda posso gastar nesta semana?" '
-              'serão respondidas com os seus números. O que você lança '
-              'desde já fica guardado para isso.',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(assistantProvider);
+    return switch (state) {
+      AssistantUnpaired() => _unpaired(context),
+      AssistantTalking() => _talking(ref, state),
+    };
+  }
+
+  Widget _unpaired(BuildContext context) => CajuiScreen(
+    title: 'Assistente',
+    children: [
+      CajuiEmptyState(
+        title: 'A conversa passa pelo servidor',
+        message:
+            'O assistente responde com os seus números, e quem monta essa '
+            'conta é o servidor do Cajui. Este aparelho ainda não está '
+            'cadastrado nele. Enquanto isso, os resumos do dia, da semana e '
+            'do mês funcionam aqui mesmo, sem internet.',
+        action: CajuiNoticeAction(
+          label: 'Ver os resumos',
+          onPressed: () => InsightsPage.open(context),
         ),
+      ),
+    ],
+  );
+
+  Widget _talking(WidgetRef ref, AssistantTalking state) {
+    final assistant = ref.read(assistantProvider.notifier);
+    final pending = state.pending;
+    return CajuiScreen(
+      title: 'Assistente',
+      footer: AssistantComposer(
+        enabled: !state.isWaiting,
+        onSend: assistant.ask,
+      ),
+      children: [
+        if (state.exchanges.isEmpty && pending == null)
+          ..._firstTalk(assistant.ask),
+        for (final (question, reply) in state.exchanges) ...[
+          CajuiChatBubble(question, fromUser: true),
+          AssistantReplyView(reply: reply, onRetry: assistant.retry),
+        ],
+        if (pending != null) ...[
+          CajuiChatBubble(pending, fromUser: true),
+          const CajuiChatBubble('', thinking: true),
+        ],
       ],
     );
   }
+
+  List<Widget> _firstTalk(ValueChanged<String> onAsk) => [
+    const CajuiEmptyState(
+      title: 'Pergunte sobre o seu mês',
+      message: 'Eu olho os seus números e respondo com a conta na mão.',
+    ),
+    const SizedBox(height: CajuiSpacing.lg),
+    Wrap(
+      spacing: CajuiSpacing.sm,
+      runSpacing: CajuiSpacing.sm,
+      children: [
+        for (final suggestion in _suggestions)
+          CajuiChip(
+            label: suggestion,
+            selected: false,
+            onSelected: (_) => onAsk(suggestion),
+          ),
+      ],
+    ),
+  ];
 }

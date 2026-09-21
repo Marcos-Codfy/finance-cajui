@@ -1,5 +1,7 @@
 import 'package:cajui/src/core/feedback/sound_player_provider.dart';
 import 'package:cajui/src/core/storage/memory_event_store.dart';
+import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
@@ -40,6 +42,7 @@ List<Override> testOverrides({
   ReceiptInbox? inbox,
   ReceiptReader? reader,
   EventStore? captureStore,
+  AssistantGateway? assistant,
 }) {
   var next = 0;
   return [
@@ -51,6 +54,9 @@ List<Override> testOverrides({
     receiptReaderProvider.overrideWithValue(reader ?? const NoReceiptReader()),
     captureShelfProvider.overrideWithValue(
       EventStoreCaptureShelf(captureStore ?? MemoryEventStore()),
+    ),
+    assistantGatewayProvider.overrideWithValue(
+      assistant ?? const UnpairedAssistantGateway(),
     ),
   ];
 }

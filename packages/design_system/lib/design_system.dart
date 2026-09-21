@@ -23,6 +23,7 @@ export 'src/components/button/cajui_button_tokens.dart';
 export 'src/components/button/cajui_button_variant.dart';
 export 'src/components/button/cajui_icon_button.dart';
 export 'src/components/card/cajui_card.dart';
+export 'src/components/chat/cajui_chat_bubble.dart';
 export 'src/components/chip/cajui_chip.dart';
 export 'src/components/confidence/cajui_confidence_indicator.dart';
 export 'src/components/confidence/cajui_confidence_level.dart';

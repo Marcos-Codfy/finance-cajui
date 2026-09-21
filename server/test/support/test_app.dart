@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:persistence/persistence.dart';
 import 'package:server/src/app.dart';
+import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/http/rate_limiter.dart';
@@ -29,7 +30,10 @@ final class TestApp {
   final List<String> logs;
 
   /// Sobe um servidor novo. [rateLimiter] permite apertar o limite.
-  static Future<TestApp> start({RateLimiter? rateLimiter}) async {
+  static Future<TestApp> start({
+    RateLimiter? rateLimiter,
+    AssistantService? Function(FileEventStore store)? assistant,
+  }) async {
     final data = Directory.systemTemp.createTempSync('cajui-server-');
     addTearDown(() => data.deleteSync(recursive: true));
     final store = await FileEventStore.open(
@@ -44,6 +48,7 @@ final class TestApp {
       log: logs.add,
       sessions: SessionBook(),
       rateLimiter: rateLimiter,
+      assistant: assistant?.call(store),
     );
     return TestApp._(app, store, data, logs);
   }
