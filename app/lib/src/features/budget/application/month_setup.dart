@@ -40,15 +40,22 @@ final class MonthSetup {
       variableBudgets.isEmpty;
 
   /// O plano de [month], com [voucherAvailable] de vale para gastar nele.
-  MonthPlan planFor(BudgetMonth month, {required Money voucherAvailable}) =>
-      MonthPlan.of(
-        month: month,
-        cashIncome: cashIncome,
-        voucherAvailable: voucherAvailable,
-        fixedExpenses: fixedExpenses,
-        variableBudgets: variableBudgets,
-        debtInstallments: debtInstallments,
-      );
+  ///
+  /// [cardInstallments] são as parcelas de compras no cartão que vencem no
+  /// mês: entram ao lado das parcelas de dívida, como compromisso, e não
+  /// consomem o orçamento dos variáveis (RN-312).
+  MonthPlan planFor(
+    BudgetMonth month, {
+    required Money voucherAvailable,
+    Money cardInstallments = Money.zero,
+  }) => MonthPlan.of(
+    month: month,
+    cashIncome: cashIncome,
+    voucherAvailable: voucherAvailable,
+    fixedExpenses: fixedExpenses,
+    variableBudgets: variableBudgets,
+    debtInstallments: debtInstallments + cardInstallments,
+  );
 
   /// O mesmo cadastro com a renda e as parcelas trocadas.
   MonthSetup withMoney({Money? cashIncome, Money? debtInstallments}) =>

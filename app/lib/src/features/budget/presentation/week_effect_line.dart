@@ -28,6 +28,9 @@ class WeekEffectLine extends ConsumerWidget {
     return overview.plan.variables.isNotEmpty &&
         draft.category?.block == Block.variable &&
         _cashPart.isPositive &&
+        // Compra parcelada não mexe no limite da semana: cada parcela entra
+        // como compromisso no mês em que a fatura vence (RN-312).
+        draft.installmentCount == 1 &&
         !day.isBefore(week.start) &&
         !day.isAfter(week.end);
   }

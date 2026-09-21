@@ -1,0 +1,78 @@
+import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/features/cards/application/statement_view.dart';
+import 'package:cajui/src/features/cards/presentation/statement_section.dart';
+import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// A fatura de um cartão: uma **visão** das compras feitas nele, e nunca uma
+/// despesa (RN-330).
+///
+/// Mostra a fatura que já fechou e a que está aberta. Pagar a fatura é uma
+/// liquidação: as compras já contaram quando foram feitas, então o pagamento
+/// não acrescenta nada às despesas do mês (RN-340).
+class StatementPage extends ConsumerWidget {
+  /// Cria a tela da fatura de [card].
+  const new({required this.card, super.key});
+
+  /// O cartão.
+  final CreditCard card;
+
+  /// Abre a tela.
+  static Future<void> open(BuildContext context, CreditCard card) {
+    return Navigator.of(context)
+        .push<void>(CajuiPageRoute(builder: (_) => StatementPage(card: card)));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final book = ref.watch(ledgerProvider).value;
+    if (book == null) return const SizedBox.shrink();
+    final today = ref.watch(clockProvider).today();
+    final views = StatementView.current(book, card, today);
+    final nothingYet = views.every((view) => view.statement.total.isZero);
+    return CajuiScreen(
+      title: card.name,
+      overline: 'fecha dia ${card.closingDay} · vence dia ${card.dueDay}',
+      onBack: Navigator.of(context).pop,
+      children: [
+        if (nothingYet) _noPurchasesYet,
+        for (final view in views)
+          if (!view.statement.total.isZero)
+            StatementSection(
+              view: view,
+              book: book,
+              title: _titleOf(view, today),
+              onSettle: (amount) => _settle(ref, view, amount),
+            ),
+      ],
+    );
+  }
+
+  static const _noPurchasesYet = CajuiEmptyState(
+    title: 'Nenhuma compra neste cartão',
+    message:
+        'Ao lançar uma despesa, escolha este cartão em "Por onde foi pago". '
+        'A compra conta na categoria dela, no dia em que foi feita; a fatura '
+        'aparece aqui, calculada.',
+  );
+
+  Future<void> _settle(WidgetRef ref, StatementView view, Money amount) => ref
+      .read(ledgerProvider.notifier)
+      .settleStatement(
+        card: card,
+        dueMonth: view.cycle.dueMonth,
+        amount: amount,
+      );
+
+  static String _titleOf(StatementView view, LocalDate today) {
+    final due = DateLabels.long(view.cycle.dueOn);
+    return view.isClosedOn(today)
+        ? 'Fatura fechada · vence em $due'
+        : 'Fatura aberta · fecha em '
+              '${DateLabels.long(view.cycle.closesOn)}, vence em $due';
+  }
+}

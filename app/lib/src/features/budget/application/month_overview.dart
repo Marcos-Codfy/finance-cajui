@@ -20,6 +20,7 @@ final class MonthOverview {
       month,
       // O vale que o mês tem para gastar: o que resta mais o que já saiu.
       voucherAvailable: book.voucher.balance + spent.mealVoucher,
+      cardInstallments: book.installmentsDueIn(month),
     );
     final spending = MonthSpending.of(
       month,
@@ -30,6 +31,8 @@ final class MonthOverview {
       today: today,
       plan: plan,
       voucher: book.voucher,
+      statementReserve: _reserveOf(book),
+      hasCards: book.cards.isNotEmpty,
       indicators: MonthIndicators(plan, spending),
       week: WeeklyLimit.of(
         week: BudgetWeek.containing(today),
@@ -43,9 +46,24 @@ final class MonthOverview {
     required this.today,
     required this.plan,
     required this.voucher,
+    required this.statementReserve,
+    required this.hasCards,
     required this.indicators,
     required this.week,
   });
+
+  /// A reserva de todos os cartões, somada. A conta é do domínio, cartão a
+  /// cartão; aqui só se junta.
+  static Money _reserveOf(LedgerBook book) => book.cards.fold(
+    Money.zero,
+    (sum, card) =>
+        sum +
+        StatementReserve.of(
+          card,
+          entries: book.entries,
+          settlements: book.settlements,
+        ),
+  );
 
   /// O dia de hoje.
   final LocalDate today;
@@ -55,6 +73,14 @@ final class MonthOverview {
 
   /// A conta do vale.
   final VoucherAccount voucher;
+
+  /// A **reserva da fatura**: o que já foi comprado à vista no cartão e ainda
+  /// vai sair da conta quando a fatura vencer. A compra já contou no mês em
+  /// que foi feita (RN-310); a reserva só lembra que o dinheiro tem dono.
+  final Money statementReserve;
+
+  /// Se há cartão cadastrado — sem cartão, a reserva nem aparece.
+  final bool hasCards;
 
   /// A sobra prevista, a renda comprometida e os ajustes possíveis.
   final MonthIndicators indicators;

@@ -15,6 +15,8 @@ final class LedgerBook {
     required this.categories,
     required this.paymentMethods,
     this.entries = const [],
+    this.cards = const [],
+    this.settlements = const [],
     this.setup = MonthSetup.empty,
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
@@ -22,17 +24,36 @@ final class LedgerBook {
   /// As categorias em que se pode lançar.
   final List<Category> categories;
 
-  /// As formas de pagamento cadastradas.
+  /// As formas de pagamento de fábrica: Pix, débito, dinheiro, vale, boleto.
+  /// Os cartões de crédito entram por [methods].
   final List<PaymentMethod> paymentMethods;
 
   /// Os lançamentos, na ordem em que foram gravados.
   final List<Entry> entries;
+
+  /// Os cartões de crédito cadastrados.
+  final List<CreditCard> cards;
+
+  /// As faturas já pagas.
+  final List<Settlement> settlements;
 
   /// O plano do mês em vigor.
   final MonthSetup setup;
 
   /// A conta do vale, com o saldo em vigor.
   final VoucherAccount voucher;
+
+  /// Tudo por onde dá para pagar: as formas de fábrica e, depois, cada
+  /// cartão cadastrado. Cartão é forma de pagamento, e só isso (RN-301).
+  List<PaymentMethod> get methods => [
+    ...paymentMethods,
+    for (final card in cards)
+      PaymentMethod(
+        id: card.id,
+        name: card.name,
+        kind: PaymentMethodKind.creditCard,
+      ),
+  ];
 
   /// O livro depois de [event].
   LedgerBook apply(LedgerEvent event) => switch (event) {
@@ -49,16 +70,27 @@ final class LedgerBook {
       voucher: voucher.adjust(adjustment),
     ),
     PlanDefined(:final setup) => _with(setup: setup),
+    // A versão mais recente do cartão toma o lugar da anterior.
+    CardDefined(:final card) => _with(
+      cards: [...cards.where((known) => known.id != card.id), card],
+    ),
+    StatementSettled(:final settlement) => _with(
+      settlements: [...settlements, settlement],
+    ),
   };
 
   LedgerBook _with({
     List<Entry>? entries,
+    List<CreditCard>? cards,
+    List<Settlement>? settlements,
     VoucherAccount? voucher,
     MonthSetup? setup,
   }) => LedgerBook(
     categories: categories,
     paymentMethods: paymentMethods,
     entries: entries ?? this.entries,
+    cards: cards ?? this.cards,
+    settlements: settlements ?? this.settlements,
     setup: setup ?? this.setup,
     voucher: voucher ?? this.voucher,
   );
@@ -79,11 +111,25 @@ final class LedgerBook {
       entriesIn(month)
           .fold(TenderAmounts.zero, (sum, entry) => sum + entry.paidByTender);
 
+  /// As parcelas de compras no cartão que vencem em [month]: entram no mês
+  /// como compromisso do bloco de dívidas, e não como gasto variável
+  /// (RN-311 e RN-312).
+  Money installmentsDueIn(BudgetMonth month) => entries.fold(
+    Money.zero,
+    (sum, entry) =>
+        sum +
+        (entry.installmentPlan?.installmentDueIn(month)?.amount ?? Money.zero),
+  );
+
   /// A categoria de identificador [id].
   Category categoryOf(String id) =>
       categories.firstWhere((category) => category.id == id);
 
   /// A forma de pagamento de identificador [id].
   PaymentMethod methodOf(String id) =>
-      paymentMethods.firstWhere((method) => method.id == id);
+      methods.firstWhere((method) => method.id == id);
+
+  /// O cartão de identificador [id], ou `null`.
+  CreditCard? cardOf(String id) =>
+      cards.where((card) => card.id == id).firstOrNull;
 }
