@@ -1,5 +1,7 @@
 import 'package:cajui/src/features/budget/application/month_setup.dart';
+import 'package:cajui/src/features/ledger/application/correction_guard.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
+import 'package:cajui/src/features/ledger/application/entry_changes.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
@@ -7,8 +9,8 @@ import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Os casos de uso do livro de lançamentos: abrir, lançar e corrigir o saldo
-/// do vale.
+/// Os casos de uso do livro de lançamentos: abrir, lançar, corrigir, cancelar,
+/// estornar e acertar o saldo do vale.
 ///
 /// O caminho de toda escrita é o mesmo do servidor: aplicar as regras do
 /// domínio, **gravar o fato** e só então mudar o estado que a tela vê. Se a
@@ -27,11 +29,29 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
   /// nada é gravado nesse caso.
   Future<Result<Entry>> record(EntryDraft draft) async {
     final book = await future;
-    final result = Entry.create(
-      // Lançamento que nasce de um comprovante usa a chave gerada na chegada
-      // dele: confirmar duas vezes o mesmo comprovante grava um fato só.
-      id: draft.captureId ?? ref.read(newIdProvider)(),
-      origin: draft.origin,
+    // Lançamento que nasce de um comprovante usa a chave gerada na chegada
+    // dele: confirmar duas vezes o mesmo comprovante grava um fato só.
+    final id = draft.captureId ?? ref.read(newIdProvider)();
+    final result = _entryFrom(draft, book, id: id, origin: draft.origin);
+    final entry = result.valueOrNull;
+    if (entry == null) return result;
+    // Já gravado: repetir a confirmação não lança de novo (RN-781).
+    if (book.entryOf(entry.id) != null) return result;
+    final paid = book.voucher.pay(entry.paidByTender.mealVoucher);
+    if (paid.failureOrNull case final failure?) return Err(failure);
+    await _commit(book, EntryRecorded(entry));
+    return result;
+  }
+
+  Result<Entry> _entryFrom(
+    EntryDraft draft,
+    LedgerBook book, {
+    required String id,
+    required EntryOrigin origin,
+  }) {
+    return Entry.create(
+      id: id,
+      origin: origin,
       description: draft.description.trim(),
       amount: Money.fromCents(draft.amountCents),
       occurredOn: draft.occurredOn,
@@ -40,13 +60,75 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       today: ref.read(clockProvider).today(),
       installmentPlan: _planOf(draft, book),
     );
+  }
+
+  /// Corrige o lançamento que [draft] aponta em `correctionOf` (RN-208). As
+  /// regras são as mesmas de lançar; o original fica no registro, e a versão
+  /// nova passa a valer em toda visão. Sem mudança, nenhum fato é gravado.
+  Future<Result<Entry>> correct(EntryDraft draft) async {
+    final book = await future;
+    final original = book.entryOf(draft.correctionOf!)!;
+    final result = _entryFrom(
+      draft,
+      book,
+      id: original.id,
+      origin: original.origin,
+    );
     final entry = result.valueOrNull;
     if (entry == null) return result;
-    // Já gravado: repetir a confirmação não lança de novo (RN-781).
-    if (book.entries.any((known) => known.id == entry.id)) return result;
-    final paid = book.voucher.pay(entry.paidByTender.mealVoucher);
-    if (paid.failureOrNull case final failure?) return Err(failure);
-    await _commit(book, EntryRecorded(entry));
+    final changes = EntryChanges.between(original, entry);
+    if (changes.isEmpty) return result;
+    final refusal = CorrectionGuard.refusalOf(book, original, entry);
+    if (refusal != null) return Err(refusal);
+    await _commit(
+      book,
+      EntryCorrected(
+        id: 'correction-${ref.read(newIdProvider)()}',
+        entry: entry,
+        on: ref.read(clockProvider).today(),
+        reason: changes.join(', '),
+      ),
+    );
+    return result;
+  }
+
+  /// Cancela o lançamento [entryId] (RN-208): ele sai de toda visão e de toda
+  /// conta, e o que o vale tinha pago volta ao saldo. O fato original fica no
+  /// registro.
+  Future<void> cancel(String entryId, {required String reason}) async {
+    final book = await future;
+    if (book.entryOf(entryId) == null) return;
+    await _commit(
+      book,
+      EntryCancelled(
+        id: 'cancellation-${ref.read(newIdProvider)()}',
+        entryId: entryId,
+        on: ref.read(clockProvider).today(),
+        reason: reason,
+      ),
+    );
+  }
+
+  /// Registra que [amount] da compra [entry] voltou pela forma
+  /// [paymentMethodId], no dia [occurredOn] (RN-209 e RN-211). O domínio
+  /// recusa o que passar do que ainda resta naquela linha (RN-210).
+  Future<Result<Reversal>> reverse({
+    required Entry entry,
+    required String paymentMethodId,
+    required Money amount,
+    required LocalDate occurredOn,
+  }) async {
+    final book = await future;
+    final result = Reversal.create(
+      id: ref.read(newIdProvider)(),
+      entry: entry,
+      paymentMethodId: paymentMethodId,
+      amount: amount,
+      occurredOn: occurredOn,
+      previous: book.reversedOf(entry.id),
+    );
+    final reversal = result.valueOrNull;
+    if (reversal != null) await _commit(book, EntryReversed(reversal));
     return result;
   }
 
