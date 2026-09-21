@@ -35,6 +35,7 @@ Um componente novo que se toca **não reimplementa** nada disso.
 |---|---|---|
 | `CajuiAppSurface` | O chão do app: entrega tema e retorno sensorial, pinta o fundo e define o texto padrão | `themeOf` segue o claro/escuro do aparelho e baixa o movimento quando o sistema pede ou quando o aparelho perde quadros. O app não escolhe cor de fundo nem estilo de texto |
 | `CajuiScreen` | O esqueleto de toda tela: título, conteúdo rolável, ação presa ao pé | O título rola com o conteúdo e é cabeçalho para o leitor de tela. Voltar só aparece quando há para onde voltar. Conteúdo limitado a 640 de largura |
+| `CajuiSectionTitle` | O título de uma seção dentro da tela: "Contas fixas", "Por onde foi pago" | Traz o próprio respiro — espaço de seção acima, pequeno abaixo —, para duas telas nunca separarem seções de jeitos diferentes. É cabeçalho para o leitor de tela |
 | `CajuiPageRoute` | A troca de tela | A tela nova sobe 4% enquanto aparece; em `reduced`, só esmaece |
 | `CajuiLocalizations` | Os textos de sistema que os componentes pedem ao Flutter | Existe para o app não importar o Material — o verificador reprova esse import (ADR-014) |
 
