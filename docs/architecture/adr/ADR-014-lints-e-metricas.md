@@ -18,6 +18,13 @@ Regra que não é conferida por máquina vira intenção. Com uma pessoa só no 
    - **importação por camada**: `domain` não importa Flutter, `dart:io` nem `dart:html`; `presentation` não importa `infrastructure` ([ADR-001](ADR-001-monorepo-e-dominio-compartilhado.md), [ADR-002](ADR-002-estado-com-riverpod.md));
    - **fonte única do design**: fora de `packages/design_system`, reprova `Color(`, `TextStyle(`, `Duration(` de interface e widget cru do Material;
    - **`TODO` sem dono**: todo `TODO` cita um item do `BACKLOG.md`, ou reprova.
+
+   **Em vigor desde o passo 5 da Fase 6** (`ArchitectureChecker`, regras `layer-imports`, `raw-style` e `orphan-todo`), com três precisões que só apareceram na hora de escrever:
+   - o domínio tem lista do que **pode** importar (`dart:core`, `async`, `collection`, `convert`, `math`, `typed_data`, `package:meta` e ele mesmo), e não do que não pode — dependência nova no domínio passa a ser decisão, não descuido;
+   - além de `presentation` não enxergar `infrastructure`, `application` não enxerga nenhuma das duas, e `infrastructure` não enxerga `presentation`. Quem liga as pontas é a raiz de composição do app;
+   - "widget cru do Material" virou proibição do **import** de `material.dart` e `cupertino.dart` em `app/lib`, mesmo com `show`. O que o app precisar do Material entra no design system (foi assim que nasceu `CajuiLocalizations`). `Duration(` só é reprovado em `presentation`: espera de rede em `infrastructure` não é duração de interface.
+
+   Escrever as regras revelou um furo do próprio verificador: as pastas conferidas por padrão eram só `packages` e `tool`, e `server/` nunca tinha sido medido — havia dois arquivos de teste acima de 300 linhas, divididos no mesmo passo. A lista padrão agora é `app`, `packages`, `server` e `tool`.
 4. **Trava local antes do commit** (gancho `pre-commit`): varredura de segredos com `gitleaks`, `flutter analyze`, o verificador e os testes do pacote alterado. Gancho `commit-msg`: Conventional Commits.
 5. **O CI repete tudo** — a trava local é conveniência; quem garante é o CI. Em dois ritmos (BL-023): leve em todo PR (análise, verificador, testes, `gitleaks`); pesado só no `main` (build Android, build web, Lighthouse).
 

@@ -9,10 +9,11 @@ String _function(int bodyLines, {String name = 'work'}) => [
   '',
 ].join('\n');
 
-List<String> _rules(String content, {bool isTest = false}) => const FileChecker()
-    .check('sample.dart', content, isTest: isTest)
-    .map((violation) => violation.rule)
-    .toList();
+List<String> _rules(String content, {bool isTest = false}) =>
+    const FileChecker()
+        .check('sample.dart', content, isTest: isTest)
+        .map((violation) => violation.rule)
+        .toList();
 
 void main() {
   group('linhas por função', () {
@@ -37,7 +38,10 @@ void main() {
           .check('lib/a.dart', '\n\n${_function(40)}')
           .single;
 
-      expect(violation.toString(), startsWith('lib/a.dart:3  [function-lines]'));
+      expect(
+        violation.toString(),
+        startsWith('lib/a.dart:3  [function-lines]'),
+      );
       expect(violation.message, contains('42 linhas'));
     });
   });
@@ -111,7 +115,8 @@ final class Err implements Result {}
     });
 
     test('typedef e extensão não contam como tipo', () {
-      const content = 'class A {}\ntypedef F = void Function();\n'
+      const content =
+          'class A {}\ntypedef F = void Function();\n'
           'extension on A {}\n';
 
       expect(_rules(content), isEmpty);
