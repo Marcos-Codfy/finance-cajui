@@ -4,8 +4,17 @@
 /// `RN-xxx` tem uma implementação e um teste, nomeado pela regra.
 library;
 
+export 'src/budget/amount_range.dart';
+export 'src/budget/fixed_expense.dart';
+export 'src/budget/fixed_occurrence.dart';
+export 'src/budget/month_close.dart';
+export 'src/budget/month_plan.dart';
+export 'src/budget/planned_variable.dart';
+export 'src/budget/reallocation.dart';
+export 'src/budget/variable_budget.dart';
 export 'src/calendar/budget_month.dart';
 export 'src/calendar/local_date.dart';
+export 'src/calendar/month_span.dart';
 export 'src/card/card_statement.dart';
 export 'src/card/credit_card.dart';
 export 'src/card/installment.dart';

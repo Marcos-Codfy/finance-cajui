@@ -1,3 +1,4 @@
+import 'package:domain/src/calendar/budget_month.dart';
 import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/money/money.dart';
 
@@ -61,6 +62,42 @@ final class ReversalExceedsRemaining extends Failure {
   final Money remaining;
 
   /// O valor do estorno pedido.
+  final Money requested;
+}
+
+/// `E-BUDG-01` · Faixa com mínimo maior que o máximo, ou negativa (RN-420).
+final class RangeMinAboveMax extends Failure {
+  /// Cria a falha com os dois limites informados.
+  const new({required this.min, required this.max});
+
+  /// O mínimo informado.
+  final Money min;
+
+  /// O máximo informado.
+  final Money max;
+}
+
+/// `E-BUDG-02` · Tentativa de fechar um mês que ainda não terminou (RN-442).
+final class MonthNotOver extends Failure {
+  /// Cria a falha com o mês e o primeiro dia em que ele pode ser fechado.
+  const new({required this.month, required this.closableFrom});
+
+  /// O mês que se tentou fechar.
+  final BudgetMonth month;
+
+  /// O primeiro dia em que o fechamento passa a ser aceito.
+  final LocalDate closableFrom;
+}
+
+/// `E-BUDG-04` · Remanejamento maior que a folga da origem (RN-403).
+final class ReallocationExceedsSlack extends Failure {
+  /// Cria a falha com a folga da origem e o valor pedido.
+  const new({required this.slack, required this.requested});
+
+  /// Quanto a categoria de origem ainda tem de folga.
+  final Money slack;
+
+  /// Quanto se tentou mover.
   final Money requested;
 }
 
