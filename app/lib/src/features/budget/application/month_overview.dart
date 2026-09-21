@@ -20,7 +20,7 @@ final class MonthOverview {
       month,
       // O vale que o mês tem para gastar: o que resta mais o que já saiu.
       voucherAvailable: book.voucher.balance + spent.mealVoucher,
-      cardInstallments: book.installmentsDueIn(month),
+      installmentsDue: book.installmentsDueIn(month),
       receivedCashIncome: book.cashIncomeIn(month),
     );
     final spending = MonthSpending.of(

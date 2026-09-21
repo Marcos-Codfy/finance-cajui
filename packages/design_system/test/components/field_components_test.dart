@@ -129,4 +129,38 @@ void main() {
       expect(find.byType(CajuiIcon), findsOneWidget);
     });
   });
+
+  group('CajuiFieldLabel', () {
+    testWidgets('nomeia um grupo de escolhas para o leitor de tela', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(const CajuiFieldLabel('Em que moeda')));
+
+      expect(find.text('Em que moeda'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.text('Em que moeda')),
+        isSemantics(label: 'Em que moeda'),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('dentro de um campo, não repete o nome para o leitor', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        host(const CajuiFieldFrame(label: 'Valor', child: Text(r'R$ 10,00'))),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(ExcludeSemantics),
+          matching: find.text('Valor'),
+        ),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+  });
 }

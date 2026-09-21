@@ -81,13 +81,14 @@ void main() {
     expect(player.played, isNotEmpty);
   });
 
-  testWidgets('segue o tema escuro do aparelho', (tester) async {
+  testWidgets('abre no claro mesmo com o aparelho no escuro: o tema é '
+      'escolha de quem usa, nos ajustes', (tester) async {
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
     await _open(tester);
 
     final theme = CajuiTheme.of(tester.element(find.byType(CajuiNavBar)));
-    expect(theme.colors.brightness, Brightness.dark);
+    expect(theme.colors.brightness, Brightness.light);
   });
 }

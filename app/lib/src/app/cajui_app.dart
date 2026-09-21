@@ -1,4 +1,5 @@
 import 'package:cajui/src/app/home_shell.dart';
+import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/feedback_providers.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -23,7 +24,11 @@ class CajuiApp extends ConsumerWidget {
       pageRouteBuilder: <T>(settings, builder) =>
           CajuiPageRoute<T>(settings: settings, builder: builder),
       builder: (context, child) => CajuiAppSurface(
-        theme: CajuiAppSurface.themeOf(context),
+        // A escolha de quem usa vence o aparelho: o app nasce claro.
+        theme: CajuiAppSurface.themeOf(
+          context,
+          dark: ref.watch(appearanceProvider),
+        ),
         feedback: ref.watch(feedbackProvider),
         child: child!,
       ),

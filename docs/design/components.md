@@ -57,6 +57,8 @@ Um componente novo que se toca **não reimplementa** nada disso.
 
 Todos sobre `CajuiFieldFrame`, que dá o rótulo sempre visível (fora do campo, nunca como dica que some), a ajuda e o erro.
 
+`CajuiFieldLabel` é esse rótulo, sozinho: serve ao que não é campo de texto — um grupo de chips, por exemplo —, porque grupo de escolhas sem rótulo deixa quem usa leitor de tela sem saber o que está escolhendo. Traz o próprio espaço (`CajuiFieldLabel.gap`) para o rótulo ficar sempre à mesma distância do que nomeia.
+
 | Componente | Estados | Regras |
 |---|---|---|
 | `CajuiTextField` | Vazio com dica · preenchido · com ajuda · com erro · em foco · inativo | O erro fica sob o campo até ser resolvido e diz o que fazer ([catálogo](../spec/error-catalog.md), classe `validação`) |

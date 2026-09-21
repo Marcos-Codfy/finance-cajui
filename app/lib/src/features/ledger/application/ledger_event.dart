@@ -158,3 +158,46 @@ final class EntryReversed extends LedgerEvent {
   /// O estorno, já aceito pelo domínio.
   final Reversal reversal;
 }
+
+/// Uma dívida foi cadastrada, ou teve os dados alterados (RN-501).
+///
+/// O fato carrega a dívida **inteira**, e a versão mais recente vale — o
+/// mesmo desenho do cartão. O valor para quitar informado pela pessoa vai
+/// junto (RN-511).
+final class DebtDefined extends LedgerEvent {
+  /// Registra a dívida [debt]. Alterar é um fato novo, com [id] próprio.
+  const new({required super.id, required this.debt});
+
+  /// A dívida, já aceita pelo domínio.
+  final Debt debt;
+}
+
+/// Uma parcela de dívida foi paga (RN-520).
+///
+/// O pagamento em si é um **lançamento** do bloco de dívidas; este fato só o
+/// liga à dívida, para ela contar mais uma parcela paga. Se o lançamento for
+/// cancelado, a parcela volta a estar em aberto.
+final class DebtInstallmentPaid extends LedgerEvent {
+  /// Liga o lançamento [entryId] à dívida [debtId].
+  const new({required this.debtId, required this.entryId})
+    : super(id: 'debt-payment-$entryId');
+
+  /// A dívida que teve a parcela paga.
+  final String debtId;
+
+  /// O lançamento que pagou a parcela.
+  final String entryId;
+}
+
+/// Um mês foi fechado, ou teve o fechamento revisado (RN-440 e RN-441).
+///
+/// Cada revisão é um fato próprio: a anterior continua no registro, e a
+/// diferença entre as duas é o que a tela mostra depois de um lançamento
+/// tardio.
+final class MonthClosed extends LedgerEvent {
+  /// Registra o fechamento [close].
+  new(this.close) : super(id: 'close-${close.month}-${close.revision}');
+
+  /// O retrato do mês: qual mês, que revisão, o resultado e quando foi feito.
+  final MonthClose close;
+}

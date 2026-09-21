@@ -87,6 +87,14 @@ abstract final class DefaultCatalog {
       block: Block.fixed,
       groupId: 'housing',
     ),
+    // O pagamento de uma parcela de dívida é lançamento como qualquer outro
+    // (RN-520); é o bloco que o separa do gasto do mês.
+    Category(
+      id: 'debt-installment',
+      name: 'Parcela de dívida',
+      block: Block.debt,
+      groupId: 'debt',
+    ),
   ];
 
   /// As formas de pagamento iniciais.

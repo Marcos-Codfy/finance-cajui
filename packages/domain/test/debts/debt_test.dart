@@ -54,6 +54,16 @@ void main() {
       expect(loan.outstandingBalance, Money.zero);
     });
 
+    test(
+      'RN-208 cancelar o pagamento de uma parcela a devolve ao que falta',
+      () {
+        final loan = _loan(paid: 6).valueOrNull!.withInstallmentReverted();
+
+        expect(loan.paidInstallments, 5);
+        expect(loan.remainingInstallments, 7);
+      },
+    );
+
     test('RN-531 a previsão de quitação é o mês da última parcela', () {
       // 12 parcelas a partir de abril de 2026: a última é em março de 2027.
       expect(_loan().valueOrNull!.payoffForecast, const BudgetMonth(2027, 3));
