@@ -34,7 +34,10 @@ final class Reversal {
   final LocalDate occurredOn;
 
   /// Quanto já voltou pela forma de pagamento [paymentMethodId].
-  static Money _reversedOn(String paymentMethodId, Iterable<Reversal> previous) {
+  static Money _reversedOn(
+    String paymentMethodId,
+    Iterable<Reversal> previous,
+  ) {
     return previous
         .where((r) => r.line.paymentMethodId == paymentMethodId)
         .fold(Money.zero, (sum, r) => sum + r.line.amount);

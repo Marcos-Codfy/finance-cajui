@@ -43,8 +43,6 @@ abstract final class StatementReserve {
     });
   }
 
-  static bool _paidOnCard(CreditCard card, Entry entry) =>
-      entry.paymentLines.any(
-        (line) => line.kind.isCreditCard && line.paymentMethodId == card.id,
-      );
+  static bool _paidOnCard(CreditCard card, Entry entry) => entry.paymentLines
+      .any((line) => line.kind.isCreditCard && line.paymentMethodId == card.id);
 }

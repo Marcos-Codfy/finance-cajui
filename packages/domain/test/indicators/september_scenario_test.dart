@@ -131,7 +131,12 @@ void main() {
           category: internet,
           on: LocalDate(2026, 9, 9),
         ),
-        parceled(id: 'fogao', cents: 96000, count: 6, on: LocalDate(2026, 9, 9)),
+        parceled(
+          id: 'fogao',
+          cents: 96000,
+          count: 6,
+          on: LocalDate(2026, 9, 9),
+        ),
       ];
 
       expect(_limitOn(9, entries).spent, _cents(26000));
@@ -234,7 +239,10 @@ void main() {
         _cents(10000),
       );
       expect(
-        BudgetAdjustment.maxAfterCut(leisureBudget, _cents(15001)).failureOrNull,
+        BudgetAdjustment.maxAfterCut(
+          leisureBudget,
+          _cents(15001),
+        ).failureOrNull,
         isA<AdjustmentBelowMinimum>(),
       );
     });

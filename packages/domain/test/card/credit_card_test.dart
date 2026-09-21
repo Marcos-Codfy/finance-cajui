@@ -97,10 +97,7 @@ void main() {
 
       expect(plan.installments.first.dueMonth, _october);
       expect(plan.installments.last.dueMonth, const BudgetMonth(2027, 3));
-      expect(
-        plan.installments.map((i) => i.amount.cents).toSet(),
-        {16000},
-      );
+      expect(plan.installments.map((i) => i.amount.cents).toSet(), {16000});
     });
 
     test('RN-312 o parcelamento não consome o variável do mês da compra', () {

@@ -73,8 +73,7 @@ final class Debt {
 
   /// O mês da última parcela, no calendário atual. É sempre apresentado como
   /// projeção: "no ritmo atual, quita em abril de 2027" (RN-531).
-  BudgetMonth get payoffForecast =>
-      firstMonth.addMonths(totalInstallments - 1);
+  BudgetMonth get payoffForecast => firstMonth.addMonths(totalInstallments - 1);
 
   /// A parcela que entra no plano de [month], em dinheiro (RN-504). Zero
   /// fora do calendário da dívida: ela sai do plano no mês seguinte ao da

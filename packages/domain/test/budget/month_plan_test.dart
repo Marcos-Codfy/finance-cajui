@@ -11,7 +11,10 @@ AmountRange _range(int min, int max) =>
 void main() {
   group('AmountRange', () {
     test('RN-420 aceita 0 ≤ mínimo ≤ máximo, inclusive iguais', () {
-      expect(AmountRange.create(min: Money.zero, max: _cents(100)).isOk, isTrue);
+      expect(
+        AmountRange.create(min: Money.zero, max: _cents(100)).isOk,
+        isTrue,
+      );
       expect(AmountRange.create(min: _cents(5), max: _cents(5)).isOk, isTrue);
     });
 
@@ -168,22 +171,25 @@ void main() {
       );
     });
 
-    test('RN-441 lançamento tardio gera revisão, e a anterior é preservada', () {
-      final first = MonthClose.close(
-        month: september,
-        cashResult: _cents(55800),
-        today: LocalDate(2026, 10, 1),
-      ).valueOrNull!;
+    test(
+      'RN-441 lançamento tardio gera revisão, e a anterior é preservada',
+      () {
+        final first = MonthClose.close(
+          month: september,
+          cashResult: _cents(55800),
+          today: LocalDate(2026, 10, 1),
+        ).valueOrNull!;
 
-      final second = first.revisedWith(
-        cashResult: _cents(51600),
-        on: LocalDate(2026, 10, 3),
-      );
+        final second = first.revisedWith(
+          cashResult: _cents(51600),
+          on: LocalDate(2026, 10, 3),
+        );
 
-      expect(first.revision, 1);
-      expect(first.cashResult, _cents(55800));
-      expect(second.revision, 2);
-      expect(second.differenceFrom(first), _cents(-4200));
-    });
+        expect(first.revision, 1);
+        expect(first.cashResult, _cents(55800));
+        expect(second.revision, 2);
+        expect(second.differenceFrom(first), _cents(-4200));
+      },
+    );
   });
 }

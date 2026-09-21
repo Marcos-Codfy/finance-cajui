@@ -80,8 +80,7 @@ final class Entry {
   }
 
   bool _isInstallmentLine(PaymentLine line) =>
-      line.kind.isCreditCard &&
-      line.paymentMethodId == installmentPlan?.cardId;
+      line.kind.isCreditCard && line.paymentMethodId == installmentPlan?.cardId;
 
   static TenderAmounts _sum(Iterable<PaymentLine> lines) => lines.fold(
     TenderAmounts.zero,

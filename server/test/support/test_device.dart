@@ -30,8 +30,9 @@ final class TestDevice {
   /// A chave pública no formato X.509, como o app a envia no cadastro.
   final Uint8List publicKeyX509;
 
-  static FortunaRandom _random(int seed) => FortunaRandom()
-    ..seed(KeyParameter(Uint8List.fromList(List.filled(32, seed))));
+  static FortunaRandom _random(int seed) =>
+      FortunaRandom()
+        ..seed(KeyParameter(Uint8List.fromList(List.filled(32, seed))));
 
   /// Assina [message] com SHA-256/ECDSA e devolve a assinatura em DER, como
   /// faz o `SHA256withECDSA` do Android.

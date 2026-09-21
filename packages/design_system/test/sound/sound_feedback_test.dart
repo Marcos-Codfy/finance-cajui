@@ -108,7 +108,10 @@ void main() {
   group('CajuiSound', () {
     test('todo token aponta para um arquivo do pacote', () {
       for (final sound in CajuiSound.values) {
-        expect(sound.asset, startsWith('packages/design_system/assets/sounds/'));
+        expect(
+          sound.asset,
+          startsWith('packages/design_system/assets/sounds/'),
+        );
         expect(sound.asset, endsWith('.wav'));
       }
     });

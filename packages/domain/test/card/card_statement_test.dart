@@ -70,14 +70,17 @@ void main() {
       });
     });
 
-    test('RN-332 a diferença para a fatura do banco fica "não identificada"', () {
-      final statement = CardStatement.of(_cycle, entries: _entries());
+    test(
+      'RN-332 a diferença para a fatura do banco fica "não identificada"',
+      () {
+        final statement = CardStatement.of(_cycle, entries: _entries());
 
-      expect(
-        statement.unidentifiedGiven(const Money.fromCents(85000)),
-        const Money.fromCents(6000),
-      );
-    });
+        expect(
+          statement.unidentifiedGiven(const Money.fromCents(85000)),
+          const Money.fromCents(6000),
+        );
+      },
+    );
 
     test('soma as parcelas de compras anteriores ao uso do app', () {
       final statement = CardStatement.of(

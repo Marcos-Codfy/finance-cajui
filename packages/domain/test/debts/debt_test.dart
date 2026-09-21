@@ -59,14 +59,20 @@ void main() {
       expect(_loan().valueOrNull!.payoffForecast, const BudgetMonth(2027, 3));
     });
 
-    test('RN-504 e RN-532 a parcela entra no plano só dentro do calendário', () {
-      final loan = _loan().valueOrNull!;
+    test(
+      'RN-504 e RN-532 a parcela entra no plano só dentro do calendário',
+      () {
+        final loan = _loan().valueOrNull!;
 
-      expect(loan.installmentDueIn(september), _cents(21200));
-      expect(loan.installmentDueIn(const BudgetMonth(2027, 3)), _cents(21200));
-      expect(loan.installmentDueIn(const BudgetMonth(2027, 4)), Money.zero);
-      expect(loan.installmentDueIn(const BudgetMonth(2026, 3)), Money.zero);
-    });
+        expect(loan.installmentDueIn(september), _cents(21200));
+        expect(
+          loan.installmentDueIn(const BudgetMonth(2027, 3)),
+          _cents(21200),
+        );
+        expect(loan.installmentDueIn(const BudgetMonth(2027, 4)), Money.zero);
+        expect(loan.installmentDueIn(const BudgetMonth(2026, 3)), Money.zero);
+      },
+    );
   });
 
   group('PayoffQuote', () {
@@ -111,28 +117,31 @@ void main() {
       expect(due, _cents(36200));
     });
 
-    test('RN-330 parcela de compra anterior ao app compõe a fatura do cartão', () {
-      final legacy = Debt.create(
-        id: 'old',
-        creditor: 'Notebook',
-        kind: DebtKind.cardInstallment,
-        installmentAmount: _cents(30000),
-        totalInstallments: 6,
-        paidInstallments: 2,
-        dueDay: 5,
-        firstMonth: const BudgetMonth(2026, 7),
-        cardId: 'card',
-      ).valueOrNull!;
+    test(
+      'RN-330 parcela de compra anterior ao app compõe a fatura do cartão',
+      () {
+        final legacy = Debt.create(
+          id: 'old',
+          creditor: 'Notebook',
+          kind: DebtKind.cardInstallment,
+          installmentAmount: _cents(30000),
+          totalInstallments: 6,
+          paidInstallments: 2,
+          dueDay: 5,
+          firstMonth: const BudgetMonth(2026, 7),
+          cardId: 'card',
+        ).valueOrNull!;
 
-      Money dueOn(String cardId) => DebtSchedule.legacyCardInstallmentsDueIn(
-        september,
-        cardId: cardId,
-        debts: [legacy, _loan().valueOrNull!],
-      );
+        Money dueOn(String cardId) => DebtSchedule.legacyCardInstallmentsDueIn(
+          september,
+          cardId: cardId,
+          debts: [legacy, _loan().valueOrNull!],
+        );
 
-      expect(dueOn('card'), _cents(30000));
-      expect(dueOn('outro'), Money.zero);
-    });
+        expect(dueOn('card'), _cents(30000));
+        expect(dueOn('outro'), Money.zero);
+      },
+    );
   });
 
   group('PayoffSimulation', () {
