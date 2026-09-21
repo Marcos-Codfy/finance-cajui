@@ -17,6 +17,18 @@ sealed class Failure {
   const new();
 }
 
+/// `E-DEBT-01` · Mais parcelas pagas do que o total de parcelas (RN-501).
+final class PaidInstallmentsExceedTotal extends Failure {
+  /// Cria a falha com o total e o número de pagas informados.
+  const new({required this.total, required this.paid});
+
+  /// O total de parcelas da dívida.
+  final int total;
+
+  /// Quantas parcelas foram informadas como pagas.
+  final int paid;
+}
+
 /// `E-ENTRY-01` · A soma das linhas de pagamento difere do valor (RN-203).
 final class PaymentLinesMismatch extends Failure {
   /// Cria a falha com o valor do lançamento e a soma das linhas.

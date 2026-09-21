@@ -42,6 +42,16 @@ final class MonthPlan {
     );
   }
 
+  const new _({
+    required this.month,
+    required this.cashIncome,
+    required this.voucherAvailable,
+    required this.fixed,
+    required this.variables,
+    required this.debtInstallments,
+  });
+
+  /// As ocorrências dos fixos vigentes em [month], já com o valor pago.
   static Iterable<FixedOccurrence> _occurrences(
     BudgetMonth month,
     Iterable<FixedExpense> expenses,
@@ -55,15 +65,6 @@ final class MonthPlan {
           paidAmount: paid[expense.id],
         ),
       );
-
-  const new _({
-    required this.month,
-    required this.cashIncome,
-    required this.voucherAvailable,
-    required this.fixed,
-    required this.variables,
-    required this.debtInstallments,
-  });
 
   /// O mês planejado.
   final BudgetMonth month;
