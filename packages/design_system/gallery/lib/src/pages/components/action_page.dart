@@ -24,8 +24,16 @@ class _ActionPageState extends State<ActionPage> {
     CajuiButtonVariant.destructive: 'Apagar lançamento',
   };
 
+  static const _areas = [
+    CajuiNavDestination(icon: CajuiIconData.chart, label: 'Painel'),
+    CajuiNavDestination(icon: CajuiIconData.receipt, label: 'Lançamentos'),
+    CajuiNavDestination(icon: CajuiIconData.chat, label: 'Assistente'),
+    CajuiNavDestination(icon: CajuiIconData.sliders, label: 'Ajustes'),
+  ];
+
   String _category = _categories.first;
   bool _soundsOn = true;
+  int _area = 0;
 
   void _nothing() {}
 
@@ -43,7 +51,27 @@ class _ActionPageState extends State<ActionPage> {
         _iconButtons(),
         _chips(),
         _switches(),
+        _navBar(),
       ],
+    );
+  }
+
+  Widget _navBar() {
+    return GallerySection(
+      title: 'Barra de navegação',
+      description:
+          'As áreas do app, no pé da tela, onde o polegar alcança. A área em '
+          'vigor é marcada pela pílula e pelo peso do nome, não só pela cor. '
+          'Toda área tem nome à vista: ícone sozinho obriga a adivinhar.',
+      child: GallerySpecimen(
+        state: 'Ao vivo',
+        width: 390,
+        child: CajuiNavBar(
+          destinations: _areas,
+          selectedIndex: _area,
+          onSelected: (index) => setState(() => _area = index),
+        ),
+      ),
     );
   }
 

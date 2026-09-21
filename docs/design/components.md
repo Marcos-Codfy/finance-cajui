@@ -27,6 +27,16 @@ Um componente novo que se toca **não reimplementa** nada disso.
 | `CajuiIconButton` | As mesmas quatro variantes | Os mesmos | Desenho de 24, alvo de 48. `semanticLabel` obrigatório |
 | `CajuiChip` | — | Não selecionado · selecionado · inativo | Selecionado muda de cor **e** ganha o ícone de visto. Rótulo longo encolhe com reticências, não estoura |
 | `CajuiSwitch` | — | Ligada · desligada · inativa (ligada e desligada) | Efeito imediato, sem botão de salvar |
+| `CajuiNavBar` + `CajuiNavDestination` | De 3 a 5 destinos | Em vigor · repouso · mouse · pressionado · foco | No pé da tela, onde o polegar alcança. O destino em vigor é marcado pela pílula **e** pelo peso do nome. Todo destino tem nome à vista. Cabe em 320 px com fonte a 200% |
+
+## Moldura do app
+
+| Componente | Para quê | Regra |
+|---|---|---|
+| `CajuiAppSurface` | O chão do app: entrega tema e retorno sensorial, pinta o fundo e define o texto padrão | `themeOf` segue o claro/escuro do aparelho e baixa o movimento quando o sistema pede ou quando o aparelho perde quadros. O app não escolhe cor de fundo nem estilo de texto |
+| `CajuiScreen` | O esqueleto de toda tela: título, conteúdo rolável, ação presa ao pé | O título rola com o conteúdo e é cabeçalho para o leitor de tela. Voltar só aparece quando há para onde voltar. Conteúdo limitado a 640 de largura |
+| `CajuiPageRoute` | A troca de tela | A tela nova sobe 4% enquanto aparece; em `reduced`, só esmaece |
+| `CajuiLocalizations` | Os textos de sistema que os componentes pedem ao Flutter | Existe para o app não importar o Material — o verificador reprova esse import (ADR-014) |
 
 ## Conteúdo
 
@@ -67,7 +77,7 @@ Todos sobre `CajuiFieldFrame`, que dá o rótulo sempre visível (fora do campo,
 |---|---|
 | `CajuiEntrance` | Entrada em cascata de itens de lista; o atraso de cada item vem do índice |
 | `CajuiCountUp` | O número conta do valor antigo ao novo |
-| `CajuiIcon` + `CajuiIconData` | 16 ícones de traço, desenhados como caminhos vetoriais: recibo, cartão, carteira, vale, dívida, calendário, gráfico, conversa, compartilhar, som, visto, fechar, mais, seta, informação, sem rede |
+| `CajuiIcon` + `CajuiIconData` | 18 ícones de traço, desenhados como caminhos vetoriais: recibo, cartão, carteira, vale, dívida, calendário, gráfico, conversa, compartilhar, som, visto, fechar, mais, avançar, voltar, ajustes, informação, sem rede |
 
 Os dois efeitos consultam o nível de movimento do tema e aparecem prontos em `reduced`. A revisão deles contra a WCAG 2.2.2 (conteúdo que se move sozinho) é o item BL-024.
 
