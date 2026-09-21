@@ -1,6 +1,6 @@
 # ADR-013 — Web de consulta em Flutter Web, e a meta de Lighthouse
 
-- **Estado:** proposta · aguarda o checkpoint da Fase 4 · **contém uma exceção à meta**, que a RNF-WEB-13 só admite por ADR aprovada em checkpoint
+- **Estado:** aceita em 2026-09-20, no checkpoint da Fase 4 · **contém uma exceção à meta**, aprovada como a RNF-WEB-13 exige
 - **Data:** 2026-09-20
 - **Medido em:** [spike A](../spikes/web-lighthouse.md) · **responde:** BL-002
 

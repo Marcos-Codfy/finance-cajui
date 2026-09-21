@@ -1,6 +1,6 @@
 # ADR-006 — Receber o compartilhamento do Android
 
-- **Estado:** proposta · **confirma no spike C** (depende de aparelho real)
+- **Estado:** aceita em 2026-09-20 · a medição em aparelho real (spike C) ainda pode ajustá-la
 - **Data:** 2026-09-20
 - **Responde:** BL-004
 

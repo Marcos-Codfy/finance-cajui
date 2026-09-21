@@ -1,6 +1,6 @@
 # ADR-007 — Leitura de texto no aparelho: OCR e PDF
 
-- **Estado:** proposta · **confirma no spike C** (depende de aparelho real)
+- **Estado:** aceita em 2026-09-20 · a medição em aparelho real (spike C) ainda pode ajustá-la
 - **Data:** 2026-09-20
 - **Responde:** BL-005 · **ajusta:** RNF-PERF-06
 

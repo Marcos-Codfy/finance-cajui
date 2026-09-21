@@ -1,6 +1,6 @@
 # ADR-016 — Motor de áudio
 
-- **Estado:** proposta · a medição de latência no Android **confirma no spike C**
+- **Estado:** aceita em 2026-09-20 · a medição de latência no Android (spike C) decide se o adaptador troca
 - **Data:** 2026-09-20
 - **Responde:** BL-009 · relaciona-se com BL-026
 

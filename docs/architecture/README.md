@@ -31,24 +31,24 @@ Arquitetura limpa, organizada por feature, em quatro camadas — `domain`, `appl
 
 | ADR | Decisão | Estado |
 |---|---|---|
-| [001](adr/ADR-001-monorepo-e-dominio-compartilhado.md) | Monorepo; o domínio é um pacote compartilhado por app e servidor | proposta |
-| [002](adr/ADR-002-estado-com-riverpod.md) | Riverpod sem gerador; MVVM só na apresentação; estado selado por tela | proposta |
-| [003](adr/ADR-003-backend-dart-shelf.md) | Backend em Dart + Shelf, compilado fora do servidor como executável único | proposta · **medida** |
-| [004](adr/ADR-004-registro-de-eventos-em-json.md) | Registro de eventos em JSON Lines, com limites escritos e gatilhos para SQLite | proposta |
-| [005](adr/ADR-005-criptografia-em-repouso-e-dbtool.md) | Cifra por registro, `dbtool` para ler por SSH, backup cifrado com chave que não fica no servidor | proposta |
-| [006](adr/ADR-006-receber-compartilhamento.md) | Canal nativo próprio para o compartilhamento; copiar o arquivo antes de tudo | proposta · **espera o spike C** |
-| [007](adr/ADR-007-ocr-e-pdf.md) | ML Kit embutido; todo PDF é rasterizado e passa pelo mesmo OCR | proposta · **espera o spike C** |
-| [008](adr/ADR-008-autenticacao.md) | Sem senha: chave do aparelho liberada por biometria; web pareada por código | proposta |
-| [009](adr/ADR-009-fixacao-de-certificado.md) | Fixar as raízes, em Dart; nunca o certificado folha | proposta |
-| [010](adr/ADR-010-integracao-com-a-deepseek.md) | IA só pelo backend, texto mascarado, OCR como dado, saída validada, categoria em lista fechada | proposta |
-| [011](adr/ADR-011-hospedagem-a-custo-zero.md) | Oracle ARM + Caddy + DNS dinâmico + Vercel com reescrita de `/api/*` | proposta |
-| [012](adr/ADR-012-modo-offline.md) | Leitura local e fila de comandos idempotentes no Android; web só com rede | proposta |
-| [013](adr/ADR-013-web-de-consulta-e-lighthouse.md) | Web em Flutter Web/WebAssembly; **uma exceção nomeada** na meta de boas práticas | proposta · **medida** |
-| [014](adr/ADR-014-lints-e-metricas.md) | Análise estrita, verificador próprio, ganchos e CI em dois ritmos | proposta · em parte já em vigor |
-| [015](adr/ADR-015-erros-tipados-e-catalogo.md) | `Result` e `Failure` selados; `ErrorCode` compartilhado; texto de erro num arquivo só | proposta |
-| [016](adr/ADR-016-motor-de-audio.md) | `audioplayers` atrás de uma porta, com critério medido para trocar | proposta · **espera o spike C** |
+| [001](adr/ADR-001-monorepo-e-dominio-compartilhado.md) | Monorepo; o domínio é um pacote compartilhado por app e servidor | aceita |
+| [002](adr/ADR-002-estado-com-riverpod.md) | Riverpod sem gerador; MVVM só na apresentação; estado selado por tela | aceita |
+| [003](adr/ADR-003-backend-dart-shelf.md) | Backend em Dart + Shelf, compilado fora do servidor como executável único | aceita · **medida** |
+| [004](adr/ADR-004-registro-de-eventos-em-json.md) | Registro de eventos em JSON Lines, com limites escritos e gatilhos para SQLite | aceita |
+| [005](adr/ADR-005-criptografia-em-repouso-e-dbtool.md) | Cifra por registro, `dbtool` para ler por SSH, backup cifrado com chave que não fica no servidor | aceita |
+| [006](adr/ADR-006-receber-compartilhamento.md) | Canal nativo próprio para o compartilhamento; copiar o arquivo antes de tudo | aceita · **spike C pode ajustar** |
+| [007](adr/ADR-007-ocr-e-pdf.md) | ML Kit embutido; todo PDF é rasterizado e passa pelo mesmo OCR | aceita · **spike C pode ajustar** |
+| [008](adr/ADR-008-autenticacao.md) | Sem senha: chave do aparelho liberada por biometria; web pareada por código | aceita |
+| [009](adr/ADR-009-fixacao-de-certificado.md) | Fixar as raízes, em Dart; nunca o certificado folha | aceita |
+| [010](adr/ADR-010-integracao-com-a-deepseek.md) | IA só pelo backend, texto mascarado, OCR como dado, saída validada, categoria em lista fechada | aceita |
+| [011](adr/ADR-011-hospedagem-a-custo-zero.md) | Oracle ARM + Caddy + DNS dinâmico + Vercel com reescrita de `/api/*` | aceita |
+| [012](adr/ADR-012-modo-offline.md) | Leitura local e fila de comandos idempotentes no Android; web só com rede | aceita |
+| [013](adr/ADR-013-web-de-consulta-e-lighthouse.md) | Web em Flutter Web/WebAssembly; **uma exceção nomeada** na meta de boas práticas | aceita · **medida** |
+| [014](adr/ADR-014-lints-e-metricas.md) | Análise estrita, verificador próprio, ganchos e CI em dois ritmos | aceita · em parte já em vigor |
+| [015](adr/ADR-015-erros-tipados-e-catalogo.md) | `Result` e `Failure` selados; `ErrorCode` compartilhado; texto de erro num arquivo só | aceita |
+| [016](adr/ADR-016-motor-de-audio.md) | `audioplayers` atrás de uma porta, com critério medido para trocar | aceita · **spike C pode ajustar** |
 
-Toda ADR nasce como *proposta* e vira *aceita* no checkpoint da Fase 4. Decisão que mudar depois ganha ADR nova, que substitui a antiga — a antiga não é apagada.
+As 16 foram aceitas em 2026-09-20, no checkpoint da Fase 4. Toda ADR nasce como *proposta* e vira *aceita* num checkpoint. Decisão que mudar depois ganha ADR nova, que substitui a antiga — a antiga não é apagada.
 
 ## O que os spikes mudaram no plano
 
