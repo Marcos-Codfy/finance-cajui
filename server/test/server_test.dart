@@ -167,6 +167,37 @@ void main() {
     });
   });
 
+  group('classificação de comprovante', () {
+    test('ADR-010 sem chave da IA, a rota responde só com as regras locais',
+        () async {
+      final (status, body) = await server.call(
+        'POST',
+        '/v1/receipts/classify',
+        body: {'text': 'MERCADO BOA COMPRA\nTOTAL 186,40\nPIX\n12/09/2026'},
+        token: token,
+      );
+      final amount = body['amountCents']! as Map<String, Object?>;
+
+      expect(status, 200);
+      expect(amount['value'], 18640);
+      expect(amount['confidence'], 'high');
+      expect(amount['source'], 'fixedRule');
+      expect(body['merchant'], 'MERCADO BOA COMPRA');
+      expect(body['warnings'], isEmpty);
+    });
+
+    test('a rota só aceita texto: qualquer outro campo é recusado', () async {
+      final (status, body) = await server.call(
+        'POST',
+        '/v1/receipts/classify',
+        body: {'text': 'TOTAL 1,00', 'image': 'base64...'},
+        token: token,
+      );
+
+      expect((status, _error(body)['code']), (400, 'E-REQ-01'));
+    });
+  });
+
   group('categorias', () {
     test('RN-207 nome que representa cartão vira E-CARD-02', () async {
       final (status, body) = await server.call(

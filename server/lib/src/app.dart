@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
+import 'package:server/src/ai/receipt_routes.dart';
 import 'package:server/src/auth/auth_routes.dart';
 import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/auth/challenge_book.dart';
@@ -28,7 +29,9 @@ final class App {
     required this._log,
     required this.sessions,
     RateLimiter? rateLimiter,
-  }) : _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
+    this.classifier = const RuleBasedClassifier(),
+  }) : _clock = clock,
+       _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
        _auth = AuthRoutes(
          devices: DeviceRegistry(store),
          codes: EnrollmentCodes(dataDirectory),
@@ -45,10 +48,21 @@ final class App {
   /// biometria.
   final SessionBook sessions;
 
+  /// Quem classifica comprovantes. Sem chave da IA, são só as regras locais —
+  /// e o servidor funciona inteiro assim.
+  final ReceiptClassifier classifier;
+
+  final Clock _clock;
   final void Function(String line) _log;
   final RateLimiter _limiter;
   final AuthRoutes _auth;
   final LedgerRoutes _ledger;
+
+  late final ReceiptRoutes _receipts = ReceiptRoutes(
+    classifier: classifier,
+    state: _ledger.state,
+    clock: _clock,
+  );
 
   /// O tratador de requisições, pronto para o `shelf_io`.
   ///
@@ -59,6 +73,7 @@ final class App {
   Handler get handler {
     final routes = Router()
       ..mount('/v1/auth', _auth.router.call)
+      ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1', _ledger.router.call);
     return const Pipeline()
         .addMiddleware(Middlewares.requestRef())

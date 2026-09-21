@@ -1,6 +1,12 @@
 import 'dart:io';
 
+import 'package:domain/domain.dart';
+import 'package:path/path.dart' as p;
 import 'package:persistence/persistence.dart';
+import 'package:server/src/ai/ai_receipt_classifier.dart';
+import 'package:server/src/ai/circuit_breaker.dart';
+import 'package:server/src/ai/deepseek_chat_client.dart';
+import 'package:server/src/ai/token_budget.dart';
 import 'package:server/src/app.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
@@ -48,6 +54,24 @@ String _keyFile(List<String> arguments) {
   return path;
 }
 
+/// Com a credencial da DeepSeek, a IA entra por cima das regras locais; sem
+/// ela, o servidor sobe só com as regras, e tudo continua funcionando.
+ReceiptClassifier _classifier(EventStore store) {
+  final directory = Platform.environment['CREDENTIALS_DIRECTORY'];
+  final keyFile = directory == null
+      ? null
+      : File(p.join(directory, DeepSeekChatClient.credentialName));
+  if (keyFile == null || !keyFile.existsSync()) {
+    stdout.writeln('sem credencial da IA: classificando só pelas regras locais');
+    return const RuleBasedClassifier();
+  }
+  return AiReceiptClassifier(
+    client: DeepSeekChatClient(apiKey: keyFile.readAsStringSync().trim()),
+    budget: TokenBudget(store, monthlyLimit: 2000000),
+    breaker: CircuitBreaker(),
+  );
+}
+
 Future<void> _serve(Directory data, String keyFile) async {
   final store = await FileEventStore.open(
     data,
@@ -59,6 +83,7 @@ Future<void> _serve(Directory data, String keyFile) async {
     clock: const SystemClock(),
     log: stdout.writeln,
     sessions: SessionBook(),
+    classifier: _classifier(store),
   );
   // Só na própria máquina: quem recebe a internet é o Caddy (ADR-003 · T-36).
   final host = Platform.environment['HOST'] ?? '127.0.0.1';

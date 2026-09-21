@@ -80,6 +80,14 @@ SECTIONS = {
     "V16.5": ("Erro tipado e sem detalhe interno; falha da IA cai nas regras locais; nada falha aberto", "ADR-015 · ADR-010", "F6-03 · F6-04"),
 }
 
+# Seções cujo controle já foi entregue, com teste, e em que PR.
+DELIVERED = {
+    "V2.3": "PR #9", "V11.3": "PR #9", "V11.4": "PR #9", "V11.5": "PR #9",
+    "V1.5": "PR #10", "V2.2": "PR #10", "V2.4": "PR #10", "V6.5": "PR #10",
+    "V7.2": "PR #10", "V8.2": "PR #10", "V8.3": "PR #10", "V15.3": "PR #10",
+    "V16.2": "PR #10", "V1.2": "PR #11", "V1.3": "PR #11", "V16.5": "PR #11",
+}
+
 # Seção ou requisito que não se aplica → motivo.
 NOT_APPLICABLE = {
     "V1.4": "Dart tem gerência automática de memória",
@@ -123,6 +131,8 @@ def situation(section_id, req_id):
     if reason:
         return ("não se aplica", reason, "—", "—")
     control, reference, step = SECTIONS[section_id]
+    if section_id in DELIVERED:
+        return ("atende", control, reference, DELIVERED[section_id])
     return ("atende" if step == "feito" else "planejado", control, reference, step)
 
 
