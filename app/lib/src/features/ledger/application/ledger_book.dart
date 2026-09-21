@@ -17,6 +17,7 @@ final class LedgerBook {
     this.entries = const [],
     this.cards = const [],
     this.settlements = const [],
+    this.receipts = const [],
     this.setup = MonthSetup.empty,
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
@@ -36,6 +37,9 @@ final class LedgerBook {
 
   /// As faturas já pagas.
   final List<Settlement> settlements;
+
+  /// As rendas já recebidas, nas duas moedas.
+  final List<IncomeReceipt> receipts;
 
   /// O plano do mês em vigor.
   final MonthSetup setup;
@@ -77,12 +81,21 @@ final class LedgerBook {
     StatementSettled(:final settlement) => _with(
       settlements: [...settlements, settlement],
     ),
+    // O crédito do vale entra no saldo (RN-120); renda em dinheiro só fica
+    // registrada — o app não conhece o saldo da conta de ninguém.
+    IncomeReceived(:final receipt) => _with(
+      receipts: [...receipts, receipt],
+      voucher: receipt.tender == Tender.mealVoucher
+          ? voucher.credit(receipt.amount)
+          : voucher,
+    ),
   };
 
   LedgerBook _with({
     List<Entry>? entries,
     List<CreditCard>? cards,
     List<Settlement>? settlements,
+    List<IncomeReceipt>? receipts,
     VoucherAccount? voucher,
     MonthSetup? setup,
   }) => LedgerBook(
@@ -91,6 +104,7 @@ final class LedgerBook {
     entries: entries ?? this.entries,
     cards: cards ?? this.cards,
     settlements: settlements ?? this.settlements,
+    receipts: receipts ?? this.receipts,
     setup: setup ?? this.setup,
     voucher: voucher ?? this.voucher,
   );
@@ -110,6 +124,27 @@ final class LedgerBook {
   TenderAmounts spentIn(BudgetMonth month) =>
       entriesIn(month)
           .fold(TenderAmounts.zero, (sum, entry) => sum + entry.paidByTender);
+
+  /// O identificador da fonte de renda em dinheiro do plano. O plano tem uma
+  /// renda só; recebimento ligado a ela **substitui** o esperado no mês.
+  static const cashIncomeSourceId = 'cash-income';
+
+  /// A renda em dinheiro que vale em [month]: a recebida, se já houve
+  /// recebimento da fonte do plano, senão a esperada — mais as entradas
+  /// avulsas do mês (RN-131, RN-133). A conta é do domínio.
+  Money cashIncomeIn(BudgetMonth month) => MonthIncome.of(
+    month,
+    sources: [
+      IncomeSource(
+        id: cashIncomeSourceId,
+        name: 'Renda em dinheiro',
+        tender: Tender.cash,
+        expectedAmount: setup.cashIncome,
+        expectedDay: 5,
+      ),
+    ],
+    receipts: receipts,
+  ).amounts.cash;
 
   /// As parcelas de compras no cartão que vencem em [month]: entram no mês
   /// como compromisso do bloco de dívidas, e não como gasto variável

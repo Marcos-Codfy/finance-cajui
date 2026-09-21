@@ -61,6 +61,21 @@ final class StatementSettled extends LedgerEvent {
   final Settlement settlement;
 }
 
+/// Uma renda foi recebida: o salário, o crédito mensal do vale, uma entrada
+/// avulsa.
+///
+/// Recebimento **não é lançamento** (RN-132): não tem categoria, não entra
+/// em bloco de despesa e nunca se compensa com um gasto. Em dinheiro, o valor
+/// recebido passa a valer no lugar do esperado nas contas do mês (RN-131); no
+/// vale, é o crédito que entra no saldo (RN-120).
+final class IncomeReceived extends LedgerEvent {
+  /// Registra o recebimento [receipt].
+  new(this.receipt) : super(id: 'income-${receipt.id}');
+
+  /// O recebimento: moeda, valor, dia e, se houver, a fonte.
+  final IncomeReceipt receipt;
+}
+
 /// O saldo do vale foi corrigido para bater com o da operadora (RN-123).
 ///
 /// Não é renda nem despesa, e não entra em indicador: é só o app admitindo

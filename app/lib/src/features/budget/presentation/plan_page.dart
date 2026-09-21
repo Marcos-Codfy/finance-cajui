@@ -2,6 +2,7 @@ import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:cajui/src/features/budget/presentation/amount_page.dart';
 import 'package:cajui/src/features/budget/presentation/fixed_expense_page.dart';
+import 'package:cajui/src/features/budget/presentation/income_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_sections.dart';
 import 'package:cajui/src/features/budget/presentation/variable_budget_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -37,20 +38,30 @@ class PlanPage extends ConsumerWidget {
       title: 'Plano do mês',
       onBack: Navigator.of(context).pop,
       children: [
-        CajuiStatCard(
-          label: 'Sobra planejada',
-          cents: overview.hasIncome
-              ? overview.indicators.plannedResult.cents
-              : null,
-          tone: overview.indicators.plannedResult.isNegative
-              ? CajuiAmountTone.shortfall
-              : CajuiAmountTone.positive,
-          caption: 'Renda menos fixos, dívidas e variáveis pelo máximo',
-        ),
+        _plannedResult(overview),
         ...PlanSections.money(book.setup, edit.income, edit.debts),
+        const SizedBox(height: CajuiSpacing.md),
+        CajuiButton(
+          label: 'Registrar recebimento',
+          variant: CajuiButtonVariant.secondary,
+          icon: CajuiIconData.wallet,
+          onPressed: () => IncomePage.open(context),
+        ),
         ...PlanSections.fixed(book.setup, edit.fixedExpense),
         ...PlanSections.variable(book, edit.variableBudget),
       ],
+    );
+  }
+
+  Widget _plannedResult(MonthOverview overview) {
+    final result = overview.indicators.plannedResult;
+    return CajuiStatCard(
+      label: 'Sobra planejada',
+      cents: overview.hasIncome ? result.cents : null,
+      tone: result.isNegative
+          ? CajuiAmountTone.shortfall
+          : CajuiAmountTone.positive,
+      caption: 'Renda menos fixos, dívidas e variáveis pelo máximo',
     );
   }
 }

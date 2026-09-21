@@ -1,0 +1,145 @@
+import 'dart:io';
+
+import 'package:cajui/src/core/storage/event_store_opener_file.dart';
+import 'package:cajui/src/features/budget/application/month_overview.dart';
+import 'package:cajui/src/features/ledger/application/default_catalog.dart';
+import 'package:cajui/src/features/ledger/application/entry_draft.dart';
+import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
+import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
+import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
+import 'package:domain/domain.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../../support/sample_plan.dart';
+import '../../support/test_scope.dart';
+
+void main() {
+  late ProviderContainer container;
+
+  LedgerController ledger() => container.read(ledgerProvider.notifier);
+  Future<LedgerBook> book() => container.read(ledgerProvider.future);
+  MonthOverview overview() => container.read(monthOverviewProvider)!;
+
+  setUp(() async {
+    container = ProviderContainer(
+      overrides: testOverrides(journal: MemoryLedgerJournal(samplePlanEvents)),
+    );
+    addTearDown(container.dispose);
+    await book();
+  });
+
+  test('RN-120 · saldo do vale = saldo + créditos − compras no vale: 50 + 600 '
+      '− 480 = 170', () async {
+    await ledger().setVoucherBalance(
+      const Money.fromCents(5000),
+      reason: 'saldo inicial do exemplo',
+    );
+
+    await ledger().receiveIncome(
+      tender: Tender.mealVoucher,
+      amount: const Money.fromCents(60000),
+      receivedOn: testToday,
+    );
+    final current = await book();
+    await ledger().record(
+      EntryDraft(
+        amountCents: 48000,
+        description: 'Mercado do mês',
+        category: current.categoryOf('groceries'),
+        method: current.methodOf('voucher'),
+        occurredOn: testToday,
+      ),
+    );
+
+    expect((await book()).voucher.balance.cents, 17000);
+  });
+
+  test('RN-131 · o valor recebido vale no lugar do esperado, no mês em que '
+      'foi recebido', () async {
+    expect(overview().plan.cashIncome.cents, 320000);
+
+    await ledger().receiveIncome(
+      tender: Tender.cash,
+      amount: const Money.fromCents(231000),
+      receivedOn: testToday,
+    );
+
+    expect(overview().plan.cashIncome.cents, 231000);
+    expect(
+      (await book()).cashIncomeIn(const BudgetMonth(2026, 10)).cents,
+      320000,
+    );
+  });
+
+  test('RN-133 · entrada avulsa soma no mês em que entrou, e não aparece no '
+      'mês seguinte', () async {
+    await ledger().receiveIncome(
+      tender: Tender.cash,
+      amount: const Money.fromCents(15000),
+      receivedOn: testToday,
+      fromPlan: false,
+    );
+    final current = await book();
+
+    expect(current.cashIncomeIn(testToday.budgetMonth).cents, 335000);
+    expect(current.cashIncomeIn(const BudgetMonth(2026, 10)).cents, 320000);
+  });
+
+  test('RN-132 e RN-111 · recebimento não é lançamento, e o vale não entra '
+      'na renda em dinheiro', () async {
+    await ledger().receiveIncome(
+      tender: Tender.mealVoucher,
+      amount: const Money.fromCents(60000),
+      receivedOn: testToday,
+    );
+    final current = await book();
+
+    expect(current.entries, isEmpty);
+    expect(current.spentIn(testToday.budgetMonth), TenderAmounts.zero);
+    expect(current.cashIncomeIn(testToday.budgetMonth).cents, 320000);
+  });
+
+  test('valor zero não gera fato', () async {
+    await ledger().receiveIncome(
+      tender: Tender.cash,
+      amount: Money.zero,
+      receivedOn: testToday,
+    );
+
+    expect((await book()).receipts, isEmpty);
+  });
+
+  test('a renda recebida volta igual do registro cifrado', () async {
+    final directory = Directory.systemTemp.createTempSync('cajui-income-');
+    addTearDown(() => directory.deleteSync(recursive: true));
+    Future<ProviderContainer> open() async {
+      final opened = ProviderContainer(
+        overrides: testOverrides(
+          journal: EventStoreLedgerJournal(
+            store: await openEventStoreAt(directory),
+            codec: LedgerEventCodec(
+              categoryOf: DefaultCatalog.emptyBook.categoryOf,
+            ),
+          ),
+        ),
+      );
+      addTearDown(opened.dispose);
+      return opened;
+    }
+
+    container = await open();
+    await ledger().receiveIncome(
+      tender: Tender.mealVoucher,
+      amount: const Money.fromCents(60000),
+      receivedOn: testToday,
+    );
+
+    final reopened = await (await open()).read(ledgerProvider.future);
+
+    expect(reopened.receipts.single.tender, Tender.mealVoucher);
+    expect(reopened.voucher.balance.cents, 60000);
+  });
+}

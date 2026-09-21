@@ -28,6 +28,9 @@ final class LedgerEventCodec {
   /// O tipo do fato "fatura paga".
   static const statementSettled = 'statement.settled';
 
+  /// O tipo do fato "renda recebida".
+  static const incomeReceived = 'income.received';
+
   /// O tipo do fato "saldo do vale corrigido".
   static const voucherAdjusted = 'voucher.adjusted';
 
@@ -56,6 +59,10 @@ final class LedgerEventCodec {
       type: statementSettled,
       payload: CardCodec.encodeSettlement(settlement),
     ),
+    IncomeReceived(:final receipt) => (
+      type: incomeReceived,
+      payload: _encodeReceipt(receipt),
+    ),
     VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => (
       type: voucherAdjusted,
       payload: {
@@ -65,6 +72,24 @@ final class LedgerEventCodec {
       },
     ),
   };
+
+  static Map<String, Object?> _encodeReceipt(IncomeReceipt receipt) => {
+    'id': receipt.id,
+    'sourceId': receipt.sourceId,
+    'tender': receipt.tender.name,
+    'amountCents': receipt.amount.cents,
+    'receivedOn': '${receipt.receivedOn}',
+  };
+
+  static IncomeReceipt _decodeReceipt(Map<String, Object?> payload) {
+    return IncomeReceipt(
+      id: payload['id']! as String,
+      sourceId: payload['sourceId'] as String?,
+      tender: EntryCodec.named(Tender.values, payload['tender']! as String),
+      amount: Money.fromCents(payload['amountCents']! as int),
+      receivedOn: EntryCodec.parseDate(payload['receivedOn']! as String),
+    );
+  }
 
   /// O fato gravado com [id], [type] e [payload]; `null` para um tipo que
   /// esta versão do app não conhece — versão mais nova pode ter gravado
@@ -86,6 +111,7 @@ final class LedgerEventCodec {
       ),
       cardDefined => CardDefined(id: id, card: CardCodec.decodeCard(payload)),
       statementSettled => StatementSettled(CardCodec.decodeSettlement(payload)),
+      incomeReceived => IncomeReceived(_decodeReceipt(payload)),
       voucherAdjusted => VoucherBalanceAdjusted(
         id: id,
         adjustment: Money.fromCents(payload['adjustmentCents']! as int),

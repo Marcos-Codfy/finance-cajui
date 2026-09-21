@@ -48,9 +48,12 @@ final class MonthSetup {
     BudgetMonth month, {
     required Money voucherAvailable,
     Money cardInstallments = Money.zero,
+    Money? receivedCashIncome,
   }) => MonthPlan.of(
     month: month,
-    cashIncome: cashIncome,
+    // Recebido vale no lugar do esperado, no mês em que foi recebido
+    // (RN-131).
+    cashIncome: receivedCashIncome ?? cashIncome,
     voucherAvailable: voucherAvailable,
     fixedExpenses: fixedExpenses,
     variableBudgets: variableBudgets,
