@@ -1,0 +1,89 @@
+import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:domain/domain.dart';
+
+/// Leva o livro do aparelho ao servidor, para o assistente ter com que
+/// responder (RN-781, RN-915).
+///
+/// Não guarda marcador de "já enviei": **o servidor é o marcador**. A cada
+/// subida se pergunta o que ele tem, e manda-se a diferença. Assim um
+/// servidor restaurado de backup se completa sozinho, e um aparelho
+/// reinstalado não duplica nada.
+///
+/// A subida acontece nos momentos em que a pessoa já está esperando o
+/// servidor — antes de uma pergunta que precisa da IA, ou quando ela pede em
+/// Ajustes. Sincronizar a cada lançamento pediria a digital a cada
+/// lançamento, e isso ninguém merece.
+final class LedgerSync {
+  /// Cria o sincronismo sobre [uplink].
+  const new(this.uplink);
+
+  /// Por onde o livro sobe.
+  final LedgerUplink uplink;
+
+  /// Manda o que falta. Devolve quantos lançamentos subiram e o primeiro
+  /// erro, se houver — a primeira recusa interrompe: insistir com o servidor
+  /// recusando só gasta bateria.
+  Future<(int sent, ErrorCode? error)> run(LedgerBook book) async {
+    if (!uplink.isPaired) return (0, ErrorCode.auth03);
+    final categories = await _sendCategories(book);
+    if (categories != null) return (0, categories);
+    final (remote, failure) = await uplink.remoteEntries();
+    if (failure != null) return (0, failure);
+    return await _sendEntries(book, remote);
+  }
+
+  /// O servidor recusa lançamento de categoria que ele não conhece, então as
+  /// categorias vão primeiro.
+  Future<ErrorCode?> _sendCategories(LedgerBook book) async {
+    final (known, failure) = await uplink.remoteCategories();
+    if (failure != null) return failure;
+    for (final category in book.categories) {
+      if (known.contains(category.id)) continue;
+      final error = await uplink.sendCategory({
+        'id': category.id,
+        'name': category.name,
+        'block': category.block.name,
+        'groupId': category.groupId,
+        'voucherEligible': category.voucherEligible,
+      });
+      if (error != null) return error;
+    }
+    return null;
+  }
+
+  Future<(int, ErrorCode?)> _sendEntries(
+    LedgerBook book,
+    Map<String, String> remote,
+  ) async {
+    var sent = 0;
+    final live = {for (final entry in book.entries) entry.id: entry};
+    for (final entry in book.entries) {
+      final error = await _sendOne(entry, remote[entry.id]);
+      if (error != null) return (sent, error);
+      if (remote[entry.id] != _signatureOf(entry)) sent++;
+    }
+    // O que o servidor tem e o aparelho não tem mais foi cancelado aqui.
+    for (final id in remote.keys.where((id) => !live.containsKey(id))) {
+      final error = await uplink.cancelEntry(id);
+      if (error != null) return (sent, error);
+      sent++;
+    }
+    return (sent, null);
+  }
+
+  Future<ErrorCode?> _sendOne(Entry entry, String? remote) async {
+    final request = EntryCodec.fromEntry(entry);
+    if (remote == null) return await uplink.sendEntry(request);
+    if (remote == _signatureOf(entry)) return null;
+    return await uplink.reviseEntry(request);
+  }
+
+  static String _signatureOf(Entry entry) => LedgerUplink.signature(
+    cents: entry.amount.cents,
+    occurredOn: '${entry.occurredOn}',
+    categoryId: entry.categoryId,
+    description: entry.description,
+  );
+}

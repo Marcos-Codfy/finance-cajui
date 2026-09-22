@@ -4,6 +4,7 @@ import android.content.Intent
 import app.cajui.capture.CaptureChannel
 import app.cajui.auth.DeviceKeyChannel
 import app.cajui.capture.PhotoIntake
+import app.cajui.voice.SpeechChannel
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -18,21 +19,21 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : FlutterFragmentActivity() {
 
     private var capture: CaptureChannel? = null
+    private var speech: SpeechChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        capture = CaptureChannel(
-            applicationContext,
-            flutterEngine.dartExecutor.binaryMessenger,
-            PhotoIntake(this),
-        )
-        DeviceKeyChannel(this, flutterEngine.dartExecutor.binaryMessenger)
+        val messenger = flutterEngine.dartExecutor.binaryMessenger
+        capture = CaptureChannel(applicationContext, messenger, PhotoIntake(this))
+        speech = SpeechChannel(this, messenger)
+        DeviceKeyChannel(this, messenger)
         capture?.handle(intent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         capture?.onPhoto(requestCode, resultCode)
+        speech?.onHeard(requestCode, resultCode, data)
     }
 
     override fun onNewIntent(intent: Intent) {

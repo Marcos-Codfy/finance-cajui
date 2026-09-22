@@ -18,6 +18,15 @@ final class LedgerState {
   /// O tipo do evento de lançamento criado.
   static const entryCreated = 'entry.created';
 
+  /// O tipo do evento de lançamento corrigido. **Nada é reescrito**
+  /// (RN-208): o fato antigo continua no registro, e a projeção passa a
+  /// mostrar o novo no lugar dele.
+  static const entryRevised = 'entry.revised';
+
+  /// O tipo do evento de lançamento cancelado. O cancelado sai de toda
+  /// visão (RN-995), mas não some do registro.
+  static const entryCancelled = 'entry.cancelled';
+
   final Map<String, Category> _categories = {};
   final List<Entry> _entries = [];
 
@@ -36,7 +45,22 @@ final class LedgerState {
         _categories[category.id] = category;
       case entryCreated:
         _entries.add(_replayed(event));
+      case entryRevised:
+        _replace(_replayed(event));
+      case entryCancelled:
+        _entries.removeWhere((entry) => entry.id == event.payload['id']);
     }
+  }
+
+  /// Põe [entry] no lugar da versão anterior, **na mesma posição**: corrigir
+  /// um lançamento não o manda para o fim da lista.
+  void _replace(Entry entry) {
+    final at = _entries.indexWhere((existing) => existing.id == entry.id);
+    if (at < 0) {
+      _entries.add(entry);
+      return;
+    }
+    _entries[at] = entry;
   }
 
   /// A categoria descrita por [json].

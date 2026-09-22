@@ -3,7 +3,6 @@ package app.cajui.auth
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
-import java.security.Signature
 import java.util.concurrent.Executor
 
 /**
@@ -43,15 +42,14 @@ object BiometricGate {
     var appContext: android.content.Context? = null
 
     /**
-     * Pede a confirmação e devolve a assinatura de [message], ou `null` se a
-     * pessoa desistiu.
+     * Abre a janela de uso da chave, e diz se conseguiu.
+     *
+     * Não vai objeto de criptografia junto: a chave tem prazo de validade,
+     * e quem a libera por esse prazo é o próprio Keystore quando o Android
+     * confirma quem está ali. O app não recebe nada além de um "foi" — nem
+     * a digital, nem a chave.
      */
-    fun sign(
-        activity: FragmentActivity,
-        pending: Signature,
-        message: ByteArray,
-        onDone: (ByteArray?) -> Unit,
-    ) {
+    fun unlock(activity: FragmentActivity, onDone: (Boolean) -> Unit) {
         val executor = Executor { command -> activity.runOnUiThread(command) }
         val prompt = BiometricPrompt(
             activity,
@@ -59,23 +57,15 @@ object BiometricGate {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult,
-                ) {
-                    val signature = result.cryptoObject?.signature
-                    if (signature == null) {
-                        onDone(null)
-                        return
-                    }
-                    signature.update(message)
-                    onDone(signature.sign())
-                }
+                ) = onDone(true)
 
                 // Desistir não é erro: a pessoa fechou a caixa, e o app volta
                 // ao que estava fazendo sem alarde.
                 override fun onAuthenticationError(code: Int, message: CharSequence) =
-                    onDone(null)
+                    onDone(false)
             },
         )
-        prompt.authenticate(info(), BiometricPrompt.CryptoObject(pending))
+        prompt.authenticate(info())
     }
 
     private fun info() = BiometricPrompt.PromptInfo.Builder()

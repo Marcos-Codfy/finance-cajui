@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A conversa com o assistente: ele olha os números do mês e responde com a
 /// conta na mão — nunca com conselho de investimento, nunca julgando gasto.
-class AssistantPage extends ConsumerWidget {
+class AssistantPage extends ConsumerStatefulWidget {
   /// Cria a tela do assistente.
   const new({super.key});
 
@@ -23,7 +23,39 @@ class AssistantPage extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AssistantPage> createState() => _AssistantPageState();
+}
+
+class _AssistantPageState extends ConsumerState<AssistantPage> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Leva a conversa ao fim depois que o quadro é desenhado.
+  ///
+  /// Só depois: a altura da mensagem nova ainda não existe enquanto ela não
+  /// foi medida, e rolar antes disso para no lugar errado. Ler a resposta
+  /// não pode depender de a pessoa lembrar de descer a tela.
+  void _followLatest() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scroll.hasClients) return;
+      _scroll.animateTo(
+        _scroll.position.maxScrollExtent,
+        duration: CajuiDurations.base,
+        curve: CajuiCurves.enter,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Pergunta enviada, resposta chegando ou erro: em qualquer troca, a
+    // conversa desce sozinha.
+    ref.listen(assistantProvider, (_, _) => _followLatest());
     final state = ref.watch(assistantProvider);
     return switch (state) {
       AssistantUnpaired() => _unpaired(context, ref),
@@ -41,12 +73,12 @@ class AssistantPage extends ConsumerWidget {
     ),
     children: [
       CajuiEmptyState(
-        title: 'A conversa passa pelo servidor',
+        title: 'Esta pergunta precisa do servidor',
         message:
-            'O assistente responde com os seus números, e quem monta essa '
-            'conta é o servidor do Cajui. Este aparelho ainda não está '
-            'cadastrado nele. Enquanto isso, os resumos do dia, da semana e '
-            'do mês funcionam aqui mesmo, sem internet.',
+            'As contas do seu mês — semana, sobra, vale, fatura, para onde '
+            'foi o dinheiro — o Cajui responde aqui mesmo, sem internet. '
+            'Para conversar sobre o resto, o aparelho precisa estar '
+            'cadastrado no seu servidor.',
         action: CajuiNoticeAction(
           label: 'Cadastrar este aparelho',
           onPressed: () => _enroll(context, ref),
@@ -67,9 +99,11 @@ class AssistantPage extends ConsumerWidget {
     final pending = state.pending;
     return CajuiScreen(
       title: 'Assistente',
+      controller: _scroll,
       footer: AssistantComposer(
         enabled: !state.isWaiting,
         onSend: assistant.ask,
+        onFocused: _followLatest,
       ),
       children: [
         if (state.exchanges.isEmpty && pending == null)
@@ -96,7 +130,7 @@ class AssistantPage extends ConsumerWidget {
       spacing: CajuiSpacing.sm,
       runSpacing: CajuiSpacing.sm,
       children: [
-        for (final suggestion in _suggestions)
+        for (final suggestion in AssistantPage._suggestions)
           CajuiChip(
             label: suggestion,
             selected: false,
