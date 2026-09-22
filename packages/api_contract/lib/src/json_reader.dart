@@ -60,4 +60,19 @@ final class JsonReader {
     }
     return value;
   }
+
+  /// Uma lista opcional; ausente ou nula devolve a lista vazia.
+  ///
+  /// Existe para o que pode legitimamente estar vazio — quem não cadastrou
+  /// nenhuma conta fixa ainda tem um plano válido. O teto de [maxItems]
+  /// continua: o limite de tamanho do corpo sozinho deixaria passar milhares
+  /// de itens minúsculos.
+  List<Object?> optionalList(String field, {int maxItems = 50}) {
+    if (_json[field] == null) return const [];
+    final value = _read<List<Object?>>(field);
+    if (value.length > maxItems) {
+      throw FormatException('campo "$field" com itens demais');
+    }
+    return value;
+  }
 }

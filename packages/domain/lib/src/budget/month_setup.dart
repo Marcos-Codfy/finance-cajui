@@ -1,4 +1,8 @@
-import 'package:domain/domain.dart';
+import 'package:domain/src/budget/fixed_expense.dart';
+import 'package:domain/src/budget/month_plan.dart';
+import 'package:domain/src/budget/variable_budget.dart';
+import 'package:domain/src/calendar/budget_month.dart';
+import 'package:domain/src/money/money.dart';
 import 'package:meta/meta.dart';
 
 /// O que a pessoa cadastrou para o app conseguir planejar o mês: a renda em
@@ -6,6 +10,10 @@ import 'package:meta/meta.dart';
 ///
 /// É a planilha de onde o Cajui nasceu, em forma de dado: três blocos de
 /// despesa contra a renda, com os variáveis contados **pelo pior caso**.
+///
+/// Mora no domínio, e não no app, porque o servidor também precisa dele: sem
+/// o plano, o assistente responde sobre o que já foi gasto mas não sobre o
+/// que ainda pode ser (BL-049).
 @immutable
 final class MonthSetup {
   /// Cria o cadastro.
@@ -40,6 +48,10 @@ final class MonthSetup {
       debtInstallments.isZero &&
       fixedExpenses.isEmpty &&
       variableBudgets.isEmpty;
+
+  /// A soma das contas fixas cadastradas.
+  Money get fixedTotal =>
+      fixedExpenses.fold(Money.zero, (total, fixed) => total + fixed.amount);
 
   /// O plano de [month], com [voucherAvailable] de vale para gastar nele.
   ///

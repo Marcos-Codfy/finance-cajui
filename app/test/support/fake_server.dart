@@ -55,6 +55,10 @@ final class FakeServer {
   /// Os caminhos pedidos, na ordem.
   List<String> get paths => [for (final request in requests) request.path];
 
+  /// Respostas por caminho, para o teste montar o servidor de que precisa.
+  /// Caminho que não estiver aqui continua caindo em [answer].
+  final Map<String, Map<String, Object?>> bodies = {};
+
   /// Passa a recusar tudo com [code].
   void refuseWith(ErrorCode code, {int status = 401}) {
     _refusal = code;
@@ -108,7 +112,12 @@ final class FakeServer {
     request.response.write(jsonEncode(_bodyFor(request.uri.path)));
   }
 
-  Map<String, Object?> _bodyFor(String path) => switch (path) {
+  Map<String, Object?> _bodyFor(String path) => switch (bodies[path]) {
+    final resposta? => resposta,
+    _ => _defaultBodyFor(path),
+  };
+
+  Map<String, Object?> _defaultBodyFor(String path) => switch (path) {
     '/v1/auth/enroll' => {'deviceId': 'aparelho'},
     '/v1/auth/challenge' => {
       'challengeId': 'desafio',

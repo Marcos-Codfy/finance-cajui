@@ -36,6 +36,7 @@ final class AssistantRoutes {
     today: clock.today(),
     entries: state.entries,
     categories: state.categories,
+    plan: state.plan,
   );
 
   /// O roteador, montado em `/v1/assistant`.

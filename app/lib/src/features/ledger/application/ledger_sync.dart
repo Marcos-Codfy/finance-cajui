@@ -31,8 +31,17 @@ final class LedgerSync {
     if (cadastro != null) return (0, cadastro);
     final (remote, failure) = await uplink.remoteEntries();
     if (failure != null) return (0, failure);
-    return await _sendEntries(book, remote);
+    final (sent, refused) = await _sendEntries(book, remote);
+    // O plano vai por último e não interrompe nada: sem ele o assistente
+    // ainda responde quanto saiu — só não responde quanto ainda cabe.
+    return (sent, refused ?? await _sendPlan(book));
   }
+
+  /// Quem ainda não planejou não tem o que mandar, e um plano vazio subindo
+  /// apagaria no servidor o plano que já estava lá.
+  Future<ErrorCode?> _sendPlan(LedgerBook book) async => book.setup.isEmpty
+      ? null
+      : await uplink.sendPlan(MonthSetupCodec.encode(book.setup));
 
   /// O servidor recusa lançamento de categoria que ele não conhece, então as
   /// categorias vão primeiro.

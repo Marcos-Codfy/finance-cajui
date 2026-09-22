@@ -120,6 +120,9 @@ final class _PairedUplink implements LedgerUplink {
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;
 
   @override
+  Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async => null;
+
+  @override
   Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async => null;
 
   @override

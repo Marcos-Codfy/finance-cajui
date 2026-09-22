@@ -13,6 +13,7 @@ export 'src/budget/fixed_expense.dart';
 export 'src/budget/fixed_occurrence.dart';
 export 'src/budget/month_close.dart';
 export 'src/budget/month_plan.dart';
+export 'src/budget/month_setup.dart';
 export 'src/budget/planned_variable.dart';
 export 'src/budget/reallocation.dart';
 export 'src/budget/variable_budget.dart';

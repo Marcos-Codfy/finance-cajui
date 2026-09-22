@@ -11,4 +11,5 @@ export 'src/error_class.dart';
 export 'src/error_code.dart';
 export 'src/failure_mapper.dart';
 export 'src/json_reader.dart';
+export 'src/month_setup_codec.dart';
 export 'src/payment_line_dto.dart';

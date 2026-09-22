@@ -23,6 +23,12 @@ final class LedgerState {
   /// domínio recusa o lançamento inteiro.
   static const cardDefined = 'card.defined';
 
+  /// O tipo do evento de plano do mês definido.
+  ///
+  /// O plano não tem histórico aqui: vale o último que chegou. Sem ele o
+  /// assistente sabe o que já saiu, mas não o que ainda cabe (BL-049).
+  static const planDefined = 'plan.defined';
+
   /// O tipo do evento de lançamento criado.
   static const entryCreated = 'entry.created';
 
@@ -38,6 +44,7 @@ final class LedgerState {
   final Map<String, Category> _categories = {};
   final Map<String, CreditCard> _cards = {};
   final List<Entry> _entries = [];
+  MonthSetup _plan = MonthSetup.empty;
 
   /// As categorias, por identificador.
   Map<String, Category> get categories => Map.unmodifiable(_categories);
@@ -47,6 +54,9 @@ final class LedgerState {
 
   /// Os lançamentos, na ordem em que entraram.
   List<Entry> get entries => List.unmodifiable(_entries);
+
+  /// O plano do mês como o aparelho o cadastrou.
+  MonthSetup get plan => _plan;
 
   /// Aplica um evento ao estado. Tipo desconhecido é ignorado: um servidor
   /// mais velho consegue subir sobre um registro mais novo.
@@ -58,6 +68,8 @@ final class LedgerState {
       case cardDefined:
         final card = CardCodec.decodeCard(event.payload);
         _cards[card.id] = card;
+      case planDefined:
+        _plan = MonthSetupCodec.decode(event.payload);
       case entryCreated:
         _entries.add(_replayed(event));
       case entryRevised:
