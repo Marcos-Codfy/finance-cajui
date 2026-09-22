@@ -27,7 +27,9 @@ import 'package:shelf/shelf_io.dart' as io;
 /// resposta ao "ler por SSH" num registro cifrado, **só de leitura**.
 Future<void> main(List<String> arguments) async {
   if (arguments.length < 2) {
-    stderr.writeln('uso: server serve|enroll|db <pasta-de-dados> [--key-file f]');
+    stderr.writeln(
+      'uso: server serve|enroll|db <pasta-de-dados> [--key-file f]',
+    );
     exitCode = 64;
     return;
   }
