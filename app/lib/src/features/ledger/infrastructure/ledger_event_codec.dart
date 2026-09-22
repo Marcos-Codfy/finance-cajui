@@ -176,6 +176,10 @@ final class LedgerEventCodec {
       category: categoryOf(request.categoryId),
       today: _endOfTime,
       cardOf: cardOf,
+      // Este registro é deste aparelho, escrito por ele: o valor da parcela
+      // gravado vale, e o plano com juros volta com os juros (BL-054). O
+      // mesmo campo vindo da rede continua sendo ignorado.
+      fromOwnJournal: true,
     ).valueOrNull!;
   }
 }
