@@ -74,7 +74,8 @@ void main() {
 
     expect(proposal.amount.value, const Money.fromCents(600));
     expect(proposal.occurredOn.value, LocalDate(2026, 9, 12));
-    expect(draft.description, 'LANCHONETE E RESTAURANTE SABOR DA PRACA');
+    // O cupom grita em maiúsculas; a tela mostra nome de gente.
+    expect(draft.description, 'Lanchonete e Restaurante Sabor da Praca');
     expect(draft.method?.kind, PaymentMethodKind.pix);
     expect(draft.category, isNull, reason: 'RN-782: sem palpite de categoria');
     expect(draft.origin, EntryOrigin.share);

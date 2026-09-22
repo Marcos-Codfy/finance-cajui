@@ -14,5 +14,12 @@ final class NoReceiptInbox implements ReceiptInbox {
   Future<List<SharedItem>> takePending() async => const [];
 
   @override
+  bool get canPhotograph => false;
+
+  /// Na web não há câmera do aparelho a chamar: o modo consulta não captura.
+  @override
+  Future<bool> takePhoto() async => false;
+
+  @override
   Future<void> discard(SharedFile file) async {}
 }

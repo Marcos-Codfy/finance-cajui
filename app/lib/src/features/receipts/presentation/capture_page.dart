@@ -2,6 +2,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_confirm_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
@@ -63,28 +64,43 @@ class CapturePage extends ConsumerWidget {
   };
 
   Widget _failed(BuildContext context, WidgetRef ref, PresentedError error) {
-    final capture = ref.read(captureProvider.notifier);
     return CajuiScreen(
       title: 'Comprovante',
-      onBack: capture.dismiss,
+      onBack: ref.read(captureProvider.notifier).dismiss,
       children: [
         ErrorNotice(
           error: error,
-          onAction: (index) async {
-            final label = error.text.actions[index];
-            if (error.code == ErrorCode.capt07 && index == 0) {
-              await capture.retry();
-              return;
-            }
-            await capture.dismiss();
-            // "Digitar os dados" e "Digitar o valor" levam ao lançamento à
-            // mão; as outras saídas acontecem fora do app.
-            if (label.startsWith('Digitar') && context.mounted) {
-              await EntryFormPage.open(context);
-            }
-          },
+          onAction: (index) => _resolve(context, ref, error, index),
         ),
       ],
     );
+  }
+
+  /// A saída escolhida no aviso. Cada código do catálogo tem as suas; o que
+  /// acontece fora do app — abrir o armazenamento, por exemplo — só dispensa
+  /// o aviso.
+  Future<void> _resolve(
+    BuildContext context,
+    WidgetRef ref,
+    PresentedError error,
+    int index,
+  ) async {
+    final capture = ref.read(captureProvider.notifier);
+    final label = error.text.actions[index];
+    if (error.code == ErrorCode.capt07 && index == 0) {
+      await capture.retry();
+      return;
+    }
+    await capture.dismiss();
+    // "Tirar outra foto" abre a câmera de novo (ADR-017): foto escura ou
+    // torta é o caso comum de cupom, e refazer é um toque.
+    if (label.startsWith('Tirar outra')) {
+      await ref.read(captureServiceProvider).photograph();
+      return;
+    }
+    // "Digitar os dados" e "Digitar o valor" levam ao lançamento à mão.
+    if (label.startsWith('Digitar') && context.mounted) {
+      await EntryFormPage.open(context);
+    }
   }
 }

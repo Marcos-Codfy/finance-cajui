@@ -44,7 +44,7 @@ void main() {
     expect(find.text('Conferir comprovante'), findsOneWidget);
     expect(find.text('6,00'), findsOneWidget);
     expect(
-      find.text('LANCHONETE E RESTAURANTE SABOR DA PRACA'),
+      find.text('Lanchonete e Restaurante Sabor da Praca'),
       findsOneWidget,
     );
     expect(find.text('Pix'), findsOneWidget);

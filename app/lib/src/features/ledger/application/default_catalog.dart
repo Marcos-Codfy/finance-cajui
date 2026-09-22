@@ -118,6 +118,22 @@ abstract final class DefaultCatalog {
     ),
   ];
 
+  /// O que cada ramo de estabelecimento significa neste cadastro.
+  ///
+  /// É o que faz um cupom de supermercado nascer como compra de mercado sem a
+  /// IA: o domínio lê o ramo do nome da loja, e este mapa diz em que
+  /// categoria ele cai. Quem muda as categorias muda isto junto.
+  static const Map<MerchantKind, String> categoryByMerchantKind = {
+    MerchantKind.supermarket: 'groceries',
+    MerchantKind.streetMarket: 'street-market',
+    MerchantKind.produce: 'produce',
+    MerchantKind.butcher: 'butcher',
+    MerchantKind.bakery: 'bakery',
+    MerchantKind.dining: 'eating-out',
+    MerchantKind.pharmacy: 'health',
+    MerchantKind.fuel: 'transport',
+  };
+
   /// O livro de quem acabou de instalar o app: o cadastro e mais nada.
   static LedgerBook get emptyBook =>
       LedgerBook(categories: categories, paymentMethods: paymentMethods);
