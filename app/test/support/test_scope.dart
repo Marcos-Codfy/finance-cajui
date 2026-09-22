@@ -1,3 +1,4 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/feedback/sound_player_provider.dart';
 import 'package:cajui/src/core/storage/memory_event_store.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
@@ -8,7 +9,6 @@ import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
-import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/application/receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_reader.dart';
@@ -62,9 +62,45 @@ List<Override> testOverrides({
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const UnpairedAssistantGateway(),
     ),
-    // No teste o livro não sobe para lugar nenhum: a subida tem teste
-    // próprio, e aqui ela só atrapalharia.
-    ledgerUplinkProvider.overrideWithValue(const NoLedgerUplink()),
+    // O teste roda como celular cadastrado: é lá que a camada local
+    // responde, e o livro não sobe para lugar nenhum.
+    ledgerUplinkProvider.overrideWithValue(const _PairedUplink()),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
   ];
+}
+
+/// Uma subida que diz "este aparelho tem livro próprio": é o celular
+/// cadastrado, onde a camada local de respostas vale. Não manda nada.
+final class _PairedUplink implements LedgerUplink {
+  const new();
+
+  @override
+  bool get isPaired => true;
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
+      (const <String>{}, null);
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
+      (const <String>{}, null);
+
+  @override
+  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
+      (const <String, String>{}, null);
+
+  @override
+  Future<ErrorCode?> sendCategory(Map<String, Object?> category) async => null;
+
+  @override
+  Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;
+
+  @override
+  Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async => null;
+
+  @override
+  Future<ErrorCode?> reviseEntry(CreateEntryRequest entry) async => null;
+
+  @override
+  Future<ErrorCode?> cancelEntry(String id) async => null;
 }

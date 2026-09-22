@@ -69,6 +69,10 @@ class AssistantViewModel extends Notifier<AssistantState> {
   /// A resposta que o aparelho dá sozinho, quando dá. Sem livro aberto ainda,
   /// ninguém responde nada aqui — e a pergunta segue o caminho de sempre.
   AssistantReply? _localAnswerTo(String question) {
+    // Na web não existe livro: o que há é um livro **vazio**, e responder
+    // por ele diria "R$ 0,00" com cara de verdade. Lá tudo passa pelo
+    // servidor, que é quem tem os números (ADR-013).
+    if (!ref.read(ledgerUplinkProvider).isPaired) return null;
     final intent = QuestionRouter.of(question);
     if (intent == QuestionIntent.unknown) return null;
     final overview = ref.read(monthOverviewProvider);

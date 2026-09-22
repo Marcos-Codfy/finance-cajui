@@ -4,6 +4,7 @@ import 'package:server/src/auth/device_registry.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/session_scope.dart';
+import 'package:server/src/auth/web_codes.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -17,7 +18,15 @@ import 'package:shelf_router/shelf_router.dart';
 /// servidor por fora** — o código nasce no aparelho que você já tem na mão.
 final class DeviceRoutes {
   /// Cria as rotas sobre o cadastro e os códigos.
-  new({required this.devices, required this.codes, required this.sessions});
+  new({
+    required this.devices,
+    required this.codes,
+    required this.sessions,
+    required this.webCodes,
+  });
+
+  /// Os códigos de consulta da web.
+  final WebCodes webCodes;
 
   /// Os aparelhos cadastrados.
   final DeviceRegistry devices;
@@ -32,7 +41,23 @@ final class DeviceRoutes {
   Router get router => Router()
     ..get('/', _list)
     ..post('/codes', _issue)
+    ..post('/web-codes', _issueWeb)
     ..delete('/<id>', _revoke);
+
+  /// O código que abre a consulta no navegador (ADR-013). Vale dois
+  /// minutos: é o tempo de atravessar a sala com o celular na mão.
+  ///
+  /// Só um aparelho **completo** emite. A web não convida a web: quem só lê
+  /// não decide quem mais entra (T-12).
+  Future<Response> _issueWeb(Request request) async {
+    if (Authenticate.sessionOf(request).scope == SessionScope.webReadOnly) {
+      return Responses.error(request, ErrorCode.auth03, status: 403);
+    }
+    return Responses.json({
+      'code': webCodes.issue(),
+      'expiresInSeconds': WebCodes.validity.inSeconds,
+    });
+  }
 
   Future<Response> _list(Request request) async => Responses.json({
     'devices': [for (final device in devices.devices) device.toJson()],
