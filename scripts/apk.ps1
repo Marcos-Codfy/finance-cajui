@@ -13,7 +13,8 @@ param([switch]$Release)
 $ErrorActionPreference = 'Stop'
 
 $raiz = Resolve-Path (Join-Path $PSScriptRoot '..')
-$copia = Join-Path $HOME 'Desktop\Relatorio Cajui'
+# Subpasta própria: na raiz, quatro APKs de 200 MB escondem os documentos.
+$copia = Join-Path $HOME 'Desktop\Relatorio Cajui\apk'
 $adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
 $env:ANDROID_HOME = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
 
