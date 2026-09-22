@@ -132,7 +132,7 @@ abstract final class ErrorTexts {
       actions: ['Entrar de novo'],
     ),
     ErrorCode.auth04 => const ErrorText(
-      'Este código não serve mais. Gere outro no app do celular, em Ajustes › Computador.',
+      'Este código não serve mais. Gere outro no app do celular, em Ajustes › Aparelhos com acesso.',
       actions: ['Digitar outro código'],
     ),
     ErrorCode.rate01 => const ErrorText(

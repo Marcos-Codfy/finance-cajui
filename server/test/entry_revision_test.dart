@@ -81,6 +81,60 @@ void main() {
     });
   });
 
+  group('RN-311 · compra parcelada, com o cartão que o app mandou', () {
+    const card = {
+      'id': 'card-1',
+      'name': 'Cartão da casa',
+      'closingDay': 25,
+      'dueDay': 5,
+      'creditLimitCents': null,
+    };
+    Map<String, Object?> stove() => entryBody(
+      id: 'stove',
+      cents: 96000,
+      on: '2026-09-19',
+      lines: [
+        {
+          'paymentMethodId': 'card-1',
+          'kind': 'creditCard',
+          'amountCents': 96000,
+        },
+      ],
+    )..['installments'] = 6;
+
+    test('sem o cartão, o servidor recusa — e é o que acontecia', () async {
+      final (status, _) = await call('POST', '/v1/entries', body: stove());
+
+      expect(status, 400, reason: 'não há de onde recalcular as parcelas');
+    });
+
+    test('com o cartão cadastrado antes, ela entra', () async {
+      final (cadastro, _) = await call('POST', '/v1/cards', body: card);
+
+      final (status, _) = await call('POST', '/v1/entries', body: stove());
+
+      expect(cadastro, 201);
+      expect(status, 201);
+      final (_, listed) = await call('GET', '/v1/entries');
+      expect(listed['entries']! as List<Object?>, hasLength(2));
+    });
+
+    test('o cartão volta na lista, e sem número de cartão nenhum', () async {
+      await call('POST', '/v1/cards', body: card);
+
+      final (_, listed) = await call('GET', '/v1/cards');
+
+      final first = (listed['cards']! as List<Object?>).first;
+      expect((first! as Map<String, Object?>).keys, {
+        'id',
+        'name',
+        'closingDay',
+        'dueDay',
+        'creditLimitCents',
+      });
+    });
+  });
+
   group('RN-995 · o cancelado sai de toda visão, e fica no registro', () {
     test('cancelar tira da lista sem apagar o fato', () async {
       final (status, _) = await call('DELETE', '/v1/entries/e1');

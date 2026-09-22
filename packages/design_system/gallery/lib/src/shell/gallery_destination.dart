@@ -17,6 +17,9 @@ enum GalleryDestination {
   /// Espaçamento, raio e elevação.
   layout('Espaço, raio e sombra', GalleryGroup.foundations),
 
+  /// Todos os ícones, percorrendo o enum.
+  icons('Ícones', GalleryGroup.foundations),
+
   /// Botão, botão de ícone, chip e chave.
   action('Ação', GalleryGroup.components),
 

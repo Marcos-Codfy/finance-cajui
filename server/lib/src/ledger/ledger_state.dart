@@ -15,6 +15,14 @@ final class LedgerState {
   /// O tipo do evento de categoria criada.
   static const categoryCreated = 'category.created';
 
+  /// O tipo do evento de cartão cadastrado.
+  ///
+  /// O servidor precisa dos cartões por um motivo só: **compra parcelada**.
+  /// O plano de parcelas é recalculado a partir do cartão e da data — não
+  /// se confia na parcela que o app mandou (T-05) —, e sem o cartão o
+  /// domínio recusa o lançamento inteiro.
+  static const cardDefined = 'card.defined';
+
   /// O tipo do evento de lançamento criado.
   static const entryCreated = 'entry.created';
 
@@ -28,10 +36,14 @@ final class LedgerState {
   static const entryCancelled = 'entry.cancelled';
 
   final Map<String, Category> _categories = {};
+  final Map<String, CreditCard> _cards = {};
   final List<Entry> _entries = [];
 
   /// As categorias, por identificador.
   Map<String, Category> get categories => Map.unmodifiable(_categories);
+
+  /// Os cartões cadastrados, por identificador.
+  Map<String, CreditCard> get cards => Map.unmodifiable(_cards);
 
   /// Os lançamentos, na ordem em que entraram.
   List<Entry> get entries => List.unmodifiable(_entries);
@@ -43,6 +55,9 @@ final class LedgerState {
       case categoryCreated:
         final category = categoryFrom(event.payload);
         _categories[category.id] = category;
+      case cardDefined:
+        final card = CardCodec.decodeCard(event.payload);
+        _cards[card.id] = card;
       case entryCreated:
         _entries.add(_replayed(event));
       case entryRevised:
@@ -90,6 +105,10 @@ final class LedgerState {
       request,
       category: _categories[request.categoryId]!,
       today: today,
+      // Sem isto, toda compra parcelada é recusada: o plano de parcelas é
+      // **recalculado** a partir do cartão (T-05, nunca se confia na parcela
+      // que o app mandou), e sem o cartão não há de onde recalcular.
+      cardOf: (id) => _cards[id],
     );
   }
 

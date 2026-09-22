@@ -1,3 +1,6 @@
+import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/core/errors/error_notice.dart';
+import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/known_device.dart';
 import 'package:cajui/src/features/auth/presentation/invite_sheet.dart';
@@ -32,16 +35,30 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   void _reload() => setState(() => _devices = _load());
 
+  ErrorCode? _problem;
+
   Future<void> _invite() async {
-    final (invite, _) = await ref.read(deviceDirectoryProvider).invite();
-    if (!mounted || invite == null) return;
+    setState(() => _problem = null);
+    final (invite, error) = await ref.read(deviceDirectoryProvider).invite();
+    if (!mounted) return;
+    // Sem isto, o botão principal não fazia nada quando o servidor não
+    // respondia: nem aviso, nem carregando. A pessoa tocava de novo, e de
+    // novo.
+    if (invite == null) {
+      setState(() => _problem = error ?? ErrorCode.srv01);
+      return;
+    }
     await InviteSheet.show(context, invite);
     _reload();
   }
 
+  /// Revogar é ação de segurança: falhar calado deixaria a pessoa achando
+  /// que tirou um aparelho que continua entrando.
   Future<void> _revoke(KnownDevice device) async {
-    await ref.read(deviceDirectoryProvider).revoke(device.id);
-    if (mounted) _reload();
+    final error = await ref.read(deviceDirectoryProvider).revoke(device.id);
+    if (!mounted) return;
+    setState(() => _problem = error);
+    _reload();
   }
 
   @override
@@ -55,8 +72,20 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
         expand: true,
         onPressed: _invite,
       ),
-      children: [_explanation(context), ..._list()],
+      children: [_explanation(context), ..._notice(), ..._list()],
     );
+  }
+
+  List<Widget> _notice() {
+    final code = _problem;
+    if (code == null) return const [];
+    return [
+      const SizedBox(height: CajuiSpacing.lg),
+      ErrorNotice(
+        error: (code: code, text: AssistantReplyView.textOf(code)),
+        onAction: (_) => setState(() => _problem = null),
+      ),
+    ];
   }
 
   Widget _explanation(BuildContext context) {

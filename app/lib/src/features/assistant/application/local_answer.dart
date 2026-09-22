@@ -19,6 +19,7 @@ abstract final class LocalAnswer {
   /// A resposta local para [intent], ou `null`.
   static AssistantAnswered? of(
     QuestionIntent intent, {
+    required String question,
     required Insights insights,
     required MonthOverview overview,
     required LedgerBook book,
@@ -26,12 +27,45 @@ abstract final class LocalAnswer {
     QuestionIntent.today => _from(insights.daily.lines),
     QuestionIntent.weekLimit => _week(insights, overview),
     QuestionIntent.monthClosing => _month(insights, overview),
-    QuestionIntent.whereMoneyWent => _where(overview, book),
+    QuestionIntent.whereMoneyWent => _where(question, overview, book),
     QuestionIntent.voucherBalance => _voucher(overview),
     QuestionIntent.cardBill => _card(overview),
     QuestionIntent.debts => _debts(overview),
+    QuestionIntent.dailyCost => _daily(overview),
+    QuestionIntent.greeting => _greeting(insights),
+    QuestionIntent.help => _help(),
     QuestionIntent.unknown => null,
   };
+
+  /// Cumprimento não é pergunta — mas responder "olá" e parar seria um
+  /// desperdício de toque. Vem junto a frase de hoje, que é o que a pessoa
+  /// abriria o app para ver.
+  static AssistantAnswered _greeting(Insights insights) => AssistantAnswered(
+    '${AssistantIdentity.about} '
+    '${insights.daily.lines.where((line) => line.isNotEmpty).join(' ')}',
+  );
+
+  static AssistantAnswered _help() => const AssistantAnswered(
+    '${AssistantIdentity.about} Dá para me perguntar: quanto ainda dá para '
+    'gastar nesta semana, como o mês está fechando, para onde foi o '
+    'dinheiro, quanto gastei numa categoria, quanto resta no vale, quanto '
+    'vem na fatura, quanto falta nas dívidas e quanto dá para gastar por '
+    'dia. Essas eu respondo aqui mesmo, na hora e sem internet. O resto eu '
+    'levo ao servidor.',
+  );
+
+  /// Quanto dá para gastar por dia, pelo plano. As duas moedas lado a lado,
+  /// e nunca somadas (RN-111).
+  static AssistantAnswered? _daily(MonthOverview overview) {
+    final daily = overview.indicators.plannedDailyCost;
+    if (!daily.cash.isPositive && !daily.mealVoucher.isPositive) return null;
+    return AssistantAnswered(
+      'Pelo plano de ${CalendarWords.month(overview.plan.month)}, dá para '
+      'gastar ${MoneyFormat.brl(daily.cash)} por dia em dinheiro'
+      '${daily.mealVoucher.isPositive ? ', mais ${MoneyFormat.brl(daily.mealVoucher)} no vale' : ''}.',
+      sources: [_source('Custo por dia', daily.cash, overview, 'plan')],
+    );
+  }
 
   /// Junta as frases do resumo numa resposta só. As frases são do domínio e
   /// já passaram pelo guia de voz.
@@ -77,7 +111,13 @@ abstract final class LocalAnswer {
 
   /// Para onde foi o dinheiro: as categorias com gasto, da maior para a
   /// menor. Dinheiro e vale continuam separados — nunca se somam (RN-111).
-  static AssistantAnswered? _where(MonthOverview overview, LedgerBook book) {
+  static AssistantAnswered? _where(
+    String question,
+    MonthOverview overview,
+    LedgerBook book,
+  ) {
+    final named = _categoryNamedIn(question, book);
+    if (named != null) return _forCategory(named, overview, book);
     final spent = book.spentIn(overview.plan.month);
     final totals =
         overview.indicators.spending.routineByCategory.entries
@@ -98,6 +138,36 @@ abstract final class LocalAnswer {
         for (final line in totals.take(6))
           _source(book.categoryOf(line.key).name, line.value, overview, 'fact'),
       ],
+    );
+  }
+
+  /// A categoria que a pergunta nomeia, se nomear alguma. Compara pelo nome
+  /// que a pessoa vê na tela, sem acento e sem caixa.
+  static Category? _categoryNamedIn(String question, LedgerBook book) {
+    final text = QuestionRouter.normalize(question);
+    for (final category in book.categories) {
+      if (text.contains(QuestionRouter.normalize(category.name))) {
+        return category;
+      }
+    }
+    return null;
+  }
+
+  static AssistantAnswered _forCategory(
+    Category category,
+    MonthOverview overview,
+    LedgerBook book,
+  ) {
+    final spent =
+        overview.indicators.spending.routineByCategory[category.id] ??
+        Money.zero;
+    final month = CalendarWords.month(overview.plan.month);
+    return AssistantAnswered(
+      spent.isPositive
+          ? 'Em $month, ${category.name} levou ${MoneyFormat.brl(spent)} '
+                'de rotina.'
+          : 'Em $month ainda não há gasto de rotina em ${category.name}.',
+      sources: [_source(category.name, spent, overview, 'fact')],
     );
   }
 

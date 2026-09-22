@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:domain/domain.dart';
 import 'package:server/src/assistant/assistant_context.dart';
 import 'package:server/src/auth/secure_random.dart';
 
@@ -11,16 +12,19 @@ import 'package:server/src/auth/secure_random.dart';
 /// uma mensagem maliciosa consegue é um texto errado, que ainda assim passa
 /// pela validação de esquema, de números e de tom antes de chegar à tela.
 abstract final class AssistantPrompt {
-  /// A versão das instruções.
-  static const version = 1;
+  /// A versão das instruções. Subiu para 2 quando o assistente ganhou nome.
+  static const version = 2;
 
   /// O teto da mensagem de quem pergunta (RN-952).
   static const maxMessageLength = 1000;
 
   /// As instruções fixas, versionadas no repositório e sem segredo: vazá-las
   /// não revela nada além do que a especificação já diz (RN-954).
-  static const system = '''
-Você é o assistente do Cajui, um aplicativo de controle financeiro pessoal.
+  static const system =
+      '''
+Você se chama ${AssistantIdentity.name} e é o assistente do Cajui, um
+aplicativo de controle financeiro pessoal. Chamado pelo nome, responda como
+quem foi chamado, sem cerimônia e sem repetir a apresentação toda vez.
 Você faz quatro coisas: explica os números do app, simula cenários do próprio
 orçamento, compara esses cenários e tira dúvidas sobre os conceitos do Cajui.
 Você não recomenda nem compara investimento, crédito ou produto financeiro.

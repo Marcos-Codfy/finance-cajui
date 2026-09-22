@@ -49,7 +49,7 @@ void main() {
         'vale a pena trocar meu plano de celular?',
         'me explica o que é renda comprometida',
         'se eu comprar um tênis de 300 reais, complica?',
-        'bom dia',
+        'compensa antecipar parcela?',
       ];
 
       for (final question in open) {
@@ -59,6 +59,47 @@ void main() {
           reason: question,
         );
       }
+    });
+
+    test('chamado pelo nome, entende a mesma pergunta', () {
+      // "Buriti, quanto sobrou?" é a mesma pergunta que "quanto sobrou?".
+      // Sem tirar o vocativo, o nome atrapalharia quem o usa.
+      expect(
+        QuestionRouter.of('Buriti, quanto dá para gastar nesta semana?'),
+        QuestionIntent.weekLimit,
+      );
+      expect(
+        QuestionRouter.of('oi buriti, como o mês está fechando'),
+        QuestionIntent.monthClosing,
+      );
+      expect(AssistantIdentity.withoutVocative('Buriti, e aí?'), 'e aí?');
+    });
+
+    test('só o cumprimento é cumprimento, e não custa token', () {
+      for (final hello in ['oi', 'Oi!', 'Buriti', 'bom dia', 'oi buriti']) {
+        expect(
+          QuestionRouter.of(hello),
+          QuestionIntent.greeting,
+          reason: hello,
+        );
+      }
+      // Mas cumprimento com pergunta junto vale pela pergunta.
+      expect(
+        QuestionRouter.of('bom dia, quanto tenho no vale?'),
+        QuestionIntent.voucherBalance,
+      );
+    });
+
+    test('o nome não come palavra que só começa igual', () {
+      expect(
+        AssistantIdentity.withoutVocative('buritizal grande'),
+        'buritizal grande',
+      );
+    });
+
+    test('"o que você faz" é respondido aqui, e não pela IA', () {
+      expect(QuestionRouter.of('o que você faz?'), QuestionIntent.help);
+      expect(QuestionRouter.of('quem é você'), QuestionIntent.help);
     });
 
     test('o texto normalizado perde acento, caixa e espaço sobrando', () {

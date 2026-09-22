@@ -77,6 +77,7 @@ class AssistantViewModel extends Notifier<AssistantState> {
     if (overview == null || insights == null || book == null) return null;
     return LocalAnswer.of(
       intent,
+      question: question,
       insights: insights,
       overview: overview,
       book: book,

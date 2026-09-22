@@ -120,9 +120,16 @@ final class LedgerBook {
   /// O que foi gasto em [month], **por moeda**. Não existe total que some
   /// dinheiro e vale (RN-111). O estorno desconta no mês em que o dinheiro
   /// voltou, e não no da compra (RN-209).
+  ///
+  /// Quem decide o que conta é o domínio, e não esta soma: `Entry.spentIn`
+  /// deixa a **linha parcelada de fora** (RN-311, RN-312), porque ela conta
+  /// parcela a parcela, no bloco de dívidas. Somar `paidByTender` punha o
+  /// fogão de R$ 960,00 inteiro no mês da compra — e o conceito central do
+  /// Cajui é justamente esse não acontecer.
   TenderAmounts spentIn(BudgetMonth month) =>
-      entriesIn(month)
-          .fold(TenderAmounts.zero, (sum, entry) => sum + entry.paidByTender) -
+      entriesIn(
+        month,
+      ).fold(TenderAmounts.zero, (sum, entry) => sum + entry.spentIn(month)) -
       reversedIn(month);
 
   /// O que voltou em [month], por moeda.

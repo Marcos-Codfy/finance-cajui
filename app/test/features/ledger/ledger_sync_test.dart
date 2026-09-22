@@ -21,6 +21,17 @@ final class _FakeUplink implements LedgerUplink {
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
       (categories, null);
 
+  final Set<String> cards = {};
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteCards() async => (cards, null);
+
+  @override
+  Future<ErrorCode?> sendCard(Map<String, Object?> card) async {
+    cards.add('${card['id']}');
+    return null;
+  }
+
   @override
   Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
       (Map.of(entries), null);
@@ -139,6 +150,26 @@ void main() {
       expect(uplink.entries.keys, ['e1']);
     });
 
+    test('um lançamento recusado não cala os que vêm depois dele', () async {
+      // A compra parcelada era recusada pelo servidor, e o laço parava ali:
+      // tudo lançado depois dela nunca subia, e o assistente respondia com
+      // um mês pela metade sem dizer que estava pela metade.
+      final teimoso = _RefusingOne('e2');
+      final sync = LedgerSync(teimoso);
+
+      final (sent, error) = await sync.run(
+        _bookOf([
+          _entry('e1', 'Padaria', 850),
+          _entry('e2', 'Fogão', 96000),
+          _entry('e3', 'Feira', 2000),
+        ]),
+      );
+
+      expect(error, ErrorCode.req01, reason: 'a recusa é relatada');
+      expect(sent, 2, reason: 'os outros dois subiram assim mesmo');
+      expect(teimoso.entries.keys, containsAll(['e1', 'e3']));
+    });
+
     test('aparelho sem cadastro não tenta subir nada', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
 
@@ -153,4 +184,16 @@ void main() {
 final class _UnpairedUplink extends _FakeUplink {
   @override
   bool get isPaired => false;
+}
+
+/// Recusa um lançamento e aceita os outros, como o servidor fazia com a
+/// compra parcelada.
+final class _RefusingOne extends _FakeUplink {
+  new(this.refused);
+
+  final String refused;
+
+  @override
+  Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async =>
+      entry.id == refused ? ErrorCode.req01 : await super.sendEntry(entry);
 }

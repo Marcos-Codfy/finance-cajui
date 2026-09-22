@@ -1,7 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/infrastructure/month_setup_codec.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
-import 'package:cajui/src/features/ledger/infrastructure/card_codec.dart';
+
 import 'package:cajui/src/features/ledger/infrastructure/debt_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/entry_fact_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/month_close_codec.dart';

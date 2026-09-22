@@ -5,6 +5,7 @@ import 'package:cajui/src/features/assistant/presentation/assistant_view_model.d
 import 'package:cajui/src/features/auth/presentation/enroll_page.dart';
 import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -122,8 +123,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   List<Widget> _firstTalk(ValueChanged<String> onAsk) => [
     const CajuiEmptyState(
-      title: 'Pergunte sobre o seu mês',
-      message: 'Eu olho os seus números e respondo com a conta na mão.',
+      title: 'Oi, eu sou o ${AssistantIdentity.name}',
+      message:
+          'Onde tem buriti, tem água. Eu olho os seus números e respondo '
+          'com a conta na mão.',
     ),
     const SizedBox(height: CajuiSpacing.lg),
     Wrap(

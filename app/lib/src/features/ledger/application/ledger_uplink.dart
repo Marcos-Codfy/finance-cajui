@@ -30,6 +30,13 @@ abstract interface class LedgerUplink {
   /// As categorias que o servidor já conhece.
   Future<(Set<String>, ErrorCode?)> remoteCategories();
 
+  /// Os cartões que o servidor já conhece. Sem eles, compra parcelada é
+  /// recusada: o plano de parcelas é recalculado a partir do cartão.
+  Future<(Set<String>, ErrorCode?)> remoteCards();
+
+  /// Cadastra o cartão no servidor.
+  Future<ErrorCode?> sendCard(Map<String, Object?> card);
+
   /// As assinaturas dos lançamentos que o servidor tem, por identificador.
   Future<(Map<String, String>, ErrorCode?)> remoteEntries();
 

@@ -4,6 +4,7 @@
 library;
 
 export 'src/api_error.dart';
+export 'src/card_codec.dart';
 export 'src/create_entry_request.dart';
 export 'src/entry_codec.dart';
 export 'src/error_class.dart';

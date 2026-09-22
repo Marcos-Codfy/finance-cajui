@@ -33,13 +33,13 @@ Fora do alcance, por decisão: adversário com recursos de Estado, e ataque fís
 
 | # | STRIDE | Ameaça | Controle | Onde | Nasce em |
 |---|---|---|---|---|---|
-| T-01 | Spoofing | Servidor falso, com certificado emitido por autoridade instalada no aparelho | O app só confia nas raízes fixadas; falha é `E-AUTH-03`, sem "continuar assim mesmo" | ADR-009 · RNF-SEC-07 | F6-11 |
+| T-01 | Spoofing | Servidor falso, com certificado emitido por autoridade instalada no aparelho | **Ainda não implementado** (BL-047). Hoje vale o TLS com as raízes do sistema; a fixação decidida na ADR-009 não existe no código | ADR-009 · RNF-SEC-07 | **em aberto** |
 | T-02 | Spoofing | App adulterado diz ao servidor que "a biometria passou" | A biometria **destrava uma chave em hardware** que assina um desafio; booleano não vale nada | ADR-008 · RNF-SEC-03 | F6-11 |
-| T-03 | Spoofing | Alguém cadastra o próprio aparelho na conta | Cadastro só com código emitido por `dbtool enroll`, por SSH, válido por 10 minutos | ADR-008 · RNF-SEC-05 | F6-03 |
+| T-03 | Spoofing | Alguém cadastra o próprio aparelho na conta | Código de 10 caracteres, uso único, 10 minutos: o **primeiro** aparelho o recebe de `server enroll`, dentro da VM; do segundo em diante o convite sai do celular já cadastrado (`POST /v1/devices/codes`) | ADR-008 · RNF-SEC-05 | F6-11a |
 | T-04 | Tampering | Requisição alterada ou repetida em trânsito | TLS 1.2+ com HSTS; comando com chave de idempotência; desafio de uso único | ADR-012 · RNF-SEC-02 | F6-03 |
 | T-05 | Tampering | O app manda um comando que viola regra (valor negativo, vale em categoria não elegível) | O servidor **valida de novo com o mesmo domínio**: nunca confia no cliente | ADR-001 · RNF-SEC-09 | F6-03 |
 | T-06 | Repudiation | "Eu não lancei isso" | Registro só de acréscimo, encadeado por hash; correção é evento novo | ADR-004 | F6-02 |
-| T-07 | Information disclosure | Celular perdido, com o app aberto por último | Biometria ao abrir e ao voltar do segundo plano; armazenamento local cifrado com chave do Keystore; tela escondida no seletor de apps | ADR-012 · RNF-SEC-19 e 20 | F6-11 |
+| T-07 | Information disclosure | Celular perdido, com o app aberto por último | **Parcial.** Feito: `FLAG_SECURE` esconde a tela do seletor de apps e impede captura; o registro local é cifrado. Falta: a chave desse registro ainda é arquivo ao lado dos dados, e não do Keystore (BL-032); não há biometria ao abrir o app — a chave do aparelho é liberada por dia (F6-A8) | ADR-012 · RNF-SEC-19 e 20 | **parcial** |
 | T-08 | Information disclosure | Outro app lê o arquivo do comprovante | O arquivo é copiado para a **área privada** do app na chegada; nada vai para armazenamento compartilhado | ADR-006 | F6-07 |
 | T-09 | Information disclosure | Dado financeiro em log, métrica ou relatório de erro | Log só com código, rota, duração e `ref`. Teste percorre os logs de uma sessão e reprova valor, descrição ou texto de comprovante | ADR-015 · RNF-SEC-12 | F6-03 |
 | T-10 | Information disclosure | A web deixa dado no computador de outra pessoa | Nada em `localStorage`; sessão em cookie `HttpOnly`, 30 min de inatividade; o celular encerra a sessão à distância | ADR-008 | F6-12 |
@@ -58,7 +58,7 @@ Fora do alcance, por decisão: adversário com recursos de Estado, e ataque fís
 | T-24 | Information disclosure | A resposta da IA vaza o prompt de sistema | O prompt não contém segredo nem dado de outro contexto: vazá-lo não revela nada | ADR-010 | F6-04 |
 | T-25 | Denial of service | Texto enorme ou laço de chamadas queima o crédito | Teto de tamanho na entrada (`E-REQ-04`), teto de tokens de saída, **orçamento mensal** (`E-AI-03`), disjuntor; o crédito é pré-pago | ADR-010 | F6-04 |
 | T-26 | Spoofing | Resposta forjada no caminho até a DeepSeek | TLS com validação normal de certificado na saída do servidor | RNF-SEC-02 | F6-04 |
-| T-27 | Information disclosure | A chave da API vaza | Só existe como credencial do systemd; `gitleaks` no commit e no CI; revogação em um clique na plataforma | ADR-005 · RNF-SEC-11 | F6-04 · Fase 7 |
+| T-27 | Information disclosure | A chave da API vaza | Só existe como credencial do systemd; ``tool/security/scan_secrets.py`` no commit e no CI; revogação em um clique na plataforma | ADR-005 · RNF-SEC-11 | F6-04 · Fase 7 |
 
 A **suíte de comprovantes maliciosos** (RNF-SEC-17) é o teste desta fronteira: textos com instrução embutida, JSON embutido, categoria falsa e valor adulterado. Critério: a classificação não muda, e nada fora do esquema é aceito. Roda em todo PR.
 
@@ -68,14 +68,14 @@ A **suíte de comprovantes maliciosos** (RNF-SEC-17) é o teste desta fronteira:
 |---|---|---|---|---|---|
 | T-30 | Spoofing | Força bruta no SSH | Só chave, senha desligada, `fail2ban`, atualização automática | RNF-SEC-15 | Fase 7 |
 | T-31 | Tampering | Alguém com acesso ao disco altera, remove ou reordena eventos | Envelope autenticado por registro + cadeia de hash; `dbtool verify` aponta o registro exato (`E-DATA-01`) | ADR-005 | F6-02 |
-| T-39 | Tampering | Alguém com acesso ao disco **corta o fim** do registro: a cadeia continua válida, só mais curta | Âncora fora do disco: o app guarda o maior `seq` que já viu e estranha um servidor que sabe menos (`E-DATA-02`); o backup de ontem é prefixo do de hoje | ADR-005 | F6-03 |
+| T-39 | Tampering | Alguém com acesso ao disco **corta o fim** do registro: a cadeia continua válida, só mais curta | **Metade feita.** O servidor expõe `GET /v1/head` com o `seq`; **nenhum cliente o consulta ainda**, então o corte não é notado (BL-051). O backup de ontem continua sendo prefixo do de hoje | ADR-005 | **em aberto** |
 | T-32 | Tampering | Queda de energia no meio de uma escrita corrompe o registro | `append` + `fsync`; linha incompleta detectada e descartada ao subir; resumos por `rename` atômico | ADR-004 | F6-02 |
 | T-33 | Information disclosure | Cópia do disco ou do backup cai em mãos erradas | Registro cifrado por registro; backup cifrado com `age` para chave que **não está no servidor** | ADR-005 · RNF-SEC-14 | F6-02 · Fase 7 |
 | T-34 | Information disclosure | A Vercel enxerga o tráfego da web | Aceito e limitado: a web é só leitura e recebe agregados; o Android fala direto com o backend | ADR-011 | Fase 7 |
 | T-35 | Denial of service | A Oracle recolhe a VM ociosa, ou o DNS gratuito some | O app funciona offline; deploy idempotente; restauração ensaiada | ADR-011 · ADR-012 | Fase 7 |
 | T-36 | Elevation of privilege | Falha no servidor dá acesso à máquina | Serviço sem privilégio, escutando só em `127.0.0.1`; o executável é o único artefato — sem SDK nem interpretador na VM | ADR-003 · RNF-SEC-15 | Fase 7 |
 | T-37 | Tampering | Dependência comprometida entra no build | Versões travadas num `pubspec.lock` único; atualização deliberada; poucas dependências no domínio (só `meta`) | ADR-014 · RNF-SEC-16 | contínuo |
-| T-38 | Information disclosure | Segredo commitado por engano | `gitleaks` no gancho de commit e no CI; varredura do histórico inteiro antes de o repositório ficar público | ADR-014 · BL-022 | F6-03 · Fase 9 |
+| T-38 | Information disclosure | Segredo commitado por engano | ``tool/security/scan_secrets.py`` no gancho de commit e no CI; varredura do histórico inteiro antes de o repositório ficar público | ADR-014 · BL-022 | F6-03 · Fase 9 |
 
 ## Riscos que ficam
 

@@ -50,7 +50,13 @@ class _EnrollPageState extends ConsumerState<EnrollPage> {
     if (failure != null) {
       setState(() {
         _saving = false;
-        _problem = (code: failure, text: ErrorTexts.of(failure));
+        // Sem preencher, a tela mostrava a chave crua: "{recurso} só
+        // funciona com internet". Aqui o recurso é o cadastro.
+        _problem = (
+          code: failure,
+          text: ErrorTexts.of(failure)
+              .fill(const {'recurso': 'O cadastro do aparelho'}),
+        );
       });
       return;
     }

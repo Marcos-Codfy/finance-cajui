@@ -27,8 +27,8 @@ final class LedgerSync {
   /// recusando só gasta bateria.
   Future<(int sent, ErrorCode? error)> run(LedgerBook book) async {
     if (!uplink.isPaired) return (0, ErrorCode.auth03);
-    final categories = await _sendCategories(book);
-    if (categories != null) return (0, categories);
+    final cadastro = await _sendCategories(book) ?? await _sendCards(book);
+    if (cadastro != null) return (0, cadastro);
     final (remote, failure) = await uplink.remoteEntries();
     if (failure != null) return (0, failure);
     return await _sendEntries(book, remote);
@@ -53,24 +53,48 @@ final class LedgerSync {
     return null;
   }
 
+  /// Manda o que falta, **sem parar no primeiro tropeço**.
+  ///
+  /// Um lançamento que o servidor recusa não pode calar todos os que vêm
+  /// depois dele: a lista está em ordem de inserção, então abortar ali
+  /// deixaria o servidor com um mês pela metade — e o assistente
+  /// respondendo com número incompleto sem ninguém saber por quê. Guarda-se
+  /// a primeira recusa e segue-se em frente.
+  /// Os cartões vão antes dos lançamentos, e pelo mesmo motivo que as
+  /// categorias: sem o cartão, o servidor recusa toda compra parcelada —
+  /// ele recalcula o plano de parcelas a partir dele.
+  Future<ErrorCode?> _sendCards(LedgerBook book) async {
+    if (book.cards.isEmpty) return null;
+    final (known, failure) = await uplink.remoteCards();
+    if (failure != null) return failure;
+    for (final card in book.cards) {
+      if (known.contains(card.id)) continue;
+      final error = await uplink.sendCard(CardCodec.encodeCard(card));
+      if (error != null) return error;
+    }
+    return null;
+  }
+
   Future<(int, ErrorCode?)> _sendEntries(
     LedgerBook book,
     Map<String, String> remote,
   ) async {
     var sent = 0;
+    ErrorCode? refused;
     final live = {for (final entry in book.entries) entry.id: entry};
     for (final entry in book.entries) {
+      final pending = remote[entry.id] != _signatureOf(entry);
       final error = await _sendOne(entry, remote[entry.id]);
-      if (error != null) return (sent, error);
-      if (remote[entry.id] != _signatureOf(entry)) sent++;
+      refused ??= error;
+      if (error == null && pending) sent++;
     }
     // O que o servidor tem e o aparelho não tem mais foi cancelado aqui.
     for (final id in remote.keys.where((id) => !live.containsKey(id))) {
       final error = await uplink.cancelEntry(id);
-      if (error != null) return (sent, error);
-      sent++;
+      refused ??= error;
+      if (error == null) sent++;
     }
-    return (sent, null);
+    return (sent, refused);
   }
 
   Future<ErrorCode?> _sendOne(Entry entry, String? remote) async {

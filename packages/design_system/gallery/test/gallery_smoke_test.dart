@@ -52,6 +52,21 @@ void main() {
     }
   });
 
+  testWidgets('a gallery mostra TODOS os ícones do design system', (
+    tester,
+  ) async {
+    // Guarda contra o defeito que a criou: por vinte ícones, a gallery não
+    // mostrava nenhum. Gallery que mostra menos do que existe mente sobre o
+    // que existe, e quem desenha a próxima tela não sabe o que já tem.
+    await _open(tester, _desktop);
+    await tester.tap(find.text(GalleryDestination.icons.title).first);
+    await _settle(tester);
+
+    for (final icon in CajuiIconData.values) {
+      expect(find.text(icon.name), findsWidgets, reason: icon.name);
+    }
+  });
+
   testWidgets('cada página abre sem erro, em tela de celular', (tester) async {
     await _open(tester, const Size(390, 844));
 
