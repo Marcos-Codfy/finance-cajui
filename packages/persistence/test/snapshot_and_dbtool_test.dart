@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:persistence/persistence.dart';
-import 'package:persistence/src/db_tool.dart';
 import 'package:test/test.dart';
 
 import 'support/temp_store.dart';

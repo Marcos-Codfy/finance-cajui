@@ -19,13 +19,15 @@ import 'package:shelf/shelf_io.dart' as io;
 /// ```text
 /// server serve  <pasta-de-dados> [--key-file <arquivo>]
 /// server enroll <pasta-de-dados>
+/// server db     verify|cat|export <pasta-de-dados> [--key-file <arquivo>]
 /// ```
 ///
 /// `serve` sobe a API. `enroll` emite o código que cadastra um aparelho novo
-/// — só por aqui, dentro da VM (ADR-008).
+/// — só por aqui, dentro da VM (ADR-008). `db` é o `dbtool` da ADR-005: a
+/// resposta ao "ler por SSH" num registro cifrado, **só de leitura**.
 Future<void> main(List<String> arguments) async {
   if (arguments.length < 2) {
-    stderr.writeln('uso: server serve|enroll <pasta-de-dados> [--key-file f]');
+    stderr.writeln('uso: server serve|enroll|db <pasta-de-dados> [--key-file f]');
     exitCode = 64;
     return;
   }
@@ -37,6 +39,11 @@ Future<void> main(List<String> arguments) async {
         ..writeln('Vale por 10 minutos, uma única vez.');
     case 'serve':
       await _serve(data, _keyFile(arguments));
+    case 'db':
+      // O `dbtool` da ADR-005 existia no pacote e **nunca tinha sido ligado
+      // a um executável**: a ferramenta que a ADR promete para ler o
+      // registro cifrado não era alcançável por ninguém.
+      exitCode = await DbTool(stdout).run(arguments.skip(1).toList());
     default:
       exitCode = 64;
   }

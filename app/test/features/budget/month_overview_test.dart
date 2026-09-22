@@ -8,11 +8,11 @@ import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
-import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
 

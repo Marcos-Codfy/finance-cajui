@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cajui/src/app/cajui_app.dart';
 import 'package:cajui/src/core/storage/event_store_opener_file.dart';
-import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
 import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
 import 'package:cajui/src/features/receipts/infrastructure/event_store_capture_shelf.dart';
@@ -11,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_inbox.dart';
+import '../../support/memory_ledger_journal.dart';
 import '../../support/pix_receipt.dart';
 import '../../support/test_scope.dart';
 
