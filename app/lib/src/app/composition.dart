@@ -20,6 +20,7 @@ import 'package:cajui/src/features/ledger/infrastructure/cajui_ledger_api.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/infrastructure/remote_ledger_journal.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/infrastructure/event_store_capture_shelf.dart';
 import 'package:cajui/src/features/receipts/infrastructure/native_receipt_inbox.dart';
@@ -54,18 +55,29 @@ abstract final class Composition {
         api.keys.exists ? api : WebSessionEnrollment(api),
       ),
       deviceDirectoryProvider.overrideWithValue(api),
-      ledgerJournalProvider.overrideWithValue(
-        EventStoreLedgerJournal(
-          store: store,
-          codec: const LedgerEventCodec(categoryOf: _defaultCategory),
-        ),
-      ),
+      _journal(store, api, local: nativeCapture),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
       _preferences(store, local: nativeCapture),
       ..._server(api),
       ..._capture(inbox),
     ];
   }
+
+  /// No aparelho, o livro é o registro cifrado. Na web, é o que o servidor
+  /// tem: ela não tem registro próprio, e o livro vazio que usava antes
+  /// mostrava "R$ 0,00" com cara de verdade (ADR-013).
+  static Override _journal(
+    EventStore store,
+    CajuiApi api, {
+    required bool local,
+  }) => ledgerJournalProvider.overrideWithValue(
+    local
+        ? EventStoreLedgerJournal(
+            store: store,
+            codec: const LedgerEventCodec(categoryOf: _defaultCategory),
+          )
+        : RemoteLedgerJournal(api, categoryOf: _defaultCategory),
+  );
 
   /// As escolhas de som, vibração e tema vivem no mesmo registro cifrado
   /// (BL-030). Na web, em lugar nenhum: lá a aba é a sessão, e guardar
