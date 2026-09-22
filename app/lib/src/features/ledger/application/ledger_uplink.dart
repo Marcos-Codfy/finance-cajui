@@ -37,6 +37,14 @@ abstract interface class LedgerUplink {
   /// Cadastra o cartão no servidor.
   Future<ErrorCode?> sendCard(Map<String, Object?> card);
 
+  /// Manda o plano do mês inteiro: renda, fixos, faixas e parcelas.
+  ///
+  /// Vai inteiro, e não campo a campo, porque é assim que ele vive no
+  /// aparelho — e meio plano no servidor daria resposta pior do que plano
+  /// nenhum. Sem ele o assistente sabe quanto saiu, mas não quanto ainda
+  /// cabe (BL-049).
+  Future<ErrorCode?> sendPlan(Map<String, Object?> plan);
+
   /// As assinaturas dos lançamentos que o servidor tem, por identificador.
   Future<(Map<String, String>, ErrorCode?)> remoteEntries();
 

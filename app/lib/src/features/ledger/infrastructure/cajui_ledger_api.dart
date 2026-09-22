@@ -52,6 +52,14 @@ final class CajuiLedgerApi implements LedgerUplink {
   }
 
   @override
+  Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async {
+    final outcome = await _api.authenticated(
+      (token) => _api.post('/v1/plan', plan, token: token),
+    );
+    return outcome.error;
+  }
+
+  @override
   Future<(Map<String, String>, ErrorCode?)> remoteEntries() async {
     final outcome = await _api.authenticated(
       (token) => _api.send('GET', '/v1/entries', token: token),

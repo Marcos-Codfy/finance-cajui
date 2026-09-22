@@ -1,5 +1,4 @@
 import 'package:cajui/src/features/budget/application/close_revision.dart';
-import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:cajui/src/features/ledger/application/correction_guard.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_changes.dart';

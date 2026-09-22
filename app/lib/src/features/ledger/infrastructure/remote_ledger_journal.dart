@@ -27,9 +27,28 @@ final class RemoteLedgerJournal implements LedgerJournal {
     );
     final lista = outcome.body?['entries'] as List<Object?>? ?? const [];
     return [
+      // O plano vem antes dos lançamentos porque é o que dá sentido a eles:
+      // sem ele a consulta mostra o que saiu, mas não quanto ainda cabe.
+      ...await _plan(),
       for (final item in lista)
         if (_entryOf(item) case final entry?) EntryRecorded(entry),
     ];
+  }
+
+  /// Servidor que ainda não recebeu plano nenhum devolve um plano vazio, e
+  /// aí não há fato a aplicar: o livro nasce sem plano, como no aparelho.
+  Future<List<LedgerEvent>> _plan() async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', '/v1/plan', token: token),
+    );
+    final body = outcome.body;
+    if (body == null) return const [];
+    final setup = MonthSetupCodec.decode(body);
+    // O identificador é fixo porque aqui só existe um plano: o que o
+    // servidor tem agora. A consulta não guarda o histórico dele.
+    return setup.isEmpty
+        ? const []
+        : [PlanDefined(id: 'plan-remoto', setup: setup)];
   }
 
   /// Lançamento que o app não consegue reconstruir — categoria que ele não

@@ -1,5 +1,4 @@
 import 'package:cajui/src/features/budget/application/month_overview.dart';
-import 'package:cajui/src/features/budget/application/month_setup.dart';
 import 'package:cajui/src/features/budget/presentation/amount_page.dart';
 import 'package:cajui/src/features/budget/presentation/fixed_expense_page.dart';
 import 'package:cajui/src/features/budget/presentation/income_page.dart';

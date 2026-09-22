@@ -32,6 +32,15 @@ final class _FakeUplink implements LedgerUplink {
     return null;
   }
 
+  Map<String, Object?>? plan;
+
+  @override
+  Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async {
+    calls.add('plan');
+    this.plan = plan;
+    return null;
+  }
+
   @override
   Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
       (Map.of(entries), null);
@@ -83,14 +92,17 @@ Entry _entry(String id, String what, int cents) => Entry.create(
   today: _today,
 ).valueOrNull!;
 
-LedgerBook _bookOf(List<Entry> entries) {
+LedgerBook _bookOf(List<Entry> entries, {MonthSetup? setup}) {
   final base = DefaultCatalog.emptyBook;
   return LedgerBook(
     categories: base.categories,
     paymentMethods: base.paymentMethods,
     entries: entries,
+    setup: setup ?? MonthSetup.empty,
   );
 }
+
+const MonthSetup _plan = MonthSetup(cashIncome: Money.fromCents(320000));
 
 void main() {
   late _FakeUplink uplink;
@@ -111,6 +123,21 @@ void main() {
         expect(uplink.entries.keys, contains('e1'));
       },
     );
+
+    test('BL-049 · o plano sobe junto, depois dos lançamentos', () async {
+      await sync.run(_bookOf([_entry('e1', 'Padaria', 850)], setup: _plan));
+
+      expect(uplink.plan?['cashIncomeCents'], 320000);
+      expect(uplink.calls, ['criou e1', 'plan']);
+    });
+
+    test('quem ainda não planejou não manda plano vazio: apagaria o que o '
+        'servidor já tem', () async {
+      await sync.run(_bookOf([_entry('e1', 'Padaria', 850)]));
+
+      expect(uplink.plan, isNull);
+      expect(uplink.calls, isNot(contains('plan')));
+    });
 
     test('o que falta sobe, e o que já está lá não sobe de novo', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
