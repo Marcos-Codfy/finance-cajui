@@ -48,7 +48,7 @@ final class AuthRoutes {
   Future<Response> _enroll(Request request) async {
     final body = JsonReader(
       await JsonBody.read(request),
-      allowed: const {'code', 'deviceId', 'name', 'publicKey'},
+      allowed: const {'code', 'deviceId', 'name', 'publicKey', 'kind'},
     );
     final publicKey = base64Decode(body.string('publicKey'));
     final accepted =
@@ -60,6 +60,11 @@ final class AuthRoutes {
       deviceId: deviceId,
       name: body.string('name', maxLength: 60),
       publicKey: publicKey,
+      // Quem se cadastra como web **nasce** sem poder escrever: a regra é do
+      // cadastro, e não da tela (T-12 e RN-906).
+      scope: body.optionalString('kind') == 'web'
+          ? SessionScope.webReadOnly
+          : SessionScope.device,
     );
     return Responses.json({'deviceId': deviceId}, status: 201);
   }
@@ -95,7 +100,10 @@ final class AuthRoutes {
         );
     if (!valid) return Responses.error(request, ErrorCode.auth03, status: 401);
     return Responses.json({
-      'token': sessions.open(challenge.deviceId, scope: SessionScope.device),
+      'token': sessions.open(
+        challenge.deviceId,
+        scope: devices.scopeOf(challenge.deviceId),
+      ),
       'expiresInSeconds': SessionBook.deviceLifetime.inSeconds,
     });
   }

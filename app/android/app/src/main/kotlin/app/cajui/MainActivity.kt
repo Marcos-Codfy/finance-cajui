@@ -2,6 +2,7 @@ package app.cajui
 
 import android.content.Intent
 import app.cajui.capture.CaptureChannel
+import app.cajui.auth.DeviceKeyChannel
 import app.cajui.capture.PhotoIntake
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -23,6 +24,7 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             PhotoIntake(this),
         )
+        DeviceKeyChannel(flutterEngine.dartExecutor.binaryMessenger)
         capture?.handle(intent)
     }
 
