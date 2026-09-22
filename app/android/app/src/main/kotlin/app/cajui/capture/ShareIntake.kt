@@ -34,8 +34,14 @@ class ShareIntake(private val context: Context) {
         if (stream == null) return receiveText(id, intent.getStringExtra(Intent.EXTRA_TEXT))
         return try {
             receiveFile(id, stream)
-        } catch (denied: SecurityException) {
-            // O app de origem não liberou a leitura do arquivo.
+        } catch (recusado: Exception) {
+            // **Qualquer** tropeço na leitura vira recusa, e não exceção.
+            // Não é só o app de origem que pode não ter liberado: um
+            // `file://` que este app não alcança, um arquivo que sumiu no
+            // meio, um provedor que morreu. Deixar escapar daqui derrubava
+            // o app **na abertura** — o compartilhamento é lido antes da
+            // primeira tela existir, e um app hostil manda isso de
+            // propósito.
             failure(id, "E-CAPT-05")
         }
     }
