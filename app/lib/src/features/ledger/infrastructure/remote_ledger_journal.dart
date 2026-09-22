@@ -27,11 +27,39 @@ final class RemoteLedgerJournal implements LedgerJournal {
     );
     final lista = outcome.body?['entries'] as List<Object?>? ?? const [];
     return [
-      // O plano vem antes dos lançamentos porque é o que dá sentido a eles:
-      // sem ele a consulta mostra o que saiu, mas não quanto ainda cabe.
+      // O plano e o que entrou vêm antes dos lançamentos porque são o que dá
+      // sentido a eles: sem o plano a consulta mostra o que saiu mas não
+      // quanto ainda cabe, e sem o crédito do vale o saldo pararia em zero
+      // — a projeção recusa pagar vale que não entrou.
       ...await _plan(),
+      ...await _income(),
       for (final item in lista)
         if (_entryOf(item) case final entry?) EntryRecorded(entry),
+    ];
+  }
+
+  /// O que entrou, como o servidor tem: os recebimentos e os acertos de
+  /// saldo. O saldo em si não desce pronto — ele nasce da projeção, aqui,
+  /// pelos mesmos fatos e pelas mesmas regras do aparelho.
+  Future<List<LedgerEvent>> _income() async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', '/v1/income', token: token),
+    );
+    final body = outcome.body;
+    if (body == null) return const [];
+    return [
+      for (final item in body['receipts'] as List<Object?>? ?? const [])
+        if (item is Map)
+          IncomeReceived(IncomeCodec.decode(item.cast<String, Object?>())),
+      for (final item
+          in body['voucherAdjustments'] as List<Object?>? ?? const [])
+        if (item is Map)
+          VoucherBalanceAdjusted(
+            IncomeCodec.decodeAdjustment(
+              item.cast<String, Object?>(),
+              orElse: 'acerto-remoto',
+            ),
+          ),
     ];
   }
 

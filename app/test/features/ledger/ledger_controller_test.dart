@@ -135,7 +135,7 @@ void main() {
 
       expect(book.voucher.balance.cents, 16210);
       expect(book.entries, isEmpty);
-      expect((event as VoucherBalanceAdjusted).adjustment.cents, 16210);
+      expect((event as VoucherBalanceAdjusted).adjustment.amount.cents, 16210);
     });
 
     test('saldo que já bate não gera fato nenhum', () async {
@@ -207,6 +207,18 @@ final class _OpenUplink implements LedgerUplink {
 
   @override
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;
+
+  @override
+  Future<(RemoteIncome, ErrorCode?)> remoteIncome() async =>
+      ((receipts: const <String>{}, adjustments: const <String>{}), null);
+
+  @override
+  Future<ErrorCode?> sendIncome(Map<String, Object?> receipt) async => null;
+
+  @override
+  Future<ErrorCode?> sendVoucherAdjustment(
+    Map<String, Object?> adjustment,
+  ) async => null;
 
   @override
   Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async => null;

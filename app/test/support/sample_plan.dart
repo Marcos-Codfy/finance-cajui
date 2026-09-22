@@ -49,9 +49,11 @@ final MonthSetup samplePlan = MonthSetup(
 final List<LedgerEvent> samplePlanEvents = [
   PlanDefined(id: 'plan-1', setup: samplePlan),
   VoucherBalanceAdjusted(
-    id: 'voucher-1',
-    adjustment: const Money.fromCents(65000),
-    on: testToday,
-    reason: 'saldo da operadora',
+    VoucherAdjustment(
+      id: 'voucher-1',
+      amount: const Money.fromCents(65000),
+      on: testToday,
+      reason: 'saldo da operadora',
+    ),
   ),
 ];

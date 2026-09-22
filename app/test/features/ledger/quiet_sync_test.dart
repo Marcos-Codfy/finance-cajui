@@ -44,6 +44,18 @@ final class _FakeUplink implements LedgerUplink {
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;
 
   @override
+  Future<(RemoteIncome, ErrorCode?)> remoteIncome() async =>
+      ((receipts: const <String>{}, adjustments: const <String>{}), null);
+
+  @override
+  Future<ErrorCode?> sendIncome(Map<String, Object?> receipt) async => null;
+
+  @override
+  Future<ErrorCode?> sendVoucherAdjustment(
+    Map<String, Object?> adjustment,
+  ) async => null;
+
+  @override
   Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async => null;
 
   @override

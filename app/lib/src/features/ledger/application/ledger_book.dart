@@ -18,6 +18,7 @@ final class LedgerBook {
     this.cards = const [],
     this.settlements = const [],
     this.receipts = const [],
+    this.voucherAdjustments = const [],
     this.reversals = const [],
     this.debts = const [],
     this.debtPayments = const {},
@@ -44,6 +45,11 @@ final class LedgerBook {
 
   /// As rendas já recebidas, nas duas moedas.
   final List<IncomeReceipt> receipts;
+
+  /// Os acertos de saldo do vale já feitos (RN-123). Ficam guardados, e
+  /// não só somados em [voucher], porque o servidor precisa deles: sem
+  /// eles o saldo que ele calcula desanda do daqui no primeiro acerto.
+  final List<VoucherAdjustment> voucherAdjustments;
 
   /// Os estornos: dinheiro de compra que voltou (RN-209).
   final List<Reversal> reversals;
@@ -85,6 +91,7 @@ final class LedgerBook {
     List<CreditCard>? cards,
     List<Settlement>? settlements,
     List<IncomeReceipt>? receipts,
+    List<VoucherAdjustment>? voucherAdjustments,
     List<Reversal>? reversals,
     List<Debt>? debts,
     Map<String, String>? debtPayments,
@@ -98,6 +105,7 @@ final class LedgerBook {
     cards: cards ?? this.cards,
     settlements: settlements ?? this.settlements,
     receipts: receipts ?? this.receipts,
+    voucherAdjustments: voucherAdjustments ?? this.voucherAdjustments,
     reversals: reversals ?? this.reversals,
     debts: debts ?? this.debts,
     debtPayments: debtPayments ?? this.debtPayments,

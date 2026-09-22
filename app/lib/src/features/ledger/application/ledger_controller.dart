@@ -233,10 +233,12 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     await _commit(
       book,
       VoucherBalanceAdjusted(
-        id: 'voucher-adjust-${ref.read(newIdProvider)()}',
-        adjustment: adjustment,
-        on: ref.read(clockProvider).today(),
-        reason: reason,
+        VoucherAdjustment(
+          id: ref.read(newIdProvider)(),
+          amount: adjustment,
+          on: ref.read(clockProvider).today(),
+          reason: reason,
+        ),
       ),
     );
   }

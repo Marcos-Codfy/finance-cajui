@@ -1,6 +1,10 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// O que o servidor já tem do que entrou: os identificadores dos
+/// recebimentos e dos acertos de saldo do vale que ele conhece.
+typedef RemoteIncome = ({Set<String> receipts, Set<String> adjustments});
+
 /// O caminho de subida do livro: o que está no aparelho chegando ao servidor
 /// (RN-781).
 ///
@@ -44,6 +48,15 @@ abstract interface class LedgerUplink {
 
   /// Cadastra o cartão no servidor.
   Future<ErrorCode?> sendCard(Map<String, Object?> card);
+
+  /// O que o servidor já tem do que entrou.
+  Future<(RemoteIncome, ErrorCode?)> remoteIncome();
+
+  /// Manda um recebimento: salário, crédito do vale, entrada avulsa.
+  Future<ErrorCode?> sendIncome(Map<String, Object?> receipt);
+
+  /// Manda um acerto de saldo do vale (RN-123).
+  Future<ErrorCode?> sendVoucherAdjustment(Map<String, Object?> adjustment);
 
   /// Manda o plano do mês inteiro: renda, fixos, faixas e parcelas.
   ///
