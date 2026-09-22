@@ -20,23 +20,37 @@ Três decisões, em ordem de efeito:
 
 ## A conta, para 120 lançamentos por mês
 
-Tamanhos **estimados a partir do prompt**, não medidos — ver a ressalva no fim.
+Tamanhos **medidos**, e não estimados. O servidor grava o consumo de cada
+chamada como evento `ai.usage_recorded`; estes são os números lidos do
+registro cifrado da VM em 22/09, com `server db cat`:
 
-| | Entrada | Saída | Custo unitário (pico) |
-|---|---|---|---|
-| Pergunta ao assistente | ~1 800 tokens | ~200 tokens | US$ 0,00078 |
-| Classificação de comprovante | ~1 200 tokens | ~150 tokens | US$ 0,00054 |
+| Chamada | Entrada | Saída |
+|---|---|---|
+| 1 | 729 | 123 |
+| 2 | 843 | 163 |
+| 3 | 999 | 160 |
+| 4 | 498 | 110 |
+| **média** | **767** | **139** |
+
+| | Custo unitário (pico) | Fora do pico |
+|---|---|---|
+| Uma chamada, com a média medida | US$ 0,00040 | US$ 0,00020 |
 
 Cenário do plano — 120 lançamentos no mês, **todos** passando pela IA, mais 60 perguntas abertas (as que a camada local não responde):
 
 ```
-120 × US$ 0,00054  = US$ 0,065
- 60 × US$ 0,00078  = US$ 0,047
-                     ---------
-                     US$ 0,11  por mês  ≈  R$ 0,60
+180 chamadas × US$ 0,00040  =  US$ 0,072 por mês  ≈  R$ 0,39   (pico)
+180 chamadas × US$ 0,00020  =  US$ 0,036 por mês  ≈  R$ 0,20   (fora do pico)
 ```
 
-Com os **US$ 2,00** de crédito que já estão na conta, isso dá **mais de um ano** de uso — e o número real tende a ser menor, porque a tarifa de fora do pico é metade e porque nem todo lançamento é comprovante compartilhado.
+Com os **US$ 2,00** de crédito que já estão na conta, isso dá **mais de dois
+anos** de uso. E o número tende a ser menor ainda: quem usa um app de
+finanças de dia paga a tarifa de fora do pico, e nem todo lançamento é
+comprovante compartilhado.
+
+A primeira versão deste documento estimava 1 800 tokens de entrada por
+chamada. A medição deu **767** — menos da metade. Vale como lembrete de que
+estimativa de prompt erra para cima com facilidade.
 
 O custo fixo do projeto continua **R$ 0,00**: VM gratuita, TLS gratuito, DNS gratuito, repositório gratuito, Vercel no plano Hobby.
 
