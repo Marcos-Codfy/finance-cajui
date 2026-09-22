@@ -7,7 +7,9 @@
 abstract final class MerchantName {
   /// A forma jurídica no fim do nome: não é parte de como a loja se chama.
   static final _legalForm = RegExp(
-    r'[\s,-]+(?:ltda|eireli|epp|mei|me|s\.?\s?/?\s?a)\.?\s*$',
+    // "LTEA", "LTDA." e "LTDA-ME" são o que o OCR devolve de "LTDA".
+    r'[\s,-]+(?:lt[deo]a|ltd|eireli|epp|mei|me|s\.?\s?/?\s?a)\.?'
+    r'(?:[\s-]+me)?\.?\s*$',
     caseSensitive: false,
   );
 
