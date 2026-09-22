@@ -36,15 +36,30 @@ if ([string]::IsNullOrWhiteSpace($chave)) {
     Write-Host 'Chave carregada da sua pasta pessoal. Ela não passa pelo repositório.'
 }
 
+# A chave que cifra os dados também precisa existir: o servidor a exige, e
+# na VM ela vem da credencial do systemd. Aqui nasce uma de brincadeira, na
+# pasta de dados local — nunca a mesma da VM, e nunca no repositório.
+$dados = Join-Path $HOME '.cajui\dados-locais'
+New-Item -ItemType Directory -Force -Path $dados | Out-Null
+$chaveDados = Join-Path $credenciais 'cajui-data-key'
+if (-not (Test-Path $chaveDados)) {
+    $bytes = [byte[]]::new(32)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    [IO.File]::WriteAllText($chaveDados, [Convert]::ToBase64String($bytes))
+}
+
 $env:CREDENTIALS_DIRECTORY = $credenciais
 $env:HOST = '127.0.0.1'
 $env:PORT = '8080'
 
 Push-Location (Join-Path $PSScriptRoot '..\server')
 try {
-    dart run bin/server.dart
+    # `serve`, e a pasta de dados: sem os dois argumentos o servidor só
+    # imprime o modo de usar e sai. Ele nunca subiu por aqui até hoje.
+    dart run bin/server.dart serve $dados
 } finally {
     Pop-Location
-    # A cópia em claro da chave não fica para trás.
+    # A cópia em claro da chave da IA não fica para trás. A chave de dados
+    # fica: sem ela, o registro local vira ruído na próxima execução.
     Remove-Item (Join-Path $credenciais 'cajui-deepseek-key') -ErrorAction SilentlyContinue
 }

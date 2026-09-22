@@ -21,3 +21,18 @@ python tool/quality/check_authorship.py || {
   echo "Commit interrompido: o repositório não leva assinatura de IA."
   exit 1
 }
+
+# Os limites de tamanho e de arquitetura (ADR-014). Rodam em dois segundos
+# sobre o projeto inteiro, e pegam no commit o que antes só a conferência do
+# GitHub pegava — depois do push, e com o retrabalho já feito.
+#
+# O analisador **não** entra aqui de propósito: leva uns dez segundos e
+# precisa do Flutter no PATH, que nem toda máquina tem. Ele é portão da
+# esteira, não do commit.
+if command -v dart >/dev/null 2>&1; then
+  dart run tool/code_metrics/bin/check.dart || {
+    echo ""
+    echo "Commit interrompido: algum limite de tamanho ou de camada estourou."
+    exit 1
+  }
+fi

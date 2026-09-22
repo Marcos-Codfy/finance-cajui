@@ -21,6 +21,22 @@ class MainActivity : FlutterFragmentActivity() {
     private var capture: CaptureChannel? = null
     private var speech: SpeechChannel? = null
 
+    /**
+     * A tela não vai para a miniatura do seletor de apps, e não se deixa
+     * fotografar nem gravar (T-07).
+     *
+     * O Android guarda uma imagem da última tela de cada app para mostrar no
+     * seletor — e essa imagem ficaria com o saldo e os gastos à vista de
+     * quem pegasse o celular desbloqueado, sem precisar abrir nada.
+     */
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        window.setFlags(
+            android.view.WindowManager.LayoutParams.FLAG_SECURE,
+            android.view.WindowManager.LayoutParams.FLAG_SECURE,
+        )
+        super.onCreate(savedInstanceState)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger

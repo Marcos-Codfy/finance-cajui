@@ -31,6 +31,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
   int? _dueDay;
   int _limitCents = 0;
   String? _dayError;
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -51,7 +52,13 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     );
   }
 
+  /// Grava o cartão. A trava existe porque o identificador é sorteado a cada
+  /// chamada: dois toques em "Guardar" antes de a tela fechar cadastravam
+  /// **dois cartões iguais**, e o segundo `pop` ainda derrubava a tela de
+  /// trás junto.
   Future<void> _save(int closingDay, int dueDay) async {
+    if (_saving) return;
+    setState(() => _saving = true);
     final navigator = Navigator.of(context);
     final result = await ref
         .read(ledgerProvider.notifier)
@@ -61,12 +68,16 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
           dueDay: dueDay,
           creditLimit: _limitCents > 0 ? Money.fromCents(_limitCents) : null,
         );
+    if (!mounted) return;
     switch (result) {
       case Ok():
         navigator.pop();
       case Err(:final failure):
         final error = FailurePresenter.present(failure);
-        setState(() => _dayError = error.text.message);
+        setState(() {
+          _saving = false;
+          _dayError = error.text.message;
+        });
     }
   }
 
@@ -81,7 +92,8 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
       footer: CajuiButton(
         label: 'Guardar',
         expand: true,
-        onPressed: ready ? () => _save(closing, due) : null,
+        loading: _saving,
+        onPressed: ready && !_saving ? () => _save(closing, due) : null,
       ),
       children: [
         CajuiTextField(

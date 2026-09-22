@@ -34,6 +34,8 @@ final class LedgerRoutes {
     ..get('/head', _head)
     ..get('/categories', _listCategories)
     ..post('/categories', _createCategory)
+    ..get('/cards', _listCards)
+    ..post('/cards', _createCard)
     ..get('/entries', _listEntries)
     ..post('/entries', _createEntry)
     ..put('/entries/<id>', _reviseEntry)
@@ -81,6 +83,36 @@ final class LedgerRoutes {
     );
     state.apply(event);
     return Responses.json({'id': payload['id']}, status: 201);
+  }
+
+  Response _listCards(Request request) => Responses.json({
+    'cards': [
+      for (final card in state.cards.values) CardCodec.encodeCard(card),
+    ],
+  });
+
+  /// O cartão como forma de pagamento, e **nada de número de cartão**: só
+  /// nome, dias e limite, que é o que a conta da fatura pede.
+  Future<Response> _createCard(Request request) async {
+    final json = await JsonBody.read(request);
+    final body = JsonReader(
+      json,
+      allowed: const {'id', 'name', 'closingDay', 'dueDay', 'creditLimitCents'},
+    );
+    final card = CardCodec.decodeCard({
+      'id': body.string('id', maxLength: 64),
+      'name': body.string('name', maxLength: 40),
+      'closingDay': body.integer('closingDay'),
+      'dueDay': body.integer('dueDay'),
+      'creditLimitCents': body.optionalInteger('creditLimitCents'),
+    });
+    final event = await store.append(
+      id: 'card-${card.id}',
+      type: LedgerState.cardDefined,
+      payload: CardCodec.encodeCard(card),
+    );
+    state.apply(event);
+    return Responses.json({'id': card.id}, status: 201);
   }
 
   Response _listEntries(Request request) {

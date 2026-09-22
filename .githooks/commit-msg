@@ -1,0 +1,29 @@
+#!/bin/sh
+# A mensagem do commit, conferida antes de ela existir (ADR-014).
+#
+# O `check_authorship.py` do pre-commit olha o histórico — commits que **já**
+# existem. A mensagem que está sendo escrita agora passava por ele; a
+# conferência do GitHub a pegava depois, e aí o conserto já era reescrever
+# mensagem publicada.
+#
+# Ligado com: git config core.hooksPath .githooks
+set -e
+
+mensagem=$(cat "$1")
+primeira=$(printf '%s' "$mensagem" | head -n 1)
+
+# Conventional Commits: tipo(escopo opcional)!: assunto.
+padrao='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9_/-]+\))?!?: .+'
+if ! printf '%s' "$primeira" | grep -Eq "$padrao"; then
+  echo "Mensagem fora do padrão Conventional Commits."
+  echo "  esperado: tipo(escopo): assunto"
+  echo "  exemplo:  feat(app): o teclado deixa de cobrir o campo"
+  echo "  recebido: $primeira"
+  exit 1
+fi
+
+# Nenhuma assinatura de IA entra no histórico deste repositório.
+if printf '%s' "$mensagem" | grep -Eiq 'co-authored-by:.*(claude|copilot|chatgpt|gpt-)|generated with \[?claude|noreply@anthropic\.com|🤖'; then
+  echo "Commit interrompido: o repositório não leva assinatura de IA."
+  exit 1
+fi

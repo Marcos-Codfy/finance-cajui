@@ -42,18 +42,32 @@ class AssistantReplyView extends StatelessWidget {
   /// A frase do assistente para [code]. O catálogo traz, em alguns códigos,
   /// uma frase por tela; aqui vale a do assistente, e só a saída que faz
   /// sentido numa conversa.
+  ///
+  /// Qualquer código pode chegar aqui — o servidor devolve o que ele quiser
+  /// —, e chave sem valor derruba a tela que deveria contar o erro. Já
+  /// aconteceu duas vezes. Quando falta valor para montar a frase exata, sai
+  /// a genérica: **dizer menos é melhor do que cair**, e melhor ainda do que
+  /// mostrar uma frase com buraco. Um teste percorre o catálogo inteiro.
+  static ErrorText textOf(ErrorCode code, {int? retryAfterSeconds}) =>
+      _textOf(code, retryAfterSeconds);
+
   static ErrorText _textOf(ErrorCode code, int? retryAfterSeconds) {
-    final text = ErrorTexts.of(code).inContext('No assistente').fill({
+    final values = {
       'recurso': 'O assistente',
       'segundos': '${retryAfterSeconds ?? 60}',
       // Conversar não tem fila de envio: a frase do `E-APP-01` termina em
-      // "continua salvo" e ponto. Sem isto, a falha sem nome derrubava a
-      // própria tela que deveria contá-la.
+      // "continua salvo" e ponto.
       'fila': '',
+      'ação': 'responder',
       'mês': CalendarWords.month(
         LocalDate.fromDateTime(DateTime.now()).budgetMonth,
       ),
-    });
+    };
+    final catalog = ErrorTexts.of(code).inContext('No assistente');
+    final missing = catalog.placeholders.difference(values.keys.toSet());
+    final text = missing.isEmpty
+        ? catalog.fill(values)
+        : ErrorTexts.of(ErrorCode.srv01).fill(values);
     final retry = text.actions.where((a) => a.contains('de novo')).take(1);
     return ErrorText(text.message, actions: retry.toList());
   }

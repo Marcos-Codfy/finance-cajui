@@ -1,7 +1,7 @@
 # ADR-018 — Ditar a pergunta, com o reconhecedor do aparelho
 
 **Estado:** aceita · 22/09/2026
-**Relacionada:** [ADR-010](ADR-010-deepseek.md) (a IA) · [ADR-017](ADR-017-fotografar-comprovante.md) (a câmera, mesmo padrão)
+**Relacionada:** [ADR-010](ADR-010-integracao-com-a-deepseek.md) (a IA) · [ADR-017](ADR-017-fotografar-comprovante.md) (a câmera, mesmo padrão)
 
 ## Contexto
 

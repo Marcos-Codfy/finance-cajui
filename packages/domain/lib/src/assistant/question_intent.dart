@@ -31,6 +31,15 @@ enum QuestionIntent {
   /// O resumo de hoje (RN-810 a RN-812).
   today,
 
+  /// Quanto dá para gastar por dia, pelo plano (RN-661).
+  dailyCost,
+
+  /// Um cumprimento, ou o nome dele sozinho. Não é pergunta, e não custa.
+  greeting,
+
+  /// "O que você faz?", "o que posso perguntar?".
+  help,
+
   /// Nenhuma das acima. Aqui a IA entra.
   unknown,
 }

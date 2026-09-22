@@ -1,3 +1,4 @@
+import 'package:domain/src/assistant/assistant_identity.dart';
 import 'package:domain/src/assistant/question_intent.dart';
 
 /// Lê a pergunta e diz se o próprio Cajui a responde (RN-960).
@@ -9,8 +10,12 @@ import 'package:domain/src/assistant/question_intent.dart';
 /// ordem vai do mais restrito ao mais geral.
 abstract final class QuestionRouter {
   /// A intenção de [question], ou [QuestionIntent.unknown].
+  ///
+  /// O chamado pelo nome sai antes de qualquer coisa: "Buriti, quanto
+  /// sobrou?" é a mesma pergunta que "quanto sobrou?".
   static QuestionIntent of(String question) {
-    final text = normalize(question);
+    if (AssistantIdentity.isGreeting(question)) return QuestionIntent.greeting;
+    final text = normalize(AssistantIdentity.withoutVocative(question));
     for (final (intent, triggers) in _triggers) {
       for (final trigger in triggers) {
         if (text.contains(trigger)) return intent;
@@ -45,6 +50,24 @@ abstract final class QuestionRouter {
   /// casar vence, então "quanto gastei hoje" não pode cair em "quanto
   /// gastei".
   static const List<(QuestionIntent, List<String>)> _triggers = [
+    (
+      QuestionIntent.help,
+      [
+        'o que voce faz',
+        'o que vc faz',
+        'o que voce sabe',
+        'o que posso perguntar',
+        'me ajuda',
+        'como funciona',
+        'quem e voce',
+        'quem e vc',
+        'pra que voce serve',
+      ],
+    ),
+    (
+      QuestionIntent.dailyCost,
+      ['por dia', 'ao dia', 'cada dia', 'custo diario', 'gastar por dia'],
+    ),
     (QuestionIntent.today, ['hoje', 'no dia de hoje', 'resumo do dia']),
     (
       QuestionIntent.voucherBalance,

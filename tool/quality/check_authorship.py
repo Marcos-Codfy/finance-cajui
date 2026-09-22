@@ -35,7 +35,11 @@ MARKS = [
 SKIP = re.compile(
     r"(^|/)(\.git|build|\.dart_tool|node_modules)/"
     r"|\.(png|jpg|jpeg|webp|gif|pdf|ttf|otf|wav|ogg|mp3|apk|jar|zip|lock)$"
-    r"|tool/quality/check_authorship\.py$",
+    # Os dois arquivos que **impõem** a regra precisam nomear o que ela
+    # proíbe. Sem esta exceção, o verificador reprova a si mesmo e ao gancho
+    # que ele existe para apoiar.
+    r"|tool/quality/check_authorship\.py$"
+    r"|(^|/)\.githooks/commit-msg$",
 )
 
 

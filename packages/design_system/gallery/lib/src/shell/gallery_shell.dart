@@ -15,6 +15,7 @@ import 'package:gallery/src/pages/senses/motion_desk_page.dart';
 import 'package:gallery/src/pages/senses/sound_desk_page.dart';
 import 'package:gallery/src/pages/tokens/colors_page.dart';
 import 'package:gallery/src/pages/tokens/contrast_page.dart';
+import 'package:gallery/src/pages/tokens/icons_page.dart';
 import 'package:gallery/src/pages/tokens/layout_page.dart';
 import 'package:gallery/src/pages/tokens/typography_page.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
@@ -127,6 +128,7 @@ class _GalleryShellState extends State<GalleryShell> {
           GalleryDestination.contrast => const ContrastPage(),
           GalleryDestination.typography => const TypographyPage(),
           GalleryDestination.layout => const LayoutPage(),
+          GalleryDestination.icons => const IconsPage(),
           GalleryDestination.action => const ActionPage(),
           GalleryDestination.content => const ContentPage(),
           GalleryDestination.fields => const FieldPage(),
