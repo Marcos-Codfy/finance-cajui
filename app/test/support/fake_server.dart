@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:api_contract/api_contract.dart';
+import 'package:http/http.dart';
 
 /// O que o app mandou: o caminho, o corpo e o portador.
 typedef SentRequest = ({
@@ -49,7 +50,7 @@ final class FakeServer {
   Uri get baseUrl => Uri.parse('http://127.0.0.1:${_server.port}');
 
   /// Um cliente comum: o teste não finge rede, ele usa rede.
-  HttpClient get client => HttpClient();
+  Client get client => Client();
 
   /// Os caminhos pedidos, na ordem.
   List<String> get paths => [for (final request in requests) request.path];

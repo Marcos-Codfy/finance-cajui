@@ -15,6 +15,10 @@ abstract interface class DeviceDirectory {
   /// Emite um convite para cadastrar outro aparelho.
   Future<(DeviceInvite?, ErrorCode?)> invite();
 
+  /// Emite o código que abre a **consulta no navegador** (ADR-013). Vale dois
+  /// minutos, e não dez: é o tempo de atravessar a sala com o celular na mão.
+  Future<(DeviceInvite?, ErrorCode?)> webInvite();
+
   /// Tira [id] de circulação. A sessão dele morre junto.
   Future<ErrorCode?> revoke(String id);
 }

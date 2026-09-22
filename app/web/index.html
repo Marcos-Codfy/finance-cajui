@@ -1,46 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Cajui - controle financeiro pessoal">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="cajui">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>cajui</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Cajui — o seu controle financeiro, em modo consulta. Os lançamentos são feitos no celular; aqui você olha e pergunta.">
+  <!-- A cor da barra do navegador segue o tema, como a do app. -->
+  <meta name="theme-color" content="#FAF5EE" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1A1512" media="(prefers-color-scheme: dark)">
+  <!-- Isto é dado de uma pessoa só: nada disso tem por que aparecer em busca. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Cajui</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* A primeira tinta é nossa, e não do motor: sem isto a página fica em
+       branco até o Flutter subir, e branco puro no escuro machuca. */
+    :root { color-scheme: light dark; }
+    html, body { height: 100%; margin: 0; background: #FAF5EE; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #1A1512; }
+    }
+    #abertura {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font: 400 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #6B5D4F;
+      transition: opacity 240ms ease-out;
+    }
+    @media (prefers-color-scheme: dark) { #abertura { color: #A79683; } }
+    body.pronto #abertura { opacity: 0; pointer-events: none; }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <!-- Some sozinho quando o Flutter pinta o primeiro quadro. Texto, e não
+       roda girando: quem lê com leitor de tela também precisa saber que a
+       página está vindo. -->
+  <div id="abertura" role="status">Abrindo o Cajui…</div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      document.body.classList.add('pronto');
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

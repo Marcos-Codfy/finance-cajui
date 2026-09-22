@@ -12,6 +12,7 @@ import 'package:server/src/auth/device_registry.dart';
 import 'package:server/src/auth/device_routes.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
+import 'package:server/src/auth/web_codes.dart';
 import 'package:server/src/http/middlewares.dart';
 import 'package:server/src/http/rate_limiter.dart';
 import 'package:server/src/ledger/ledger_routes.dart';
@@ -48,6 +49,7 @@ final class App {
          rateLimiter: rateLimiter,
          classifier: classifier,
          assistant: assistant,
+         webCodes: WebCodes(),
        );
 
   new _shared({
@@ -60,6 +62,7 @@ final class App {
     required RateLimiter? rateLimiter,
     required this.classifier,
     required this.assistant,
+    required WebCodes webCodes,
   }) : _clock = clock,
        _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
        _auth = AuthRoutes(
@@ -67,17 +70,22 @@ final class App {
          codes: codes,
          challenges: ChallengeBook(),
          sessions: sessions,
+         webCodes: webCodes,
        ),
        _devices = DeviceRoutes(
          devices: devices,
          codes: codes,
          sessions: sessions,
+         webCodes: webCodes,
        ),
-       _ledger = LedgerRoutes(
-         store: store,
-         state: LedgerState(store.events),
-         clock: clock,
-       );
+       _ledger = _ledgerRoutes(store, clock);
+
+  static LedgerRoutes _ledgerRoutes(EventStore store, Clock clock) =>
+      LedgerRoutes(
+        store: store,
+        state: LedgerState(store.events),
+        clock: clock,
+      );
 
   /// As sessões abertas. Expostas para o teste abrir uma sem passar pela
   /// biometria.

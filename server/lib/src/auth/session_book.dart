@@ -16,16 +16,25 @@ final class SessionBook {
   /// Quanto dura a sessão do app: curta, e renovada pela biometria.
   static const deviceLifetime = Duration(minutes: 15);
 
+  /// Quanto dura a sessão da web. Mais longa que a do app porque o navegador
+  /// **não tem como se renovar sozinho** — não há chave ali para assinar um
+  /// desafio novo. Vencida, pede-se outro código ao celular. Ela morre com a
+  /// aba de qualquer jeito: nada é guardado no navegador (ADR-013).
+  static const webLifetime = Duration(hours: 2);
+
   final DateTime Function() _now;
   final Map<String, Session> _byTokenHash = {};
 
   /// Abre uma sessão para [deviceId] e devolve o token, em claro, uma vez.
   String open(String deviceId, {required SessionScope scope}) {
     final token = SecureRandom.token();
+    final lifetime = scope == SessionScope.webReadOnly
+        ? webLifetime
+        : deviceLifetime;
     _byTokenHash[SecureRandom.hash(token)] = Session(
       deviceId: deviceId,
       scope: scope,
-      expiresAt: _now().add(deviceLifetime),
+      expiresAt: _now().add(lifetime),
     );
     return token;
   }

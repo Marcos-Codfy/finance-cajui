@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:api_contract/api_contract.dart';
@@ -10,6 +9,7 @@ import 'package:cajui/src/features/auth/application/device_key_failure.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/application/known_device.dart';
 import 'package:cajui/src/features/auth/application/server_session.dart';
+import 'package:http/http.dart';
 
 /// O que o servidor respondeu: o corpo em JSON, ou o código do catálogo.
 typedef ApiOutcome = ({Map<String, Object?>? body, ErrorCode? error});
@@ -27,9 +27,9 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   new({
     required this._baseUrl,
     required this._keys,
-    HttpClient? client,
+    Client? client,
     DateTime Function()? now,
-  }) : _client = client ?? HttpClient(),
+  }) : _given = client,
        _now = now ?? DateTime.now;
 
   final Uri _baseUrl;
@@ -37,7 +37,14 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
 
   /// A chave deste aparelho, para a raiz de composição ligá-la à porta.
   DeviceKeyStore get keys => _keys;
-  final HttpClient _client;
+  final Client? _given;
+
+  /// O cliente só nasce quando alguém vai mesmo falar com o servidor.
+  ///
+  /// No navegador, `HttpClient` do `dart:io` é um substituto que **estoura
+  /// ao ser criado**. Construir a raiz de composição derrubava o app inteiro
+  /// antes do primeiro quadro, e a tela nem chegava a existir.
+  late final Client _client = _given ?? Client();
   final DateTime Function() _now;
 
   ServerSession? _session;
@@ -92,9 +99,15 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   );
 
   @override
-  Future<(DeviceInvite?, ErrorCode?)> invite() async {
+  Future<(DeviceInvite?, ErrorCode?)> invite() => _invite('/v1/devices/codes');
+
+  @override
+  Future<(DeviceInvite?, ErrorCode?)> webInvite() =>
+      _invite('/v1/devices/web-codes');
+
+  Future<(DeviceInvite?, ErrorCode?)> _invite(String path) async {
     final outcome = await authenticated(
-      (token) => post('/v1/devices/codes', const {}, token: token),
+      (token) => post(path, const {}, token: token),
     );
     if (outcome.body case final body?) {
       return (
@@ -131,9 +144,29 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     return await send(_session!.token);
   }
 
+  /// Abre a sessão de **consulta** com o código que o celular mostrou
+  /// (ADR-013). Não há chave nem assinatura: quem respondeu pela identidade
+  /// foi o celular, ao emitir o código. O token fica só na memória e morre
+  /// com a aba.
+  Future<ErrorCode?> openWithCode(String code) async {
+    final opened = await _post('/v1/auth/web', {'code': code.trim()});
+    if (opened.body case final session?) {
+      _session = ServerSession(
+        token: session['token']! as String,
+        expiresAt: _now().add(
+          Duration(seconds: session['expiresInSeconds']! as int),
+        ),
+      );
+    }
+    return opened.error;
+  }
+
   /// A sessão em vigor, ou uma nova, provada pela chave do aparelho.
   Future<ApiOutcome> _open() async {
     if (isOpen) return (body: null, error: null);
+    // Sem chave — a web —, não há o que assinar: a sessão só entra pelo
+    // código do celular, e enquanto ela não veio, o servidor é quem recusa.
+    if (!_keys.exists) return (body: null, error: ErrorCode.auth03);
     return await _withKey(() async {
       final publicKey = await _keys.publicKey();
       final challenge = await _post('/v1/auth/challenge', {
@@ -209,17 +242,14 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     Map<String, Object?>? body,
   }) async {
     try {
-      final request = await _client
-          .openUrl(method, _baseUrl.resolve(path))
-          .timeout(timeout);
-      request.headers.contentType = ContentType.json;
-      if (token != null) {
-        request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
-      }
-      if (body != null) request.write(jsonEncode(body));
-      final response = await request.close().timeout(timeout);
-      final text = await response.transform(utf8.decoder).join();
-      return _read(response.statusCode, text);
+      final request = Request(method, _baseUrl.resolve(path))
+        ..headers['content-type'] = 'application/json; charset=utf-8';
+      if (token != null) request.headers['authorization'] = 'Bearer $token';
+      if (body != null) request.body = jsonEncode(body);
+      final response = await Response.fromStream(
+        await _client.send(request).timeout(timeout),
+      );
+      return _read(response.statusCode, utf8.decode(response.bodyBytes));
     } on Object {
       return (body: null, error: ErrorCode.net01);
     }

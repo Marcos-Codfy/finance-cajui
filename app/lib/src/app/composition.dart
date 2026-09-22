@@ -3,13 +3,13 @@ import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/infrastructure/native_speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
-import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
 import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
+import 'package:cajui/src/features/auth/infrastructure/web_session_enrollment.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -45,7 +45,11 @@ abstract final class Composition {
     final api = _api(nativeCapture: nativeCapture);
     return [
       deviceKeyStoreProvider.overrideWithValue(api.keys),
-      deviceEnrollmentProvider.overrideWithValue(api),
+      // Sem Keystore — a web —, a mesma tela de código abre uma sessão de
+      // consulta em vez de cadastrar um aparelho (ADR-013).
+      deviceEnrollmentProvider.overrideWithValue(
+        api.keys.exists ? api : WebSessionEnrollment(api),
+      ),
       deviceDirectoryProvider.overrideWithValue(api),
       ledgerJournalProvider.overrideWithValue(
         EventStoreLedgerJournal(
@@ -65,11 +69,11 @@ abstract final class Composition {
     ledgerUplinkProvider.overrideWithValue(
       api.keys.exists ? CajuiLedgerApi(api) : const NoLedgerUplink(),
     ),
-    assistantGatewayProvider.overrideWithValue(
-      api.keys.exists
-          ? HttpAssistantGateway(api)
-          : const UnpairedAssistantGateway(),
-    ),
+    // A conversa com o Buriti é a única coisa que a web faz de verdade: ela
+    // não tem o livro local, e o contexto é montado no servidor de qualquer
+    // jeito (RN-915). Na web o gateway é o mesmo; o que muda é como a
+    // sessão nasce.
+    assistantGatewayProvider.overrideWithValue(HttpAssistantGateway(api)),
     speechInputProvider.overrideWithValue(
       api.keys.exists ? const NativeSpeechInput() : const NoSpeechInput(),
     ),

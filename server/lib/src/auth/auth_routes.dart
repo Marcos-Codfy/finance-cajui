@@ -7,6 +7,7 @@ import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/auth/signature_verifier.dart';
+import 'package:server/src/auth/web_codes.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
 import 'package:shelf/shelf.dart';
@@ -25,7 +26,11 @@ final class AuthRoutes {
     required this.codes,
     required this.challenges,
     required this.sessions,
+    required this.webCodes,
   });
+
+  /// Os códigos de consulta da web, emitidos pelo celular.
+  final WebCodes webCodes;
 
   /// Os aparelhos cadastrados.
   final DeviceRegistry devices;
@@ -43,7 +48,33 @@ final class AuthRoutes {
   Router get router => Router()
     ..post('/enroll', _enroll)
     ..post('/challenge', _challenge)
-    ..post('/session', _session);
+    ..post('/session', _session)
+    ..post('/web', _web);
+
+  /// Troca o código emitido pelo celular por uma sessão **só de leitura**
+  /// (ADR-013).
+  ///
+  /// O navegador não tem chave, então não há desafio para assinar: quem
+  /// respondeu pela identidade foi o celular, quando emitiu o código. O
+  /// escopo nasce aqui, no servidor, e não numa tela que esconde botão
+  /// (T-12, RN-906).
+  Future<Response> _web(Request request) async {
+    final body = JsonReader(
+      await JsonBody.read(request),
+      allowed: const {'code'},
+    );
+    if (!webCodes.consume(body.string('code', maxLength: 16))) {
+      return Responses.error(request, ErrorCode.auth04);
+    }
+    return Responses.json({
+      'token': sessions.open(webDeviceId, scope: SessionScope.webReadOnly),
+      'expiresInSeconds': SessionBook.webLifetime.inSeconds,
+    });
+  }
+
+  /// O identificador do "aparelho" web. É um só, de propósito: o navegador
+  /// não é um aparelho cadastrado, e revogar a web é fechar as sessões dele.
+  static const webDeviceId = 'web';
 
   Future<Response> _enroll(Request request) async {
     final body = JsonReader(
