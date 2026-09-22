@@ -220,7 +220,11 @@ void main() {
     });
 
     test('token errado no /health não muda nada: ele é público', () async {
-      final (status, _) = await server.call('GET', '/health', token: 'nao-vale');
+      final (status, _) = await server.call(
+        'GET',
+        '/health',
+        token: 'nao-vale',
+      );
 
       expect(status, 200);
     });
