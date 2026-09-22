@@ -1,6 +1,7 @@
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
+import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
@@ -39,6 +40,7 @@ abstract final class Composition {
     return [
       deviceKeyStoreProvider.overrideWithValue(api.keys),
       deviceEnrollmentProvider.overrideWithValue(api),
+      deviceDirectoryProvider.overrideWithValue(api),
       ledgerJournalProvider.overrideWithValue(
         EventStoreLedgerJournal(
           store: store,

@@ -3,8 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/device_enrollment.dart';
+import 'package:cajui/src/features/auth/application/device_invite.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
+import 'package:cajui/src/features/auth/application/known_device.dart';
 import 'package:cajui/src/features/auth/application/server_session.dart';
 
 /// O que o servidor respondeu: o corpo em JSON, ou o código do catálogo.
@@ -18,7 +21,7 @@ typedef ApiOutcome = ({Map<String, Object?>? body, ErrorCode? error});
 ///
 /// O cadastro (o código de 10 minutos) só é pedido uma vez, e só quando o
 /// servidor ainda não conhece este aparelho.
-final class CajuiApi implements DeviceEnrollment {
+final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   /// Cria o cliente para o endereço dado, assinando com a chave do aparelho.
   new({
     required this._baseUrl,
@@ -59,6 +62,54 @@ final class CajuiApi implements DeviceEnrollment {
       'name': name,
       'publicKey': base64Encode(publicKey),
     });
+    return outcome.error;
+  }
+
+  @override
+  Future<(List<KnownDevice>, ErrorCode?)> devices() async {
+    final outcome = await authenticated(
+      (token) => _send('GET', '/v1/devices', token: token),
+    );
+    if (outcome.body case final body?) {
+      return (
+        [
+          for (final device in (body['devices'] as List?) ?? const [])
+            if (device is Map) _device(device.cast<String, Object?>()),
+        ],
+        null,
+      );
+    }
+    return (const <KnownDevice>[], outcome.error);
+  }
+
+  KnownDevice _device(Map<String, Object?> json) => KnownDevice(
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? 'Aparelho',
+    isWeb: json['kind'] == 'web',
+  );
+
+  @override
+  Future<(DeviceInvite?, ErrorCode?)> invite() async {
+    final outcome = await authenticated(
+      (token) => post('/v1/devices/codes', const {}, token: token),
+    );
+    if (outcome.body case final body?) {
+      return (
+        DeviceInvite(
+          code: body['code']! as String,
+          seconds: body['expiresInSeconds'] as int? ?? 600,
+        ),
+        null,
+      );
+    }
+    return (null, outcome.error);
+  }
+
+  @override
+  Future<ErrorCode?> revoke(String id) async {
+    final outcome = await authenticated(
+      (token) => _send('DELETE', '/v1/devices/$id', token: token),
+    );
     return outcome.error;
   }
 
@@ -119,16 +170,23 @@ final class CajuiApi implements DeviceEnrollment {
     String path,
     Map<String, Object?> body, {
     String? token,
+  }) => _send('POST', path, token: token, body: body);
+
+  Future<ApiOutcome> _send(
+    String method,
+    String path, {
+    String? token,
+    Map<String, Object?>? body,
   }) async {
     try {
       final request = await _client
-          .postUrl(_baseUrl.resolve(path))
+          .openUrl(method, _baseUrl.resolve(path))
           .timeout(timeout);
       request.headers.contentType = ContentType.json;
       if (token != null) {
         request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
       }
-      request.write(jsonEncode(body));
+      if (body != null) request.write(jsonEncode(body));
       final response = await request.close().timeout(timeout);
       final text = await response.transform(utf8.decoder).join();
       return _read(response.statusCode, text);

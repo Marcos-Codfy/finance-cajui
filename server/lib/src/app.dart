@@ -9,6 +9,7 @@ import 'package:server/src/auth/auth_routes.dart';
 import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/auth/challenge_book.dart';
 import 'package:server/src/auth/device_registry.dart';
+import 'package:server/src/auth/device_routes.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/http/middlewares.dart';
@@ -24,21 +25,52 @@ import 'package:shelf_router/shelf_router.dart';
 /// acontece com uma requisição antes de ela chegar a uma rota.
 final class App {
   /// Monta o servidor sobre o registro [store], já aberto.
+  ///
+  /// O cadastro de aparelhos e os códigos de convite são **os mesmos** para
+  /// as rotas públicas de autenticação e para as de dentro: um convite
+  /// emitido pelo celular é o que o cadastro do computador consome.
   new({
     required EventStore store,
     required Directory dataDirectory,
     required Clock clock,
+    required void Function(String line) log,
+    required SessionBook sessions,
+    RateLimiter? rateLimiter,
+    ReceiptClassifier classifier = const RuleBasedClassifier(),
+    AssistantService? assistant,
+  }) : this._shared(
+         store: store,
+         devices: DeviceRegistry(store),
+         codes: EnrollmentCodes(dataDirectory),
+         clock: clock,
+         log: log,
+         sessions: sessions,
+         rateLimiter: rateLimiter,
+         classifier: classifier,
+         assistant: assistant,
+       );
+
+  new _shared({
+    required EventStore store,
+    required DeviceRegistry devices,
+    required EnrollmentCodes codes,
+    required Clock clock,
     required this._log,
     required this.sessions,
-    RateLimiter? rateLimiter,
-    this.classifier = const RuleBasedClassifier(),
-    this.assistant,
+    required RateLimiter? rateLimiter,
+    required this.classifier,
+    required this.assistant,
   }) : _clock = clock,
        _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
        _auth = AuthRoutes(
-         devices: DeviceRegistry(store),
-         codes: EnrollmentCodes(dataDirectory),
+         devices: devices,
+         codes: codes,
          challenges: ChallengeBook(),
+         sessions: sessions,
+       ),
+       _devices = DeviceRoutes(
+         devices: devices,
+         codes: codes,
          sessions: sessions,
        ),
        _ledger = LedgerRoutes(
@@ -63,6 +95,7 @@ final class App {
   final void Function(String line) _log;
   final RateLimiter _limiter;
   final AuthRoutes _auth;
+  final DeviceRoutes _devices;
   final LedgerRoutes _ledger;
 
   late final ReceiptRoutes _receipts = ReceiptRoutes(
@@ -98,6 +131,7 @@ final class App {
     final routes = Router()
       ..get('/health', _health)
       ..mount('/v1/auth', _auth.router.call)
+      ..mount('/v1/devices', _devices.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1/assistant', _assistant.router.call)
       ..mount('/v1', _ledger.router.call);
