@@ -4,8 +4,9 @@
 # A cópia leva a data e a hora no nome: duas versões do mesmo dia não se
 # sobrescrevem, e dá para voltar para a de ontem sem recompilar.
 #
-# Uso:  pwsh scripts/apk.ps1            (depuração, instala se houver celular)
-#       pwsh scripts/apk.ps1 -Release   (assinado só quando existir chave)
+# Uso, da raiz do projeto (o PowerShell do Windows basta; não há `pwsh` aqui):
+#   .\scripts\apk.ps1             depuração, instala se houver celular no cabo
+#   .\scripts\apk.ps1 -Release    assinado, só quando existir chave
 
 param([switch]$Release)
 

@@ -35,7 +35,12 @@ class DeviceKeyChannel(
                 else -> result.notImplemented()
             }
         } catch (failure: Exception) {
-            result.error(codeFor(failure), null, null)
+            // A falha do Keystore fica no log do aparelho, que é o único
+            // lugar onde dá para diagnosticá-la — não há depurador no
+            // celular de quem usa. Só a exceção: nenhum dado da pessoa.
+            // Quem fala com ela é o catálogo, pelo código.
+            android.util.Log.w(TAG, "chave do aparelho recusou", failure)
+            result.error(codeFor(failure), failure::class.java.simpleName, null)
         }
     }
 
@@ -52,12 +57,24 @@ class DeviceKeyChannel(
     }
 
     /**
+     * Três destinos, e nenhum chute.
+     *
      * Chave invalidada porque a digital do aparelho mudou é caso à parte: o
      * aparelho precisa se cadastrar de novo, e a chave velha não serve mais.
+     * `E-AUTH-01` diz "este aparelho não tem biometria configurada", então
+     * só sai quando **for verdade** — antes ele era o destino de qualquer
+     * falha, e o aparelho do dono, cheio de digital cadastrada, ouviu que
+     * não tinha nenhuma. O resto é defeito nosso, e se chama assim.
      */
     private fun codeFor(failure: Exception): String {
-        val invalidated = failure is android.security.keystore.KeyPermanentlyInvalidatedException
-        if (invalidated) key.forget()
-        return if (invalidated) "E-AUTH-03" else "E-AUTH-01"
+        if (failure is android.security.keystore.KeyPermanentlyInvalidatedException) {
+            key.forget()
+            return "E-AUTH-03"
+        }
+        return if (key.canAuthenticate) "E-APP-01" else "E-AUTH-01"
+    }
+
+    private companion object {
+        const val TAG = "cajui-auth"
     }
 }

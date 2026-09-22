@@ -29,7 +29,7 @@ class DeviceKey {
 
     /** Se o aparelho tem como liberar a chave: digital, rosto ou PIN. */
     val canAuthenticate: Boolean
-        get() = BiometricGate.isAvailable(keyStore())
+        get() = BiometricGate.isAvailable()
 
     /** A chave pública em X.509 DER, que é o formato que o servidor espera. */
     fun publicKey(): ByteArray = entry().certificate.publicKey.encoded
@@ -81,6 +81,9 @@ class DeviceKey {
          * Digital e rosto fortes, **ou** o desbloqueio do aparelho. O PIN
          * entra de propósito: sem ele, quem não cadastrou digital ficaria de
          * fora do próprio app.
+         *
+         * Vale só para **criar a chave**. A caixa de diálogo conta os mesmos
+         * fatores em outra escala — ver `BiometricGate.PROMPT_KINDS`.
          */
         const val AUTH_KINDS =
             KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL

@@ -66,7 +66,7 @@ A chave já existe e está guardada em **`C:\Users\<você>\.cajui\cajui.env`**, 
 Para subir o servidor nesta máquina com a IA ligada:
 
 ```
-pwsh scripts/servidor-local.ps1
+.\scripts\servidor-local.ps1
 ```
 
 O script lê a chave de lá, monta o diretório de credenciais que o servidor espera (`CREDENTIALS_DIRECTORY` com o arquivo `cajui-deepseek-key`, como o systemd faz na VM) e **apaga a cópia em claro ao terminar**. Sem chave no arquivo, o servidor sobe assim mesmo, classificando só pelas regras locais.

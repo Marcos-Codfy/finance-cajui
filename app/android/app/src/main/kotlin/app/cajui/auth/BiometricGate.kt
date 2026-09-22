@@ -3,7 +3,6 @@ package app.cajui.auth
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
-import java.security.KeyStore
 import java.security.Signature
 import java.util.concurrent.Executor
 
@@ -18,10 +17,25 @@ import java.util.concurrent.Executor
  */
 object BiometricGate {
 
+    /**
+     * "Digital forte, ou o desbloqueio do aparelho" — **na régua desta
+     * caixa de diálogo**.
+     *
+     * É a mesma ideia do `DeviceKey.AUTH_KINDS`, em números diferentes: o
+     * Keystore conta em `KeyProperties.AUTH_*` (1 e 2) e o `BiometricPrompt`
+     * em `BiometricManager.Authenticators` (0x000F e 0x8000). Trocar uma
+     * pela outra compila sem reclamar e só quebra no aparelho, com
+     * "Authenticator combination is unsupported" — foi exatamente o que
+     * aconteceu no primeiro uso do S22.
+     */
+    const val PROMPT_KINDS =
+        BiometricManager.Authenticators.BIOMETRIC_STRONG or
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
     /** Se dá para liberar a chave neste aparelho: digital, rosto ou PIN. */
-    fun isAvailable(keyStore: KeyStore): Boolean {
+    fun isAvailable(): Boolean {
         val manager = BiometricManager.from(appContext ?: return false)
-        return manager.canAuthenticate(DeviceKey.AUTH_KINDS) ==
+        return manager.canAuthenticate(PROMPT_KINDS) ==
             BiometricManager.BIOMETRIC_SUCCESS
     }
 
@@ -67,6 +81,6 @@ object BiometricGate {
     private fun info() = BiometricPrompt.PromptInfo.Builder()
         .setTitle("Confirme que é você")
         .setSubtitle("O Cajui vai falar com o seu servidor")
-        .setAllowedAuthenticators(DeviceKey.AUTH_KINDS)
+        .setAllowedAuthenticators(PROMPT_KINDS)
         .build()
 }
