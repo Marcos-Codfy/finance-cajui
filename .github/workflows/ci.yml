@@ -86,25 +86,25 @@ jobs:
         run: |
           dart pub global activate coverage
           dart pub global run coverage:test_with_coverage
-          python ../../tool/quality/check_coverage.py packages/domain 90
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/domain 90
         working-directory: packages/domain
 
       - name: contrato
         run: |
           dart pub global run coverage:test_with_coverage
-          python ../../tool/quality/check_coverage.py packages/api_contract 70
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/api_contract 70
         working-directory: packages/api_contract
 
       - name: persistência
         run: |
           dart pub global run coverage:test_with_coverage
-          python ../../tool/quality/check_coverage.py packages/persistence 90
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/persistence 90
         working-directory: packages/persistence
 
       - name: servidor
         run: |
           dart pub global run coverage:test_with_coverage
-          python ../../tool/quality/check_coverage.py server 85
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py server 85
         working-directory: server
 
       - name: verificador de métricas
@@ -114,7 +114,7 @@ jobs:
       - name: design system
         run: |
           flutter test --coverage
-          python ../../tool/quality/check_coverage.py packages/design_system 75
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/design_system 75
         working-directory: packages/design_system
 
       - name: gallery
@@ -124,7 +124,7 @@ jobs:
       - name: app
         run: |
           flutter test --coverage
-          python ../tool/quality/check_coverage.py app 75
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py app 75
         working-directory: app
 
   android:

@@ -210,4 +210,19 @@ void main() {
       expect(server.logs.last, contains('"ref":"$ref"'));
     });
   });
+
+  group('estou de pé', () {
+    test('o /health responde sem token, e não conta nada da casa', () async {
+      final (status, body) = await server.call('GET', '/health');
+
+      expect(status, 200);
+      expect(body, {'status': 'ok'});
+    });
+
+    test('token errado no /health não muda nada: ele é público', () async {
+      final (status, _) = await server.call('GET', '/health', token: 'nao-vale');
+
+      expect(status, 200);
+    });
+  });
 }
