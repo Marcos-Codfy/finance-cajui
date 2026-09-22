@@ -4,6 +4,7 @@ import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,7 +42,7 @@ class PendingCapturesCard extends ConsumerWidget {
 
   Widget _row(WidgetRef ref, PendingCapture capture) {
     final today = ref.watch(clockProvider).today();
-    final name = _firstLine(capture);
+    final name = _nameOf(capture);
     return CajuiListRow(
       title: name,
       subtitle: 'chegou ${DateLabels.day(capture.receivedOn, today: today)}',
@@ -51,10 +52,10 @@ class PendingCapturesCard extends ConsumerWidget {
     );
   }
 
-  /// A primeira linha com cara de texto: basta para a pessoa reconhecer o
-  /// comprovante na lista.
-  static String _firstLine(PendingCapture capture) => capture.text
-      .split('\n')
-      .map((line) => line.trim())
-      .firstWhere((line) => line.length >= 4, orElse: () => 'Comprovante');
+  /// O estabelecimento, lido como na conferência.
+  ///
+  /// Antes era a primeira linha do texto, e numa **foto** de cupom essa linha
+  /// é a do CNPJ: o cartão mostrava o documento no lugar do nome da loja.
+  static String _nameOf(PendingCapture capture) =>
+      MerchantName.pretty(MerchantReader.nameIn(capture.text)) ?? 'Comprovante';
 }
