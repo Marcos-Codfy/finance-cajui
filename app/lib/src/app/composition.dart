@@ -1,5 +1,11 @@
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
+import 'package:cajui/src/features/auth/application/device_enrollment.dart';
+import 'package:cajui/src/features/auth/application/device_key_store.dart';
+import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
+import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.dart';
+import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
@@ -29,7 +35,10 @@ abstract final class Composition {
     required bool nativeCapture,
   }) {
     final inbox = nativeCapture ? NativeReceiptInbox() : null;
+    final api = _api(nativeCapture: nativeCapture);
     return [
+      deviceKeyStoreProvider.overrideWithValue(api.keys),
+      deviceEnrollmentProvider.overrideWithValue(api),
       ledgerJournalProvider.overrideWithValue(
         EventStoreLedgerJournal(
           store: store,
@@ -37,10 +46,10 @@ abstract final class Composition {
         ),
       ),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
-      // Até o aparelho ser cadastrado no servidor (passo de biometria), não
-      // há com quem o assistente conversar — e a tela diz isso.
       assistantGatewayProvider.overrideWithValue(
-        const UnpairedAssistantGateway(),
+        api.keys.exists
+            ? HttpAssistantGateway(api)
+            : const UnpairedAssistantGateway(),
       ),
       receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
       receiptReaderProvider.overrideWithValue(
@@ -50,6 +59,16 @@ abstract final class Composition {
       ),
     ];
   }
+
+  /// O caminho até o servidor. O aparelho só tem identidade onde há
+  /// Keystore: sem ela não há sessão, e sem sessão o assistente diz a
+  /// verdade em vez de fingir conversa.
+  static CajuiApi _api({required bool nativeCapture}) => CajuiApi(
+    baseUrl: CajuiApi.production,
+    keys: nativeCapture
+        ? const NativeDeviceKeyStore()
+        : const NoDeviceKeyStore(),
+  );
 
   static Category _defaultCategory(String id) =>
       DefaultCatalog.emptyBook.categoryOf(id);

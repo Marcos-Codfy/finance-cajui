@@ -2,6 +2,7 @@ import 'package:cajui/src/features/assistant/presentation/assistant_composer.dar
 import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_view_model.dart';
+import 'package:cajui/src/features/auth/presentation/enroll_page.dart';
 import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -25,13 +26,19 @@ class AssistantPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(assistantProvider);
     return switch (state) {
-      AssistantUnpaired() => _unpaired(context),
+      AssistantUnpaired() => _unpaired(context, ref),
       AssistantTalking() => _talking(ref, state),
     };
   }
 
-  Widget _unpaired(BuildContext context) => CajuiScreen(
+  Widget _unpaired(BuildContext context, WidgetRef ref) => CajuiScreen(
     title: 'Assistente',
+    footer: CajuiButton(
+      label: 'Ver os resumos',
+      variant: CajuiButtonVariant.secondary,
+      expand: true,
+      onPressed: () => InsightsPage.open(context),
+    ),
     children: [
       CajuiEmptyState(
         title: 'A conversa passa pelo servidor',
@@ -41,12 +48,19 @@ class AssistantPage extends ConsumerWidget {
             'cadastrado nele. Enquanto isso, os resumos do dia, da semana e '
             'do mês funcionam aqui mesmo, sem internet.',
         action: CajuiNoticeAction(
-          label: 'Ver os resumos',
-          onPressed: () => InsightsPage.open(context),
+          label: 'Cadastrar este aparelho',
+          onPressed: () => _enroll(context, ref),
         ),
       ),
     ],
   );
+
+  /// Cadastrado, a conversa já pode começar: o estado volta a ser de quem
+  /// tem com quem falar.
+  static Future<void> _enroll(BuildContext context, WidgetRef ref) async {
+    final enrolled = await EnrollPage.open(context);
+    if (enrolled ?? false) ref.invalidate(assistantProvider);
+  }
 
   Widget _talking(WidgetRef ref, AssistantTalking state) {
     final assistant = ref.read(assistantProvider.notifier);
