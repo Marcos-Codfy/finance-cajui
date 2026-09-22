@@ -17,8 +17,11 @@ import java.util.concurrent.Executors
  * fechado ou aberto: um aviso de que chegou algo, e então a lista de itens já
  * copiados para a área privada, na ordem recebida.
  */
-class CaptureChannel(context: Context, messenger: BinaryMessenger) :
-    MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+class CaptureChannel(
+    context: Context,
+    messenger: BinaryMessenger,
+    private val photos: PhotoIntake? = null,
+) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
     private val intake = ShareIntake(context)
     private val ocr = ReceiptOcr(context)
@@ -43,10 +46,21 @@ class CaptureChannel(context: Context, messenger: BinaryMessenger) :
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "takePending" -> result.success(pending.toList()).also { pending.clear() }
+            "takePhoto" -> result.success(photos?.start() ?: false)
             "readText" -> readText(call, result)
             "discard" -> result.success(intake.discard(call.argument<String>("path").orEmpty()))
             else -> result.notImplemented()
         }
+    }
+
+    /**
+     * A foto tirada entra na fila pelo mesmo caminho do compartilhamento: para
+     * o Dart, fotografar e compartilhar são a mesma coisa daqui em diante.
+     */
+    fun onPhoto(requestCode: Int, resultCode: Int) {
+        val item = photos?.finish(requestCode, resultCode) ?: return
+        pending.add(item)
+        events?.success(mapOf("type" to "arrived"))
     }
 
     /** A leitura sai da thread principal; a resposta e o progresso voltam por ela. */

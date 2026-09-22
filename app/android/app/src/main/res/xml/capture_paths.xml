@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A caixa de entrada da captura, e nada mais: o app de câmera recebe
+     permissão de escrever só neste diretório (ADR-006 e ADR-017). -->
+<paths>
+    <files-path name="captures" path="capture-inbox/" />
+</paths>
