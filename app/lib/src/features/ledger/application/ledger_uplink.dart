@@ -14,6 +14,14 @@ abstract interface class LedgerUplink {
   /// Se este aparelho já tem com quem falar.
   bool get isPaired;
 
+  /// Se há sessão aberta com o servidor **agora**.
+  ///
+  /// Quem pergunta é a subida silenciosa: abrir sessão pede a digital, e
+  /// pedir a digital no meio de um lançamento é pior do que não subir na
+  /// hora. Com a sessão de um dia, isso quer dizer que o primeiro envio do
+  /// dia é a pedido e os seguintes acontecem sozinhos.
+  bool get hasOpenSession;
+
   /// A assinatura de um lançamento, para saber se o servidor tem a versão
   /// em vigor.
   ///

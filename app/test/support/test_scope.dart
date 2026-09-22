@@ -50,6 +50,7 @@ List<Override> testOverrides({
   EventStore? captureStore,
   AssistantGateway? assistant,
   PreferencesStore? preferences,
+  LedgerUplink? uplink,
 }) {
   var next = 0;
   return [
@@ -63,7 +64,7 @@ List<Override> testOverrides({
     ),
     // O teste roda como celular cadastrado: é lá que a camada local
     // responde, e o livro não sobe para lugar nenhum.
-    ledgerUplinkProvider.overrideWithValue(const _PairedUplink()),
+    ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
     ..._extras(preferences),
   ];
@@ -100,6 +101,11 @@ final class _PairedUplink implements LedgerUplink {
 
   @override
   bool get isPaired => true;
+
+  /// Sem sessão aberta: o teste de tela não sobe nada sozinho, e continua
+  /// medindo só o que a tela faz.
+  @override
+  bool get hasOpenSession => false;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>

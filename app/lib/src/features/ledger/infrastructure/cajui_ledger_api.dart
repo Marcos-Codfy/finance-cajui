@@ -20,6 +20,9 @@ final class CajuiLedgerApi implements LedgerUplink {
   bool get isPaired => true;
 
   @override
+  bool get hasOpenSession => _api.isOpen;
+
+  @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async {
     final outcome = await _api.authenticated(
       (token) => _api.send('GET', '/v1/categories', token: token),

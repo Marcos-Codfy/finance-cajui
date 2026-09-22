@@ -6,6 +6,8 @@ import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/quiet_sync.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -272,7 +274,11 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       next = next.apply(revision);
       state = AsyncData(next);
     }
+    quietSync.schedule(next);
   }
+
+  /// A cópia para o servidor, que acontece sozinha e não aparece na tela.
+  late final QuietSync quietSync = QuietSync(ref.read(ledgerUplinkProvider));
 }
 
 /// O livro de lançamentos em vigor.

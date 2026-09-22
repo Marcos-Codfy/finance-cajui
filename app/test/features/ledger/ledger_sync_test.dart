@@ -17,6 +17,13 @@ final class _FakeUplink implements LedgerUplink {
   @override
   bool get isPaired => true;
 
+  /// Nasce sem sessão: a subida silenciosa só age quando há uma aberta, e o
+  /// teste que a quer ligada diz isso na cara.
+  bool session = false;
+
+  @override
+  bool get hasOpenSession => session;
+
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
       (categories, null);
