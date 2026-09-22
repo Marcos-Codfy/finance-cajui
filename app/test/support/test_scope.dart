@@ -4,13 +4,12 @@ import 'package:cajui/src/core/settings/no_preferences_store.dart';
 import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:cajui/src/core/storage/memory_event_store.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
-import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
-import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
 import 'package:cajui/src/features/receipts/application/receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_reader.dart';
@@ -21,6 +20,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:persistence/event_store.dart';
 
+import 'memory_ledger_journal.dart';
 import 'mute_player.dart';
 
 /// O dia em que os testes acontecem: domingo, 20 de setembro de 2026.
@@ -59,7 +59,7 @@ List<Override> testOverrides({
     newIdProvider.overrideWithValue(() => 'id-${next++}'),
     ..._capture(inbox, reader, captureStore),
     assistantGatewayProvider.overrideWithValue(
-      assistant ?? const UnpairedAssistantGateway(),
+      assistant ?? const _SilentGateway(),
     ),
     // O teste roda como celular cadastrado: é lá que a camada local
     // responde, e o livro não sobe para lugar nenhum.
@@ -127,4 +127,17 @@ final class _PairedUplink implements LedgerUplink {
 
   @override
   Future<ErrorCode?> cancelEntry(String id) async => null;
+}
+
+/// Um assistente que nunca foi pareado. Vive aqui, e não em `lib/`: é dublê
+/// de teste, e código que só o teste usa não tem por que viajar no APK.
+final class _SilentGateway implements AssistantGateway {
+  const new();
+
+  @override
+  bool get isPaired => false;
+
+  @override
+  Future<AssistantReply> ask(String message) async =>
+      const AssistantNotPaired();
 }

@@ -1,13 +1,13 @@
 import 'package:cajui/src/app/cajui_app.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
-import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
 

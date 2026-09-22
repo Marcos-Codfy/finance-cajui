@@ -7,6 +7,7 @@ library;
 
 export 'src/aes_gcm_record_cipher.dart';
 export 'src/data_key.dart';
+export 'src/db_tool.dart';
 export 'src/event_store.dart';
 export 'src/file_event_store.dart';
 export 'src/file_snapshot_store.dart';

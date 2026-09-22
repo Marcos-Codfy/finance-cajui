@@ -1,5 +1,4 @@
 import 'package:cajui/src/app/cajui_app.dart';
-import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
 import 'package:cajui/src/features/receipts/application/read_outcome.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
 import 'package:design_system/design_system.dart';
@@ -9,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_inbox.dart';
 import '../../support/fake_reader.dart';
+import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
 

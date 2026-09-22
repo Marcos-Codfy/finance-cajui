@@ -53,3 +53,16 @@ Descoberto ao escrever os testes: alterar, remover do meio ou reordenar registro
 - Testes: registro alterado, removido, reordenado e truncado — todos detectados, com o `seq` apontado.
 - Teste: a mesma mensagem cifrada duas vezes gera linhas diferentes (nonce único).
 - Fase 7: restaurar um backup numa máquina limpa, do zero, com o roteiro cronometrado.
+
+
+## Nota de 22/09/2026 — a ferramenta existia e não era alcançável
+
+Durante a auditoria de limpeza, o `DbTool` apareceu na lista de "código que
+só o teste usa": a classe estava escrita e testada em
+`packages/persistence`, e **nunca tinha sido ligada a um executável**. A
+ADR prometia a resposta ao "ler por SSH", e a resposta não era alcançável
+por ninguém.
+
+Agora é um subcomando do próprio servidor — `server db verify|cat|export|keygen` —,
+o que evita um segundo binário para instalar e manter na VM. O comando
+completo, com a credencial, está no runbook.
