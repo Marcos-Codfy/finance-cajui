@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
+import 'package:pointycastle/export.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
 import 'package:server/src/ledger/ledger_state.dart';
@@ -31,7 +35,9 @@ final class LedgerRoutes {
     ..get('/categories', _listCategories)
     ..post('/categories', _createCategory)
     ..get('/entries', _listEntries)
-    ..post('/entries', _createEntry);
+    ..post('/entries', _createEntry)
+    ..put('/entries/<id>', _reviseEntry)
+    ..delete('/entries/<id>', _cancelEntry);
 
   /// A âncora contra o corte do fim do registro (T-39): o app guarda o maior
   /// `seq` que já viu, e estranha um servidor que sabe menos do que ele.
@@ -115,6 +121,52 @@ final class LedgerRoutes {
     );
     if (!known) state.apply(event);
     return Responses.json({'id': command.id, 'seq': event.seq}, status: 201);
+  }
+
+  /// O lançamento como passou a valer (RN-208). A chave de idempotência sai
+  /// do próprio conteúdo: reenviar a mesma correção não cria fato novo, e
+  /// uma correção diferente cria — sem o app ter de contar revisões.
+  Future<Response> _reviseEntry(Request request, String id) async {
+    final json = await JsonBody.read(request);
+    final command = CreateEntryRequest.fromJson(json);
+    if (command.id != id) return Responses.error(request, ErrorCode.req02);
+    if (!state.categories.containsKey(command.categoryId)) {
+      return Responses.error(request, ErrorCode.req02);
+    }
+    final failure = state
+        .tryCreate(command, today: clock.today())
+        .failureOrNull;
+    if (failure != null) return _refuse(request, failure);
+    final payload = command.toJson();
+    final event = await store.append(
+      id: 'entry-revised-$id-${_fingerprint(payload)}',
+      type: LedgerState.entryRevised,
+      payload: payload,
+    );
+    state.apply(event);
+    return Responses.json({'id': id});
+  }
+
+  /// Cancelar não apaga: grava o fato de que aquele lançamento não vale mais.
+  Future<Response> _cancelEntry(Request request, String id) async {
+    final event = await store.append(
+      id: 'entry-cancelled-$id',
+      type: LedgerState.entryCancelled,
+      payload: {'id': id},
+    );
+    state.apply(event);
+    return Responses.json({'id': id});
+  }
+
+  /// Oito caracteres do SHA-256 do conteúdo: o bastante para separar duas
+  /// correções e curto o bastante para caber num identificador legível.
+  static String _fingerprint(Map<String, Object?> payload) {
+    final bytes = utf8.encode(jsonEncode(payload));
+    final digest = SHA256Digest().process(Uint8List.fromList(bytes));
+    return digest
+        .take(4)
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
   }
 
   Response _refuse(Request request, Failure failure) {

@@ -4,6 +4,8 @@
 /// `RN-xxx` tem uma implementação e um teste, nomeado pela regra.
 library;
 
+export 'src/assistant/question_intent.dart';
+export 'src/assistant/question_router.dart';
 export 'src/budget/amount_range.dart';
 export 'src/budget/budget_adjustment.dart';
 export 'src/budget/fixed_expense.dart';

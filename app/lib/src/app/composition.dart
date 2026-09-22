@@ -9,8 +9,11 @@ import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.d
 import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/infrastructure/cajui_ledger_api.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
+import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/infrastructure/event_store_capture_shelf.dart';
 import 'package:cajui/src/features/receipts/infrastructure/native_receipt_inbox.dart';
@@ -48,19 +51,32 @@ abstract final class Composition {
         ),
       ),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
-      assistantGatewayProvider.overrideWithValue(
-        api.keys.exists
-            ? HttpAssistantGateway(api)
-            : const UnpairedAssistantGateway(),
-      ),
-      receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
-      receiptReaderProvider.overrideWithValue(
-        inbox == null
-            ? const NoReceiptReader()
-            : NativeReceiptReader(progress: inbox.progress),
-      ),
+      ..._server(api),
+      ..._capture(inbox),
     ];
   }
+
+  /// O que depende de haver identidade de aparelho: subir o livro e
+  /// conversar com o assistente. Sem Keystore, nenhuma das duas existe.
+  static List<Override> _server(CajuiApi api) => [
+    ledgerUplinkProvider.overrideWithValue(
+      api.keys.exists ? CajuiLedgerApi(api) : const NoLedgerUplink(),
+    ),
+    assistantGatewayProvider.overrideWithValue(
+      api.keys.exists
+          ? HttpAssistantGateway(api)
+          : const UnpairedAssistantGateway(),
+    ),
+  ];
+
+  static List<Override> _capture(NativeReceiptInbox? inbox) => [
+    receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
+    receiptReaderProvider.overrideWithValue(
+      inbox == null
+          ? const NoReceiptReader()
+          : NativeReceiptReader(progress: inbox.progress),
+    ),
+  ];
 
   /// O caminho até o servidor. O aparelho só tem identidade onde há
   /// Keystore: sem ela não há sessão, e sem sessão o assistente diz a

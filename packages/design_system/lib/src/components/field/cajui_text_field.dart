@@ -23,6 +23,9 @@ class CajuiTextField extends StatefulWidget {
     this.error,
     this.enabled = true,
     this.onChanged,
+    this.onSubmitted,
+    this.focusNode,
+    this.textInputAction,
     this.keyboardType,
     this.inputFormatters,
     this.style,
@@ -51,6 +54,16 @@ class CajuiTextField extends StatefulWidget {
   /// Chamado a cada mudança do texto.
   final ValueChanged<String>? onChanged;
 
+  /// Chamado quando a tecla de ação do teclado é apertada.
+  final ValueChanged<String>? onSubmitted;
+
+  /// O foco, quando quem chama precisa saber dele ou comandá-lo. Sem ele, o
+  /// campo cria o próprio.
+  final FocusNode? focusNode;
+
+  /// A tecla de ação do teclado: enviar, procurar, ir para o próximo.
+  final TextInputAction? textInputAction;
+
   /// O teclado virtual pedido.
   final TextInputType? keyboardType;
 
@@ -68,7 +81,10 @@ class CajuiTextField extends StatefulWidget {
 }
 
 class _CajuiTextFieldState extends State<CajuiTextField> {
-  final FocusNode _focus = FocusNode();
+  /// O foco de fora, quando existe; senão, um próprio. Quem cria, destrói —
+  /// descartar o foco de outro derrubaria a tela de quem o mantém.
+  late final FocusNode _own = FocusNode();
+  FocusNode get _focus => widget.focusNode ?? _own;
   bool _hovered = false;
 
   @override
@@ -81,9 +97,8 @@ class _CajuiTextFieldState extends State<CajuiTextField> {
 
   @override
   void dispose() {
-    _focus
-      ..removeListener(_onFocusChanged)
-      ..dispose();
+    _focus.removeListener(_onFocusChanged);
+    _own.dispose();
     super.dispose();
   }
 
@@ -116,6 +131,8 @@ class _CajuiTextFieldState extends State<CajuiTextField> {
         focusNode: _focus,
         enabled: widget.enabled,
         onChanged: widget.onChanged,
+        onSubmitted: widget.onSubmitted,
+        textInputAction: widget.textInputAction,
         keyboardType: widget.keyboardType,
         inputFormatters: widget.inputFormatters,
         textAlign: widget.textAlign,

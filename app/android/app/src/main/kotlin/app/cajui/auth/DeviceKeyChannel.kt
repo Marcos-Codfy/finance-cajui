@@ -45,14 +45,22 @@ class DeviceKeyChannel(
     }
 
     /**
-     * A assinatura sai da caixa de diálogo do sistema, e só de lá. Desistir
-     * devolve vazio: a camada de cima entende como "não agora", e não como
-     * defeito.
+     * Assina, pedindo a digital **só quando o prazo do dia venceu**.
+     *
+     * Dentro da janela, a chave assina direto e ninguém é interrompido. Fora
+     * dela, o Android pergunta quem está ali e a assinatura sai em seguida.
+     * Desistir devolve vazio: a camada de cima entende como "não agora", e
+     * não como defeito.
      */
     private fun sign(call: MethodCall, result: MethodChannel.Result) {
         val message = call.argument<ByteArray>("message")!!
-        BiometricGate.sign(activity, key.pendingSignature(), message) { signed ->
+        val signed = key.trySign(message)
+        if (signed != null) {
             result.success(signed)
+            return
+        }
+        BiometricGate.unlock(activity) { confirmed ->
+            result.success(if (confirmed) key.trySign(message) else null)
         }
     }
 

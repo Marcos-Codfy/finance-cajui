@@ -187,6 +187,15 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     String? token,
   }) async => await _post(path, body, token: token);
 
+  /// Um pedido qualquer com a sessão já aberta, para quem precisa de outro
+  /// verbo além de POST.
+  Future<ApiOutcome> send(
+    String method,
+    String path, {
+    required String token,
+    Map<String, Object?>? body,
+  }) async => await _send(method, path, token: token, body: body);
+
   Future<ApiOutcome> _post(
     String path,
     Map<String, Object?> body, {

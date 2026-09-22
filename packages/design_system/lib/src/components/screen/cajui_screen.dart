@@ -1,6 +1,8 @@
 import 'package:design_system/src/components/button/cajui_icon_button.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
+import 'package:design_system/src/tokens/primitives/cajui_curves.dart';
+import 'package:design_system/src/tokens/primitives/cajui_durations.dart';
 import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
 import 'package:flutter/widgets.dart';
 
@@ -18,6 +20,7 @@ class CajuiScreen extends StatelessWidget {
     this.onBack,
     this.trailing,
     this.footer,
+    this.controller,
     super.key,
   });
 
@@ -39,6 +42,10 @@ class CajuiScreen extends StatelessWidget {
   /// As ações principais, presas ao pé da tela.
   final Widget? footer;
 
+  /// Quem comanda a rolagem, quando a tela precisa mandar nela — uma conversa
+  /// que acompanha a mensagem nova, por exemplo.
+  final ScrollController? controller;
+
   /// A largura máxima do conteúdo. Em janela larga, a tela não estica: linha
   /// comprida demais cansa a leitura.
   static const double maxContentWidth = 640;
@@ -46,21 +53,29 @@ class CajuiScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foot = footer;
-    return SafeArea(
-      bottom: foot != null,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: _content(context)),
-              if (foot != null)
-                Padding(
-                  padding: const EdgeInsets.all(CajuiSpacing.xl),
-                  child: foot,
-                ),
-            ],
+    // O teclado sobe por cima de tudo: sem Material por baixo, ninguém encolhe
+    // a tela por conta própria. Sem isto, o campo de digitar fica escondido
+    // justamente enquanto se digita nele.
+    return AnimatedPadding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      duration: CajuiDurations.fast,
+      curve: CajuiCurves.standard,
+      child: SafeArea(
+        bottom: foot != null,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxContentWidth),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _content(context)),
+                if (foot != null)
+                  Padding(
+                    padding: const EdgeInsets.all(CajuiSpacing.xl),
+                    child: foot,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -69,6 +84,7 @@ class CajuiScreen extends StatelessWidget {
 
   Widget _content(BuildContext context) {
     return ListView(
+      controller: controller,
       padding: const EdgeInsets.all(CajuiSpacing.xl),
       children: [
         if (onBack != null || trailing != null) _corner(),

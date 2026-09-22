@@ -4,6 +4,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import android.security.keystore.UserNotAuthenticatedException
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
@@ -15,11 +16,11 @@ import java.security.spec.ECGenParameterSpec
  * o app pede assinaturas, não a chave. Em aparelho com StrongBox — o S22 tem
  * —, ela vive no elemento seguro.
  *
- * E ela só assina **com você presente**: a chave é criada exigindo
- * autenticação do usuário a cada uso. Quem libera é o Android, com a digital
- * ou o desbloqueio do aparelho; o Cajui nunca vê a digital, só recebe de
- * volta uma assinatura pronta. Sem isso, um celular perdido e desbloqueado
- * conversaria com o servidor como se fosse você.
+ * E ela só assina **depois de você se confirmar**: a chave é criada exigindo
+ * autenticação do usuário, com validade de um dia ([VALIDITY_SECONDS]). Quem
+ * libera é o Android, com a digital ou o desbloqueio do aparelho; o Cajui
+ * nunca vê a digital, só recebe de volta uma assinatura pronta. Quem conta o
+ * prazo é o hardware — o app não tem como esticá-lo.
  *
  * Trocar a digital cadastrada no aparelho **invalida a chave**
  * (`setInvalidatedByBiometricEnrollment`): é a garantia de que ninguém
@@ -35,11 +36,21 @@ class DeviceKey {
     fun publicKey(): ByteArray = entry().certificate.publicKey.encoded
 
     /**
-     * Uma assinatura pela metade: o objeto que o Android vai liberar depois
-     * de confirmar quem está ali. Só depois de liberado ele assina.
+     * Assina [message], **se a janela de autenticação ainda estiver aberta**.
+     *
+     * Devolve `null` quando o Android diz que ninguém se confirmou dentro do
+     * prazo: aí quem chama abre a caixa de diálogo e tenta de novo. É o
+     * Keystore que conta o tempo, e não o app — não há relógio de mentira
+     * que estique essa janela.
      */
-    fun pendingSignature(): Signature = Signature.getInstance(ALGORITHM).apply {
-        initSign(entry().privateKey as PrivateKey)
+    fun trySign(message: ByteArray): ByteArray? = try {
+        Signature.getInstance(ALGORITHM).run {
+            initSign(entry().privateKey as PrivateKey)
+            update(message)
+            sign()
+        }
+    } catch (_: UserNotAuthenticatedException) {
+        null
     }
 
     /** Apaga a chave. O aparelho vira desconhecido e precisa cadastrar-se. */
@@ -59,10 +70,11 @@ class DeviceKey {
         val spec = KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_SIGN)
             .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
             .setDigests(KeyProperties.DIGEST_SHA256)
-            // Zero segundos: a liberação vale para **um uso**, e não por um
-            // tempo. Cada assinatura pede você de novo.
+            // A liberação vale por um dia. Quem guarda o prazo é o hardware:
+            // passado ele, a chave simplesmente não assina, e o Android pede
+            // você de novo.
             .setUserAuthenticationRequired(true)
-            .setUserAuthenticationParameters(0, AUTH_KINDS)
+            .setUserAuthenticationParameters(VALIDITY_SECONDS, AUTH_KINDS)
             .setInvalidatedByBiometricEnrollment(true)
             .build()
         KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, PROVIDER).run {
@@ -72,8 +84,19 @@ class DeviceKey {
     }
 
     companion object {
-        /** O apelido da chave. O `v2` marca a que exige autenticação. */
-        const val ALIAS = "cajui-device-key-v2"
+        /** O apelido da chave. O `v3` marca a de janela diária. */
+        const val ALIAS = "cajui-device-key-v3"
+
+        /**
+         * Um dia. É o equilíbrio pedido: confirmar quem é uma vez por dia,
+         * e não a cada vez que o app fala com o servidor.
+         *
+         * O que se perde: um celular roubado **e desbloqueado** dentro da
+         * janela conversaria com o servidor. O que se ganha: a pessoa usa o
+         * app sem ser interrompida, e quem não é interrompido não desliga a
+         * proteção. O prazo é do hardware, não do app.
+         */
+        const val VALIDITY_SECONDS = 24 * 60 * 60
         const val PROVIDER = "AndroidKeyStore"
         const val ALGORITHM = "SHA256withECDSA"
 

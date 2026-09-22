@@ -24,7 +24,7 @@ class HomeShell extends ConsumerWidget {
       children: [
         // A casca continua montada por baixo: quem estava no meio de algo
         // volta para onde estava depois de conferir o comprovante.
-        ExcludeSemantics(excluding: capturing, child: _areas(ref)),
+        ExcludeSemantics(excluding: capturing, child: _areas(context, ref)),
         if (capturing)
           Positioned.fill(
             child: ColoredBox(
@@ -36,8 +36,12 @@ class HomeShell extends ConsumerWidget {
     );
   }
 
-  Widget _areas(WidgetRef ref) {
+  Widget _areas(BuildContext context, WidgetRef ref) {
     final current = ref.watch(homeTabProvider);
+    // Com o teclado aberto, a barra sai: são quatro destinos ocupando a
+    // altura que falta para ver o que se está escrevendo. Quem digita já
+    // escolheu onde está.
+    final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Column(
       children: [
         Expanded(
@@ -48,12 +52,14 @@ class HomeShell extends ConsumerWidget {
             children: [for (final tab in HomeTab.values) _page(tab)],
           ),
         ),
-        CajuiNavBar(
-          destinations: [for (final tab in HomeTab.values) tab.destination],
-          selectedIndex: current.index,
-          onSelected: (index) =>
-              ref.read(homeTabProvider.notifier).select(HomeTab.values[index]),
-        ),
+        if (!typing)
+          CajuiNavBar(
+            destinations: [for (final tab in HomeTab.values) tab.destination],
+            selectedIndex: current.index,
+            onSelected: (index) => ref
+                .read(homeTabProvider.notifier)
+                .select(HomeTab.values[index]),
+          ),
       ],
     );
   }

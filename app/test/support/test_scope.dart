@@ -4,7 +4,9 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/infrastructure/memory_ledger_journal.dart';
+import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/application/receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_reader.dart';
@@ -58,5 +60,8 @@ List<Override> testOverrides({
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const UnpairedAssistantGateway(),
     ),
+    // No teste o livro não sobe para lugar nenhum: a subida tem teste
+    // próprio, e aqui ela só atrapalharia.
+    ledgerUplinkProvider.overrideWithValue(const NoLedgerUplink()),
   ];
 }

@@ -32,17 +32,41 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 700));
 }
 
+/// Digita a pergunta e manda, como quem usa o app.
+Future<void> _ask(WidgetTester tester, String question) async {
+  await tester.enterText(find.byType(EditableText), question);
+  await tester.pump();
+  await tester.tap(find.bySemanticsLabel('Enviar pergunta'));
+}
+
 /// O espaço que o formatador põe entre `R$` e o número.
 const String _nbsp = BrlFormatter.nbsp;
 
 void main() {
-  testWidgets('aparelho não cadastrado: a tela diz a verdade e aponta o que '
-      'já funciona sem servidor', (tester) async {
+  testWidgets('RN-960 · a conta que o Cajui já sabe fazer não vira token, '
+      'nem precisa de servidor', (tester) async {
+    final assistant = ScriptedAssistant(const [AssistantAnswered('não devia')]);
+    await _open(tester, assistant: assistant);
+
+    await tester.tap(find.text('Como o mês está fechando?'));
+    await _settle(tester);
+
+    // Respondido aqui dentro: o caminho do servidor nem foi tocado.
+    expect(assistant.asked, isEmpty);
+    expect(find.text('não devia'), findsNothing);
+    expect(find.textContaining('setembro'), findsWidgets);
+  });
+
+  testWidgets('aparelho não cadastrado: a pergunta que precisa do servidor '
+      'oferece o cadastro, e não um erro seco', (tester) async {
     await _open(tester);
 
-    expect(find.text('A conversa passa pelo servidor'), findsOneWidget);
-    expect(find.text('Ver os resumos'), findsOneWidget);
-    expect(find.bySemanticsLabel('Enviar pergunta'), findsNothing);
+    // Pergunta aberta: o domínio não responde, e aí o cadastro faz falta.
+    await _ask(tester, 'vale a pena trocar de plano de celular?');
+    await _settle(tester);
+
+    expect(find.text('Esta pergunta precisa do servidor'), findsOneWidget);
+    expect(find.text('Cadastrar este aparelho'), findsOneWidget);
   });
 
   testWidgets('RN-946 · a tela espera, e a resposta só aparece inteira; '
@@ -63,7 +87,9 @@ void main() {
     ])..hold();
     await _open(tester, assistant: assistant);
 
-    await tester.tap(find.text('Para onde foi o dinheiro deste mês?'));
+    // Pergunta aberta, das que só a IA responde: o domínio não tem conta
+    // pronta para ela, então ela sobe.
+    await _ask(tester, 'me explica o que é renda comprometida');
     await tester.pump();
 
     expect(find.bySemanticsLabel('Cajui está respondendo'), findsOneWidget);
@@ -91,7 +117,7 @@ void main() {
     ]);
     await _open(tester, assistant: assistant);
 
-    await tester.tap(find.text('Como o mês está fechando?'));
+    await _ask(tester, 'me explica o que é renda comprometida');
     await _settle(tester);
 
     expect(
@@ -107,8 +133,8 @@ void main() {
     await _settle(tester);
 
     expect(assistant.asked, [
-      'Como o mês está fechando?',
-      'Como o mês está fechando?',
+      'me explica o que é renda comprometida',
+      'me explica o que é renda comprometida',
     ]);
     expect(find.text('Certo.'), findsOneWidget);
   });
