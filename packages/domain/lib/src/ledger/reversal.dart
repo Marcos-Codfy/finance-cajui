@@ -43,6 +43,18 @@ final class Reversal {
         .fold(Money.zero, (sum, r) => sum + r.line.amount);
   }
 
+  /// A linha paga naquela forma, ou `null` se o lançamento não a usou.
+  ///
+  /// Quem não a usou tem **zero** a estornar, e a recusa é a mesma de pedir
+  /// demais — que é o que estornar de uma linha inexistente é. Antes daqui
+  /// saía uma exceção, e o resto do domínio sempre devolve `Result`
+  /// (ADR-015): quem relê o registro usa `.valueOrNull`, e uma exceção neste
+  /// ponto viraria falha ao **abrir** o livro (BL-055).
+  static PaymentLine? _lineOf(Entry entry, String paymentMethodId) => entry
+      .paymentLines
+      .where((line) => line.paymentMethodId == paymentMethodId)
+      .firstOrNull;
+
   /// Cria o estorno de [amount] na forma [paymentMethodId] do lançamento
   /// [entry], considerando os estornos [previous] que ele já teve.
   ///
@@ -56,11 +68,11 @@ final class Reversal {
     Iterable<Reversal> previous = const [],
   }) {
     if (!amount.isPositive) return Err(NonPositiveAmount(amount));
-    final original = entry.paymentLines.firstWhere(
-      (line) => line.paymentMethodId == paymentMethodId,
-    );
-    final remaining = original.amount - _reversedOn(paymentMethodId, previous);
-    if (amount > remaining) {
+    final original = _lineOf(entry, paymentMethodId);
+    final remaining =
+        (original?.amount ?? Money.zero) -
+        _reversedOn(paymentMethodId, previous);
+    if (original == null || amount > remaining) {
       return Err(
         ReversalExceedsRemaining(remaining: remaining, requested: amount),
       );

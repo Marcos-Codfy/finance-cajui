@@ -126,6 +126,18 @@ void main() {
     test('RN-104 estorno de valor zero é recusado', () {
       expect(reverse(0).failureOrNull, isA<NonPositiveAmount>());
     });
+
+    test('BL-055 estornar por uma forma que o lançamento não usou é falha, '
+        'e não exceção: quem relê o registro não pode quebrar', () {
+      final recusa = reverse(1000, method: 'boleto');
+
+      expect(recusa.failureOrNull, isA<ReversalExceedsRemaining>());
+      expect(
+        (recusa.failureOrNull! as ReversalExceedsRemaining).remaining,
+        Money.zero,
+        reason: 'linha que não existe tem zero a estornar',
+      );
+    });
   });
 
   group('PossibleDuplicate', () {

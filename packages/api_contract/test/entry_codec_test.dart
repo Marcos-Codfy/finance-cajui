@@ -62,6 +62,68 @@ void main() {
       expect(result.failureOrNull, isA<PurchaseDateInFuture>());
     });
 
+    test('BL-054 · plano com juros só volta com juros no registro do próprio '
+        'aparelho; pela rede, o servidor recalcula (T-05)', () {
+      final card = CreditCard.create(
+        id: 'card-1',
+        name: 'Cartão',
+        closingDay: 25,
+        dueDay: 5,
+      ).valueOrNull!;
+      // R$ 960,00 em 6 de R$ 180,00: R$ 1.080,00 ao todo, R$ 120,00 de juros.
+      final comJuros = Entry.create(
+        id: 'stove',
+        description: 'Fogão',
+        amount: const Money.fromCents(96000),
+        occurredOn: LocalDate(2026, 9, 19),
+        category: _groceries,
+        today: _today,
+        origin: EntryOrigin.share,
+        paymentLines: const [
+          PaymentLine(
+            paymentMethodId: 'card-1',
+            kind: PaymentMethodKind.creditCard,
+            amount: Money.fromCents(96000),
+          ),
+        ],
+        installmentPlan: InstallmentPlan.forPurchase(
+          card: card,
+          purchasedOn: LocalDate(2026, 9, 19),
+          principal: const Money.fromCents(96000),
+          count: 6,
+          installmentAmount: const Money.fromCents(18000),
+        ),
+      ).valueOrNull!;
+
+      final json = EntryCodec.fromEntry(comJuros).toJson();
+      Entry volta({required bool proprio}) => EntryCodec.toEntry(
+        CreateEntryRequest.fromJson(json),
+        category: _groceries,
+        today: _today,
+        cardOf: (id) => card,
+        fromOwnJournal: proprio,
+      ).valueOrNull!;
+
+      final daqui = volta(proprio: true);
+      final daRede = volta(proprio: false);
+
+      expect(daqui.installmentPlan!.interestTotal.cents, 12000);
+      expect(daqui.origin, EntryOrigin.share, reason: 'a origem sobrevive');
+      expect(
+        daRede.installmentPlan!.interestTotal,
+        Money.zero,
+        reason: 'parcela vinda da rede não se usa: o plano é recalculado',
+      );
+    });
+
+    test('BL-054 · lançamento à vista e digitado à mão não engorda o pedido '
+        'com campo nenhum a mais', () {
+      final json = EntryCodec.fromEntry(_split()).toJson();
+
+      expect(json.containsKey('installmentAmountCents'), isFalse);
+      expect(json.containsKey('origin'), isFalse);
+    });
+
     test('RN-311 · compra parcelada viaja só com o número de parcelas, e as '
         'parcelas são recalculadas a partir do cartão', () {
       final card = CreditCard.create(

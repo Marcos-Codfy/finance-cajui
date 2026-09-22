@@ -18,6 +18,11 @@ abstract final class EntryCodec {
     categoryId: entry.categoryId,
     isExceptional: entry.isExceptional,
     installments: entry.installmentPlan?.count,
+    // O valor da parcela só viaja quando há juros: sem eles, dividir o
+    // principal dá o mesmo resultado dos dois lados, e o campo seria peso
+    // morto em todo lançamento parcelado.
+    installmentAmountCents: _interestBearing(entry.installmentPlan),
+    origin: entry.origin == EntryOrigin.manual ? null : entry.origin.name,
     paymentLines: [
       for (final line in entry.paymentLines)
         PaymentLineDto(
@@ -37,43 +42,62 @@ abstract final class EntryCodec {
   /// [cardOf] acha o cartão de uma compra parcelada. O parcelamento é
   /// **recalculado** a partir do cartão e da data da compra (RN-311): o
   /// pedido traz só quantas parcelas, nunca o valor de cada uma.
+  ///
+  /// [fromOwnJournal] diz que o pedido veio do registro **deste** aparelho,
+  /// e não da rede. Só então o valor de parcela gravado é aceito, para um
+  /// plano com juros não voltar com os juros zerados (BL-054).
   static Result<Entry> toEntry(
     CreateEntryRequest request, {
     required Category category,
     required LocalDate today,
     CreditCard? Function(String id)? cardOf,
+    bool fromOwnJournal = false,
   }) {
-    final occurredOn = parseDate(request.occurredOn);
-    final lines = [
-      for (final line in request.paymentLines)
-        PaymentLine(
-          paymentMethodId: line.paymentMethodId,
-          kind: named(PaymentMethodKind.values, line.kind),
-          amount: Money.fromCents(line.amountCents),
-        ),
-    ];
+    final on = parseDate(request.occurredOn);
+    final lines = _lines(request);
     return Entry.create(
       id: request.id,
       description: request.description,
       amount: Money.fromCents(request.amountCents),
-      occurredOn: occurredOn,
+      occurredOn: on,
       category: category,
       today: today,
       isExceptional: request.isExceptional,
+      origin: named(EntryOrigin.values, request.origin ?? 'manual'),
       paymentLines: lines,
-      installmentPlan: _plan(request.installments, lines, occurredOn, cardOf),
+      installmentPlan: _plan(request, lines, on, cardOf, fromOwnJournal),
     );
   }
 
-  /// O parcelamento de uma compra em [count] vezes; `null` quando é à vista.
-  /// Parcelar exige uma linha no cartão de crédito e um cartão conhecido —
-  /// sem isso o pedido é malformado.
+  /// As linhas de pagamento do pedido, como o domínio as quer.
+  static List<PaymentLine> _lines(CreateEntryRequest request) => [
+    for (final line in request.paymentLines)
+      PaymentLine(
+        paymentMethodId: line.paymentMethodId,
+        kind: named(PaymentMethodKind.values, line.kind),
+        amount: Money.fromCents(line.amountCents),
+      ),
+  ];
+
+  /// O valor da parcela de um plano **com juros**; `null` quando as parcelas
+  /// são o principal dividido em partes iguais.
+  static int? _interestBearing(InstallmentPlan? plan) =>
+      plan == null || plan.interestTotal.isZero
+      ? null
+      : plan.installments.first.amount.cents;
+
+  /// O parcelamento da compra; `null` quando ela é à vista. Parcelar exige
+  /// uma linha no cartão de crédito e um cartão conhecido — sem isso o
+  /// pedido é malformado.
   static InstallmentPlan? _plan(
-    int? count,
+    CreateEntryRequest request,
     List<PaymentLine> lines,
     LocalDate purchasedOn,
     CreditCard? Function(String id)? cardOf,
+    bool fromOwnJournal,
   ) {
+    final count = request.installments;
+    final cents = fromOwnJournal ? request.installmentAmountCents : null;
     if (count == null || count < 2) return null;
     if (count > maxInstallments) throw const FormatException('parcelas');
     final onCard = lines.where((line) => line.kind.isCreditCard).firstOrNull;
@@ -86,6 +110,7 @@ abstract final class EntryCodec {
       purchasedOn: purchasedOn,
       principal: onCard.amount,
       count: count,
+      installmentAmount: cents == null ? null : Money.fromCents(cents),
     );
   }
 
