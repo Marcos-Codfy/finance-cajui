@@ -17,6 +17,9 @@ enum CajuiIconData {
   /// Câmera: fotografar um comprovante de papel.
   camera(_camera),
 
+  /// Microfone: ditar em vez de digitar.
+  microphone(_microphone),
+
   /// Cartão de crédito: forma de pagamento.
   card(_card),
 
@@ -241,6 +244,22 @@ void _camera(Path p) {
     ..lineTo(14.2, 4.5)
     ..lineTo(15.5, 7)
     ..addOval(Rect.fromCircle(center: const Offset(12, 13.5), radius: 3.6));
+}
+
+/// Cápsula do microfone, o arco que o abraça e o pé: a forma que todo mundo
+/// já reconhece, no mesmo traço dos outros.
+void _microphone(Path p) {
+  p
+    ..addRRect(
+      RRect.fromRectAndRadius(_box(9, 2.5, 6, 11), const Radius.circular(3)),
+    )
+    ..addArc(
+      Rect.fromCircle(center: const Offset(12, 12), radius: 5),
+      0,
+      math.pi,
+    );
+  _line(p, 12, 17, 12, 20.5);
+  _line(p, 8.5, 20.5, 15.5, 20.5);
 }
 
 void _info(Path p) {

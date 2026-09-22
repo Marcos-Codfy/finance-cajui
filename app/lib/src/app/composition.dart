@@ -1,5 +1,8 @@
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/infrastructure/native_speech_input.dart';
+import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/device_enrollment.dart';
@@ -66,6 +69,9 @@ abstract final class Composition {
       api.keys.exists
           ? HttpAssistantGateway(api)
           : const UnpairedAssistantGateway(),
+    ),
+    speechInputProvider.overrideWithValue(
+      api.keys.exists ? const NativeSpeechInput() : const NoSpeechInput(),
     ),
   ];
 

@@ -1,6 +1,8 @@
 import 'package:cajui/src/core/feedback/sound_player_provider.dart';
 import 'package:cajui/src/core/storage/memory_event_store.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/application/speech_input.dart';
+import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/unpaired_assistant_gateway.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -63,5 +65,6 @@ List<Override> testOverrides({
     // No teste o livro não sobe para lugar nenhum: a subida tem teste
     // próprio, e aqui ela só atrapalharia.
     ledgerUplinkProvider.overrideWithValue(const NoLedgerUplink()),
+    speechInputProvider.overrideWithValue(const NoSpeechInput()),
   ];
 }
