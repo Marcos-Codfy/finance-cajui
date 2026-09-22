@@ -13,6 +13,9 @@ final class NoLedgerUplink implements LedgerUplink {
   bool get isPaired => false;
 
   @override
+  bool get hasOpenSession => false;
+
+  @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
       (const <String>{}, ErrorCode.auth03);
 

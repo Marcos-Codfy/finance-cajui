@@ -10,13 +10,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Mandar o livro para o servidor, quando a pessoa quiser.
 ///
-/// Antes a subida só acontecia de carona numa pergunta ao assistente — e
-/// quem lançava e nunca perguntava nada ficava com o servidor vazio, sem
-/// saber por quê. A consulta pela web dependia disso e não dizia.
-///
-/// Continua não acontecendo a cada lançamento, de propósito: a subida abre
-/// a sessão, e a sessão pede a digital. Uma vez por dia basta, e quem manda
-/// é quem está com o celular na mão.
+/// Depois do primeiro envio do dia, cada lançamento sobe sozinho — é o que
+/// a `QuietSync` faz. Esta tela continua existindo porque **o primeiro** não
+/// sobe: abrir a sessão pede a digital, e pedir a digital no meio de um
+/// lançamento é pior do que esperar. Aqui é onde se dá esse primeiro passo,
+/// de propósito e com a pessoa olhando.
 class SyncPage extends ConsumerStatefulWidget {
   /// Cria a tela.
   const new({super.key});
@@ -71,8 +69,9 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     return Text(
       'Os seus lançamentos ficam neste aparelho. O servidor recebe uma '
       'cópia para o assistente responder com os seus números e para você '
-      'consultar do computador. Nada é apagado daqui, e o envio pede a sua '
-      'digital uma vez por dia.',
+      'consultar do computador. Nada é apagado daqui. O envio pede a sua '
+      'digital uma vez por dia; depois dele, o que você lançar sobe sozinho '
+      'até o dia acabar.',
       style: theme.typography.body.copyWith(color: theme.colors.text.muted),
     );
   }

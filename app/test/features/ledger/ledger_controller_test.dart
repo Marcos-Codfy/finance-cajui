@@ -1,8 +1,10 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -159,4 +161,72 @@ void main() {
     expect(book.entries, hasLength(1));
     expect(book.voucher.balance, Money.zero);
   });
+
+  group('RN-781 · o lançamento sobe sozinho depois de gravado', () {
+    test('com sessão aberta, gravar já manda para o servidor', () async {
+      final uplink = _OpenUplink();
+      final scope = ProviderContainer(
+        overrides: testOverrides(journal: journal, uplink: uplink),
+      );
+      addTearDown(scope.dispose);
+      final notifier = scope.read(ledgerProvider.notifier);
+
+      await notifier.record(_draft());
+      await notifier.quietSync.settled;
+
+      expect(uplink.sent, ['id-0']);
+    });
+
+    test('sem sessão aberta, o lançamento é gravado aqui e espera: a '
+        'digital não é pedida no meio do lançamento', () async {
+      await controller().record(_draft());
+      await controller().quietSync.settled;
+
+      expect(await recorded(), 1, reason: 'gravado aqui, sempre');
+    });
+  });
+}
+
+/// Uma subida com sessão aberta, que guarda o que recebeu.
+final class _OpenUplink implements LedgerUplink {
+  final List<String> sent = [];
+
+  @override
+  bool get isPaired => true;
+
+  @override
+  bool get hasOpenSession => true;
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
+      ({for (final category in _book.categories) category.id}, null);
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
+      (const <String>{}, null);
+
+  @override
+  Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;
+
+  @override
+  Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async => null;
+
+  @override
+  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
+      (const <String, String>{}, null);
+
+  @override
+  Future<ErrorCode?> sendCategory(Map<String, Object?> category) async => null;
+
+  @override
+  Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async {
+    sent.add(entry.id);
+    return null;
+  }
+
+  @override
+  Future<ErrorCode?> reviseEntry(CreateEntryRequest entry) async => null;
+
+  @override
+  Future<ErrorCode?> cancelEntry(String id) async => null;
 }
