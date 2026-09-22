@@ -175,7 +175,7 @@ void main() {
     test(
       'RN-727 o estabelecimento normalizado ignora loja, caixa e sufixo',
       () {
-        final merchant = ReceiptFieldReader.merchantIn(_coupon)!;
+        final merchant = MerchantReader.nameIn(_coupon)!;
 
         expect(PossibleDuplicate.normalize(merchant), 'mercado boa compra');
         expect(

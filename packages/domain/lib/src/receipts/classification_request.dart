@@ -1,5 +1,6 @@
 import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/category.dart';
+import 'package:domain/src/receipts/merchant_kind.dart';
 import 'package:meta/meta.dart';
 
 /// O que um classificador recebe: o texto do comprovante e a **lista fechada**
@@ -15,6 +16,7 @@ final class ClassificationRequest {
     required this.categories,
     required this.today,
     this.learnedRules = const {},
+    this.categoryByMerchantKind = const {},
     this.householdNames = const [],
   });
 
@@ -30,6 +32,13 @@ final class ClassificationRequest {
 
   /// As regras aprendidas: estabelecimento normalizado → categoria (RN-763).
   final Map<String, String> learnedRules;
+
+  /// Que categoria cada ramo de estabelecimento significa neste cadastro.
+  ///
+  /// É o que deixa um cupom de supermercado nascer como compra de mercado sem
+  /// a IA e sem ninguém ter ensinado nada: o ramo é lido do nome pelo
+  /// domínio, e o cadastro diz em que categoria ele cai.
+  final Map<MerchantKind, String> categoryByMerchantKind;
 
   /// Os nomes do domicílio, mascarados antes de qualquer envio (RN-732).
   final List<String> householdNames;
