@@ -32,5 +32,30 @@ Map<String, Object?> entryBody({
       ],
 };
 
+/// Um plano de mês no formato de `POST /v1/plan`: renda, parcelas, uma conta
+/// fixa e uma faixa de variável que o vale pode pagar.
+Map<String, Object?> planBody({int cashIncomeCents = 320000}) => {
+  'cashIncomeCents': cashIncomeCents,
+  'debtInstallmentsCents': 45000,
+  'fixed': [
+    {
+      'id': 'rent',
+      'name': 'Aluguel',
+      'amountCents': 120000,
+      'dueDay': 5,
+      'categoryId': 'housing',
+      'paymentMethodId': 'pix',
+    },
+  ],
+  'variables': [
+    {
+      'categoryId': 'groceries',
+      'minCents': 40000,
+      'maxCents': 60000,
+      'voucherEligible': true,
+    },
+  ],
+};
+
 Map<String, Object?> errorOf(Map<String, Object?> body) =>
     body['error']! as Map<String, Object?>;

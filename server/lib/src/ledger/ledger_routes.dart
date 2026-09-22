@@ -36,6 +36,8 @@ final class LedgerRoutes {
     ..post('/categories', _createCategory)
     ..get('/cards', _listCards)
     ..post('/cards', _createCard)
+    ..get('/plan', _readPlan)
+    ..post('/plan', _definePlan)
     ..get('/entries', _listEntries)
     ..post('/entries', _createEntry)
     ..put('/entries/<id>', _reviseEntry)
@@ -113,6 +115,26 @@ final class LedgerRoutes {
     );
     state.apply(event);
     return Responses.json({'id': card.id}, status: 201);
+  }
+
+  Response _readPlan(Request request) =>
+      Responses.json(MonthSetupCodec.encode(state.plan));
+
+  /// O plano inteiro de uma vez, e não campo a campo: é assim que ele vive no
+  /// aparelho, e mandar o conjunto evita um servidor com meio plano.
+  ///
+  /// A chave sai do próprio conteúdo, como na correção de lançamento:
+  /// reenviar o mesmo plano não cria fato novo, e um plano diferente cria.
+  Future<Response> _definePlan(Request request) async {
+    final setup = MonthSetupCodec.read(await JsonBody.read(request));
+    final payload = MonthSetupCodec.encode(setup);
+    final event = await store.append(
+      id: 'plan-${_fingerprint(payload)}',
+      type: LedgerState.planDefined,
+      payload: payload,
+    );
+    state.apply(event);
+    return Responses.json({'seq': event.seq});
   }
 
   Response _listEntries(Request request) {

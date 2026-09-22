@@ -21,6 +21,7 @@ final class AssistantContext {
     required LocalDate today,
     required Iterable<Entry> entries,
     required Map<String, Category> categories,
+    MonthSetup plan = MonthSetup.empty,
   }) {
     final month = today.budgetMonth;
     final byCategory = <String, TenderAmounts>{};
@@ -42,6 +43,7 @@ final class AssistantContext {
       numbers: _numbered([
         for (final (label, amounts) in labelled)
           ..._byTender(label, month, amounts),
+        ..._planned(month, plan),
       ]),
     );
   }
@@ -69,8 +71,9 @@ final class AssistantContext {
   static Iterable<ContextNumber> _byTender(
     String label,
     BudgetMonth month,
-    TenderAmounts amounts,
-  ) sync* {
+    TenderAmounts amounts, {
+    ContextNumberKind kind = ContextNumberKind.fact,
+  }) sync* {
     for (final tender in Tender.values) {
       final amount = amounts.of(tender);
       if (amount.isZero) continue;
@@ -78,10 +81,40 @@ final class AssistantContext {
       yield ContextNumber(
         id: '',
         label: '$label, $currency',
-        kind: ContextNumberKind.fact,
+        kind: kind,
         period: '$month',
         amount: amount,
       );
+    }
+  }
+
+  /// O que o mês **previa**, ao lado do que já aconteceu (RN-918).
+  ///
+  /// São quatro números, e não quarenta: o contexto cresce com a existência
+  /// do plano, não com o tamanho dele — quem tem trinta contas fixas manda o
+  /// mesmo tanto de texto que quem tem três.
+  static Iterable<ContextNumber> _planned(
+    BudgetMonth month,
+    MonthSetup plan,
+  ) sync* {
+    final ceiling = plan.variableBudgets.fold(
+      TenderAmounts.zero,
+      (total, budget) =>
+          total +
+          TenderAmounts.single(
+            // O teto de uma categoria que o vale paga é teto **de vale**:
+            // somar as duas moedas num teto só é o erro que a RN-111 proíbe.
+            budget.voucherEligible ? Tender.mealVoucher : Tender.cash,
+            budget.range.max,
+          ),
+    );
+    for (final (label, amounts) in [
+      ('Renda planejada', TenderAmounts(cash: plan.cashIncome)),
+      ('Contas fixas planejadas', TenderAmounts(cash: plan.fixedTotal)),
+      ('Parcelas previstas', TenderAmounts(cash: plan.debtInstallments)),
+      ('Teto dos gastos variáveis', ceiling),
+    ]) {
+      yield* _byTender(label, month, amounts, kind: ContextNumberKind.plan);
     }
   }
 
