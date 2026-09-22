@@ -144,6 +144,9 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   Future<ApiOutcome> _sign(Map<String, Object?> challenge) async {
     final nonce = base64Decode(challenge['nonce']! as String);
     final signature = await _keys.sign(Uint8List.fromList(nonce));
+    // Caixa de diálogo fechada sem confirmar: não há o que mandar, e o
+    // servidor não precisa saber que alguém desistiu.
+    if (signature.isEmpty) return (body: null, error: ErrorCode.auth02);
     final opened = await _post('/v1/auth/session', {
       'challengeId': challenge['challengeId'],
       'signature': base64Encode(signature),

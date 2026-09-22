@@ -21,6 +21,9 @@ final class _FakeKeys implements DeviceKeyStore {
   bool get exists => true;
 
   @override
+  Future<bool> canAuthenticate() async => true;
+
+  @override
   Future<Uint8List> publicKey() async => Uint8List.fromList([1, 2, 3, 4]);
 
   @override

@@ -4,7 +4,7 @@ import android.content.Intent
 import app.cajui.capture.CaptureChannel
 import app.cajui.auth.DeviceKeyChannel
 import app.cajui.capture.PhotoIntake
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
 /**
@@ -13,7 +13,9 @@ import io.flutter.embedding.engine.FlutterEngine
  * seguintes chegam por `onNewIntent` (ADR-006). A foto tirada pela câmera do
  * aparelho volta por `onActivityResult` e entra na mesma fila (ADR-017).
  */
-class MainActivity : FlutterActivity() {
+// `FlutterFragmentActivity`, e não `FlutterActivity`: a caixa de diálogo da
+// biometria é um fragmento, e só existe sobre uma atividade que os hospede.
+class MainActivity : FlutterFragmentActivity() {
 
     private var capture: CaptureChannel? = null
 
@@ -24,7 +26,7 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             PhotoIntake(this),
         )
-        DeviceKeyChannel(flutterEngine.dartExecutor.binaryMessenger)
+        DeviceKeyChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         capture?.handle(intent)
     }
 

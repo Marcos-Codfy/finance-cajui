@@ -14,6 +14,10 @@ final class NativeDeviceKeyStore implements DeviceKeyStore {
   bool get exists => true;
 
   @override
+  Future<bool> canAuthenticate() async =>
+      await _channel.invokeMethod<bool>('canAuthenticate') ?? false;
+
+  @override
   Future<Uint8List> publicKey() async =>
       await _channel.invokeMethod<Uint8List>('publicKey') ?? Uint8List(0);
 

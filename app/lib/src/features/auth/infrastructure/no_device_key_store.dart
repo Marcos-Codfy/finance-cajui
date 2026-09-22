@@ -16,6 +16,9 @@ final class NoDeviceKeyStore implements DeviceKeyStore {
   bool get exists => false;
 
   @override
+  Future<bool> canAuthenticate() async => false;
+
+  @override
   Future<Uint8List> publicKey() async => Uint8List(0);
 
   @override
