@@ -7,6 +7,15 @@ import 'package:gallery/src/pages/screens/capture/capture_kind.dart';
 /// O texto mora aqui, e não espalhado pela tela, para que a conferência com
 /// a especificação seja uma leitura de cima para baixo.
 enum CaptureState {
+  /// A câmera do aparelho vai abrir para fotografar um cupom de papel.
+  photographing(
+    'Fotografando',
+    CaptureKind.progress,
+    what: 'Abrindo a câmera…',
+    meaning: 'A foto fica só no app, e não na galeria',
+    actions: [],
+  ),
+
   /// O arquivo acabou de chegar pelo compartilhamento.
   receiving(
     'Recebendo',

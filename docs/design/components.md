@@ -82,7 +82,7 @@ Todos sobre `CajuiFieldFrame`, que dá o rótulo sempre visível (fora do campo,
 |---|---|
 | `CajuiEntrance` | Entrada em cascata de itens de lista; o atraso de cada item vem do índice |
 | `CajuiCountUp` | O número conta do valor antigo ao novo |
-| `CajuiIcon` + `CajuiIconData` | 18 ícones de traço, desenhados como caminhos vetoriais: recibo, cartão, carteira, vale, dívida, calendário, gráfico, conversa, compartilhar, som, visto, fechar, mais, avançar, voltar, ajustes, informação, sem rede |
+| `CajuiIcon` + `CajuiIconData` | 19 ícones de traço, desenhados como caminhos vetoriais: recibo, câmera, cartão, carteira, vale, dívida, calendário, gráfico, conversa, compartilhar, som, visto, fechar, mais, avançar, voltar, ajustes, informação, sem rede |
 
 Os dois efeitos consultam o nível de movimento do tema e aparecem prontos em `reduced`. A revisão deles contra a WCAG 2.2.2 (conteúdo que se move sozinho) é o item BL-024.
 
