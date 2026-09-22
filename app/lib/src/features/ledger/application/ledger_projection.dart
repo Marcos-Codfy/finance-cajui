@@ -18,7 +18,8 @@ abstract final class LedgerProjection {
       EntryReversed(:final reversal) => _reversed(book, reversal),
       IncomeReceived(:final receipt) => _received(book, receipt),
       VoucherBalanceAdjusted(:final adjustment) => book.copyWith(
-        voucher: book.voucher.adjust(adjustment),
+        voucher: book.voucher.adjust(adjustment.amount),
+        voucherAdjustments: [...book.voucherAdjustments, adjustment],
       ),
       PlanDefined(:final setup) => book.copyWith(setup: setup),
       StatementSettled(:final settlement) => book.copyWith(

@@ -93,10 +93,12 @@ void main() {
       'nenhum total', (tester) async {
     final book = MemoryLedgerJournal([
       VoucherBalanceAdjusted(
-        id: 'a1',
-        adjustment: const Money.fromCents(3000),
-        on: testToday,
-        reason: 'teste',
+        VoucherAdjustment(
+          id: 'a1',
+          amount: const Money.fromCents(3000),
+          on: testToday,
+          reason: 'teste',
+        ),
       ),
     ]);
     await _openEntries(tester, book);

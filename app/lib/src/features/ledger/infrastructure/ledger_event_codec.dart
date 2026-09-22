@@ -94,11 +94,12 @@ final class LedgerEventCodec {
     DebtDefined(:final debt) => DebtCodec.encodeDebt(debt),
     DebtInstallmentPaid() => DebtCodec.encodePayment(event),
     MonthClosed(:final close) => MonthCloseCodec.encode(close),
-    VoucherBalanceAdjusted(:final adjustment, :final on, :final reason) => {
-      'adjustmentCents': adjustment.cents,
-      'on': '$on',
-      'reason': reason,
-    },
+    VoucherBalanceAdjusted(:final adjustment) => IncomeCodec.encodeAdjustment(
+      id: adjustment.id,
+      adjustment: adjustment.amount,
+      on: adjustment.on,
+      reason: adjustment.reason,
+    ),
   };
 
   static Map<String, Object?> _encodeReceipt(IncomeReceipt receipt) => {
@@ -154,15 +155,14 @@ final class LedgerEventCodec {
     };
   }
 
+  /// O identificador do acerto vem do próprio fato quando ele está lá, e do
+  /// fato gravado quando não — registro antigo não trazia o campo.
   static VoucherBalanceAdjusted _decodeVoucher(
     String id,
     Map<String, Object?> payload,
   ) {
     return VoucherBalanceAdjusted(
-      id: id,
-      adjustment: Money.fromCents(payload['adjustmentCents']! as int),
-      on: EntryCodec.parseDate(payload['on']! as String),
-      reason: payload['reason']! as String,
+      IncomeCodec.decodeAdjustment(payload, orElse: id),
     );
   }
 

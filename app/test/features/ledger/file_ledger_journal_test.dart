@@ -48,10 +48,12 @@ void main() {
     await journal.append(EntryRecorded(_groceries()));
     await journal.append(
       VoucherBalanceAdjusted(
-        id: 'voucher-adjust-1',
-        adjustment: const Money.fromCents(-790),
-        on: testToday,
-        reason: 'saldo da operadora',
+        VoucherAdjustment(
+          id: 'voucher-adjust-1',
+          amount: const Money.fromCents(-790),
+          on: testToday,
+          reason: 'saldo da operadora',
+        ),
       ),
     );
 
@@ -62,8 +64,9 @@ void main() {
     expect(entry.description, 'Mercado Boa Compra');
     expect(entry.paidByTender.mealVoucher.cents, 3000);
     expect(entry.paidByTender.cash.cents, 5600);
-    expect((second as VoucherBalanceAdjusted).adjustment.cents, -790);
-    expect(second.on, testToday);
+    expect((second as VoucherBalanceAdjusted).adjustment.amount.cents, -790);
+    expect(second.adjustment.on, testToday);
+    expect(second.adjustment.id, 'voucher-adjust-1');
   });
 
   test('T-07 · o arquivo no aparelho não traz o lançamento em claro', () async {

@@ -80,22 +80,11 @@ final class IncomeReceived extends LedgerEvent {
 /// Não é renda nem despesa, e não entra em indicador: é só o app admitindo
 /// que o saldo de verdade é o do cartão do vale, não o que ele calculou.
 final class VoucherBalanceAdjusted extends LedgerEvent {
-  /// Registra o ajuste [adjustment], feito em [on].
-  const new({
-    required super.id,
-    required this.adjustment,
-    required this.on,
-    required this.reason,
-  });
+  /// Registra o acerto [adjustment].
+  new(this.adjustment) : super(id: 'voucher-${adjustment.id}');
 
-  /// Quanto entra (positivo) ou sai (negativo) do saldo.
-  final Money adjustment;
-
-  /// O dia do ajuste.
-  final LocalDate on;
-
-  /// Por que o saldo foi corrigido, nas palavras de quem corrigiu.
-  final String reason;
+  /// O acerto: quanto, quando e por quê.
+  final VoucherAdjustment adjustment;
 }
 
 /// Um lançamento foi corrigido (RN-208).

@@ -22,28 +22,18 @@ final class AssistantContext {
     required Iterable<Entry> entries,
     required Map<String, Category> categories,
     MonthSetup plan = MonthSetup.empty,
+    TenderAmounts received = TenderAmounts.zero,
+    Money voucherBalance = Money.zero,
   }) {
     final month = today.budgetMonth;
-    final byCategory = <String, TenderAmounts>{};
-    for (final entry in entries) {
-      final known = byCategory[entry.categoryId] ?? TenderAmounts.zero;
-      byCategory[entry.categoryId] = known + entry.spentIn(month);
-    }
-    final total = byCategory.values.fold(TenderAmounts.zero, (a, b) => a + b);
-    final labelled = [
-      for (final MapEntry(key: id, value: spent) in byCategory.entries)
-        // Nome de categoria é texto do usuário: passa pelo mascaramento
-        // antes de sair (RN-919).
-        ('Gasto em ${PiiRedactor.redact(categories[id]?.name ?? id)}', spent),
-      ('Gasto do mês', total),
-    ];
     return AssistantContext._(
       today: today,
       month: month,
       numbers: _numbered([
-        for (final (label, amounts) in labelled)
+        for (final (label, amounts) in _spent(month, entries, categories))
           ..._byTender(label, month, amounts),
         ..._planned(month, plan),
+        ..._received(month, received, voucherBalance),
       ]),
     );
   }
@@ -65,6 +55,29 @@ final class AssistantContext {
 
   /// Os números do contexto, cada um com origem, natureza e período.
   final List<ContextNumber> numbers;
+
+  /// O gasto do mês, por categoria e no total (RN-912).
+  static List<(String, TenderAmounts)> _spent(
+    BudgetMonth month,
+    Iterable<Entry> entries,
+    Map<String, Category> categories,
+  ) {
+    final byCategory = <String, TenderAmounts>{};
+    for (final entry in entries) {
+      final known = byCategory[entry.categoryId] ?? TenderAmounts.zero;
+      byCategory[entry.categoryId] = known + entry.spentIn(month);
+    }
+    return [
+      for (final MapEntry(key: id, value: spent) in byCategory.entries)
+        // Nome de categoria é texto do usuário: passa pelo mascaramento
+        // antes de sair (RN-919).
+        ('Gasto em ${PiiRedactor.redact(categories[id]?.name ?? id)}', spent),
+      (
+        'Gasto do mês',
+        byCategory.values.fold(TenderAmounts.zero, (a, b) => a + b),
+      ),
+    ];
+  }
 
   /// Um número por moeda, e só das moedas com gasto: o contexto não tem campo
   /// de total que some dinheiro e vale.
@@ -116,6 +129,28 @@ final class AssistantContext {
     ]) {
       yield* _byTender(label, month, amounts, kind: ContextNumberKind.plan);
     }
+  }
+
+  /// O que **entrou** e o que sobrou de vale.
+  ///
+  /// Os dois são fato, e não plano: o recebido vale no lugar do esperado no
+  /// mês em que foi recebido (RN-131), e o saldo do vale é o que existe
+  /// agora. O saldo não leva período porque não é do mês: ele passa inteiro
+  /// de um mês para o outro (RN-121).
+  static Iterable<ContextNumber> _received(
+    BudgetMonth month,
+    TenderAmounts received,
+    Money voucherBalance,
+  ) sync* {
+    yield* _byTender('Renda recebida', month, received);
+    if (voucherBalance.isZero) return;
+    yield ContextNumber(
+      id: '',
+      label: 'Saldo do vale hoje',
+      kind: ContextNumberKind.fact,
+      period: 'acumulado',
+      amount: voucherBalance,
+    );
   }
 
   /// Identificadores curtos e em sequência (`n1`, `n2`…): é por eles que a

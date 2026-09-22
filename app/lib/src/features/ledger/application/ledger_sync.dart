@@ -32,9 +32,45 @@ final class LedgerSync {
     final (remote, failure) = await uplink.remoteEntries();
     if (failure != null) return (0, failure);
     final (sent, refused) = await _sendEntries(book, remote);
-    // O plano vai por último e não interrompe nada: sem ele o assistente
-    // ainda responde quanto saiu — só não responde quanto ainda cabe.
-    return (sent, refused ?? await _sendPlan(book));
+    // O plano e o que entrou vão por último e não interrompem nada: sem eles
+    // o assistente ainda responde quanto saiu — só não responde quanto ainda
+    // cabe nem quanto sobrou de vale.
+    return (sent, refused ?? await _sendPlan(book) ?? await _sendIncome(book));
+  }
+
+  /// O que entrou: recebimentos e acertos de saldo do vale (RN-132, RN-123).
+  ///
+  /// Vão como **fatos**, e não como um saldo pronto: o servidor recalcula o
+  /// saldo a partir deles e dos lançamentos, porque número vindo do cliente
+  /// não se usa para responder (T-05, RN-915).
+  Future<ErrorCode?> _sendIncome(LedgerBook book) async {
+    final (remote, failure) = await uplink.remoteIncome();
+    if (failure != null) return failure;
+    for (final receipt in book.receipts) {
+      if (remote.receipts.contains(receipt.id)) continue;
+      final error = await uplink.sendIncome(IncomeCodec.encode(receipt));
+      if (error != null) return error;
+    }
+    return await _sendAdjustments(book, remote.adjustments);
+  }
+
+  Future<ErrorCode?> _sendAdjustments(
+    LedgerBook book,
+    Set<String> known,
+  ) async {
+    for (final acerto in book.voucherAdjustments) {
+      if (known.contains(acerto.id)) continue;
+      final error = await uplink.sendVoucherAdjustment(
+        IncomeCodec.encodeAdjustment(
+          id: acerto.id,
+          adjustment: acerto.amount,
+          on: acerto.on,
+          reason: acerto.reason,
+        ),
+      );
+      if (error != null) return error;
+    }
+    return null;
   }
 
   /// Quem ainda não planejou não tem o que mandar, e um plano vazio subindo

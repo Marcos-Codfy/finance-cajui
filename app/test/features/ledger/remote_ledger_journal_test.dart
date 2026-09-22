@@ -114,6 +114,41 @@ void main() {
       expect(events.whereType<EntryRecorded>().single.entry.id, 'e2');
     });
 
+    test(
+      'BL-060 · o crédito do vale desce, e o saldo aparece na consulta',
+      () async {
+        server.bodies['/v1/entries'] = const {'entries': <Object?>[]};
+        server.bodies['/v1/plan'] = const {'cashIncomeCents': 0};
+        server.bodies['/v1/income'] = const {
+          'receipts': [
+            {
+              'id': 'r1',
+              'sourceId': 'salario',
+              'tender': 'mealVoucher',
+              'amountCents': 50000,
+              'receivedOn': '2026-09-05',
+            },
+          ],
+          'voucherAdjustments': [
+            {
+              'id': 'a1',
+              'adjustmentCents': -790,
+              'on': '2026-09-20',
+              'reason': 'o cartão mostrava outro saldo',
+            },
+          ],
+        };
+
+        final events = await journal.readAll();
+        final book = events.fold(
+          DefaultCatalog.emptyBook,
+          (livro, event) => livro.apply(event),
+        );
+
+        expect(book.voucher.balance, const Money.fromCents(49210));
+      },
+    );
+
     test('T-12 · a consulta não grava: gravar estoura aqui', () {
       expect(
         () => journal.append(

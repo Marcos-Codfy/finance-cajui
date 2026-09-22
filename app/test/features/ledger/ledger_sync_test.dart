@@ -2,90 +2,12 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
-import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/fake_uplink.dart';
+
 final _today = LocalDate(2026, 9, 22);
-
-/// Um servidor de mentira que guarda o que recebeu, como o de verdade faria.
-final class _FakeUplink implements LedgerUplink {
-  final Map<String, String> entries = {};
-  final Set<String> categories = {};
-  final List<String> calls = [];
-
-  @override
-  bool get isPaired => true;
-
-  /// Nasce sem sessão: a subida silenciosa só age quando há uma aberta, e o
-  /// teste que a quer ligada diz isso na cara.
-  bool session = false;
-
-  @override
-  bool get hasOpenSession => session;
-
-  @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
-      (categories, null);
-
-  final Set<String> cards = {};
-
-  @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async => (cards, null);
-
-  @override
-  Future<ErrorCode?> sendCard(Map<String, Object?> card) async {
-    cards.add('${card['id']}');
-    return null;
-  }
-
-  Map<String, Object?>? plan;
-
-  @override
-  Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async {
-    calls.add('plan');
-    this.plan = plan;
-    return null;
-  }
-
-  @override
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
-      (Map.of(entries), null);
-
-  @override
-  Future<ErrorCode?> sendCategory(Map<String, Object?> category) async {
-    categories.add('${category['id']}');
-    return null;
-  }
-
-  @override
-  Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async {
-    calls.add('criou ${entry.id}');
-    entries[entry.id] = _signature(entry);
-    return null;
-  }
-
-  @override
-  Future<ErrorCode?> reviseEntry(CreateEntryRequest entry) async {
-    calls.add('corrigiu ${entry.id}');
-    entries[entry.id] = _signature(entry);
-    return null;
-  }
-
-  @override
-  Future<ErrorCode?> cancelEntry(String id) async {
-    calls.add('cancelou $id');
-    entries.remove(id);
-    return null;
-  }
-
-  String _signature(CreateEntryRequest entry) => LedgerUplink.signature(
-    cents: entry.amountCents,
-    occurredOn: entry.occurredOn,
-    categoryId: entry.categoryId,
-    description: entry.description,
-  );
-}
 
 Entry _entry(String id, String what, int cents) => Entry.create(
   id: id,
@@ -99,12 +21,19 @@ Entry _entry(String id, String what, int cents) => Entry.create(
   today: _today,
 ).valueOrNull!;
 
-LedgerBook _bookOf(List<Entry> entries, {MonthSetup? setup}) {
+LedgerBook _bookOf(
+  List<Entry> entries, {
+  MonthSetup? setup,
+  List<IncomeReceipt> receipts = const [],
+  List<VoucherAdjustment> adjustments = const [],
+}) {
   final base = DefaultCatalog.emptyBook;
   return LedgerBook(
     categories: base.categories,
     paymentMethods: base.paymentMethods,
     entries: entries,
+    receipts: receipts,
+    voucherAdjustments: adjustments,
     setup: setup ?? MonthSetup.empty,
   );
 }
@@ -112,11 +41,11 @@ LedgerBook _bookOf(List<Entry> entries, {MonthSetup? setup}) {
 const MonthSetup _plan = MonthSetup(cashIncome: Money.fromCents(320000));
 
 void main() {
-  late _FakeUplink uplink;
+  late FakeUplink uplink;
   late LedgerSync sync;
 
   setUp(() {
-    uplink = _FakeUplink();
+    uplink = FakeUplink();
     sync = LedgerSync(uplink);
   });
 
@@ -215,14 +144,14 @@ void main() {
   });
 }
 
-final class _UnpairedUplink extends _FakeUplink {
+final class _UnpairedUplink extends FakeUplink {
   @override
   bool get isPaired => false;
 }
 
 /// Recusa um lançamento e aceita os outros, como o servidor fazia com a
 /// compra parcelada.
-final class _RefusingOne extends _FakeUplink {
+final class _RefusingOne extends FakeUplink {
   new(this.refused);
 
   final String refused;

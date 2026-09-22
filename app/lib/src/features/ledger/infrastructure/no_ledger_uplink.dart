@@ -28,6 +28,21 @@ final class NoLedgerUplink implements LedgerUplink {
       ErrorCode.auth03;
 
   @override
+  Future<(RemoteIncome, ErrorCode?)> remoteIncome() async => (
+    (receipts: const <String>{}, adjustments: const <String>{}),
+    ErrorCode.auth03,
+  );
+
+  @override
+  Future<ErrorCode?> sendIncome(Map<String, Object?> receipt) async =>
+      ErrorCode.auth03;
+
+  @override
+  Future<ErrorCode?> sendVoucherAdjustment(
+    Map<String, Object?> adjustment,
+  ) async => ErrorCode.auth03;
+
+  @override
   Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async =>
       ErrorCode.auth03;
 

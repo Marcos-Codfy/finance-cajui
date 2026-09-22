@@ -29,6 +29,13 @@ final class LedgerState {
   /// assistente sabe o que já saiu, mas não o que ainda cabe (BL-049).
   static const planDefined = 'plan.defined';
 
+  /// O tipo do evento de recebimento: salário, crédito do vale, entrada
+  /// avulsa. **Não é lançamento** (RN-132).
+  static const incomeReceived = 'income.received';
+
+  /// O tipo do evento de acerto do saldo do vale (RN-123).
+  static const voucherAdjusted = 'voucher.adjusted';
+
   /// O tipo do evento de lançamento criado.
   static const entryCreated = 'entry.created';
 
@@ -44,6 +51,8 @@ final class LedgerState {
   final Map<String, Category> _categories = {};
   final Map<String, CreditCard> _cards = {};
   final List<Entry> _entries = [];
+  final Map<String, IncomeReceipt> _receipts = {};
+  final Map<String, Map<String, Object?>> _adjustments = {};
   MonthSetup _plan = MonthSetup.empty;
 
   /// As categorias, por identificador.
@@ -58,6 +67,45 @@ final class LedgerState {
   /// O plano do mês como o aparelho o cadastrou.
   MonthSetup get plan => _plan;
 
+  /// Os recebimentos, por identificador.
+  Map<String, IncomeReceipt> get receipts => Map.unmodifiable(_receipts);
+
+  /// Os acertos de saldo do vale, por identificador, como foram gravados.
+  Map<String, Map<String, Object?>> get voucherAdjustments =>
+      Map.unmodifiable(_adjustments);
+
+  /// O que entrou em [month], por moeda (RN-111).
+  TenderAmounts receivedIn(BudgetMonth month) => _receipts.values
+      .where((receipt) => month.contains(receipt.receivedOn))
+      .fold(
+        TenderAmounts.zero,
+        (total, receipt) =>
+            total + TenderAmounts.single(receipt.tender, receipt.amount),
+      );
+
+  /// O saldo do vale, **refeito a partir dos fatos**: créditos recebidos,
+  /// menos o que os lançamentos vivos pagaram em vale, mais os acertos
+  /// (RN-120). Ele passa inteiro de um mês para o outro (RN-121).
+  ///
+  /// É derivado, e não guardado ao lado, de propósito: corrigir e cancelar
+  /// um lançamento já mexem na lista de lançamentos, e um saldo guardado
+  /// teria de ser desfeito à mão em cada um desses caminhos.
+  Money get voucherBalance {
+    var total = _adjustments.values.fold(
+      Money.zero,
+      (sum, raw) => sum + Money.fromCents(raw['adjustmentCents']! as int),
+    );
+    for (final receipt in _receipts.values) {
+      if (receipt.tender == Tender.mealVoucher) total += receipt.amount;
+    }
+    for (final entry in _entries) {
+      total -= entry.paidByTender.mealVoucher;
+    }
+    // Registro antigo pode dizer que o vale pagou mais do que tinha; o saldo
+    // para em zero, como na projeção do aparelho (RN-122).
+    return total.isNegative ? Money.zero : total;
+  }
+
   /// Aplica um evento ao estado. Tipo desconhecido é ignorado: um servidor
   /// mais velho consegue subir sobre um registro mais novo.
   void apply(StoredEvent event) {
@@ -70,6 +118,11 @@ final class LedgerState {
         _cards[card.id] = card;
       case planDefined:
         _plan = MonthSetupCodec.decode(event.payload);
+      case incomeReceived:
+        final receipt = IncomeCodec.decode(event.payload);
+        _receipts[receipt.id] = receipt;
+      case voucherAdjusted:
+        _adjustments['${event.payload['id']}'] = event.payload;
       case entryCreated:
         _entries.add(_replayed(event));
       case entryRevised:
