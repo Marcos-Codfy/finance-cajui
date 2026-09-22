@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Se o app está no tema escuro.
@@ -7,14 +10,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// lê no sol. O escuro fica a um toque, nos ajustes, para quem prefere.
 class AppearanceController extends Notifier<bool> {
   @override
-  bool build() => false;
+  bool build() => ref.read(preferencesStoreProvider).read().dark;
 
-  /// Liga ou desliga o tema escuro. Vale na hora, sem botão de salvar.
+  /// Liga ou desliga o tema escuro. Vale na hora, sem botão de salvar — e
+  /// continua valendo amanhã.
   ///
-  /// Método, e não setter: `setDark(enabled: true)` diz o que acontece na
-  /// chamada, como o controlador de som ao lado.
-  // ignore: use_setters_to_change_properties
-  void setDark({required bool enabled}) => state = enabled;
+  /// A tela muda **antes** de a gravação terminar: escolha que demora a
+  /// valer parece não ter valido.
+  void setDark({required bool enabled}) {
+    state = enabled;
+    unawaited(
+      ref
+          .read(preferencesStoreProvider)
+          .update((atual) => atual.copyWith(dark: enabled)),
+    );
+  }
 }
 
 /// Se o tema escuro está ligado.

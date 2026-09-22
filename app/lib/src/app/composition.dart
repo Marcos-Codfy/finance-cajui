@@ -1,3 +1,6 @@
+import 'package:cajui/src/core/settings/event_store_preferences.dart';
+import 'package:cajui/src/core/settings/no_preferences_store.dart';
+import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
@@ -58,10 +61,19 @@ abstract final class Composition {
         ),
       ),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
+      _preferences(store, local: nativeCapture),
       ..._server(api),
       ..._capture(inbox),
     ];
   }
+
+  /// As escolhas de som, vibração e tema vivem no mesmo registro cifrado
+  /// (BL-030). Na web, em lugar nenhum: lá a aba é a sessão, e guardar
+  /// escolha seria deixar rastro de quem só veio olhar.
+  static Override _preferences(EventStore store, {required bool local}) =>
+      preferencesStoreProvider.overrideWithValue(
+        local ? EventStorePreferences(store) : const NoPreferencesStore(),
+      );
 
   /// O que depende de haver identidade de aparelho: subir o livro e
   /// conversar com o assistente. Sem Keystore, nenhuma das duas existe.

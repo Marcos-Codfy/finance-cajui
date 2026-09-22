@@ -1,5 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/feedback/sound_player_provider.dart';
+import 'package:cajui/src/core/settings/no_preferences_store.dart';
+import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:cajui/src/core/storage/memory_event_store.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
@@ -47,6 +49,7 @@ List<Override> testOverrides({
   ReceiptReader? reader,
   EventStore? captureStore,
   AssistantGateway? assistant,
+  PreferencesStore? preferences,
 }) {
   var next = 0;
   return [
@@ -54,11 +57,7 @@ List<Override> testOverrides({
     ledgerJournalProvider.overrideWithValue(journal ?? MemoryLedgerJournal()),
     clockProvider.overrideWithValue(FixedClock(today ?? testToday)),
     newIdProvider.overrideWithValue(() => 'id-${next++}'),
-    receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
-    receiptReaderProvider.overrideWithValue(reader ?? const NoReceiptReader()),
-    captureShelfProvider.overrideWithValue(
-      EventStoreCaptureShelf(captureStore ?? MemoryEventStore()),
-    ),
+    ..._capture(inbox, reader, captureStore),
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const UnpairedAssistantGateway(),
     ),
@@ -66,8 +65,33 @@ List<Override> testOverrides({
     // responde, e o livro não sobe para lugar nenhum.
     ledgerUplinkProvider.overrideWithValue(const _PairedUplink()),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
+    ..._extras(preferences),
   ];
 }
+
+/// A captura: nada chega, a não ser que o teste mande.
+List<Override> _capture(
+  ReceiptInbox? inbox,
+  ReceiptReader? reader,
+  EventStore? captureStore,
+) => [
+  receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
+  receiptReaderProvider.overrideWithValue(reader ?? const NoReceiptReader()),
+  captureShelfProvider.overrideWithValue(
+    EventStoreCaptureShelf(captureStore ?? MemoryEventStore()),
+  ),
+];
+
+/// As trocas que nasceram depois e não cabem na lista principal sem
+/// estourar o limite de linhas.
+///
+/// As preferências do teste começam sempre no padrão, e não sobrevivem
+/// entre um teste e outro: teste que herda escolha de outro mente.
+List<Override> _extras(PreferencesStore? preferences) => [
+  preferencesStoreProvider.overrideWithValue(
+    preferences ?? const NoPreferencesStore(),
+  ),
+];
 
 /// Uma subida que diz "este aparelho tem livro próprio": é o celular
 /// cadastrado, onde a camada local de respostas vale. Não manda nada.
