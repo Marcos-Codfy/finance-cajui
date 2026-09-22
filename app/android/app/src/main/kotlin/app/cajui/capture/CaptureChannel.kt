@@ -35,9 +35,20 @@ class CaptureChannel(
         EventChannel(messenger, "app.cajui/capture/events").setStreamHandler(this)
     }
 
-    /** Trata a intenção de abertura e as que chegam com o app já aberto. */
+    /**
+     * Trata a intenção de abertura e as que chegam com o app já aberto.
+     *
+     * Nada daqui pode subir: isto roda dentro de `configureFlutterEngine`, e
+     * uma exceção ali **mata o app antes da primeira tela**. Comprovante
+     * estranho vira comprovante recusado, nunca app fechado.
+     */
     fun handle(intent: Intent?) {
-        val received = intake.receive(intent)
+        val received = try {
+            intake.receive(intent)
+        } catch (falha: Exception) {
+            android.util.Log.w("cajui-capture", "compartilhamento recusado", falha)
+            emptyList()
+        }
         if (received.isEmpty()) return
         pending.addAll(received)
         events?.success(mapOf("type" to "arrived"))
