@@ -12,10 +12,18 @@ abstract interface class DeviceKeyStore {
   /// Se este aparelho tem onde guardar uma chave.
   bool get exists;
 
+  /// Se dá para confirmar quem é aqui: digital, rosto ou desbloqueio. Sem
+  /// isso a chave não assina, e o aparelho não conversa com o servidor.
+  Future<bool> canAuthenticate();
+
   /// A chave pública em X.509 DER, como o servidor a espera.
   Future<Uint8List> publicKey();
 
-  /// A assinatura de [message] em DER, feita pela chave privada.
+  /// A assinatura de [message] em DER, feita pela chave privada **depois de
+  /// o Android confirmar quem está ali**.
+  ///
+  /// Vazia quando a pessoa fechou a caixa de diálogo: desistir não é erro, e
+  /// quem chamou trata como "não agora".
   Future<Uint8List> sign(Uint8List message);
 }
 
