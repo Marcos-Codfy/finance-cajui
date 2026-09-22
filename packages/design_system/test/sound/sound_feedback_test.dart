@@ -48,6 +48,9 @@ void main() {
 
       expect(player.played, isEmpty);
       expect(haptics, hasLength(1));
+      // Peso de tecla de teclado, e não o tique de rolagem: no aparelho o
+      // `selectionClick` não se sentia.
+      expect(haptics.single, 'HapticFeedbackType.lightImpact');
     });
 
     test('com o som ligado, o mesmo som nunca toca duas vezes igual', () {

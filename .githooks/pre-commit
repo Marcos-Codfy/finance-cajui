@@ -15,3 +15,9 @@ python tool/security/scan_secrets.py || {
   echo "  scan-secrets: exemplo"
   exit 1
 }
+
+python tool/quality/check_authorship.py || {
+  echo ""
+  echo "Commit interrompido: o repositório não leva assinatura de IA."
+  exit 1
+}
