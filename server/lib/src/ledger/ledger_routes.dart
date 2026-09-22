@@ -120,17 +120,14 @@ final class LedgerRoutes {
     final entries = state.entries.where(
       (entry) => month == null || '${entry.occurredOn.budgetMonth}' == month,
     );
+    // O lançamento **inteiro**, pelo mesmo codec que o app usa para gravar.
+    // Antes saíam só valor, data e categoria — e sem as linhas de pagamento
+    // não dá para saber o que foi dinheiro e o que foi vale, que é a regra
+    // central do produto (RN-111). A web precisa reconstruir o livro, não um
+    // resumo dele.
     return Responses.json({
       'entries': [
-        for (final entry in entries)
-          {
-            'id': entry.id,
-            'description': entry.description,
-            'amountCents': entry.amount.cents,
-            'occurredOn': '${entry.occurredOn}',
-            'categoryId': entry.categoryId,
-            'isExceptional': entry.isExceptional,
-          },
+        for (final entry in entries) EntryCodec.fromEntry(entry).toJson(),
       ],
     });
   }

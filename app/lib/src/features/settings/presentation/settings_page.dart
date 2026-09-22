@@ -5,6 +5,7 @@ import 'package:cajui/src/features/budget/presentation/month_close_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/cards/presentation/cards_page.dart';
 import 'package:cajui/src/features/debts/presentation/debts_page.dart';
+import 'package:cajui/src/features/ledger/presentation/sync_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,20 @@ class SettingsPage extends ConsumerWidget {
   }
 
   /// O que a pessoa cadastra uma vez e revisita de vez em quando.
+  /// O que fala com o servidor: mandar o livro e dizer quem entra.
+  List<Widget> _servidor(BuildContext context) => [
+    _opens(
+      title: 'Enviar ao servidor',
+      subtitle: 'Para o assistente e a consulta na web verem os seus números',
+      onPressed: () => SyncPage.open(context),
+    ),
+    _opens(
+      title: 'Aparelhos com acesso',
+      subtitle: 'Quem entra nos seus dados — e cadastrar outro',
+      onPressed: () => DevicesPage.open(context),
+    ),
+  ];
+
   List<Widget> _cadastros(BuildContext context) => [
     _opens(
       title: 'Plano do mês',
@@ -44,11 +59,7 @@ class SettingsPage extends ConsumerWidget {
       subtitle: 'Quanto falta de cada uma, e quando termina',
       onPressed: () => DebtsPage.open(context),
     ),
-    _opens(
-      title: 'Aparelhos com acesso',
-      subtitle: 'Quem entra nos seus dados — e cadastrar outro',
-      onPressed: () => DevicesPage.open(context),
-    ),
+    ..._servidor(context),
     _opens(
       title: 'Fechar o mês',
       subtitle: 'O retrato do mês que terminou',

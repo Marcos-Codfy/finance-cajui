@@ -8,6 +8,11 @@ import 'support/mute_player.dart';
 import 'support/test_scope.dart';
 
 Future<MutePlayer> _open(WidgetTester tester) async {
+  // Alto o bastante para a lista de ajustes inteira caber: ela é preguiçosa
+  // e não constrói o que está fora da tela.
+  tester.view.physicalSize = const Size(400, 1400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   final player = MutePlayer();
   await tester.pumpWidget(
     ProviderScope(

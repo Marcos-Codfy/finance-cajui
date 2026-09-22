@@ -7,6 +7,7 @@ import 'package:cajui/src/features/dashboard/presentation/dashboard_blocks.dart'
 import 'package:cajui/src/features/dashboard/presentation/dashboard_state.dart';
 import 'package:cajui/src/features/insights/application/insights.dart';
 import 'package:cajui/src/features/insights/presentation/insights_page.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -30,27 +31,42 @@ class DashboardPage extends ConsumerWidget {
           CajuiSkeleton(height: 112),
         ],
       ),
-      DashboardFirstUse() => _firstUse(context),
+      DashboardFirstUse() => _firstUse(context, ref),
       DashboardReady(:final overview) => _ready(context, ref, state, overview),
     };
   }
 
-  Widget _firstUse(BuildContext context) => CajuiScreen(
-    title: 'Painel',
-    children: [
-      CajuiEmptyState(
-        illustration: const CajuiHeroFruit(),
-        title: 'Seu mês começa aqui',
-        message:
-            'Com a renda e as contas fixas, o Cajui já diz quanto dá para '
-            'gastar por semana. Leva uns cinco minutos.',
-        action: CajuiNoticeAction(
-          label: 'Começar',
-          onPressed: () => PlanPage.open(context),
+  /// A primeira vez — ou, na web, o mês que ainda não subiu.
+  ///
+  /// A web **não pode oferecer "Começar"**: ela não tem onde guardar, e o
+  /// plano montado ali se perderia ao fechar a aba. Modo consulta que
+  /// convida a cadastrar é pior que modo consulta vazio.
+  Widget _firstUse(BuildContext context, WidgetRef ref) {
+    final consulta = !ref.read(ledgerUplinkProvider).isPaired;
+    return CajuiScreen(
+      title: 'Painel',
+      children: [
+        CajuiEmptyState(
+          illustration: const CajuiHeroFruit(),
+          title: consulta
+              ? 'Nada deste mês por aqui ainda'
+              : 'Seu mês começa aqui',
+          message: consulta
+              ? 'Esta é a consulta: o plano e os lançamentos ficam no '
+                    'celular. Abra o Cajui no aparelho e toque em Ajustes, '
+                    'Enviar ao servidor — e recarregue esta página.'
+              : 'Com a renda e as contas fixas, o Cajui já diz quanto dá '
+                    'para gastar por semana. Leva uns cinco minutos.',
+          action: consulta
+              ? null
+              : CajuiNoticeAction(
+                  label: 'Começar',
+                  onPressed: () => PlanPage.open(context),
+                ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 
   Widget _ready(
     BuildContext context,
