@@ -138,8 +138,12 @@ abstract final class MerchantReader {
 
   /// Linha que traz documento — CNPJ, CPF inteiro ou mascarado, ou o marcador
   /// que o mascaramento deixou no lugar. É onde o nome acaba.
+  /// Os separadores do documento vêm do OCR, e o OCR troca ponto por vírgula
+  /// e inventa espaço: no cupom fotografado, "93.209.765/0582-04" voltou como
+  /// "93.209, 765/0582-04". Por isso o separador aqui é frouxo.
   static final _documentLine = RegExp(
-    r'\d{2}\.?\d{3}\.?\d{3}/\d{4}|\d{3}\.\d{3}\.\d{3}|\*{3}\.\d{3}|\[CNPJ\]|\[CPF\]',
+    r'\d{2}[.,]?\s?\d{3}[.,]?\s?\d{3}\s?/\s?\d{4}(?:\s?-\s?\d{2})?'
+    r'|\d{3}[.,]\s?\d{3}[.,]\s?\d{3}|\*{3}[.,]\d{3}|\[CNPJ\]|\[CPF\]',
   );
 
   /// Cabeçalho, rótulo solto ou linha com dois-pontos: tem letras, mas não é
