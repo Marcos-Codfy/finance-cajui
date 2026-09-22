@@ -1,0 +1,77 @@
+# A mesma conferência que roda antes de cada commit, agora em máquina limpa.
+#
+# Existe porque hook de pre-commit é acordo de cavalheiros: quem clonar o
+# repositório e esquecer de ligar o `core.hooksPath` passa por cima dele. A CI
+# não tem como esquecer, e é ela que decide se um PR pode ser mergeado.
+name: conferência
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  segredos:
+    name: nenhum segredo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico inteiro: a Fase 9 abre o repositório com ele junto.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tool/security/scan_secrets.py --all
+      - run: python tool/security/scan_secrets.py --history
+
+  codigo:
+    name: analisador, limites e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+      - run: flutter pub get
+
+      - name: analisador sem um aviso sequer
+        run: flutter analyze
+
+      - name: formatação
+        run: dart format --set-exit-if-changed app packages server tool
+
+      - name: limites de tamanho e regras de arquitetura
+        run: dart run tool/code_metrics/bin/check.dart
+
+      - name: testes do domínio
+        run: dart test
+        working-directory: packages/domain
+
+      - name: testes do contrato
+        run: dart test
+        working-directory: packages/api_contract
+
+      - name: testes da persistência
+        run: dart test
+        working-directory: packages/persistence
+
+      - name: testes do servidor
+        run: dart test
+        working-directory: server
+
+      - name: testes do verificador
+        run: dart test
+        working-directory: tool/code_metrics
+
+      - name: testes do design system
+        run: flutter test
+        working-directory: packages/design_system
+
+      - name: testes da gallery
+        run: flutter test
+        working-directory: packages/design_system/gallery
+
+      - name: testes do app
+        run: flutter test
+        working-directory: app
