@@ -14,6 +14,9 @@ enum CajuiIconData {
   /// Comprovante.
   receipt(_receipt),
 
+  /// Câmera: fotografar um comprovante de papel.
+  camera(_camera),
+
   /// Cartão de crédito: forma de pagamento.
   card(_card),
 
@@ -224,6 +227,20 @@ void _sliders(Path p) {
   p
     ..addOval(Rect.fromCircle(center: const Offset(9, 8), radius: 2.5))
     ..addOval(Rect.fromCircle(center: const Offset(15, 16), radius: 2.5));
+}
+
+/// Corpo da câmera com a saliência do visor e a lente no meio: o gesto de
+/// fotografar, sem parecer o ícone de uma rede social.
+void _camera(Path p) {
+  p
+    ..addRRect(
+      RRect.fromRectAndRadius(_box(2.5, 7, 19, 13), const Radius.circular(3)),
+    )
+    ..moveTo(8.5, 7)
+    ..lineTo(9.8, 4.5)
+    ..lineTo(14.2, 4.5)
+    ..lineTo(15.5, 7)
+    ..addOval(Rect.fromCircle(center: const Offset(12, 13.5), radius: 3.6));
 }
 
 void _info(Path p) {

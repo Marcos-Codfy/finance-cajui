@@ -55,6 +55,10 @@ class CaptureHeader extends StatelessWidget {
           const SizedBox(height: CajuiSpacing.md),
           _amountCandidates(context, proposal.amount.candidates),
         ],
+        if (proposal.category.candidates.isNotEmpty) ...[
+          const SizedBox(height: CajuiSpacing.md),
+          _categoryCandidates(context, proposal.category.candidates),
+        ],
         const SizedBox(height: CajuiSpacing.sm),
         _seeWhatWasRead(context),
       ],
@@ -68,19 +72,54 @@ class CaptureHeader extends StatelessWidget {
       label: 'Ver o que foi lido',
       variant: CajuiButtonVariant.ghost,
       size: CajuiButtonSize.compact,
-      onPressed: () => ReadTextPage.open(context, capture.source.text),
+      onPressed: () => ReadTextPage.open(
+        context,
+        capture.source.text,
+        proposal: capture.proposal,
+      ),
     ),
   );
 
-  /// Mais de um número sem rótulo: o app mostra os candidatos, do maior para
-  /// o menor, e não escolhe nenhum (RN-753).
-  Widget _amountCandidates(BuildContext context, List<Money> candidates) {
+  /// O palpite de categoria, vindo do ramo do estabelecimento ou da IA: vem
+  /// como chip para tocar, e **nunca marcado** (RN-744 e RN-782).
+  ///
+  /// Sem isto, a leitura do ramo não chegaria à pessoa: um cupom de
+  /// supermercado sabe que é compra de mercado, e ficava calado.
+  Widget _categoryCandidates(BuildContext context, List<String> candidates) {
+    final named = [for (final id in candidates.take(3)) ?_categoryOf(id)];
+    if (named.isEmpty) return const SizedBox.shrink();
+    return _suggestion(
+      context,
+      named.length == 1
+          ? 'Pelo nome do lugar, parece ${named.single.name.toLowerCase()}.'
+          : 'Pode ser uma destas:',
+      [
+        for (final category in named)
+          CajuiChip(
+            label: category.name,
+            selected: false,
+            onSelected: (_) =>
+                edit((draft) => draft.copyWith(category: category)),
+          ),
+      ],
+    );
+  }
+
+  Category? _categoryOf(String id) =>
+      book.categories.where((category) => category.id == id).firstOrNull;
+
+  /// Uma pergunta com as respostas em chips, nenhuma marcada.
+  Widget _suggestion(
+    BuildContext context,
+    String question,
+    List<Widget> chips,
+  ) {
     final theme = CajuiTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Achei mais de um valor. Qual é o da compra?',
+          question,
           style: theme.typography.label.copyWith(
             color: theme.colors.text.muted,
           ),
@@ -89,17 +128,23 @@ class CaptureHeader extends StatelessWidget {
         Wrap(
           spacing: CajuiSpacing.sm,
           runSpacing: CajuiSpacing.sm,
-          children: [
-            for (final amount in candidates.take(3))
-              CajuiChip(
-                label: BrlFormatter.format(amount.cents),
-                selected: false,
-                onSelected: (_) =>
-                    edit((draft) => draft.copyWith(amountCents: amount.cents)),
-              ),
-          ],
+          children: chips,
         ),
       ],
     );
+  }
+
+  /// Mais de um número sem rótulo: o app mostra os candidatos, do maior para
+  /// o menor, e não escolhe nenhum (RN-753).
+  Widget _amountCandidates(BuildContext context, List<Money> candidates) {
+    return _suggestion(context, 'Achei mais de um valor. Qual é o da compra?', [
+      for (final amount in candidates.take(3))
+        CajuiChip(
+          label: BrlFormatter.format(amount.cents),
+          selected: false,
+          onSelected: (_) =>
+              edit((draft) => draft.copyWith(amountCents: amount.cents)),
+        ),
+    ]);
   }
 }

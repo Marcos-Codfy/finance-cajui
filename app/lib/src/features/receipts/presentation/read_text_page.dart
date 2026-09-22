@@ -1,44 +1,60 @@
+import 'package:cajui/src/features/receipts/presentation/understood_section.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// "Ver o que foi lido" (RN-735): o texto que o aparelho extraiu do
-/// comprovante e, abaixo, esse mesmo texto **como sairia do aparelho** — com
-/// os dados pessoais trocados por marcadores.
+/// "Ver o que foi lido" (RN-735): o que o app entendeu do comprovante, o
+/// texto que o aparelho extraiu e esse mesmo texto **como sairia do
+/// aparelho** — com os dados pessoais trocados por marcadores.
 ///
-/// É a transparência do fluxo em uma tela: a pessoa vê o que o app enxergou,
-/// inclusive texto que estava invisível no PDF, e o que ele esconde.
+/// A ordem é a da pergunta que a pessoa tem: primeiro *o que você entendeu
+/// disso?*, e só depois o texto cru, que é longo e serve para conferir. O
+/// texto cru vai arrumado em linhas (`ReceiptLayout`), porque cupom achatado
+/// pelo OCR não se lê.
 class ReadTextPage extends StatelessWidget {
   /// Cria a tela para o texto lido [text].
-  const new({required this.text, super.key});
+  const new({required this.text, this.proposal, super.key});
 
   /// O texto extraído, já limpo.
   final String text;
 
+  /// O que as regras entenderam do texto. Sem isto, a tela mostra só o texto.
+  final EntryProposal? proposal;
+
   /// Abre a tela.
-  static Future<void> open(BuildContext context, String text) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => ReadTextPage(text: text)));
+  static Future<void> open(
+    BuildContext context,
+    String text, {
+    EntryProposal? proposal,
+  }) {
+    return Navigator.of(context).push<void>(
+      CajuiPageRoute(
+        builder: (_) => ReadTextPage(text: text, proposal: proposal),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final understood = proposal;
     return CajuiScreen(
       title: 'O que foi lido',
       onBack: Navigator.of(context).pop,
       children: [
+        if (understood != null) ...UnderstoodSection.of(understood, text: text),
         _section(
           context,
-          'Lido no aparelho',
-          'Fica só aqui. A imagem do comprovante nunca é enviada.',
-          text,
+          'O texto do comprovante',
+          'Como o aparelho leu, linha por linha. Fica só aqui: a imagem '
+              'nunca é enviada.',
+          ReceiptLayout.readable(text),
         ),
         const SizedBox(height: CajuiSpacing.xl),
         _section(
           context,
           'Como sai do aparelho',
           'Só o texto, e com nome, CPF, conta e chave Pix mascarados.',
-          PiiRedactor.redact(text),
+          ReceiptLayout.readable(PiiRedactor.redact(text)),
         ),
       ],
     );
@@ -55,8 +71,7 @@ class ReadTextPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: theme.typography.title),
-        const SizedBox(height: CajuiSpacing.xs),
+        CajuiSectionTitle(title),
         Text(
           explanation,
           style: theme.typography.caption.copyWith(color: muted),

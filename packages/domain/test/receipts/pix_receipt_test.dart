@@ -40,7 +40,7 @@ void main() {
 
     test('o recebedor é o bloco depois de "Para", até o documento', () {
       expect(
-        ReceiptFieldReader.merchantIn(text),
+        MerchantReader.nameIn(text),
         'LANCHONETE E RESTAURANTE SABOR DA PRACA',
       );
     });
@@ -48,7 +48,7 @@ void main() {
     test('rótulo solto nunca vira estabelecimento', () {
       const cut = 'Comprovante de Pix\nValor\nR\$ 6,00\nPADARIA CENTRAL';
 
-      expect(ReceiptFieldReader.merchantIn(cut), 'PADARIA CENTRAL');
+      expect(MerchantReader.nameIn(cut), 'PADARIA CENTRAL');
     });
 
     test('RN-754 · é Pix, mesmo com "CRÉDITO" no nome da cooperativa', () {

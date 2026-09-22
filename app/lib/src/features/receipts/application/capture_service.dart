@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
@@ -81,10 +82,21 @@ class CaptureService {
             categories: book.categories,
             today: ref.read(clockProvider).today(),
             learnedRules: await ref.read(captureShelfProvider).learnedRules(),
+            categoryByMerchantKind: DefaultCatalog.categoryByMerchantKind,
           ),
         );
     return Capture(source: source, proposal: proposal);
   }
+
+  /// Abre a câmera do aparelho para fotografar um comprovante de papel
+  /// (ADR-017). A foto entra na mesma fila do compartilhamento: quem avisa
+  /// que ela chegou é a caixa de entrada, e a conferência abre igual.
+  ///
+  /// Devolve `false` quando o aparelho não tem com que fotografar.
+  Future<bool> photograph() => ref.read(receiptInboxProvider).takePhoto();
+
+  /// Se dá para fotografar neste aparelho.
+  bool get canPhotograph => ref.read(receiptInboxProvider).canPhotograph;
 
   /// "Conferir depois": a captura fica guardada, fora de qualquer indicador.
   Future<void> defer(Capture capture) async {

@@ -12,6 +12,15 @@ class FakeInbox implements ReceiptInbox {
   /// Os arquivos que o app mandou apagar.
   final List<String> discarded = [];
 
+  /// Quantas vezes o app pediu a câmera.
+  int photoRequests = 0;
+
+  /// Se o aparelho simulado tem câmera.
+  bool hasCamera = true;
+
+  /// O que a câmera devolve quando é chamada: o que chegaria pela fila.
+  List<SharedItem> photo = const [];
+
   /// Faz [items] chegarem, na ordem dada.
   void share(List<SharedItem> items) {
     _pending.addAll(items);
@@ -26,6 +35,17 @@ class FakeInbox implements ReceiptInbox {
     final taken = [..._pending];
     _pending.clear();
     return taken;
+  }
+
+  @override
+  bool get canPhotograph => hasCamera;
+
+  @override
+  Future<bool> takePhoto() async {
+    photoRequests++;
+    if (!hasCamera) return false;
+    if (photo.isNotEmpty) share(photo);
+    return true;
   }
 
   @override

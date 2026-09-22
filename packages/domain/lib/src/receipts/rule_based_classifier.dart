@@ -3,6 +3,7 @@ import 'package:domain/src/money/money.dart';
 import 'package:domain/src/receipts/classification_request.dart';
 import 'package:domain/src/receipts/entry_proposal.dart';
 import 'package:domain/src/receipts/field_source.dart';
+import 'package:domain/src/receipts/merchant_reader.dart';
 import 'package:domain/src/receipts/proposed_field.dart';
 import 'package:domain/src/receipts/receipt_classifier.dart';
 import 'package:domain/src/receipts/receipt_field_reader.dart';
@@ -20,7 +21,7 @@ final class RuleBasedClassifier implements ReceiptClassifier {
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {
     final text = request.text;
-    final merchant = ReceiptFieldReader.merchantIn(text);
+    final merchant = MerchantReader.nameIn(text);
     final date = ReceiptFieldReader.dateIn(text, today: request.today);
     final payment = ReceiptFieldReader.paymentKindIn(text);
     return EntryProposal(
@@ -52,17 +53,34 @@ final class RuleBasedClassifier implements ReceiptClassifier {
     ),
   };
 
-  /// A regra aprendida propõe a categoria na zona alta (RN-765) — desde que a
-  /// categoria ainda exista.
+  /// A categoria proposta: primeiro a regra que a própria pessoa ensinou
+  /// (RN-765), depois o ramo do estabelecimento lido do nome.
+  ///
+  /// A regra aprendida ganha do ramo de propósito: ela é a correção que a
+  /// pessoa já fez, e desfazê-la seria teimosia do app.
   ProposedField<String> _category(
     ClassificationRequest request,
     String? merchant,
   ) {
     if (merchant == null) return const ProposedField.unread();
     final learned = request.learnedRules[PossibleDuplicate.normalize(merchant)];
-    if (learned == null || request.categoryById(learned) == null) {
+    if (learned != null && request.categoryById(learned) != null) {
+      return ProposedField.resolved(learned, source: FieldSource.learnedRule);
+    }
+    return _byKind(request, merchant);
+  }
+
+  /// O ramo do nome — supermercado, padaria, posto — vira categoria pelo
+  /// cadastro. Fica na zona média: é palpite de regra fixa, não certeza.
+  ProposedField<String> _byKind(
+    ClassificationRequest request,
+    String merchant,
+  ) {
+    final kind = MerchantReader.kindIn(merchant);
+    final category = request.categoryByMerchantKind[kind];
+    if (category == null || request.categoryById(category) == null) {
       return const ProposedField.unread();
     }
-    return ProposedField.resolved(learned, source: FieldSource.learnedRule);
+    return ProposedField.undecided([category], source: FieldSource.fixedRule);
   }
 }

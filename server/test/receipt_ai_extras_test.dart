@@ -56,7 +56,9 @@ void main() {
         final proposal = await classifier.classify(sampleRequest(sampleCoupon));
 
         expect(proposal.description, isNull, reason: bad);
-        expect(proposal.displayDescription, 'MERCADO BOA COMPRA LTDA');
+        // Recusada a descrição da IA, vale o estabelecimento lido — e ele vai
+        // para a tela com cara de nome, não com o grito do cupom.
+        expect(proposal.displayDescription, 'Mercado Boa Compra');
         expect(proposal.warnings, isEmpty, reason: 'o resto da resposta vale');
       }
     });

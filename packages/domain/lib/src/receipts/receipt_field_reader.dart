@@ -14,11 +14,18 @@ abstract final class ReceiptFieldReader {
   // Entre o rótulo e o número cabe uma quebra de linha: comprovante de banco
   // digital põe "Valor" numa linha e "R$ 6,00" na de baixo. O trecho não
   // aceita dígito, então o primeiro número depois do rótulo é o valor ou nada.
-  static final _labelledAmount = RegExp(
-    '(?<![a-z])(?:total a pagar|valor pago|valor total|total|valor)'
+  static RegExp _labelled(String labels) => RegExp(
+    '(?<![a-z])(?:$labels)'
     r'[^\d]{0,20}(\d{1,3}(?:\.\d{3}){0,3},\d{2}|\d{1,9},\d{2})',
     caseSensitive: false,
   );
+
+  /// Os rótulos do valor, do mais forte para o mais fraco.
+  static final List<RegExp> _amountLabels = [
+    _labelled('valor a pagar|total a pagar|valor pago|total pago'),
+    _labelled('valor total|total'),
+    _labelled('valor'),
+  ];
   static final _notTheTotal = RegExp(
     'saldo|troco|desconto|subtotal|sub-total',
     caseSensitive: false,
@@ -39,13 +46,6 @@ abstract final class ReceiptFieldReader {
     r'\b(\d{1,2})\s?x\b|parc(?:ela)?\.?\s*\d{1,2}/(\d{1,2})|parcelado em (\d{1,2})',
     caseSensitive: false,
   );
-  static final _merchantLabel = RegExp(
-    r'^\s*(?:destinat[aá]rio|favorecido|recebedor|benefici[aá]rio|'
-    r'estabelecimento|raz[aã]o social)\s*:\s*([^\n]{2,80})$',
-    caseSensitive: false,
-    multiLine: true,
-  );
-
   static const Map<String, PaymentMethodKind> _paymentWords = {
     'pix': PaymentMethodKind.pix,
     'credito': PaymentMethodKind.creditCard,
@@ -86,11 +86,18 @@ abstract final class ReceiptFieldReader {
   /// Os candidatos a valor do comprovante (RN-753). Um só, quando há rótulo
   /// ("TOTAL"); senão, todos os números, do maior para o menor. Número de
   /// saldo, troco, desconto ou subtotal nunca é candidato.
+  ///
+  /// Os rótulos são tentados do mais forte para o mais fraco: um cupom de
+  /// supermercado traz "Valor total" **antes** do desconto e "Valor a pagar"
+  /// depois dele, e quem manda é o que saiu do bolso.
   static List<Money> amountCandidates(String text) {
     final lines = text.split('\n').where((l) => !_notTheTotal.hasMatch(l));
     final usable = lines.join('\n');
-    final labelled = _labelledAmount.firstMatch(usable);
-    if (labelled != null) return [_money(labelled.group(1)!)];
+    for (final label in _amountLabels) {
+      if (label.firstMatch(usable) case final match?) {
+        return [_money(match.group(1)!)];
+      }
+    }
     return amountsIn(usable).toList()..sort((a, b) => b.compareTo(a));
   }
 
@@ -148,58 +155,6 @@ abstract final class ReceiptFieldReader {
     );
     return count >= 2 ? count : null;
   }
-
-  /// O estabelecimento: o que vem depois de "Destinatário:" e afins; sem
-  /// rótulo, a primeira linha com cara de nome.
-  static String? merchantIn(String text) {
-    final labelled = _merchantLabel.firstMatch(text);
-    if (labelled != null) return labelled.group(1)!.trim();
-    final lines = [for (final line in text.split('\n')) line.trim()];
-    final block = _merchantBlock(lines);
-    if (block != null) return block;
-    for (final line in lines) {
-      final letters = line.replaceAll(RegExp('[^A-Za-zÀ-ú]'), '').length;
-      if (letters >= 4 && !_isNotAName(line)) return line;
-    }
-    return null;
-  }
-
-  /// O recebedor em bloco, como os bancos digitais escrevem: "Para" sozinho
-  /// numa linha, o nome quebrado nas linhas de baixo e, depois, o documento.
-  static String? _merchantBlock(List<String> lines) {
-    final at = lines.indexWhere(_blockLabel.hasMatch);
-    if (at < 0) return null;
-    final name = lines
-        .skip(at + 1)
-        .take(_maxNameLines)
-        .takeWhile((line) => !_documentLine.hasMatch(line) && line.isNotEmpty)
-        .join(' ');
-    return name.length < 2 ? null : name;
-  }
-
-  static const _maxNameLines = 3;
-  static final _blockLabel = RegExp(
-    r'^(?:para|destino|recebedor|favorecido|destinat[aá]rio|quem recebeu)$',
-    caseSensitive: false,
-  );
-
-  /// Linha que traz documento — CNPJ, CPF inteiro ou mascarado, ou o marcador
-  /// que o mascaramento deixou no lugar. É onde o nome acaba.
-  static final _documentLine = RegExp(
-    r'\d{2}\.?\d{3}\.?\d{3}/\d{4}|\d{3}\.\d{3}\.\d{3}|\*{3}\.\d{3}|\[CNPJ\]|\[CPF\]',
-  );
-
-  /// Cabeçalho, rótulo solto ou linha com dois-pontos: tem letras, mas não é
-  /// nome de estabelecimento.
-  static bool _isNotAName(String line) =>
-      line.contains(':') || _headerOrLabel.hasMatch(line);
-
-  static final _headerOrLabel = RegExp(
-    '^(?:comprovante|recibo|cupom|pix|nota)|'
-    '^(?:valor(?: original| pago| total)?|de|para|data|origem|destino|'
-    r'identificador|id da transa[cç][aã]o|detalhes da cobran[cç]a)$',
-    caseSensitive: false,
-  );
 
   /// O tipo do documento, pelas palavras do texto (RN-756, RN-758 e RN-759).
   static DocumentKind documentKindIn(String text) {

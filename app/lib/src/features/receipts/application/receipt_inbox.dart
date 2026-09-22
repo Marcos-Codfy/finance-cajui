@@ -12,6 +12,16 @@ abstract interface class ReceiptInbox {
   /// Os itens que chegaram desde a última chamada, na ordem recebida.
   Future<List<SharedItem>> takePending();
 
+  /// Se dá para fotografar por aqui. Falso na web, que é só consulta.
+  bool get canPhotograph;
+
+  /// Abre a câmera do aparelho para fotografar um comprovante de papel
+  /// (ADR-017). Devolve `false` quando não há câmera — aí o botão não existe.
+  ///
+  /// A foto não volta por aqui: ela entra na mesma fila do compartilhamento,
+  /// e chega por [arrivals]. Fotografar e compartilhar são o mesmo caminho.
+  Future<bool> takePhoto();
+
   /// Apaga o arquivo local de uma captura descartada (RN-723).
   Future<void> discard(SharedFile file);
 }

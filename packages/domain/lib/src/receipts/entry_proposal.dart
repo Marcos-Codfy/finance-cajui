@@ -2,6 +2,7 @@ import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/payment_method_kind.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:domain/src/receipts/document_kind.dart';
+import 'package:domain/src/receipts/merchant_name.dart';
 import 'package:domain/src/receipts/proposed_field.dart';
 import 'package:meta/meta.dart';
 
@@ -50,7 +51,12 @@ final class EntryProposal {
   final String? description;
 
   /// O que a tela de conferência mostra em "O que foi".
-  String? get displayDescription => description ?? merchant;
+  ///
+  /// O estabelecimento passa por [MerchantName]: cupom fiscal escreve a razão
+  /// social inteira em maiúsculas, e isso não é o que a pessoa chamaria de
+  /// nome do lugar.
+  String? get displayDescription =>
+      description ?? MerchantName.pretty(merchant);
 
   /// Em quantas vezes, quando o texto fala em parcelas.
   final int? installments;
