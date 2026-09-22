@@ -6,6 +6,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/auth/application/device_invite.dart';
+import 'package:cajui/src/features/auth/application/device_key_failure.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/application/known_device.dart';
 import 'package:cajui/src/features/auth/application/server_session.dart';
@@ -55,12 +56,14 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   /// errado, usado ou vencido volta como `E-AUTH-04` (RN-906).
   @override
   Future<ErrorCode?> enroll(String code, {required String name}) async {
-    final publicKey = await _keys.publicKey();
-    final outcome = await _post('/v1/auth/enroll', {
-      'code': code.trim(),
-      'deviceId': deviceIdOf(publicKey),
-      'name': name,
-      'publicKey': base64Encode(publicKey),
+    final outcome = await _withKey(() async {
+      final publicKey = await _keys.publicKey();
+      return await _post('/v1/auth/enroll', {
+        'code': code.trim(),
+        'deviceId': deviceIdOf(publicKey),
+        'name': name,
+        'publicKey': base64Encode(publicKey),
+      });
     });
     return outcome.error;
   }
@@ -131,14 +134,29 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   /// A sessão em vigor, ou uma nova, provada pela chave do aparelho.
   Future<ApiOutcome> _open() async {
     if (isOpen) return (body: null, error: null);
-    final publicKey = await _keys.publicKey();
-    final challenge = await _post('/v1/auth/challenge', {
-      'deviceId': deviceIdOf(publicKey),
+    return await _withKey(() async {
+      final publicKey = await _keys.publicKey();
+      final challenge = await _post('/v1/auth/challenge', {
+        'deviceId': deviceIdOf(publicKey),
+      });
+      if (challenge.body case final issued?) {
+        return await _sign(issued);
+      }
+      return challenge;
     });
-    if (challenge.body case final issued?) {
-      return await _sign(issued);
+  }
+
+  /// Roda [body] traduzindo a recusa do Keystore em resposta do catálogo.
+  ///
+  /// Assinar é a única coisa daqui que pode falhar fora do Dart. Deixar esse
+  /// erro subir travava a tela em "pensando", esperando algo que não vinha —
+  /// foi o que o primeiro uso no aparelho mostrou.
+  Future<ApiOutcome> _withKey(Future<ApiOutcome> Function() body) async {
+    try {
+      return await body();
+    } on DeviceKeyFailure catch (failure) {
+      return (body: null, error: failure.code);
     }
-    return challenge;
   }
 
   Future<ApiOutcome> _sign(Map<String, Object?> challenge) async {
@@ -198,18 +216,17 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     }
   }
 
+  /// Lê a resposta. A recusa vem pelo `ApiError` do contrato, e não por um
+  /// formato imaginado aqui: **o corpo de erro tem o código dentro de
+  /// `error`**, e ler na raiz fazia toda recusa do servidor — inclusive
+  /// "este aparelho não é conhecido" — chegar como falha sem nome.
   ApiOutcome _read(int status, String text) {
     final decoded = text.isEmpty ? null : jsonDecode(text);
     final json = decoded is Map ? decoded.cast<String, Object?>() : null;
     if (status >= 200 && status < 300) {
       return (body: json ?? const <String, Object?>{}, error: null);
     }
-    final code = json?['code'];
-    return (
-      body: null,
-      error: code is String
-          ? ErrorCode.tryParse(code) ?? ErrorCode.app01
-          : ErrorCode.app01,
-    );
+    if (json == null) return (body: null, error: ErrorCode.srv01);
+    return (body: null, error: ApiError.fromJson(json).code);
   }
 }

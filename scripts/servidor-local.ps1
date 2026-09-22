@@ -8,7 +8,7 @@
 # o mesmo papel, lendo de C:\Users\<voce>\.cajui\cajui.env — que fica fora da
 # pasta do projeto de propósito.
 #
-# Uso:  pwsh scripts/servidor-local.ps1
+# Uso, da raiz do projeto:  .\scripts\servidor-local.ps1
 
 $ErrorActionPreference = 'Stop'
 

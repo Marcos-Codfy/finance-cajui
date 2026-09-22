@@ -46,6 +46,10 @@ class AssistantReplyView extends StatelessWidget {
     final text = ErrorTexts.of(code).inContext('No assistente').fill({
       'recurso': 'O assistente',
       'segundos': '${retryAfterSeconds ?? 60}',
+      // Conversar não tem fila de envio: a frase do `E-APP-01` termina em
+      // "continua salvo" e ponto. Sem isto, a falha sem nome derrubava a
+      // própria tela que deveria contá-la.
+      'fila': '',
       'mês': CalendarWords.month(
         LocalDate.fromDateTime(DateTime.now()).budgetMonth,
       ),

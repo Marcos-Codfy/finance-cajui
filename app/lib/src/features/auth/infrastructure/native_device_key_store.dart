@@ -1,3 +1,5 @@
+import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/auth/application/device_key_failure.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:flutter/services.dart';
 
@@ -15,14 +17,31 @@ final class NativeDeviceKeyStore implements DeviceKeyStore {
 
   @override
   Future<bool> canAuthenticate() async =>
-      await _channel.invokeMethod<bool>('canAuthenticate') ?? false;
+      await _ask<bool>('canAuthenticate') ?? false;
 
   @override
   Future<Uint8List> publicKey() async =>
-      await _channel.invokeMethod<Uint8List>('publicKey') ?? Uint8List(0);
+      await _ask<Uint8List>('publicKey') ?? Uint8List(0);
 
   @override
   Future<Uint8List> sign(Uint8List message) async =>
-      await _channel.invokeMethod<Uint8List>('sign', {'message': message}) ??
-      Uint8List(0);
+      await _ask<Uint8List>('sign', {'message': message}) ?? Uint8List(0);
+
+  /// Pergunta ao lado nativo e traduz a recusa dele.
+  ///
+  /// O canal devolve o código do catálogo no lugar do nome da exceção, então
+  /// aqui não há adivinhação: código conhecido vira ele mesmo; qualquer outra
+  /// coisa vira `E-AUTH-01`, que é o "não deu para usar a chave" do catálogo.
+  Future<T?> _ask<T>(String method, [Map<String, Object?>? arguments]) async {
+    try {
+      return await _channel.invokeMethod<T>(method, arguments);
+    } on PlatformException catch (failure) {
+      throw DeviceKeyFailure(
+        ErrorCode.tryParse(failure.code) ?? ErrorCode.auth01,
+      );
+    } on MissingPluginException {
+      // Aparelho sem o lado nativo — só acontece em build de teste.
+      throw const DeviceKeyFailure(ErrorCode.auth01);
+    }
+  }
 }

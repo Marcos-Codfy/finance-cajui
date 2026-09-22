@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
+import 'package:cajui/src/features/auth/application/device_key_failure.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/application/server_session.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
@@ -31,6 +32,22 @@ final class _FakeKeys implements DeviceKeyStore {
     signatures++;
     return message;
   }
+}
+
+/// Uma chave que recusa: é o Keystore dizendo não, como no aparelho.
+final class _RefusingKeys implements DeviceKeyStore {
+  @override
+  bool get exists => true;
+
+  @override
+  Future<bool> canAuthenticate() async => true;
+
+  @override
+  Future<Uint8List> publicKey() async => Uint8List.fromList([1, 2, 3, 4]);
+
+  @override
+  Future<Uint8List> sign(Uint8List message) async =>
+      throw const DeviceKeyFailure(ErrorCode.auth01);
 }
 
 void main() {
@@ -116,11 +133,34 @@ void main() {
     test(
       'aparelho que o servidor não conhece pede cadastro, e não erro seco',
       () async {
+        // Este é o caminho do primeiro uso no aparelho: a digital confirma,
+        // a assinatura sobe, e o servidor responde que não conhece quem
+        // assinou. O código tem de atravessar inteiro — o corpo de erro
+        // traz `code` **dentro de `error`**, e lê-lo na raiz transformava
+        // esta recusa numa falha sem nome.
         server.refuseWith(ErrorCode.auth03);
 
         final reply = await HttpAssistantGateway(api).ask('oi');
 
         expect(reply, isA<AssistantNotPaired>());
+      },
+    );
+
+    test(
+      'Keystore que recusa vira erro na tela, e não conversa travada',
+      () async {
+        // O primeiro uso no aparelho travou aqui: a recusa do Keystore subia
+        // como exceção de plataforma, ninguém a pegava, e a conversa ficava
+        // em "pensando" para sempre.
+        final api = CajuiApi(
+          baseUrl: server.baseUrl,
+          keys: _RefusingKeys(),
+          client: server.client,
+        );
+
+        final reply = await HttpAssistantGateway(api).ask('oi');
+
+        expect((reply as AssistantFailed).code, ErrorCode.auth01);
       },
     );
 

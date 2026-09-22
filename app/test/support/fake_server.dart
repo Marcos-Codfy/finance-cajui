@@ -94,7 +94,13 @@ final class FakeServer {
     if (refusal != null && !request.uri.path.endsWith('/challenge')) {
       if (_onlyOnce) _refusal = null;
       request.response.statusCode = _refusalStatus;
-      request.response.write(jsonEncode({'code': refusal.code}));
+      // O corpo de erro sai do **mesmo** `ApiError` que o servidor usa. Já
+      // foi escrito à mão aqui, no formato que o app imaginava, e o teste
+      // passou a confirmar a suposição em vez do servidor: no aparelho,
+      // toda recusa chegava como falha sem nome.
+      request.response.write(
+        jsonEncode(ApiError(code: refusal, ref: 'teste').toJson()),
+      );
       return;
     }
     request.response.headers.contentType = ContentType.json;
