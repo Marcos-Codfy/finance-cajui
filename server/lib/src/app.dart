@@ -77,6 +77,17 @@ final class App {
     service: assistant,
   );
 
+  /// "Estou de pé" — e nada além disso.
+  ///
+  /// É o que o deploy pergunta depois de subir o serviço e o que um vigia
+  /// perguntaria de fora. **Não diz versão, nem se a IA está ligada, nem
+  /// quantos lançamentos existem**: quem não está autenticado não aprende
+  /// nada sobre esta casa além de que ela responde.
+  Response _health(Request request) => Response.ok(
+    '{"status":"ok"}',
+    headers: const {'content-type': 'application/json; charset=utf-8'},
+  );
+
   /// O tratador de requisições, pronto para o `shelf_io`.
   ///
   /// A ordem importa: o identificador nasce primeiro, para todo o resto poder
@@ -85,6 +96,7 @@ final class App {
   /// errada também gaste cota.
   Handler get handler {
     final routes = Router()
+      ..get('/health', _health)
       ..mount('/v1/auth', _auth.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1/assistant', _assistant.router.call)

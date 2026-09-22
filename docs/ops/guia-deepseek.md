@@ -59,6 +59,20 @@ Em **Top up** (ou *Billing*), escolha o **menor valor oferecido**.
 
 Na Fase 7, o roteiro de deploy pede a chave **uma vez**, no terminal da VM, e a transforma em credencial cifrada. Você cola direto lá; ela não passa por nenhum outro lugar.
 
+### Onde ela está hoje (22/09/2026)
+
+A chave já existe e está guardada em **`C:\Users\<você>\.cajui\cajui.env`**, na sua pasta pessoal — **fora da pasta do projeto**, de propósito: nenhum comando de git, nenhuma build e nenhum verificador alcança esse caminho, nem por acidente.
+
+Para subir o servidor nesta máquina com a IA ligada:
+
+```
+pwsh scripts/servidor-local.ps1
+```
+
+O script lê a chave de lá, monta o diretório de credenciais que o servidor espera (`CREDENTIALS_DIRECTORY` com o arquivo `cajui-deepseek-key`, como o systemd faz na VM) e **apaga a cópia em claro ao terminar**. Sem chave no arquivo, o servidor sobe assim mesmo, classificando só pelas regras locais.
+
+Conferir se a chave ainda vale e quanto resta de crédito **sem gastar um token**: o endpoint `https://api.deepseek.com/user/balance`, com a chave no cabeçalho `Authorization: Bearer`. Em 22/09/2026 respondeu US$ 2,00.
+
 ## 5. Acompanhar o gasto
 
 - Em **Usage**, na plataforma, aparece o consumo por dia. Olhe uma vez por semana no primeiro mês, para calibrar a expectativa.

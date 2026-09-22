@@ -1,0 +1,23 @@
+#!/bin/sh
+# A última barreira antes de um segredo virar histórico.
+#
+# Roda no que está no índice, e não na árvore: é exatamente o que o commit
+# levaria. Segredo commitado não se apaga com um commit novo — fica no
+# histórico, e a saída é reescrever tudo e trocar a chave.
+#
+# Ligado com: git config core.hooksPath .githooks
+set -e
+
+python tool/security/scan_secrets.py || {
+  echo ""
+  echo "Commit interrompido pelo verificador de segredos."
+  echo "Para um exemplo que não é chave de verdade, marque a linha com"
+  echo "  scan-secrets: exemplo"
+  exit 1
+}
+
+python tool/quality/check_authorship.py || {
+  echo ""
+  echo "Commit interrompido: o repositório não leva assinatura de IA."
+  exit 1
+}

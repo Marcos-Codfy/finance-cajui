@@ -12,6 +12,11 @@ abstract final class Authenticate {
   static const sessionKey = 'cajui.session';
 
   static const _publicPrefix = 'v1/auth/';
+
+  /// "Estou de pé", e nada além disso: é o que o deploy e um vigia de fora
+  /// perguntam antes de existir sessão nenhuma. A resposta não conta nada
+  /// sobre esta casa (T-12).
+  static const _healthPath = 'health';
   static const _readMethods = {'GET', 'HEAD'};
 
   /// A única rota que não é de leitura e é permitida à sessão da web
@@ -28,7 +33,10 @@ abstract final class Authenticate {
   /// também — o servidor não explica a quem não devia estar tentando (T-12).
   static Middleware middleware(SessionBook sessions) =>
       (inner) => (request) {
-        if (request.url.path.startsWith(_publicPrefix)) return inner(request);
+        if (request.url.path == _healthPath ||
+            request.url.path.startsWith(_publicPrefix)) {
+          return inner(request);
+        }
         final header = request.headers['authorization'] ?? '';
         final session = header.startsWith('Bearer ')
             ? sessions.find(header.substring(7))

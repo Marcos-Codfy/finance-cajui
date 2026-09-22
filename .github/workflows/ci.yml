@@ -1,0 +1,174 @@
+# A conferência que decide se um PR pode ser mergeado.
+#
+# Existe porque hook de pre-commit é acordo de cavalheiros: quem clonar o
+# repositório e esquecer de ligar o `core.hooksPath` passa por cima dele. A CI
+# não esquece — e roda em máquina limpa, onde "na minha máquina funciona" não
+# vale como argumento.
+#
+# Os portões e o porquê de cada um: docs/spec/quality-gates.md
+name: conferência
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Empurrar de novo na mesma branch cancela a conferência anterior: ninguém
+# precisa do resultado de um commit que já foi substituído.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.47.5
+
+jobs:
+  segredos:
+    name: nenhum segredo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico inteiro: a Fase 9 abre o repositório com ele junto, e
+          # segredo commitado não se apaga com um commit novo.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: na árvore
+        run: python tool/security/scan_secrets.py --all
+      - name: no histórico inteiro
+        run: python tool/security/scan_secrets.py --history
+
+  autoria:
+    name: repositório sem assinatura de IA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tool/quality/check_authorship.py
+
+  codigo:
+    name: analisador, limites e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+
+      - name: analisador, sem um aviso sequer
+        run: flutter analyze
+
+      - name: formatação
+        run: dart format --set-exit-if-changed app packages server tool
+
+      - name: limites de tamanho e regras de arquitetura
+        run: dart run tool/code_metrics/bin/check.dart
+
+      # Os pacotes Dart puros medem cobertura pelo `coverage`; os de Flutter,
+      # pelo próprio `flutter test`. O piso de cada um está no
+      # docs/spec/quality-gates.md, e fica **abaixo** do que há hoje: o portão
+      # avisa queda, não obriga a caçar linha.
+      - name: domínio
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:test_with_coverage
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/domain 90
+        working-directory: packages/domain
+
+      - name: contrato
+        run: |
+          dart pub global run coverage:test_with_coverage
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/api_contract 70
+        working-directory: packages/api_contract
+
+      - name: persistência
+        run: |
+          dart pub global run coverage:test_with_coverage
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/persistence 90
+        working-directory: packages/persistence
+
+      - name: servidor
+        run: |
+          dart pub global run coverage:test_with_coverage
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py server 85
+        working-directory: server
+
+      - name: verificador de métricas
+        run: dart test
+        working-directory: tool/code_metrics
+
+      - name: design system
+        run: |
+          flutter test --coverage
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py packages/design_system 75
+        working-directory: packages/design_system
+
+      - name: gallery
+        run: flutter test
+        working-directory: packages/design_system/gallery
+
+      - name: app
+        run: |
+          flutter test --coverage
+          python $GITHUB_WORKSPACE/tool/quality/check_coverage.py app 75
+        working-directory: app
+
+  android:
+    name: o APK compila
+    runs-on: ubuntu-latest
+    # Só na `main`: são cinco minutos de Gradle, e o que quebra o APK é o
+    # módulo nativo, que muda pouco.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --debug
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cajui-debug-apk
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+
+  servidor:
+    name: o servidor compila para a VM
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      # A VM da Oracle é Ubuntu x86_64, o mesmo desta máquina: o binário que
+      # sai daqui é o que roda lá, sem cross-compile e sem Dart na VM.
+      - run: dart compile exe bin/server.dart -o cajui-server
+        working-directory: server
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cajui-server-linux-x64
+          path: server/cajui-server
+          retention-days: 14

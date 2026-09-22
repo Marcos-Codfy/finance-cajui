@@ -46,8 +46,8 @@ Resposta tátil leve e rara o bastante para significar algo.
 
 | Evento | Vibração |
 |---|---|
-| Toque em controle | Clique leve |
-| Alternar chave | Clique leve duplo, muito curto |
+| Toque em controle | **Pulso de tecla** — o mesmo peso que o teclado do telefone dá a cada tecla (`lightImpact`). Era o tique de rolagem (`selectionClick`), que no aparelho não se sentia |
+| Alternar chave | Pulso de tecla, igual ao toque |
 | Lançamento salvo | Confirmação média, única |
 | Arrastar até o limite (puxar para atualizar, fechar folha) | Clique leve no ponto de engate |
 | Aviso | Dois pulsos suaves — nunca o padrão longo de erro do sistema |

@@ -40,16 +40,22 @@ class SoundAndHapticFeedback implements CajuiFeedback {
     if (settings.hapticsEnabled) unawaited(vibrate());
   }
 
+  /// O toque tem o peso de tecla de teclado, e não o do tique de rolagem.
+  ///
+  /// Era `selectionClick`, que no Android é o tique quase imperceptível de
+  /// passar por uma opção numa roda. No aparelho, tocar um botão não se
+  /// sentia. `lightImpact` é o mesmo pulso curto e seco que o teclado do
+  /// telefone dá a cada tecla — presente sem ser um susto.
   @override
   void tap() {
     _sound(CajuiSound.tap);
-    _haptic(HapticFeedback.selectionClick);
+    _haptic(HapticFeedback.lightImpact);
   }
 
   @override
   void toggle({required bool on}) {
     _sound(on ? CajuiSound.toggleOn : CajuiSound.toggleOff);
-    _haptic(HapticFeedback.selectionClick);
+    _haptic(HapticFeedback.lightImpact);
   }
 
   @override
