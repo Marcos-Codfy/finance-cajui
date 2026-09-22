@@ -15,6 +15,7 @@ import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/web_codes.dart';
 import 'package:server/src/http/middlewares.dart';
 import 'package:server/src/http/rate_limiter.dart';
+import 'package:server/src/ledger/income_routes.dart';
 import 'package:server/src/ledger/ledger_routes.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
@@ -106,6 +107,11 @@ final class App {
   final DeviceRoutes _devices;
   final LedgerRoutes _ledger;
 
+  late final IncomeRoutes _income = IncomeRoutes(
+    store: _ledger.store,
+    state: _ledger.state,
+  );
+
   late final ReceiptRoutes _receipts = ReceiptRoutes(
     classifier: classifier,
     state: _ledger.state,
@@ -142,6 +148,7 @@ final class App {
       ..mount('/v1/devices', _devices.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1/assistant', _assistant.router.call)
+      ..mount('/v1', _income.router.call)
       ..mount('/v1', _ledger.router.call);
     return const Pipeline()
         .addMiddleware(Middlewares.requestRef())

@@ -37,6 +37,8 @@ final class AssistantRoutes {
     entries: state.entries,
     categories: state.categories,
     plan: state.plan,
+    received: state.receivedIn(clock.today().budgetMonth),
+    voucherBalance: state.voucherBalance,
   );
 
   /// O roteador, montado em `/v1/assistant`.

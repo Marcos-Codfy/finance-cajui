@@ -94,6 +94,36 @@ void main() {
       expect(sent, contains('"cents":30000'));
     });
 
+    test(
+      'BL-060 · o saldo do vale e a renda recebida entram como fato, e o '
+      'saldo não leva mês: ele passa inteiro para o seguinte (RN-121)',
+      () async {
+        final client = SequencedChatClient([_reply('Certo.')]);
+        final (server, token) = await _server(client);
+        await server.call(
+          'POST',
+          '/v1/income',
+          body: const {
+            'id': 'r1',
+            'sourceId': 'vale',
+            'tender': 'mealVoucher',
+            'amountCents': 50000,
+            'receivedOn': '2026-09-05',
+          },
+          token: token,
+        );
+
+        await _ask(server, token, 'Quanto ainda tenho de vale?');
+        final sent = client.calls.single.user;
+
+        // R$ 500,00 de crédito menos os R$ 30,00 que o mercado pagou no vale.
+        expect(sent, contains('Saldo do vale hoje'));
+        expect(sent, contains('"cents":47000'));
+        expect(sent, contains('"period":"acumulado"'));
+        expect(sent, contains('Renda recebida, no vale'));
+      },
+    );
+
     test('sem plano cadastrado o contexto não ganha número nenhum a mais: '
         'quem não planejou não paga token por isso', () async {
       final client = SequencedChatClient([_reply('Certo.')]);
