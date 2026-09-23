@@ -14,11 +14,7 @@ abstract final class CaptureDraft {
   static const maxDescriptionLength = 60;
 
   /// O rascunho de [capture], com os nomes e formas de pagamento de [book].
-  static EntryDraft of(
-    Capture capture, {
-    required LedgerBook book,
-    required LocalDate today,
-  }) {
+  static EntryDraft of(Capture capture, {required LedgerBook book}) {
     final proposal = capture.proposal;
     return EntryDraft(
       captureId: capture.source.id,
@@ -26,7 +22,11 @@ abstract final class CaptureDraft {
       description: _short(proposal.displayDescription ?? ''),
       category: _categoryOf(book, proposal.category.value),
       method: _methodOf(book, proposal.paymentKind.value),
-      occurredOn: proposal.occurredOn.value ?? today,
+      // Data não lida fica **vazia**, e a tela oferece hoje, ontem e outro
+      // dia sem marcar nenhum (RN-748). Antes vinha "hoje" já escolhido,
+      // e um comprovante cortado acima da data gravava o dia errado sem
+      // ninguém notar.
+      occurredOn: proposal.occurredOn.value,
     );
   }
 

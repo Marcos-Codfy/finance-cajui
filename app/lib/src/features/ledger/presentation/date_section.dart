@@ -19,8 +19,10 @@ class DateSection extends StatelessWidget {
     super.key,
   });
 
-  /// O dia escolhido.
-  final LocalDate selected;
+  /// O dia escolhido; `null` quando ainda não houve escolha e a leitura
+  /// do comprovante não trouxe data (RN-748). Aí **nenhuma** opção sai
+  /// marcada: "hoje" pré-selecionado grava a data errada em silêncio.
+  final LocalDate? selected;
 
   /// O dia de hoje.
   final LocalDate today;
@@ -32,7 +34,8 @@ class DateSection extends StatelessWidget {
   /// maior fica ruim de rolar.
   static const _daysBack = 60;
 
-  bool get _isOtherDay => selected != today && selected != today.addDays(-1);
+  bool get _isOtherDay =>
+      selected != null && selected != today && selected != today.addDays(-1);
 
   Future<void> _pickOther(BuildContext context) async {
     final picked = await OptionPickerPage.open<LocalDate>(
@@ -65,7 +68,7 @@ class DateSection extends StatelessWidget {
             _chip('Hoje', today),
             _chip('Ontem', today.addDays(-1)),
             CajuiChip(
-              label: _isOtherDay ? DateLabels.short(selected) : 'Outro dia',
+              label: _isOtherDay ? DateLabels.short(selected!) : 'Outro dia',
               selected: _isOtherDay,
               onSelected: (_) => _pickOther(context),
             ),

@@ -46,11 +46,7 @@ class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
     // Montado uma vez só: se o rascunho inicial mudasse a cada reconstrução
     // da tela, o formulário recomeçaria e apagaria o que a pessoa corrigiu.
     final today = ref.read(clockProvider).today();
-    final draft = _draft ??= CaptureDraft.of(
-      widget.capture,
-      book: book,
-      today: today,
-    );
+    final draft = _draft ??= CaptureDraft.of(widget.capture, book: book);
     return ProviderScope(
       overrides: [initialDraftProvider.overrideWithValue(draft)],
       child: EntryFormPage(

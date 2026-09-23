@@ -56,7 +56,9 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       origin: origin,
       description: draft.description.trim(),
       amount: Money.fromCents(draft.amountCents),
-      occurredOn: draft.occurredOn,
+      // `isComplete` já garantiu os dois: o rascunho não chega aqui sem
+      // data nem sem categoria.
+      occurredOn: draft.occurredOn!,
       category: draft.category!,
       paymentLines: draft.lines,
       today: ref.read(clockProvider).today(),
@@ -142,7 +144,7 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     if (card == null || draft.installmentCount < 2) return null;
     return InstallmentPlan.forPurchase(
       card: card,
-      purchasedOn: draft.occurredOn,
+      purchasedOn: draft.occurredOn!,
       principal: Money.fromCents(draft.amountCents),
       count: draft.installmentCount,
     );

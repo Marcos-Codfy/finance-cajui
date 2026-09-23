@@ -39,7 +39,6 @@ void main() {
     final draft = CaptureDraft.of(
       ready().capture,
       book: book,
-      today: testToday,
     ).copyWith(category: book.categoryOf(categoryId));
     final entry = (await container.read(ledgerProvider.notifier).record(draft))
         .valueOrNull!;
@@ -69,7 +68,6 @@ void main() {
     final draft = CaptureDraft.of(
       ready().capture,
       book: DefaultCatalog.emptyBook,
-      today: testToday,
     );
 
     expect(proposal.amount.value, const Money.fromCents(600));
