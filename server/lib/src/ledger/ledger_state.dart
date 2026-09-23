@@ -48,11 +48,18 @@ final class LedgerState {
   /// visão (RN-995), mas não some do registro.
   static const entryCancelled = 'entry.cancelled';
 
+  /// O tipo do evento de **estorno**: dinheiro de uma compra que voltou.
+  ///
+  /// Sem ele o servidor contava o gasto inteiro depois de uma devolução, e
+  /// o assistente respondia com um número que o aparelho já sabia errado.
+  static const entryReversed = 'entry.reversed';
+
   final Map<String, Category> _categories = {};
   final Map<String, CreditCard> _cards = {};
   final List<Entry> _entries = [];
   final Map<String, IncomeReceipt> _receipts = {};
   final Map<String, Map<String, Object?>> _adjustments = {};
+  final Map<String, Reversal> _reversals = {};
   MonthSetup _plan = MonthSetup.empty;
 
   /// As categorias, por identificador.
@@ -66,6 +73,9 @@ final class LedgerState {
 
   /// O plano do mês como o aparelho o cadastrou.
   MonthSetup get plan => _plan;
+
+  /// Os estornos, por identificador.
+  Map<String, Reversal> get reversals => Map.unmodifiable(_reversals);
 
   /// Os recebimentos, por identificador.
   Map<String, IncomeReceipt> get receipts => Map.unmodifiable(_receipts);
@@ -123,6 +133,13 @@ final class LedgerState {
         _receipts[receipt.id] = receipt;
       case voucherAdjusted:
         _adjustments['${event.payload['id']}'] = event.payload;
+      case entryReversed:
+        // O estorno já foi aceito quando aconteceu; reaplicá-lo não pode
+        // falhar. Lançamento que sumiu da projeção leva o estorno junto.
+        if (entryOf('${event.payload['entryId']}') case final entry?) {
+          final reversal = tryReverse(event.payload, entry).valueOrNull;
+          if (reversal != null) _reversals[reversal.id] = reversal;
+        }
       case entryCreated:
         _entries.add(_replayed(event));
       case entryRevised:
@@ -176,6 +193,20 @@ final class LedgerState {
       cardOf: (id) => _cards[id],
     );
   }
+
+  /// O lançamento [id], ou `null` quando o servidor não o conhece.
+  Entry? entryOf(String id) =>
+      _entries.where((entry) => entry.id == id).firstOrNull;
+
+  /// Aplica as regras do domínio ao estorno descrito por [payload], sobre o
+  /// lançamento [entry]. O servidor confere de novo o que o app já conferiu
+  /// (T-05): o estorno não pode passar do que resta na linha (RN-210).
+  Result<Reversal> tryReverse(Map<String, Object?> payload, Entry entry) =>
+      ReversalCodec.decode(
+        payload,
+        entry: entry,
+        previous: _reversals.values.where((r) => r.entryId == entry.id),
+      );
 
   /// A mesma leitura de data do contrato; fica aqui para as rotas que
   /// recebem data fora de um lançamento.

@@ -124,6 +124,35 @@ void main() {
       },
     );
 
+    test('RN-209 · depois de uma devolução, o contexto para de contar o '
+        'gasto cheio', () async {
+      final client = SequencedChatClient([_reply('Certo.')]);
+      final (server, token) = await _server(client);
+      // O mercado de R$ 86,00 teve R$ 56,00 devolvidos pelo Pix.
+      await server.call(
+        'POST',
+        '/v1/entries/e1/reversals',
+        body: const {
+          'id': 'r1',
+          'entryId': 'e1',
+          'paymentMethodId': 'pix',
+          'amountCents': 5600,
+          'occurredOn': '2026-09-20',
+        },
+        token: token,
+      );
+
+      await _ask(server, token, 'Quanto gastei?');
+      final sent = client.calls.single.user;
+
+      expect(sent, isNot(contains('"cents":5600')));
+      expect(
+        sent,
+        contains('"cents":3000'),
+        reason: 'o vale não foi devolvido',
+      );
+    });
+
     test('sem plano cadastrado o contexto não ganha número nenhum a mais: '
         'quem não planejou não paga token por isso', () async {
       final client = SequencedChatClient([_reply('Certo.')]);

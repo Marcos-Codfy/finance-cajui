@@ -63,5 +63,13 @@ final class NoLedgerUplink implements LedgerUplink {
       ErrorCode.auth03;
 
   @override
+  Future<(Set<String>, ErrorCode?)> remoteReversals() async =>
+      (const <String>{}, ErrorCode.auth03);
+
+  @override
+  Future<ErrorCode?> sendReversal(Map<String, Object?> reversal) async =>
+      ErrorCode.auth03;
+
+  @override
   Future<ErrorCode?> cancelEntry(String id) async => ErrorCode.auth03;
 }

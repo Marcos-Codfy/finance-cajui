@@ -150,6 +150,26 @@ final class CajuiLedgerApi implements LedgerUplink {
   }
 
   @override
+  Future<(Set<String>, ErrorCode?)> remoteReversals() async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', '/v1/reversals', token: token),
+    );
+    return (_idsOf(outcome.body?['reversals']), outcome.failure?.code);
+  }
+
+  @override
+  Future<ErrorCode?> sendReversal(Map<String, Object?> reversal) async {
+    final outcome = await _api.authenticated(
+      (token) => _api.post(
+        '/v1/entries/${reversal['entryId']}/reversals',
+        reversal,
+        token: token,
+      ),
+    );
+    return outcome.failure?.code;
+  }
+
+  @override
   Future<ErrorCode?> cancelEntry(String id) async {
     final outcome = await _api.authenticated(
       (token) => _api.send('DELETE', '/v1/entries/$id', token: token),

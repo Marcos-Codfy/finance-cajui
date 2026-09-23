@@ -26,6 +26,7 @@ final class RemoteLedgerJournal implements LedgerJournal {
       (token) => _api.send('GET', '/v1/entries', token: token),
     );
     final lista = outcome.body?['entries'] as List<Object?>? ?? const [];
+    final entries = [for (final item in lista) ?_entryOf(item)];
     return [
       // O plano e o que entrou vêm antes dos lançamentos porque são o que dá
       // sentido a eles: sem o plano a consulta mostra o que saiu mas não
@@ -33,9 +34,35 @@ final class RemoteLedgerJournal implements LedgerJournal {
       // — a projeção recusa pagar vale que não entrou.
       ...await _plan(),
       ...await _income(),
-      for (final item in lista)
-        if (_entryOf(item) case final entry?) EntryRecorded(entry),
+      for (final entry in entries) EntryRecorded(entry),
+      // O estorno vem **depois** dos lançamentos, e precisa do original em
+      // mãos: é dele que sai o que ainda resta a estornar (RN-210).
+      ...await _reversals(entries),
     ];
+  }
+
+  /// Os estornos que o servidor tem. Sem eles a consulta mostraria o gasto
+  /// cheio de uma compra já devolvida (RN-209).
+  Future<List<LedgerEvent>> _reversals(List<Entry> entries) async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', '/v1/reversals', token: token),
+    );
+    final lista = outcome.body?['reversals'] as List<Object?>? ?? const [];
+    final porId = {for (final entry in entries) entry.id: entry};
+    final feitos = <Reversal>[];
+    for (final item in lista) {
+      if (item is! Map) continue;
+      final payload = item.cast<String, Object?>();
+      final entry = porId['${payload['entryId']}'];
+      if (entry == null) continue;
+      final reversal = ReversalCodec.decode(
+        payload,
+        entry: entry,
+        previous: feitos.where((r) => r.entryId == entry.id),
+      ).valueOrNull;
+      if (reversal != null) feitos.add(reversal);
+    }
+    return [for (final reversal in feitos) EntryReversed(reversal)];
   }
 
   /// O que entrou, como o servidor tem: os recebimentos e os acertos de

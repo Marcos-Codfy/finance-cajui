@@ -35,7 +35,28 @@ final class LedgerSync {
     // O plano e o que entrou vão por último e não interrompem nada: sem eles
     // o assistente ainda responde quanto saiu — só não responde quanto ainda
     // cabe nem quanto sobrou de vale.
-    return (sent, refused ?? await _sendPlan(book) ?? await _sendIncome(book));
+    return (
+      sent,
+      refused ??
+          await _sendReversals(book) ??
+          await _sendPlan(book) ??
+          await _sendIncome(book),
+    );
+  }
+
+  /// Os estornos (RN-209). Vão **depois** dos lançamentos, e não antes: o
+  /// servidor recusa estorno de lançamento que ele ainda não conhece — e
+  /// faz bem, porque é do lançamento que sai o que resta a estornar.
+  Future<ErrorCode?> _sendReversals(LedgerBook book) async {
+    if (book.reversals.isEmpty) return null;
+    final (known, failure) = await uplink.remoteReversals();
+    if (failure != null) return failure;
+    for (final reversal in book.reversals) {
+      if (known.contains(reversal.id)) continue;
+      final error = await uplink.sendReversal(ReversalCodec.encode(reversal));
+      if (error != null) return error;
+    }
+    return null;
   }
 
   /// O que entrou: recebimentos e acertos de saldo do vale (RN-132, RN-123).
