@@ -1,5 +1,6 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
+import 'package:cajui/src/core/errors/error_text.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -10,6 +11,7 @@ import 'package:cajui/src/features/ledger/presentation/month_spending_card.dart'
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/pending_captures_card.dart';
 import 'package:design_system/design_system.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,7 +30,7 @@ class EntriesPage extends ConsumerWidget {
       footer: _footer(context, ref, state),
       children: switch (state) {
         EntriesLoading() => _loading,
-        EntriesFailed() => [_failure(ref)],
+        EntriesFailed(:final code) => [_failure(ref, code)],
         EntriesReady() => _ready(state),
       },
     );
@@ -82,15 +84,22 @@ class EntriesPage extends ConsumerWidget {
     CajuiSkeleton(height: 56),
   ];
 
-  Widget _failure(WidgetRef ref) {
+  /// Por que o livro não abriu, com o texto do código certo: cadeia
+  /// quebrada e falta de espaço pedem saídas diferentes de "reabrir".
+  ///
+  /// Só o `E-APP-01` tem as duas saídas de pé — reabrir e copiar o código.
+  /// As do `E-DATA-01` ("Ver o roteiro de restauração") e do `E-STORAGE-01`
+  /// ("Abrir armazenamento") saem do app e ainda não existem: aparecem sem
+  /// botão, porque um botão que faz outra coisa é pior do que nenhum
+  /// (BL-033).
+  Widget _failure(WidgetRef ref, ErrorCode code) {
+    final text = ErrorTexts.of(code).fill(const {'fila': ''});
+    final generic = code == ErrorCode.app01;
     return ErrorNotice(
-      error: (
-        code: ErrorCode.app01,
-        text: ErrorTexts.of(ErrorCode.app01).fill(const {'fila': ''}),
-      ),
-      // "Reabrir" aqui é abrir o livro de novo; copiar o código chega com a
-      // tela de diagnóstico.
-      onAction: (_) => ref.invalidate(ledgerProvider),
+      error: (code: code, text: generic ? text : ErrorText(text.message)),
+      onAction: (index) => index == 0
+          ? ref.invalidate(ledgerProvider)
+          : Clipboard.setData(ClipboardData(text: code.code)),
     );
   }
 

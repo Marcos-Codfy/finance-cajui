@@ -7,6 +7,7 @@ import 'package:persistence/src/log_line.dart';
 import 'package:persistence/src/log_reader.dart';
 import 'package:persistence/src/record_cipher.dart';
 import 'package:persistence/src/record_tampered_exception.dart';
+import 'package:persistence/src/storage_full_exception.dart';
 import 'package:persistence/src/stored_event.dart';
 
 /// O registro de eventos em arquivos JSON Lines, um por ano, cifrado por
@@ -137,15 +138,28 @@ final class FileEventStore implements EventStore {
   }
 
   /// `append` + `fsync`: só depois disto o evento existe.
+  ///
+  /// Ficar sem espaço vira [StorageFullException], e não a
+  /// `FileSystemException` crua: quem lê isto lá em cima é a tela, e sem
+  /// espaço pede uma saída — liberar espaço — diferente da de cadeia
+  /// quebrada. Distinguir pela mensagem do sistema seria frágil, porque ela
+  /// muda com o idioma e com a plataforma; o número não muda.
   Future<void> _appendLine(File file, String line) async {
     final handle = await file.open(mode: FileMode.append);
     try {
       await handle.writeString('$line\n');
       await handle.flush();
+    } on FileSystemException catch (failure) {
+      if (_isOutOfSpace(failure)) throw StorageFullException(file.path);
+      rethrow;
     } finally {
       await handle.close();
     }
   }
+
+  /// `ENOSPC` do POSIX é 28; `ERROR_DISK_FULL` do Windows é 112.
+  static bool _isOutOfSpace(FileSystemException failure) =>
+      const {28, 112}.contains(failure.osError?.errorCode);
 
   @override
   Future<void> close() => _queue;
