@@ -30,7 +30,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final list = outcome.body?['categories'] as List<Object?>? ?? const [];
     return (
       {for (final item in list) '${(item! as Map<String, Object?>)['id']}'},
-      outcome.error,
+      outcome.failure?.code,
     );
   }
 
@@ -42,7 +42,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final list = outcome.body?['cards'] as List<Object?>? ?? const [];
     return (
       {for (final item in list) '${(item! as Map<String, Object?>)['id']}'},
-      outcome.error,
+      outcome.failure?.code,
     );
   }
 
@@ -51,7 +51,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.post('/v1/cards', card, token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -64,7 +64,7 @@ final class CajuiLedgerApi implements LedgerUplink {
         receipts: _idsOf(outcome.body?['receipts']),
         adjustments: _idsOf(outcome.body?['voucherAdjustments']),
       ),
-      outcome.error,
+      outcome.failure?.code,
     );
   }
 
@@ -78,7 +78,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.post('/v1/income', receipt, token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -88,7 +88,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.post('/v1/voucher/adjustments', adjustment, token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -96,7 +96,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.post('/v1/plan', plan, token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -105,7 +105,7 @@ final class CajuiLedgerApi implements LedgerUplink {
       (token) => _api.send('GET', '/v1/entries', token: token),
     );
     final list = outcome.body?['entries'] as List<Object?>? ?? const [];
-    return ({for (final item in list) ..._signed(item)}, outcome.error);
+    return ({for (final item in list) ..._signed(item)}, outcome.failure?.code);
   }
 
   Map<String, String> _signed(Object? item) {
@@ -125,7 +125,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.post('/v1/categories', category, token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -133,7 +133,7 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.post('/v1/entries', entry.toJson(), token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -146,7 +146,7 @@ final class CajuiLedgerApi implements LedgerUplink {
         body: entry.toJson(),
       ),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -154,6 +154,6 @@ final class CajuiLedgerApi implements LedgerUplink {
     final outcome = await _api.authenticated(
       (token) => _api.send('DELETE', '/v1/entries/$id', token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 }
