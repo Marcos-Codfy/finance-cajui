@@ -19,6 +19,7 @@ final class EntryDraft {
     this.secondCents = 0,
     this.isSplit = false,
     this.installments = 1,
+    this.installmentAmountCents,
     this.captureId,
     this.correctionOf,
   });
@@ -85,6 +86,20 @@ final class EntryDraft {
   /// crédito: [installmentCount] é o que de fato vai para o domínio.
   final int installments;
 
+  /// O valor de **cada parcela**, quando a compra tem juros; `null` quando
+  /// as parcelas são o total dividido em partes iguais (RN-314).
+  ///
+  /// É limpo sozinho a cada troca de valor ou de número de parcelas: juros
+  /// de uma conta que não existe mais seria pior do que nenhum.
+  final int? installmentAmountCents;
+
+  /// Quanto de juros a compra tem, em centavos; zero quando não há.
+  int get interestCents {
+    final each = installmentAmountCents;
+    if (each == null || installmentCount < 2) return 0;
+    return each * installmentCount - amountCents;
+  }
+
   /// As parcelas que contam: mais de uma, só em compra paga inteira num
   /// cartão de crédito. Em qualquer outro caso a compra é à vista.
   int get installmentCount {
@@ -129,6 +144,18 @@ final class EntryDraft {
     ];
   }
 
+  /// O valor de parcela que sobrevive a uma troca.
+  ///
+  /// Trocar o valor da compra ou o número de parcelas invalida o que estava
+  /// lá: a parcela volta a ser o total dividido, e quem quiser juros digita
+  /// de novo. Juros de uma conta que não existe mais é pior do que nenhum.
+  int? _keptInstallment(int? amountCents, int? installments) {
+    final mexeu =
+        (amountCents != null && amountCents != this.amountCents) ||
+        (installments != null && installments != this.installments);
+    return mexeu ? null : installmentAmountCents;
+  }
+
   /// O mesmo rascunho com os campos dados trocados.
   ///
   /// Para **limpar** categoria ou forma de pagamento, use [without]: aqui,
@@ -144,9 +171,12 @@ final class EntryDraft {
     int? secondCents,
     bool? isSplit,
     int? installments,
+    int? installmentAmountCents,
   }) {
     return EntryDraft(
       installments: installments ?? this.installments,
+      installmentAmountCents:
+          installmentAmountCents ?? _keptInstallment(amountCents, installments),
       amountCents: amountCents ?? this.amountCents,
       description: description ?? this.description,
       category: category ?? this.category,
@@ -163,6 +193,7 @@ final class EntryDraft {
 
   /// O mesmo rascunho com a segunda forma de pagamento no lugar da primeira.
   EntryDraft get swapped => EntryDraft(
+    installmentAmountCents: installmentAmountCents,
     amountCents: amountCents,
     description: description,
     category: category,

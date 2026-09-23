@@ -15,6 +15,7 @@ class PaymentSection extends StatelessWidget {
     required this.onToggleSplit,
     required this.onLineCents,
     required this.onPickInstallments,
+    required this.onInstallmentAmount,
     this.lineError,
     super.key,
   });
@@ -41,6 +42,9 @@ class PaymentSection extends StatelessWidget {
 
   /// Pede a escolha do número de parcelas.
   final VoidCallback onPickInstallments;
+
+  /// Chamado com o valor de cada parcela, quando a compra tem juros.
+  final ValueChanged<int> onInstallmentAmount;
 
   /// O erro de campo a mostrar sob a linha que está zerada, se houver.
   final String? lineError;
@@ -102,6 +106,27 @@ class PaymentSection extends StatelessWidget {
                   'Cada parcela conta no mês em que a fatura vence',
         onPressed: onPickInstallments,
       ),
+      if (count > 1) ..._installmentAmount(count, total, each),
+    ];
+  }
+
+  /// O valor de cada parcela, para quando o cartão cobra **juros** — que é
+  /// o normal fora do "sem juros" (RN-314).
+  ///
+  /// Vem preenchido com o total dividido, que é o caso comum; mudar o valor
+  /// é o que diz ao app que há juros, e aí ele mostra quanto são. O total
+  /// da compra não muda: juros não são parte do que se comprou.
+  List<Widget> _installmentAmount(int count, Money total, Money each) {
+    final juros = draft.interestCents;
+    return [
+      const SizedBox(height: CajuiSpacing.md),
+      CajuiAmountField(
+        key: ValueKey(('parcela', revision, count, draft.amountCents)),
+        label: 'Valor de cada parcela',
+        initialCents: draft.installmentAmountCents ?? each.cents,
+        onChanged: onInstallmentAmount,
+      ),
+      if (juros > 0) _Interest(juros: juros, count: count, total: total),
     ];
   }
 
@@ -147,6 +172,31 @@ class PaymentSection extends StatelessWidget {
         draft.unassignedCents > 0
             ? 'Faltam $gap para fechar a conta.'
             : 'As duas formas passam $gap do valor da compra.',
+        style: theme.typography.caption.copyWith(
+          color: theme.colors.text.muted,
+        ),
+      ),
+    );
+  }
+}
+
+/// Quanto de juros a compra tem, dito em texto e ao lado do total — nunca
+/// só a parcela, que esconde o tamanho do compromisso (RN-313).
+class _Interest extends StatelessWidget {
+  const new({required this.juros, required this.count, required this.total});
+
+  final int juros;
+  final int count;
+  final Money total;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = CajuiTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: CajuiSpacing.xs),
+      child: Text(
+        'Juros: ${BrlFormatter.format(juros)} em ${count}x — o total da '
+        'compra continua ${BrlFormatter.format(total.cents)}',
         style: theme.typography.caption.copyWith(
           color: theme.colors.text.muted,
         ),
