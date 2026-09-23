@@ -1,4 +1,6 @@
+import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/entry.dart';
+import 'package:domain/src/money/money.dart';
 
 /// Reconhece um lançamento que **parece** repetido (RN-221): mesmo valor,
 /// mesma data e estabelecimento equivalente.
@@ -39,9 +41,47 @@ abstract final class PossibleDuplicate {
   /// [candidate] parece ser o mesmo que [existing].
   static bool matches(Entry candidate, Entry existing) =>
       candidate.id != existing.id &&
-      candidate.amount == existing.amount &&
-      candidate.occurredOn == existing.occurredOn &&
-      normalize(candidate.description) == normalize(existing.description);
+      _looksLike(
+        existing,
+        amount: candidate.amount,
+        occurredOn: candidate.occurredOn,
+        description: candidate.description,
+      );
+
+  /// O lançamento de [entries] que parece ser o mesmo que um de [amount],
+  /// [occurredOn] e [description]; `null` quando nenhum parece.
+  ///
+  /// Existe para o comprovante que ainda **não é** lançamento: na hora de
+  /// conferir uma captura não há um `Entry` para comparar, e era por isso
+  /// que a RN-221 vivia só no domínio, sem tela que a usasse.
+  static Entry? among(
+    Iterable<Entry> entries, {
+    required Money amount,
+    required LocalDate occurredOn,
+    required String description,
+  }) {
+    for (final entry in entries) {
+      if (_looksLike(
+        entry,
+        amount: amount,
+        occurredOn: occurredOn,
+        description: description,
+      )) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  static bool _looksLike(
+    Entry entry, {
+    required Money amount,
+    required LocalDate occurredOn,
+    required String description,
+  }) =>
+      entry.amount == amount &&
+      entry.occurredOn == occurredOn &&
+      normalize(entry.description) == normalize(description);
 
   /// O nome do estabelecimento sem o que varia de um comprovante para outro:
   /// caixa, acento, pontuação, espaço sobrando e sufixo de razão social.

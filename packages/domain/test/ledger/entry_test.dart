@@ -176,6 +176,29 @@ void main() {
       expect(PossibleDuplicate.matches(other(where: 'Açougue'), base), isFalse);
       expect(PossibleDuplicate.matches(base, base), isFalse);
     });
+    test('RN-221 · o comprovante que ainda não é lançamento acha o que já '
+        'existe, por valor, data e lugar', () {
+      final book = [
+        entry(cents: 850, lines: [pix(850)], description: 'PADARIA CENTRAL'),
+        entry(id: 'e2', cents: 2000, lines: [pix(2000)], description: 'Feira'),
+      ];
+
+      final achado = PossibleDuplicate.among(
+        book,
+        amount: const Money.fromCents(850),
+        occurredOn: book.first.occurredOn,
+        description: 'Padaria  Central Ltda.',
+      );
+      final nenhum = PossibleDuplicate.among(
+        book,
+        amount: const Money.fromCents(850),
+        occurredOn: book.first.occurredOn,
+        description: 'Açougue',
+      );
+
+      expect(achado?.id, book.first.id);
+      expect(nenhum, isNull);
+    });
   });
 
   group('ExceptionalSpending', () {

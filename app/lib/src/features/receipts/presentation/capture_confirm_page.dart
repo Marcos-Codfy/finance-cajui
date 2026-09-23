@@ -45,10 +45,11 @@ class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
     if (book == null) return const SizedBox.shrink();
     // Montado uma vez só: se o rascunho inicial mudasse a cada reconstrução
     // da tela, o formulário recomeçaria e apagaria o que a pessoa corrigiu.
+    final today = ref.read(clockProvider).today();
     final draft = _draft ??= CaptureDraft.of(
       widget.capture,
       book: book,
-      today: ref.read(clockProvider).today(),
+      today: today,
     );
     return ProviderScope(
       overrides: [initialDraftProvider.overrideWithValue(draft)],
@@ -57,8 +58,12 @@ class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
         // Voltar é o caminho seguro: guarda para depois, não perde nada.
         onBack: () => _capture.defer(widget.capture),
         onSaved: (entry) => _capture.confirmed(widget.capture, entry),
-        header: (context, edit) =>
-            CaptureHeader(capture: widget.capture, book: book, edit: edit),
+        header: (context, edit) => CaptureHeader(
+          capture: widget.capture,
+          book: book,
+          edit: edit,
+          today: today,
+        ),
         extraActions: _askingToDiscard ? [_discardQuestion()] : _actions(),
       ),
     );
