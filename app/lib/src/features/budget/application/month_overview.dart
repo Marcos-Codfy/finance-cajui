@@ -16,13 +16,7 @@ final class MonthOverview {
   factory of(LedgerBook book, LocalDate today) {
     final month = today.budgetMonth;
     final spent = book.spentIn(month);
-    final plan = book.setup.planFor(
-      month,
-      // O vale que o mês tem para gastar: o que resta mais o que já saiu.
-      voucherAvailable: book.voucher.balance + spent.mealVoucher,
-      installmentsDue: book.installmentsDueIn(month),
-      receivedCashIncome: book.cashIncomeIn(month),
-    );
+    final plan = _planOf(book, month, spent);
     final spending = MonthSpending.of(
       month,
       entries: book.entries,
@@ -32,6 +26,7 @@ final class MonthOverview {
     return MonthOverview._(
       today: today,
       plan: plan,
+      spent: spent,
       voucher: book.voucher,
       statementReserve: _reserveOf(book),
       hasCards: book.cards.isNotEmpty,
@@ -47,12 +42,26 @@ final class MonthOverview {
   const new _({
     required this.today,
     required this.plan,
+    required this.spent,
     required this.voucher,
     required this.statementReserve,
     required this.hasCards,
     required this.indicators,
     required this.week,
   });
+
+  /// O plano do mês, com o vale que ele tem para gastar: o que resta mais o
+  /// que já saiu.
+  static MonthPlan _planOf(
+    LedgerBook book,
+    BudgetMonth month,
+    TenderAmounts spent,
+  ) => book.setup.planFor(
+    month,
+    voucherAvailable: book.voucher.balance + spent.mealVoucher,
+    installmentsDue: book.installmentsDueIn(month),
+    receivedCashIncome: book.cashIncomeIn(month),
+  );
 
   /// A reserva de todos os cartões, somada. A conta é do domínio, cartão a
   /// cartão; aqui só se junta.
@@ -73,6 +82,15 @@ final class MonthOverview {
 
   /// O plano do mês.
   final MonthPlan plan;
+
+  /// O que já saiu no mês, nas duas moedas.
+  final TenderAmounts spent;
+
+  /// O **custo de vida por dia realizado** (RN-651): o que já saiu
+  /// dividido pelos dias decorridos, contando hoje. Ao lado do planejado,
+  /// é o que diz se o mês está indo como devia.
+  TenderAmounts get realizedDailyCost =>
+      indicators.realizedDailyCost(spent, today: today);
 
   /// A conta do vale.
   final VoucherAccount voucher;

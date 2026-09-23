@@ -1,5 +1,6 @@
 import 'package:domain/src/budget/month_plan.dart';
 import 'package:domain/src/budget/planned_variable.dart';
+import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/indicators/month_spending.dart';
 import 'package:domain/src/indicators/percent.dart';
 import 'package:domain/src/money/money.dart';
@@ -68,6 +69,35 @@ final class MonthIndicators {
       cash: Money.ratio(_committed + plan.variableCash, 1, days),
       mealVoucher: Money.ratio(voucher, 1, days),
     );
+  }
+
+  /// O **custo de vida por dia realizado**, por moeda (RN-651): o que já
+  /// saiu no mês, dividido pelos dias decorridos, **contando hoje**.
+  ///
+  /// [spent] vem do livro, nas duas moedas, e não de [spending]: o custo por
+  /// dia conta o mês inteiro — fixo, dívida e fora do padrão também saíram —
+  /// enquanto [spending] guarda só a parte em dinheiro dos variáveis de
+  /// rotina.
+  ///
+  /// É média do período, nunca o gasto de hoje (RN-652). Mês ainda por vir
+  /// não tem dia decorrido, e o custo é zero em vez de uma divisão por zero.
+  TenderAmounts realizedDailyCost(
+    TenderAmounts spent, {
+    required LocalDate today,
+  }) {
+    final days = _elapsedDays(today);
+    if (days == 0) return TenderAmounts.zero;
+    return TenderAmounts(
+      cash: Money.ratio(spent.cash, 1, days),
+      mealVoucher: Money.ratio(spent.mealVoucher, 1, days),
+    );
+  }
+
+  /// Quantos dias do mês já passaram em [today], contando hoje. Mês fechado
+  /// conta inteiro; mês que ainda nem começou conta zero.
+  int _elapsedDays(LocalDate today) {
+    if (plan.month.contains(today)) return today.day;
+    return today.budgetMonth.isAfter(plan.month) ? plan.month.length : 0;
   }
 
   /// O **ajuste necessário**: `A = máx(0, −resultado projetado)` (RN-660).
