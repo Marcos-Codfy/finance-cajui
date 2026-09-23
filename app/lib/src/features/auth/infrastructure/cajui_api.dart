@@ -11,8 +11,13 @@ import 'package:cajui/src/features/auth/application/known_device.dart';
 import 'package:cajui/src/features/auth/application/server_session.dart';
 import 'package:http/http.dart';
 
-/// O que o servidor respondeu: o corpo em JSON, ou o código do catálogo.
-typedef ApiOutcome = ({Map<String, Object?>? body, ErrorCode? error});
+/// O que o servidor respondeu: o corpo em JSON, ou a **falha inteira**.
+///
+/// Leva o `ApiError`, e não só o código, porque o corpo de erro traz mais do
+/// que o código: o `retryAfterSeconds` das classes *limite* e *ia*, que a
+/// tela precisa para dizer quanto esperar. Antes o número se perdia aqui e a
+/// tela mostrava 60 segundos fixos — um número inventado (BL-048).
+typedef ApiOutcome = ({Map<String, Object?>? body, ApiError? failure});
 
 /// O caminho até a API do Cajui, com a sessão do aparelho por baixo.
 ///
@@ -56,6 +61,10 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   /// Quanto tempo se espera pelo servidor antes de desistir.
   static const timeout = Duration(seconds: 20);
 
+  /// Uma falha que nasceu **no aparelho** — sem rede, Keystore recusando —
+  /// e por isso sem `ref`: não há ocorrência no registro do servidor.
+  static ApiError _local(ErrorCode code) => ApiError(code: code, ref: '');
+
   /// Se há sessão aberta agora.
   bool get isOpen => _session?.isValidAt(_now()) ?? false;
 
@@ -72,7 +81,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
         'publicKey': base64Encode(publicKey),
       });
     });
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   @override
@@ -89,7 +98,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
         null,
       );
     }
-    return (const <KnownDevice>[], outcome.error);
+    return (const <KnownDevice>[], outcome.failure?.code);
   }
 
   KnownDevice _device(Map<String, Object?> json) => KnownDevice(
@@ -118,7 +127,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
         null,
       );
     }
-    return (null, outcome.error);
+    return (null, outcome.failure?.code);
   }
 
   @override
@@ -126,7 +135,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     final outcome = await authenticated(
       (token) => _send('DELETE', '/v1/devices/$id', token: token),
     );
-    return outcome.error;
+    return outcome.failure?.code;
   }
 
   /// Faz [send] com a sessão aberta, abrindo-a se precisar. Uma única
@@ -135,12 +144,12 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     Future<ApiOutcome> Function(String token) send,
   ) async {
     final opened = await _open();
-    if (opened.error != null) return opened;
+    if (opened.failure != null) return opened;
     final outcome = await send(_session!.token);
-    if (outcome.error != ErrorCode.auth03) return outcome;
+    if (outcome.failure?.code != ErrorCode.auth03) return outcome;
     _session = null;
     final again = await _open();
-    if (again.error != null) return again;
+    if (again.failure != null) return again;
     return await send(_session!.token);
   }
 
@@ -158,15 +167,15 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
         ),
       );
     }
-    return opened.error;
+    return opened.failure?.code;
   }
 
   /// A sessão em vigor, ou uma nova, provada pela chave do aparelho.
   Future<ApiOutcome> _open() async {
-    if (isOpen) return (body: null, error: null);
+    if (isOpen) return (body: null, failure: null);
     // Sem chave — a web —, não há o que assinar: a sessão só entra pelo
     // código do celular, e enquanto ela não veio, o servidor é quem recusa.
-    if (!_keys.exists) return (body: null, error: ErrorCode.auth03);
+    if (!_keys.exists) return (body: null, failure: _local(ErrorCode.auth03));
     return await _withKey(() async {
       final publicKey = await _keys.publicKey();
       final challenge = await _post('/v1/auth/challenge', {
@@ -188,7 +197,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     try {
       return await body();
     } on DeviceKeyFailure catch (failure) {
-      return (body: null, error: failure.code);
+      return (body: null, failure: _local(failure.code));
     }
   }
 
@@ -197,7 +206,9 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     final signature = await _keys.sign(Uint8List.fromList(nonce));
     // Caixa de diálogo fechada sem confirmar: não há o que mandar, e o
     // servidor não precisa saber que alguém desistiu.
-    if (signature.isEmpty) return (body: null, error: ErrorCode.auth02);
+    if (signature.isEmpty) {
+      return (body: null, failure: _local(ErrorCode.auth02));
+    }
     final opened = await _post('/v1/auth/session', {
       'challengeId': challenge['challengeId'],
       'signature': base64Encode(signature),
@@ -251,7 +262,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
       );
       return _read(response.statusCode, utf8.decode(response.bodyBytes));
     } on Object {
-      return (body: null, error: ErrorCode.net01);
+      return (body: null, failure: _local(ErrorCode.net01));
     }
   }
 
@@ -263,9 +274,9 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     final decoded = text.isEmpty ? null : jsonDecode(text);
     final json = decoded is Map ? decoded.cast<String, Object?>() : null;
     if (status >= 200 && status < 300) {
-      return (body: json ?? const <String, Object?>{}, error: null);
+      return (body: json ?? const <String, Object?>{}, failure: null);
     }
-    if (json == null) return (body: null, error: ErrorCode.srv01);
-    return (body: null, error: ApiError.fromJson(json).code);
+    if (json == null) return (body: null, failure: _local(ErrorCode.srv01));
+    return (body: null, failure: ApiError.fromJson(json));
   }
 }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
+import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/auth/application/device_key_failure.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/application/server_session.dart';
@@ -163,6 +164,21 @@ void main() {
         expect((reply as AssistantFailed).code, ErrorCode.auth01);
       },
     );
+
+    test('BL-048 · o tempo de espera vem do servidor, e não de um número '
+        'inventado na tela', () async {
+      server.refuseWith(ErrorCode.ai02, status: 503, retryAfterSeconds: 25);
+
+      final reply = await HttpAssistantGateway(api).ask('oi');
+      final texto = AssistantReplyView.textOf(
+        (reply as AssistantFailed).code,
+        retryAfterSeconds: reply.retryAfterSeconds,
+      );
+
+      expect(reply.retryAfterSeconds, 25);
+      expect(texto.message, contains('25'));
+      expect(texto.message, isNot(contains('60')));
+    });
 
     test('sem servidor, a conversa falha com E-NET-01', () async {
       await server.stop();

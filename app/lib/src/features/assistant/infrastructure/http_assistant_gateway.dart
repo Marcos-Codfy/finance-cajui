@@ -28,9 +28,12 @@ final class HttpAssistantGateway implements AssistantGateway {
     if (outcome.body case final answer?) return _answer(answer);
     // Aparelho ainda desconhecido do servidor: não é falha, é cadastro que
     // falta — e a tela oferece o código em vez de um erro seco.
-    final code = outcome.error ?? ErrorCode.app01;
+    final failure = outcome.failure;
+    final code = failure?.code ?? ErrorCode.app01;
     if (code == ErrorCode.auth03) return const AssistantNotPaired();
-    return AssistantFailed(code);
+    // O tempo de espera vem do servidor, que é quem sabe quanto falta do
+    // limite. Antes ele se perdia aqui, e a tela chutava 60 segundos.
+    return AssistantFailed(code, retryAfterSeconds: failure?.retryAfterSeconds);
   }
 
   AssistantReply _answer(Map<String, Object?> json) => AssistantAnswered(

@@ -16,6 +16,8 @@ dependencies:
   audioplayers: ^6.8.1
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

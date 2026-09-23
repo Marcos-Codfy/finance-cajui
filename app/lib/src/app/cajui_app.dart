@@ -22,6 +22,9 @@ class CajuiApp extends ConsumerWidget {
       color: CajuiThemeData.light().colors.surface.base,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: CajuiLocalizations.delegates,
+      // Um idioma só, e sempre ele: o app não muda de língua com o aparelho.
+      supportedLocales: CajuiLocalizations.locales,
+      locale: CajuiLocalizations.locales.first,
       pageRouteBuilder: <T>(settings, builder) =>
           CajuiPageRoute<T>(settings: settings, builder: builder),
       builder: (context, child) => CajuiAppSurface(

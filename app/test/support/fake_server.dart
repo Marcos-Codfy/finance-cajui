@@ -37,6 +37,7 @@ final class FakeServer {
   ErrorCode? _refusal;
   int _refusalStatus = 401;
   bool _onlyOnce = false;
+  int? _retryAfterSeconds;
 
   /// O corpo que o assistente devolve. O teste troca à vontade.
   Map<String, Object?> answer = const {
@@ -59,11 +60,13 @@ final class FakeServer {
   /// Caminho que não estiver aqui continua caindo em [answer].
   final Map<String, Map<String, Object?>> bodies = {};
 
-  /// Passa a recusar tudo com [code].
-  void refuseWith(ErrorCode code, {int status = 401}) {
+  /// Passa a recusar tudo com [code]. [retryAfterSeconds] é o tempo de
+  /// espera que as classes *limite* e *ia* mandam no corpo do erro.
+  void refuseWith(ErrorCode code, {int status = 401, int? retryAfterSeconds}) {
     _refusal = code;
     _refusalStatus = status;
     _onlyOnce = false;
+    _retryAfterSeconds = retryAfterSeconds;
   }
 
   /// Recusa **a próxima** com [code], e depois volta ao normal.
@@ -104,7 +107,13 @@ final class FakeServer {
       // passou a confirmar a suposição em vez do servidor: no aparelho,
       // toda recusa chegava como falha sem nome.
       request.response.write(
-        jsonEncode(ApiError(code: refusal, ref: 'teste').toJson()),
+        jsonEncode(
+          ApiError(
+            code: refusal,
+            ref: 'teste',
+            retryAfterSeconds: _retryAfterSeconds,
+          ).toJson(),
+        ),
       );
       return;
     }
