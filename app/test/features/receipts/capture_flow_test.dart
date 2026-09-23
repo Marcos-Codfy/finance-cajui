@@ -22,6 +22,9 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
+/// Um comprovante com valor e lugar, e **sem data nenhuma**.
+const semData = 'Padaria Central\nValor: R\$ 8,50\nPix';
+
 void main() {
   testWidgets('UC-CAPT-01 · Pix compartilhado: a conferência abre por cima do '
       'app, já preenchida, e só lança com o toque da pessoa', (tester) async {
@@ -101,6 +104,42 @@ void main() {
       findsOneWidget,
       reason: 'RN-221: é aviso, e lançar continua possível',
     );
+  });
+
+  testWidgets('RN-748 · comprovante sem data legível não vem com "hoje" '
+      'marcado, e não deixa lançar sem escolha', (tester) async {
+    tester.view.physicalSize = const Size(390, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final inbox = FakeInbox();
+    final journal = MemoryLedgerJournal();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(inbox: inbox, journal: journal),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+
+    // Um texto com valor e lugar, e sem data nenhuma.
+    inbox.share(const [SharedText(id: 'c1', text: semData)]);
+    await _settle(tester);
+    await tester.tap(find.text('Categoria'));
+    await _settle(tester);
+    await tester.tap(find.text('Restaurante e lanche'));
+    await _settle(tester);
+
+    // Nada gravado: a data é campo em dúvida, e sem ela não se lança.
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+    expect(await journal.readAll(), isEmpty);
+
+    await tester.tap(find.text('Hoje'));
+    await _settle(tester);
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+
+    expect(await journal.readAll(), hasLength(1));
   });
 
   test('T-07 · o texto do comprovante guardado para depois não fica em claro '

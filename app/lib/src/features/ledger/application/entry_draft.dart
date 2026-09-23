@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 final class EntryDraft {
   /// Cria o rascunho de uma compra feita em [occurredOn].
   const new({
-    required this.occurredOn,
+    this.occurredOn,
     this.amountCents = 0,
     this.description = '',
     this.category,
@@ -56,8 +56,10 @@ final class EntryDraft {
   /// A categoria escolhida.
   final Category? category;
 
-  /// A data da compra.
-  final LocalDate occurredOn;
+  /// A data da compra; `null` quando a leitura de um comprovante não a
+  /// achou e ninguém escolheu ainda (RN-748). Campo em dúvida fica vazio:
+  /// oferecer "hoje" já marcado grava a data errada sem ninguém notar.
+  final LocalDate? occurredOn;
 
   /// A forma de pagamento — a primeira, quando o pagamento é dividido.
   final PaymentMethod? method;
@@ -109,6 +111,7 @@ final class EntryDraft {
   bool get isComplete =>
       description.trim().isNotEmpty &&
       category != null &&
+      occurredOn != null &&
       method != null &&
       (!isSplit || secondMethod != null);
 

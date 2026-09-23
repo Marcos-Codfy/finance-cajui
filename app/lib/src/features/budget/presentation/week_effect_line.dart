@@ -25,6 +25,8 @@ class WeekEffectLine extends ConsumerWidget {
   bool _affects(MonthOverview overview) {
     final week = overview.week.week;
     final day = draft.occurredOn;
+    // Sem data escolhida não há semana a que o gasto pertença (RN-748).
+    if (day == null) return false;
     return overview.plan.variables.isNotEmpty &&
         // Na correção, o "antes" já conta a versão antiga: a linha diria um
         // efeito que não existe.
