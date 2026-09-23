@@ -122,7 +122,7 @@ void main() {
     await form().resolve(problem.code, 1);
 
     expect(problem.code, ErrorCode.entry01);
-    expect(problem.text.message, contains('Faltam R\$${_nbsp}6,00'));
+    expect(problem.text.message, contains('Ajuste R\$${_nbsp}6,00'));
     expect(problem.text.actions.last, 'Colocar o resto em Pix');
     expect(state().draft.secondCents, 5600);
   });

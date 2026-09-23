@@ -1,3 +1,5 @@
+import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/core/errors/open_failure.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -20,8 +22,11 @@ final class EntriesLoading extends EntriesState {
 
 /// O livro não abriu.
 final class EntriesFailed extends EntriesState {
-  /// Cria o estado de falha.
-  const new();
+  /// Cria o estado de falha, com o [code] que diz **por quê**.
+  const new(this.code);
+
+  /// O código do catálogo: cadeia quebrada, falta de espaço ou o genérico.
+  final ErrorCode code;
 }
 
 /// O livro abriu. [entries] pode estar vazio: mês sem lançamento não é erro.
@@ -63,7 +68,14 @@ final entriesStateProvider = Provider<EntriesState>((ref) {
       entries: book.entriesIn(today.budgetMonth),
       spent: book.spentIn(today.budgetMonth),
     ),
-    AsyncError() => const EntriesFailed(),
+    // `hasError`, e **não** `AsyncError()`: quando o livro não abre, o
+    // Riverpod deixa o estado em `AsyncLoading` carregando o erro junto, e
+    // não em `AsyncError`. Casando só pelo tipo, a tela ficava no esqueleto
+    // de carregamento **para sempre** — o estado de falha nunca chegava, e
+    // por isso ninguém tinha visto que o erro era genérico (BL-033).
+    AsyncValue(hasError: true, :final error) => EntriesFailed(
+      OpenFailure.codeOf(error),
+    ),
     _ => const EntriesLoading(),
   };
 });

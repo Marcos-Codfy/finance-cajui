@@ -18,4 +18,5 @@ export 'src/log_scan.dart';
 export 'src/record_cipher.dart';
 export 'src/record_tampered_exception.dart';
 export 'src/snapshot_store.dart';
+export 'src/storage_full_exception.dart';
 export 'src/stored_event.dart';

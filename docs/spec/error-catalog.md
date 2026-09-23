@@ -66,7 +66,7 @@ Toda resposta de erro do backend tem este corpo, e nenhum outro:
 
 | Código | Quando | Origem | Texto | Saídas |
 |---|---|---|---|---|
-| `E-ENTRY-01` | A soma das linhas de pagamento difere do valor do lançamento | app · api 422 | As formas de pagamento somam {soma}, e a compra é de {valor}. Faltam {diferença} para fechar a conta. | Ajustar os valores · Colocar o resto em {forma} |
+| `E-ENTRY-01` | A soma das linhas de pagamento difere do valor do lançamento | app · api 422 | As formas de pagamento somam {soma}, e a compra é de {valor}. Ajuste {diferença} para fechar a conta. | Ajustar os valores · Colocar o resto em {forma} |
 | `E-ENTRY-02` | Data da compra no futuro | app · api 422 | Esta data ainda não chegou. O Cajui registra o que já foi comprado; o que está por vir entra como compromisso no plano do mês. | Usar a data de hoje · Escolher outra data |
 | `E-ENTRY-03` | Valor zero ou negativo | app · api 422 | Digite um valor maior que zero. Para registrar um dinheiro que voltou, use "Estorno" no lançamento original. | — (campo) |
 | `E-ENTRY-04` | Estorno maior que o que resta do lançamento | app · api 422 | Este lançamento tem {restante} para estornar, e o estorno pedido é de {pedido}. | Estornar {restante} · Corrigir o valor |

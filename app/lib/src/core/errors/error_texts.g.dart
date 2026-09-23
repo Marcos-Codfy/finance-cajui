@@ -12,7 +12,7 @@ abstract final class ErrorTexts {
   /// O texto e as saídas de [code].
   static ErrorText of(ErrorCode code) => switch (code) {
     ErrorCode.entry01 => const ErrorText(
-      'As formas de pagamento somam {soma}, e a compra é de {valor}. Faltam {diferença} para fechar a conta.',
+      'As formas de pagamento somam {soma}, e a compra é de {valor}. Ajuste {diferença} para fechar a conta.',
       actions: ['Ajustar os valores', 'Colocar o resto em {forma}'],
     ),
     ErrorCode.entry02 => const ErrorText(
