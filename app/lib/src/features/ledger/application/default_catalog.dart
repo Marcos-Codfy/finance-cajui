@@ -95,6 +95,17 @@ abstract final class DefaultCatalog {
       block: Block.debt,
       groupId: 'debt',
     ),
+    // Anuidade, juros, multa e tarifa cobrados na fatura são lançamentos
+    // comuns, pagos com o próprio cartão (RN-333). Ficam no bloco de
+    // dívidas, e não no de variáveis: não são escolha de gasto, são o preço
+    // de ter a dívida — e misturá-los com o mercado faria o limite da
+    // semana parecer estourado por algo que ninguém comprou.
+    Category(
+      id: 'interest-and-fees',
+      name: 'Juros e tarifas',
+      block: Block.debt,
+      groupId: 'debt',
+    ),
   ];
 
   /// As formas de pagamento iniciais.
