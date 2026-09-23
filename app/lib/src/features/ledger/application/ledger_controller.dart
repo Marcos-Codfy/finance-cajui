@@ -142,11 +142,15 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
   InstallmentPlan? _planOf(EntryDraft draft, LedgerBook book) {
     final card = book.cardOf(draft.method?.id ?? '');
     if (card == null || draft.installmentCount < 2) return null;
+    final each = draft.installmentAmountCents;
     return InstallmentPlan.forPurchase(
       card: card,
       purchasedOn: draft.occurredOn!,
       principal: Money.fromCents(draft.amountCents),
       count: draft.installmentCount,
+      // Parcela informada só quando ela **não** é o total dividido: aí a
+      // diferença é juros, e o domínio a guarda como tal (RN-314).
+      installmentAmount: each == null ? null : Money.fromCents(each),
     );
   }
 

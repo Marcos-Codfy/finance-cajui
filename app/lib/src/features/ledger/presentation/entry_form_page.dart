@@ -242,6 +242,8 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       voucherBalance: book.voucher.balance,
       revision: _revision,
       lineError: draft.amountCents > 0 ? fieldError : null,
+      onInstallmentAmount: (cents) =>
+          _form.edit((d) => d.copyWith(installmentAmountCents: cents)),
       onPickMethod: ({required second}) => _pickMethod(book, second: second),
       onToggleSplit: () => _byApp(_form.toggleSplit),
       onPickInstallments: _pickInstallments,
