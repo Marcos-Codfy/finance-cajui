@@ -40,7 +40,7 @@ final class ReceiptRoutes {
         learnedRules: _examples(json),
       ),
     );
-    return Responses.json(_json(proposal));
+    return Responses.json(ProposalCodec.encode(proposal));
   }
 
   /// O que o aparelho aprendeu com as correções (RN-769): estabelecimento →
@@ -67,30 +67,5 @@ final class ReceiptRoutes {
       }
     }
     return examples;
-  }
-
-  Map<String, Object?> _json(EntryProposal proposal) => {
-    'documentKind': _field(proposal.documentKind, (kind) => kind.name),
-    'amountCents': _field(proposal.amount, (money) => money.cents),
-    'occurredOn': _field(proposal.occurredOn, (date) => '$date'),
-    'categoryId': _field(proposal.category, (id) => id),
-    'paymentKind': _field(proposal.paymentKind, (kind) => kind.name),
-    'merchant': proposal.merchant,
-    'description': proposal.description,
-    'installments': proposal.installments,
-    'warnings': proposal.warnings,
-  };
-
-  Map<String, Object?> _field<T>(
-    ProposedField<T> field,
-    Object Function(T value) encode,
-  ) {
-    final value = field.value;
-    return {
-      'value': value == null ? null : encode(value),
-      'candidates': field.candidates.map(encode).toList(),
-      'confidence': field.confidence.name,
-      'source': field.source.name,
-    };
   }
 }

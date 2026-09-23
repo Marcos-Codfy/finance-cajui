@@ -14,4 +14,5 @@ export 'src/income_codec.dart';
 export 'src/json_reader.dart';
 export 'src/month_setup_codec.dart';
 export 'src/payment_line_dto.dart';
+export 'src/proposal_codec.dart';
 export 'src/reversal_codec.dart';
