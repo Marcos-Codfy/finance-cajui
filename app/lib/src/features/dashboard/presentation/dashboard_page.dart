@@ -2,6 +2,7 @@ import 'package:cajui/src/app/home_tab.dart';
 import 'package:cajui/src/app/home_tab_controller.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
+import 'package:cajui/src/features/budget/presentation/adjustments_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_blocks.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_state.dart';
@@ -10,6 +11,7 @@ import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -112,6 +114,10 @@ class DashboardPage extends ConsumerWidget {
         _waitingCaptures(ref, state.pendingCaptures),
         gap,
       ],
+      if (state.overview.indicators.requiredAdjustment.isPositive) ...[
+        _howToClose(context, state.overview),
+        gap,
+      ],
     ];
   }
 
@@ -124,6 +130,27 @@ class DashboardPage extends ConsumerWidget {
       trailing: const CajuiIcon(CajuiIconData.chevronRight),
       semanticLabel: 'Resumos do dia, da semana e do mês, abrir',
       onPressed: () => InsightsPage.open(context),
+    );
+  }
+
+  /// O mês não fecha: o painel deixa de só informar e passa a oferecer o
+  /// caminho que o domínio já sabia calcular (RN-662).
+  Widget _howToClose(BuildContext context, MonthOverview overview) {
+    final indicators = overview.indicators;
+    final falta = MoneyFormat.brl(indicators.requiredAdjustment);
+    return CajuiNotice(
+      intent: CajuiNoticeIntent.info,
+      what: indicators.closesByAdjustingVariables
+          ? 'Dá para cobrir sem mexer nos fixos.'
+          : 'Faltam $falta para o mês fechar.',
+      meaning: indicators.closesByAdjustingVariables
+          ? 'Faltam $falta, e há folga nos variáveis para remanejar.'
+          : 'Os variáveis cobrem parte; o resto depende da renda, de um '
+                'fixo ou de uma dívida.',
+      primaryAction: CajuiNoticeAction(
+        label: 'Ver os ajustes',
+        onPressed: () => AdjustmentsPage.open(context),
+      ),
     );
   }
 
