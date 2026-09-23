@@ -1,6 +1,7 @@
 import 'package:cajui/src/app/home_shell.dart';
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/feedback_providers.dart';
+import 'package:cajui/src/features/ledger/presentation/sync_on_resume.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +33,7 @@ class CajuiApp extends ConsumerWidget {
         feedback: ref.watch(feedbackProvider),
         child: child!,
       ),
-      home: const HomeShell(),
+      home: const SyncOnResume(child: HomeShell()),
     );
   }
 }
