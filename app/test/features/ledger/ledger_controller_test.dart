@@ -145,6 +145,16 @@ void main() {
     });
   });
 
+  test('RN-333 · anuidade e juros do cartão têm categoria própria, no bloco '
+      'de dívidas — não viram gasto variável do mês', () async {
+    final book = await container.read(ledgerProvider.future);
+
+    final categoria = book.categoryOf('interest-and-fees');
+
+    expect(categoria.name, 'Juros e tarifas');
+    expect(categoria.block, Block.debt);
+  });
+
   test('reabrir o app reconstrói o mesmo livro a partir dos fatos', () async {
     await controller().setVoucherBalance(
       const Money.fromCents(3000),
