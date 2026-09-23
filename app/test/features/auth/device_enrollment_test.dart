@@ -165,6 +165,19 @@ void main() {
       },
     );
 
+    test(
+      'BL-047 · o nome do aparelho vai no cadastro, e não um fixo',
+      () async {
+        await api.enroll('codigo-de-teste', name: 'S22 do Marcos');
+
+        final pedido = server.requests.firstWhere(
+          (r) => r.path == '/v1/auth/enroll',
+        );
+
+        expect(pedido.body['name'], 'S22 do Marcos');
+      },
+    );
+
     test('BL-048 · o tempo de espera vem do servidor, e não de um número '
         'inventado na tela', () async {
       server.refuseWith(ErrorCode.ai02, status: 503, retryAfterSeconds: 25);

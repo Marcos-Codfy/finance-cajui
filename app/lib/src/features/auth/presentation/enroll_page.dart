@@ -27,14 +27,21 @@ class EnrollPage extends ConsumerStatefulWidget {
 
 class _EnrollPageState extends ConsumerState<EnrollPage> {
   final _code = TextEditingController();
+  final _name = TextEditingController(text: 'Celular');
   PresentedError? _problem;
   bool _saving = false;
 
   @override
   void dispose() {
     _code.dispose();
+    _name.dispose();
     super.dispose();
   }
+
+  /// Nome vazio vira "Celular": a lista de aparelhos não pode ter uma linha
+  /// sem nome, e escolher o nome é conveniência, não obrigação.
+  String get _deviceName =>
+      _name.text.trim().isEmpty ? 'Celular' : _name.text.trim();
 
   Future<void> _enroll() async {
     setState(() {
@@ -45,7 +52,7 @@ class _EnrollPageState extends ConsumerState<EnrollPage> {
     final feedback = CajuiFeedbackScope.of(context);
     final failure = await ref
         .read(deviceEnrollmentProvider)
-        .enroll(_code.text, name: 'Celular');
+        .enroll(_code.text, name: _deviceName);
     if (!mounted) return;
     if (failure != null) {
       setState(() {
@@ -87,6 +94,15 @@ class _EnrollPageState extends ConsumerState<EnrollPage> {
           controller: _code,
           hint: 'as dez letras e números',
           onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: CajuiSpacing.lg),
+        // O nome é o que a lista de aparelhos mostra depois. Antes vinha
+        // fixo em "Celular", e dois aparelhos ficavam indistinguíveis na
+        // hora de descadastrar um deles.
+        CajuiTextField(
+          label: 'Nome deste aparelho',
+          controller: _name,
+          hint: 'como ele aparece na lista',
         ),
       ],
     );
