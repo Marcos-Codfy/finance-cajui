@@ -59,12 +59,28 @@ abstract final class LocalAnswer {
   static AssistantAnswered? _daily(MonthOverview overview) {
     final daily = overview.indicators.plannedDailyCost;
     if (!daily.cash.isPositive && !daily.mealVoucher.isPositive) return null;
+    final real = overview.realizedDailyCost;
     return AssistantAnswered(
       'Pelo plano de ${CalendarWords.month(overview.plan.month)}, dá para '
       'gastar ${MoneyFormat.brl(daily.cash)} por dia em dinheiro'
-      '${daily.mealVoucher.isPositive ? ', mais ${MoneyFormat.brl(daily.mealVoucher)} no vale' : ''}.',
-      sources: [_source('Custo por dia', daily.cash, overview, 'plan')],
+      '${daily.mealVoucher.isPositive ? ', mais ${MoneyFormat.brl(daily.mealVoucher)} no vale' : ''}.'
+      '${_soFar(real)}',
+      sources: [
+        _source('Custo por dia planejado', daily.cash, overview, 'plan'),
+        if (real.cash.isPositive)
+          _source('Custo por dia até aqui', real.cash, overview, 'fact'),
+      ],
     );
+  }
+
+  /// O custo por dia que o mês vem tendo, ao lado do que ele previa
+  /// (RN-651). Sai só quando já houve gasto: no dia 1º não há média, e uma
+  /// frase dizendo "R$ 0,00 por dia" seria ruído.
+  static String _soFar(TenderAmounts real) {
+    if (!real.cash.isPositive) return '';
+    return ' Até aqui, o mês vem custando ${MoneyFormat.brl(real.cash)} por '
+        'dia em dinheiro'
+        '${real.mealVoucher.isPositive ? ', mais ${MoneyFormat.brl(real.mealVoucher)} no vale' : ''}.';
   }
 
   /// Junta as frases do resumo numa resposta só. As frases são do domínio e
