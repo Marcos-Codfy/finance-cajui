@@ -41,7 +41,9 @@ final class LedgerRoutes {
     ..get('/entries', _listEntries)
     ..post('/entries', _createEntry)
     ..put('/entries/<id>', _reviseEntry)
-    ..delete('/entries/<id>', _cancelEntry);
+    ..delete('/entries/<id>', _cancelEntry)
+    ..post('/entries/<id>/reversals', _reverseEntry)
+    ..get('/reversals', _listReversals);
 
   /// A âncora contra o corte do fim do registro (T-39): o app guarda o maior
   /// `seq` que já viu, e estranha um servidor que sabe menos do que ele.
@@ -196,6 +198,36 @@ final class LedgerRoutes {
     );
     state.apply(event);
     return Responses.json({'id': id});
+  }
+
+  Response _listReversals(Request request) => Responses.json({
+    'reversals': [
+      for (final reversal in state.reversals.values)
+        ReversalCodec.encode(reversal),
+    ],
+  });
+
+  /// O dinheiro de uma compra voltou (RN-209).
+  ///
+  /// Não altera o lançamento original: é fato próprio, e o servidor confere
+  /// de novo se ainda resta o que estornar naquela linha (RN-210, T-05).
+  Future<Response> _reverseEntry(Request request, String id) async {
+    final payload = ReversalCodec.read(await JsonBody.read(request));
+    if (payload['entryId'] != id) {
+      return Responses.error(request, ErrorCode.req02);
+    }
+    final entry = state.entryOf(id);
+    if (entry == null) return Responses.error(request, ErrorCode.req02);
+    final result = state.tryReverse(payload, entry);
+    final failure = result.failureOrNull;
+    if (failure != null) return _refuse(request, failure);
+    final event = await store.append(
+      id: 'reversal-${payload['id']}',
+      type: LedgerState.entryReversed,
+      payload: payload,
+    );
+    state.apply(event);
+    return Responses.json({'id': payload['id']}, status: 201);
   }
 
   /// Cancelar não apaga: grava o fato de que aquele lançamento não vale mais.

@@ -36,6 +36,7 @@ final class AssistantRoutes {
     today: clock.today(),
     entries: state.entries,
     categories: state.categories,
+    reversals: state.reversals.values,
     plan: state.plan,
     received: state.receivedIn(clock.today().budgetMonth),
     voucherBalance: state.voucherBalance,

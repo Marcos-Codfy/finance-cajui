@@ -75,6 +75,13 @@ final class _FakeUplink implements LedgerUplink {
   Future<ErrorCode?> reviseEntry(CreateEntryRequest entry) async => null;
 
   @override
+  Future<(Set<String>, ErrorCode?)> remoteReversals() async =>
+      (const <String>{}, null);
+
+  @override
+  Future<ErrorCode?> sendReversal(Map<String, Object?> reversal) async => null;
+
+  @override
   Future<ErrorCode?> cancelEntry(String id) async => null;
 }
 

@@ -78,6 +78,12 @@ abstract interface class LedgerUplink {
   /// Manda a versão que passou a valer de um lançamento já enviado.
   Future<ErrorCode?> reviseEntry(CreateEntryRequest entry);
 
+  /// Os estornos que o servidor já tem.
+  Future<(Set<String>, ErrorCode?)> remoteReversals();
+
+  /// Manda um estorno: dinheiro de uma compra que voltou (RN-209).
+  Future<ErrorCode?> sendReversal(Map<String, Object?> reversal);
+
   /// Avisa que um lançamento foi cancelado e não vale mais.
   Future<ErrorCode?> cancelEntry(String id);
 }

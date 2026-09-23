@@ -92,6 +92,42 @@ void main() {
       expect(uplink.income, {'r1', 'r2'});
     });
 
+    test('RN-209 · o estorno sobe depois do lançamento, porque é dele que '
+        'sai o que resta a estornar', () async {
+      final base = DefaultCatalog.emptyBook;
+      final entry = Entry.create(
+        id: 'e1',
+        description: 'Fone',
+        amount: const Money.fromCents(9000),
+        occurredOn: _today,
+        category: base.categoryOf('groceries'),
+        paymentLines: [base.methodOf('pix').line(const Money.fromCents(9000))],
+        today: _today,
+      ).valueOrNull!;
+      final reversal = Reversal.create(
+        id: 'r1',
+        entry: entry,
+        paymentMethodId: 'pix',
+        amount: const Money.fromCents(9000),
+        occurredOn: _today,
+      ).valueOrNull!;
+
+      await sync.run(
+        LedgerBook(
+          categories: base.categories,
+          paymentMethods: base.paymentMethods,
+          entries: [entry],
+          reversals: [reversal],
+        ),
+      );
+
+      expect(uplink.reversals, {'r1'});
+      expect(uplink.calls, [
+        'criou e1',
+        'estornou r1',
+      ], reason: 'o lançamento vai na frente');
+    });
+
     test('quem não recebeu nada ainda não manda nada', () async {
       await sync.run(_book());
 

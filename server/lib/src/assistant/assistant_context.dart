@@ -21,6 +21,7 @@ final class AssistantContext {
     required LocalDate today,
     required Iterable<Entry> entries,
     required Map<String, Category> categories,
+    Iterable<Reversal> reversals = const [],
     MonthSetup plan = MonthSetup.empty,
     TenderAmounts received = TenderAmounts.zero,
     Money voucherBalance = Money.zero,
@@ -30,7 +31,12 @@ final class AssistantContext {
       today: today,
       month: month,
       numbers: _numbered([
-        for (final (label, amounts) in _spent(month, entries, categories))
+        for (final (label, amounts) in _spent(
+          month,
+          entries,
+          categories,
+          reversals,
+        ))
           ..._byTender(label, month, amounts),
         ..._planned(month, plan),
         ..._received(month, received, voucherBalance),
@@ -61,12 +67,14 @@ final class AssistantContext {
     BudgetMonth month,
     Iterable<Entry> entries,
     Map<String, Category> categories,
+    Iterable<Reversal> reversals,
   ) {
     final byCategory = <String, TenderAmounts>{};
     for (final entry in entries) {
       final known = byCategory[entry.categoryId] ?? TenderAmounts.zero;
       byCategory[entry.categoryId] = known + entry.spentIn(month);
     }
+    _subtract(byCategory, month, entries, reversals);
     return [
       for (final MapEntry(key: id, value: spent) in byCategory.entries)
         // Nome de categoria é texto do usuário: passa pelo mascaramento
@@ -77,6 +85,32 @@ final class AssistantContext {
         byCategory.values.fold(TenderAmounts.zero, (a, b) => a + b),
       ),
     ];
+  }
+
+  /// O estorno reduz o gasto da categoria **no mês em que o dinheiro
+  /// voltou** (RN-209), e pela moeda em que voltou (RN-211). Sem isto o
+  /// servidor contava a compra devolvida inteira, e o assistente respondia
+  /// um número que o aparelho já sabia errado.
+  static void _subtract(
+    Map<String, TenderAmounts> byCategory,
+    BudgetMonth month,
+    Iterable<Entry> entries,
+    Iterable<Reversal> reversals,
+  ) {
+    final categoryOf = {
+      for (final entry in entries) entry.id: entry.categoryId,
+    };
+    for (final reversal in reversals) {
+      if (!month.contains(reversal.occurredOn)) continue;
+      final category = categoryOf[reversal.entryId];
+      if (category == null) continue;
+      final back = TenderAmounts.single(
+        reversal.line.kind.tender,
+        reversal.line.amount,
+      );
+      byCategory[category] =
+          (byCategory[category] ?? TenderAmounts.zero) - back;
+    }
   }
 
   /// Um número por moeda, e só das moedas com gasto: o contexto não tem campo

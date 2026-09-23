@@ -90,6 +90,19 @@ base class FakeUplink implements LedgerUplink {
     return null;
   }
 
+  final Set<String> reversals = {};
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteReversals() async =>
+      (reversals, null);
+
+  @override
+  Future<ErrorCode?> sendReversal(Map<String, Object?> reversal) async {
+    calls.add('estornou ${reversal['id']}');
+    reversals.add('${reversal['id']}');
+    return null;
+  }
+
   @override
   Future<ErrorCode?> cancelEntry(String id) async {
     calls.add('cancelou $id');
