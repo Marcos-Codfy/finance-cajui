@@ -4,6 +4,7 @@ import 'package:cajui/src/core/errors/error_text.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_row.dart';
@@ -39,7 +40,16 @@ class EntriesPage extends ConsumerWidget {
   /// As duas portas de entrada de uma despesa: fotografar o comprovante de
   /// papel e lançar à mão. Fotografar vem primeiro porque é o caminho do
   /// cupom de mercado, que não dá para compartilhar (ADR-017).
+  ///
+  /// Na web não há rodapé nenhum: lá o livro **desce** do servidor e não há
+  /// onde gravar — tocar em "Lançar" levava ao formulário e só estourava na
+  /// hora de salvar. Esconder o botão não é o que garante isso: quem garante
+  /// é o `append` da consulta, que recusa por construção (T-12). Aqui é só
+  /// para a tela parar de convidar para uma porta fechada.
   Widget _footer(BuildContext context, WidgetRef ref, EntriesState state) {
+    if (!ref.watch(ledgerUplinkProvider).isPaired) {
+      return const SizedBox.shrink();
+    }
     final ready = state is EntriesReady;
     return Column(
       mainAxisSize: MainAxisSize.min,
