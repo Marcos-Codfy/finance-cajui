@@ -61,6 +61,48 @@ void main() {
     expect(await journal.readAll(), hasLength(1));
   });
 
+  testWidgets('RN-221 · o mesmo comprovante duas vezes avisa, e não bloqueia', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final inbox = FakeInbox();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(inbox: inbox, journal: MemoryLedgerJournal()),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+
+    // Primeira vez: nenhum aviso, e o lançamento acontece.
+    inbox.share(const [SharedText(id: 'c1', text: pixReceiptText)]);
+    await _settle(tester);
+    expect(
+      find.textContaining('parece um lançamento que já existe'),
+      findsNothing,
+    );
+    await tester.tap(find.text('Categoria'));
+    await _settle(tester);
+    await tester.tap(find.text('Restaurante e lanche'));
+    await _settle(tester);
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+
+    // O mesmo comprovante de novo, com outro identificador de chegada.
+    inbox.share(const [SharedText(id: 'c2', text: pixReceiptText)]);
+    await _settle(tester);
+
+    expect(find.textContaining('Já existe um lançamento'), findsOneWidget);
+    expect(find.text('É outro?'), findsOneWidget);
+    expect(
+      find.text('Lançar'),
+      findsOneWidget,
+      reason: 'RN-221: é aviso, e lançar continua possível',
+    );
+  });
+
   test('T-07 · o texto do comprovante guardado para depois não fica em claro '
       'no aparelho, e volta igual ao reabrir', () async {
     final directory = Directory.systemTemp.createTempSync('cajui-shelf-');

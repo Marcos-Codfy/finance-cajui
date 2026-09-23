@@ -18,6 +18,7 @@ class CaptureHeader extends StatelessWidget {
     required this.capture,
     required this.book,
     required this.edit,
+    required this.today,
     super.key,
   });
 
@@ -29,6 +30,9 @@ class CaptureHeader extends StatelessWidget {
 
   /// Troca o rascunho do formulário.
   final EntryFormEdit edit;
+
+  /// O dia de hoje, para o aviso de repetido dizer "hoje" em vez da data.
+  final LocalDate today;
 
   static const Map<Confidence, CajuiConfidenceLevel> _levels = {
     Confidence.high: CajuiConfidenceLevel.high,
@@ -42,13 +46,11 @@ class CaptureHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const CajuiNotice(
-          intent: CajuiNoticeIntent.info,
-          what: 'Li o comprovante aqui no aparelho, só com as regras locais.',
-          meaning:
-              'Confira a categoria antes de lançar. Nada é gravado sem '
-              'o seu toque.',
-        ),
+        _readHere,
+        if (_alreadyThere case final existing?) ...[
+          const SizedBox(height: CajuiSpacing.lg),
+          _duplicateNotice(existing),
+        ],
         const SizedBox(height: CajuiSpacing.lg),
         CajuiConfidenceIndicator(_levels[proposal.category.confidence]!),
         if (proposal.amount.candidates.length > 1) ...[
@@ -64,6 +66,54 @@ class CaptureHeader extends StatelessWidget {
       ],
     );
   }
+
+  /// De onde veio a proposta: daqui, e não da nuvem (RN-780).
+  static const Widget _readHere = CajuiNotice(
+    intent: CajuiNoticeIntent.info,
+    what: 'Li o comprovante aqui no aparelho, só com as regras locais.',
+    meaning:
+        'Confira a categoria antes de lançar. Nada é gravado sem o seu toque.',
+  );
+
+  /// O lançamento que já existe e **parece** ser este comprovante: mesmo
+  /// valor, mesma data e mesmo lugar (RN-221).
+  ///
+  /// A regra vivia no domínio desde a Fase 6 e nenhuma tela a chamava: o app
+  /// deixava lançar o mesmo comprovante duas vezes sem dizer nada.
+  Entry? get _alreadyThere {
+    final proposal = capture.proposal;
+    final merchant = proposal.merchant;
+    final amount = proposal.amount.value;
+    final on = proposal.occurredOn.value;
+    // Comprovante em que a leitura não resolveu valor, data ou lugar não dá
+    // para comparar com nada: aí não há aviso, e a pessoa confere como já
+    // conferia.
+    if (merchant == null || amount == null || on == null) return null;
+    return PossibleDuplicate.among(
+      book.entries,
+      amount: amount,
+      occurredOn: on,
+      description: merchant,
+    );
+  }
+
+  /// **Aviso, e não bloqueio.** Dois cafés de R$ 8,50 no mesmo dia são
+  /// legítimos: quem decide é quem está olhando (RN-221).
+  ///
+  /// O texto é o do estado "Parece repetido" da gallery, aprovado na Fase 3:
+  /// o desenho existia desde lá, e era o app que ainda não o tinha.
+  Widget _duplicateNotice(Entry existing) => CajuiNotice(
+    what:
+        'Já existe um lançamento de ${MoneyFormat.brl(existing.amount)} '
+        'em ${existing.description}, '
+        '${_when(existing.occurredOn)}.',
+    meaning: 'É outro?',
+  );
+
+  /// "hoje", quando for hoje; no dia tal, quando não.
+  String _when(LocalDate day) => day == today
+      ? 'hoje'
+      : 'no dia ${day.day} de ${CalendarWords.month(day.budgetMonth)}';
 
   /// A porta para a transparência do fluxo (RN-735).
   Widget _seeWhatWasRead(BuildContext context) => Align(
