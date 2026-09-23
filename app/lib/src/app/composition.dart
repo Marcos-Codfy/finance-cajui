@@ -23,6 +23,7 @@ import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/infrastructure/remote_ledger_journal.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/infrastructure/event_store_capture_shelf.dart';
+import 'package:cajui/src/features/receipts/infrastructure/http_receipt_classifier.dart';
 import 'package:cajui/src/features/receipts/infrastructure/native_receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/infrastructure/native_receipt_reader.dart';
 import 'package:cajui/src/features/receipts/infrastructure/no_receipt_inbox.dart';
@@ -59,7 +60,7 @@ abstract final class Composition {
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
       _preferences(store, local: nativeCapture),
       ..._server(api),
-      ..._capture(inbox),
+      ..._capture(inbox, api),
     ];
   }
 
@@ -103,13 +104,21 @@ abstract final class Composition {
     ),
   ];
 
-  static List<Override> _capture(NativeReceiptInbox? inbox) => [
+  static List<Override> _capture(NativeReceiptInbox? inbox, CajuiApi api) => [
     receiptInboxProvider.overrideWithValue(inbox ?? const NoReceiptInbox()),
     receiptReaderProvider.overrideWithValue(
       inbox == null
           ? const NoReceiptReader()
           : NativeReceiptReader(progress: inbox.progress),
     ),
+    // A IA do servidor por cima das regras locais (ADR-010), e as regras
+    // como rede embaixo: sem sessão, sem rede ou sem crédito, vale a
+    // proposta local (RN-752). Onde não há captura também não há o que
+    // classificar, e o classificador de regras basta.
+    if (inbox != null)
+      receiptClassifierProvider.overrideWithValue(
+        HttpReceiptClassifier(api, const RuleBasedClassifier()),
+      ),
   ];
 
   /// O caminho até o servidor. O aparelho só tem identidade onde há
