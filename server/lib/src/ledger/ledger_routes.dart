@@ -129,6 +129,9 @@ final class LedgerRoutes {
   /// reenviar o mesmo plano não cria fato novo, e um plano diferente cria.
   Future<Response> _definePlan(Request request) async {
     final setup = MonthSetupCodec.read(await JsonBody.read(request));
+    if (_isAhead(setup.definedAt)) {
+      return Responses.error(request, ErrorCode.req01);
+    }
     final payload = MonthSetupCodec.encode(setup);
     final event = await store.append(
       id: 'plan-${_fingerprint(payload)}',
@@ -161,14 +164,7 @@ final class LedgerRoutes {
 
   Future<Response> _createEntry(Request request) async {
     final command = CreateEntryRequest.fromJson(await JsonBody.read(request));
-    if (!state.categories.containsKey(command.categoryId)) {
-      return Responses.error(request, ErrorCode.req02);
-    }
-    // Lançamento que algum aparelho já cancelou não ressuscita por outro
-    // que ainda o tinha: o cancelamento é a ordem mais recente.
-    if (state.cancelledIds.contains(command.id)) {
-      return Responses.json({'id': command.id, 'cancelled': true});
-    }
+    if (_gate(request, command) case final refused?) return refused;
     final known = state.entries.any((entry) => entry.id == command.id);
     final result = state.tryCreate(command, today: clock.today());
     final failure = result.failureOrNull;
@@ -191,12 +187,7 @@ final class LedgerRoutes {
     final json = await JsonBody.read(request);
     final command = CreateEntryRequest.fromJson(json);
     if (command.id != id) return Responses.error(request, ErrorCode.req02);
-    if (!state.categories.containsKey(command.categoryId)) {
-      return Responses.error(request, ErrorCode.req02);
-    }
-    if (state.cancelledIds.contains(id)) {
-      return Responses.json({'id': id, 'cancelled': true});
-    }
+    if (_gate(request, command) case final refused?) return refused;
     final result = state.tryCreate(command, today: clock.today());
     if (result.failureOrNull case final failure?) {
       return _refuse(request, failure);
@@ -247,7 +238,41 @@ final class LedgerRoutes {
   }
 
   /// Cancelar não apaga: grava o fato de que aquele lançamento não vale mais.
+  /// O que recusa um pedido de lançamento antes das regras: categoria que
+  /// o servidor não conhece; lançamento que algum aparelho **já cancelou**,
+  /// que não ressuscita por outro que ainda o tinha — o cancelamento é a
+  /// ordem mais recente; e carimbo de correção **no futuro**, que travaria
+  /// o lançamento para sempre contra o outro aparelho (T-05, T-40).
+  Response? _gate(Request request, CreateEntryRequest command) {
+    if (!state.categories.containsKey(command.categoryId)) {
+      return Responses.error(request, ErrorCode.req02);
+    }
+    if (state.cancelledIds.contains(command.id)) {
+      return Responses.json({'id': command.id, 'cancelled': true});
+    }
+    if (_isAhead(command.revisedAt)) {
+      return Responses.error(request, ErrorCode.req01);
+    }
+    return null;
+  }
+
+  /// Se [stamp] está além do que um relógio honesto marcaria agora. A folga
+  /// cobre celular alguns minutos adiantado; ano 9999 não passa.
+  bool _isAhead(DateTime? stamp) =>
+      stamp != null && stamp.isAfter(clock.now().add(stampTolerance));
+
+  /// Quanto um carimbo pode estar à frente do relógio do servidor.
+  static const stampTolerance = Duration(minutes: 10);
+
+  /// Cancelar o que já está cancelado é repetição (200); cancelar o que
+  /// nunca existiu seria inventar um cancelado eterno — recusa.
   Future<Response> _cancelEntry(Request request, String id) async {
+    if (state.cancelledIds.contains(id)) {
+      return Responses.json({'id': id, 'cancelled': true});
+    }
+    if (state.entryOf(id) == null) {
+      return Responses.error(request, ErrorCode.req02);
+    }
     final event = await store.append(
       id: 'entry-cancelled-$id',
       type: LedgerState.entryCancelled,

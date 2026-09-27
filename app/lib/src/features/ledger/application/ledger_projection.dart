@@ -17,10 +17,7 @@ abstract final class LedgerProjection {
       EntryCancelled(:final entryId) => _cancelled(book, entryId),
       EntryReversed(:final reversal) => _reversed(book, reversal),
       IncomeReceived(:final receipt) => _received(book, receipt),
-      VoucherBalanceAdjusted(:final adjustment) => book.copyWith(
-        voucher: book.voucher.adjust(adjustment.amount),
-        voucherAdjustments: [...book.voucherAdjustments, adjustment],
-      ),
+      VoucherBalanceAdjusted(:final adjustment) => _adjusted(book, adjustment),
       PlanDefined(:final setup) => book.copyWith(setup: setup),
       StatementSettled(:final settlement) => book.copyWith(
         settlements: [...book.settlements, settlement],
@@ -52,10 +49,16 @@ abstract final class LedgerProjection {
       account.pay(entry.paidByTender.mealVoucher).valueOrNull ??
       VoucherAccount();
 
-  static LedgerBook _recorded(LedgerBook book, Entry entry) => book.copyWith(
-    entries: [...book.entries, entry],
-    voucher: _paying(book.voucher, entry),
-  );
+  /// O mesmo fato duas vezes muda o livro **uma**: o registro já ignora o
+  /// repetido, e a projeção faz o mesmo — é o que impede duas descidas
+  /// próximas de contar um lançamento em dobro na tela (BL-062).
+  static LedgerBook _recorded(LedgerBook book, Entry entry) =>
+      book.entryOf(entry.id) != null
+      ? book
+      : book.copyWith(
+          entries: [...book.entries, entry],
+          voucher: _paying(book.voucher, entry),
+        );
 
   /// A versão corrigida entra **no lugar** da anterior, na mesma posição. O
   /// vale devolve o que a versão antiga tinha pago e paga o da nova.
@@ -96,6 +99,7 @@ abstract final class LedgerProjection {
   /// O estorno volta pela mesma forma de pagamento: o de compra no vale
   /// devolve saldo ao vale (RN-211).
   static LedgerBook _reversed(LedgerBook book, Reversal reversal) {
+    if (book.reversals.any((known) => known.id == reversal.id)) return book;
     final onVoucher = reversal.line.tender == Tender.mealVoucher;
     return book.copyWith(
       reversals: [...book.reversals, reversal],
@@ -107,7 +111,16 @@ abstract final class LedgerProjection {
 
   /// O crédito do vale entra no saldo (RN-120); renda em dinheiro só fica
   /// registrada — o app não conhece o saldo da conta de ninguém.
+  static LedgerBook _adjusted(LedgerBook book, VoucherAdjustment adjustment) {
+    if (book.voucherAdjustments.any((a) => a.id == adjustment.id)) return book;
+    return book.copyWith(
+      voucher: book.voucher.adjust(adjustment.amount),
+      voucherAdjustments: [...book.voucherAdjustments, adjustment],
+    );
+  }
+
   static LedgerBook _received(LedgerBook book, IncomeReceipt receipt) {
+    if (book.receipts.any((known) => known.id == receipt.id)) return book;
     final onVoucher = receipt.tender == Tender.mealVoucher;
     return book.copyWith(
       receipts: [...book.receipts, receipt],

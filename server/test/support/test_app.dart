@@ -63,8 +63,14 @@ final class TestApp {
     String method,
     String path, {
     Map<String, String> headers = const {},
+    Object? body,
   }) async => await app.handler(
-    Request(method, Uri.parse('http://localhost$path'), headers: headers),
+    Request(
+      method,
+      Uri.parse('http://localhost$path'),
+      headers: headers,
+      body: body == null ? null : jsonEncode(body),
+    ),
   );
 
   /// Faz uma requisição e devolve o status e o corpo, já lido como JSON.

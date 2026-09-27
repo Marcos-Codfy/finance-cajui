@@ -65,6 +65,8 @@ Para quem vai usar de verdade. Nenhuma delas é escondida na interface.
 13. **Dois números para "fora do padrão"** (BL-052) e **"quanto do limite está tomado"** (BL-040) esperam decisão do dono — a especificação não decide.
 14. **Sessão web curta e em memória**: fechar a aba é sair.
 15. **Um mês por vez nas telas**; os meses fechados existem no livro e ainda não têm lista (BL-044).
+16. **Edição de cartão e plano zerado não atravessam** entre os celulares; e dois celulares gastando o mesmo saldo do vale sem rede deixam o saldo divergente entre app e servidor (BL-065 — a regra é decisão do dono).
+17. **Os dois celulares precisam do mesmo APK.** Um APK de antes de 27/09 não carimba a correção: o servidor a mantém (`kept`) em silêncio e aquele celular fica divergente até ser atualizado.
 
 ## O que não mudou
 

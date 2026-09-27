@@ -44,10 +44,18 @@ final class JsonReader {
   /// Um instante ISO 8601 opcional, devolvido em UTC. Carimbo ilegível
   /// vale como nenhum: quem o carrega continua valendo, só perde a vez na
   /// disputa entre dois aparelhos.
-  DateTime? optionalInstant(String field) {
-    final raw = optionalString(field, maxLength: 40);
-    return raw == null ? null : DateTime.tryParse(raw)?.toUtc();
+  DateTime? optionalInstant(String field) =>
+      instantOf(optionalString(field, maxLength: 40));
+
+  /// O instante em [raw], em UTC, quando dá para ler. **Sem fuso explícito
+  /// não se lê**: `DateTime.parse` tomaria a hora como local, e um servidor
+  /// em outro fuso a deslocaria — três horas decidem quem venceu.
+  static DateTime? instantOf(Object? raw) {
+    if (raw is! String || !_withOffset.hasMatch(raw)) return null;
+    return DateTime.tryParse(raw)?.toUtc();
   }
+
+  static final _withOffset = RegExp(r'(Z|[+-]\d{2}:?\d{2})$');
 
   /// Um texto opcional; ausente, nulo ou vazio devolve `null`.
   String? optionalString(String field, {int maxLength = 200}) {

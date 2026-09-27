@@ -56,8 +56,19 @@ final class LedgerSync {
         await _sendIncome(book);
     // A descida acontece mesmo com recusa na subida: o que o outro aparelho
     // fez não depende do que este não conseguiu mandar.
-    final received = await pull?.run(book) ?? 0;
-    return (sent: sent, received: received, error: error);
+    final (received, broken) = await _pull(book);
+    return (sent: sent, received: received, error: error ?? broken);
+  }
+
+  /// A descida não pode derrubar quem a chamou: resposta que o app não lê,
+  /// disco que falhou no meio — vira o código da rede de segurança, e a
+  /// tela volta a responder em vez de ficar presa em "enviando".
+  Future<(int, ErrorCode?)> _pull(LedgerBook book) async {
+    try {
+      return (await pull?.run(book) ?? 0, null);
+    } on Object {
+      return (0, ErrorCode.app01);
+    }
   }
 
   /// Os estornos (RN-209). Vão **depois** dos lançamentos, e não antes: o

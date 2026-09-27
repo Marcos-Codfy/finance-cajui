@@ -151,10 +151,11 @@ final class App {
   ///
   /// A ordem importa: o identificador nasce primeiro, para todo o resto poder
   /// citá-lo; o registro de acesso vê a resposta final, inclusive a de erro;
-  /// o limite de taxa vem **antes** da autenticação, para que tentar senha
-  /// errada também gaste cota — e a pergunta prévia do navegador também;
-  /// a origem cruzada vem antes da autenticação porque a recusa `401`
-  /// precisa chegar legível à web.
+  /// a origem cruzada vem logo depois, **antes** de toda recusa — limite
+  /// de taxa, pedido malformado, falha interna —, porque cada uma delas
+  /// precisa chegar legível à web, com o código do catálogo; o limite de
+  /// taxa vem antes da autenticação, para que tentar senha errada também
+  /// gaste cota.
   Handler get handler {
     final routes = Router()
       ..get('/health', _health)
@@ -167,9 +168,9 @@ final class App {
     return const Pipeline()
         .addMiddleware(Middlewares.requestRef())
         .addMiddleware(Middlewares.accessLog(_log))
+        .addMiddleware(Cors.allow(webOrigin))
         .addMiddleware(Middlewares.errorBoundary(_log))
         .addMiddleware(Middlewares.rateLimit(_limiter))
-        .addMiddleware(Cors.allow(webOrigin))
         .addMiddleware(Authenticate.middleware(sessions))
         .addHandler(routes.call);
   }

@@ -1,4 +1,5 @@
 import 'package:server/src/app.dart';
+import 'package:server/src/http/rate_limiter.dart';
 import 'package:test/test.dart';
 
 import 'support/test_app.dart';
@@ -82,6 +83,33 @@ void main() {
         isFalse,
       );
       expect(plain.headers.containsKey('access-control-allow-origin'), isFalse);
+    });
+
+    test('a recusa por limite e a por pedido malformado também levam o '
+        'cabeçalho: sem ele a web veria "sem servidor"', () async {
+      final tight = await TestApp.start(
+        rateLimiter: RateLimiter(perOrigin: 1, global: 10),
+      );
+      final origin = {'origin': App.defaultWebOrigin};
+      await tight.send('GET', '/health', headers: origin);
+      final limited = await tight.send('GET', '/health', headers: origin);
+      final malformed = await server.send(
+        'POST',
+        '/v1/auth/web',
+        headers: {...origin, 'content-type': 'application/json'},
+        body: {'code': 123},
+      );
+
+      expect(limited.statusCode, 429);
+      expect(
+        limited.headers['access-control-allow-origin'],
+        App.defaultWebOrigin,
+      );
+      expect(malformed.statusCode, 400);
+      expect(
+        malformed.headers['access-control-allow-origin'],
+        App.defaultWebOrigin,
+      );
     });
 
     test('o app Android, que não manda origem, passa como sempre', () async {

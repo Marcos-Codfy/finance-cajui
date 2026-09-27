@@ -45,6 +45,15 @@ final class CreateEntryRequest {
     revisedAt: reader.optionalInstant('revisedAt'),
   );
 
+  /// [json] só com os campos que este contrato conhece. É como o **cliente**
+  /// lê o que vem do servidor: um servidor mais novo, com um campo a mais,
+  /// não pode esvaziar a comparação e fazer o app reenviar o livro inteiro
+  /// a cada subida. O servidor continua lendo estrito.
+  static Map<String, Object?> known(Map<String, Object?> json) => {
+    for (final MapEntry(:key, :value) in json.entries)
+      if (_fields.contains(key)) key: value,
+  };
+
   /// Os campos que o pedido pode ter, e só eles: campo a mais é
   /// `E-REQ-01`, que é o que impede escrever em atributo não previsto.
   static const Set<String> _fields = {

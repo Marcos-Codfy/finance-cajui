@@ -106,6 +106,16 @@ final class ReversalExceedsRemaining extends EntryFailure {
   final Money requested;
 }
 
+/// `E-REQ-02` · O lançamento a corrigir não existe mais: foi cancelado em
+/// outro aparelho enquanto a correção estava aberta (BL-062).
+final class EntryNoLongerExists extends EntryFailure {
+  /// Cria a falha para o lançamento [entryId].
+  const new(this.entryId);
+
+  /// O lançamento que não existe mais.
+  final String entryId;
+}
+
 /// `E-BUDG-01` · Faixa com mínimo maior que o máximo, ou negativa (RN-420).
 final class RangeMinAboveMax extends BudgetFailure {
   /// Cria a falha com os dois limites informados.
