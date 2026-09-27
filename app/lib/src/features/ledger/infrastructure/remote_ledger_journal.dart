@@ -159,7 +159,9 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
   Entry? _entryOf(Object? item, Map<String, CreditCard> cards) {
     if (item is! Map) return null;
     try {
-      final pedido = CreateEntryRequest.fromJson(item.cast<String, Object?>());
+      final pedido = CreateEntryRequest.fromJson(
+        CreateEntryRequest.known(item.cast<String, Object?>()),
+      );
       return EntryCodec.toEntry(
         pedido,
         category: _categoryOf(pedido.categoryId),

@@ -128,7 +128,9 @@ final class CajuiLedgerApi implements LedgerUplink {
   static CreateEntryRequest? _requestOf(Object? item) {
     if (item is! Map) return null;
     try {
-      return CreateEntryRequest.fromJson(item.cast<String, Object?>());
+      return CreateEntryRequest.fromJson(
+        CreateEntryRequest.known(item.cast<String, Object?>()),
+      );
     } on Object {
       return null;
     }

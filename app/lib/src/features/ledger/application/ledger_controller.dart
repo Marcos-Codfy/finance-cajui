@@ -11,6 +11,7 @@ import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
 import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/quiet_sync.dart';
+import 'package:cajui/src/features/ledger/application/serial_queue.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -76,9 +77,12 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
   /// Corrige o lançamento que [draft] aponta em `correctionOf` (RN-208). As
   /// regras são as mesmas de lançar; o original fica no registro, e a versão
   /// nova passa a valer em toda visão. Sem mudança, nenhum fato é gravado.
+  /// Lançamento que já não existe — cancelado em outro aparelho enquanto a
+  /// correção estava aberta — é recusado, e nada é gravado.
   Future<Result<Entry>> correct(EntryDraft draft) async {
     final book = await future;
-    final original = book.entryOf(draft.correctionOf!)!;
+    final original = book.entryOf(draft.correctionOf!);
+    if (original == null) return Err(EntryNoLongerExists(draft.correctionOf!));
     final result = _entryFrom(
       draft,
       book,
@@ -211,11 +215,17 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
   }
 
   /// Grava um fato que **veio do servidor** — o que outro aparelho fez
-  /// (BL-062). Igual a [append], menos numa coisa: não dispara nova subida,
-  /// porque o que desceu não precisa voltar.
-  Future<void> absorb(LedgerEvent event) async {
-    await _commit(await future, event, quietly: true);
-  }
+  /// (BL-062). Igual a [append], menos em duas coisas: não dispara nova
+  /// subida, porque o que desceu não precisa voltar; e confere, já na
+  /// fila e contra o livro em vigor, se o fato ainda faz diferença — duas
+  /// sincronizações próximas trazem o mesmo fato, e ele entra uma vez.
+  /// Devolve se entrou.
+  Future<bool> absorb(LedgerEvent event) => _queue.run(() async {
+    final book = state.value ?? await future;
+    if (!LedgerPull.accepts(book, event)) return false;
+    await _write(book, event, quietly: true);
+    return true;
+  });
 
   /// Grava [event] e só então muda o que a tela vê. É a porta por onde os
   /// casos de uso de outras features — dívidas, fechamento — escrevem no
@@ -224,10 +234,20 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     await _commit(await future, event);
   }
 
+  /// Um fato de cada vez (ver [SerialQueue]): dois entrelaçados apagariam
+  /// um ao outro da tela.
   Future<void> _commit(
     LedgerBook book,
     LedgerEvent event, {
     bool quietly = false,
+  }) => _queue.run(() => _write(book, event, quietly: quietly));
+
+  final _queue = SerialQueue();
+
+  Future<void> _write(
+    LedgerBook book,
+    LedgerEvent event, {
+    required bool quietly,
   }) async {
     await ref.read(ledgerJournalProvider).append(event);
     // Aplica sobre o livro **em vigor**, e não sobre o que o caso de uso leu

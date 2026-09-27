@@ -206,6 +206,46 @@ void main() {
       },
     );
 
+    test('duas sincronizações ao mesmo tempo não contam o lançamento em '
+        'dobro', () async {
+      final bookA = await a.read(ledgerProvider.future);
+      await a.read(ledgerProvider.notifier).record(_draft(bookA));
+      await _sync(a);
+
+      // O mesmo livro velho nas duas — é o que acontece quando a subida
+      // silenciosa e a pergunta ao assistente descem juntas.
+      final stale = await b.read(ledgerProvider.future);
+      final sync = b.read(ledgerSyncProvider);
+      final outcomes = await Future.wait([sync.run(stale), sync.run(stale)]);
+      final onB = await b.read(ledgerProvider.future);
+
+      expect(onB.entries, hasLength(1));
+      expect(outcomes.map((o) => o.received).reduce((x, y) => x + y), 1);
+    });
+
+    test(
+      'corrigir o que o outro celular cancelou avisa, em vez de estourar',
+      () async {
+        final bookA = await a.read(ledgerProvider.future);
+        await a.read(ledgerProvider.notifier).record(_draft(bookA));
+        await _sync(a);
+        final bookB = await _sync(b);
+        final draft = _correcting(bookB, cents: 9900);
+
+        await a
+            .read(ledgerProvider.notifier)
+            .cancel(
+              (await a.read(ledgerProvider.future)).entries.single.id,
+              reason: 'lancei errado',
+            );
+        await _sync(a);
+        await _sync(b);
+        final result = await b.read(ledgerProvider.notifier).correct(draft);
+
+        expect(result.failureOrNull, isA<EntryNoLongerExists>());
+      },
+    );
+
     test('o cartão e a compra parcelada atravessam inteiros', () async {
       await a
           .read(ledgerProvider.notifier)

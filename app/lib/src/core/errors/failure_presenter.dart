@@ -47,7 +47,9 @@ abstract final class FailurePresenter {
         amount > linesTotal ? amount - linesTotal : linesTotal - amount,
       ),
     },
-    PurchaseDateInFuture() || NonPositiveAmount() => const {},
+    PurchaseDateInFuture() ||
+    NonPositiveAmount() ||
+    EntryNoLongerExists() => const {},
     ReversalExceedsRemaining(:final remaining, :final requested) => {
       'restante': _brl(remaining),
       'pedido': _brl(requested),

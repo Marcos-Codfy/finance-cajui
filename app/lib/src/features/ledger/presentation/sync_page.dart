@@ -42,14 +42,19 @@ class _SyncPageState extends ConsumerState<SyncPage> {
       _problem = null;
       _sent = null;
     });
-    final outcome = await ref.read(ledgerSyncProvider).run(book);
-    if (!mounted) return;
-    setState(() {
-      _sending = false;
-      _sent = outcome.sent;
-      _received = outcome.received;
-      _problem = outcome.error;
-    });
+    try {
+      final outcome = await ref.read(ledgerSyncProvider).run(book);
+      if (!mounted) return;
+      setState(() {
+        _sent = outcome.sent;
+        _received = outcome.received;
+        _problem = outcome.error;
+      });
+    } finally {
+      // Aconteça o que acontecer, o botão volta: preso em "enviando" ele
+      // não serve para tentar de novo.
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override
