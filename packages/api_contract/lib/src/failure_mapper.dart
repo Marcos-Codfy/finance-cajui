@@ -40,6 +40,10 @@ abstract final class FailureMapper {
       ErrorCode.entry04,
       {'remainingCents': remaining.cents, 'requestedCents': requested.cents},
     ),
+    EntryNoLongerExists(:final entryId) => (
+      ErrorCode.req02,
+      {'entryId': entryId},
+    ),
   };
 
   static MappedFailure _voucher(VoucherFailure failure) => switch (failure) {

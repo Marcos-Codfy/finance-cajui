@@ -146,7 +146,7 @@ Vagos de propósito (RNF-SEC-18): não revelam se o aparelho existe, se o token 
 | Código | Quando | Origem | Texto | Saídas |
 |---|---|---|---|---|
 | `E-REQ-01` ✚ | Corpo da requisição fora do esquema | api 400 | O app enviou um pedido que o servidor não entendeu. É uma falha do app, não sua; o que você preencheu continua na tela. | Tentar de novo · Copiar o código |
-| `E-REQ-02` ✚ | O item pedido não existe mais | api 404 | Este item não existe mais — pode ter sido apagado em outro aparelho. | Voltar para a lista |
+| `E-REQ-02` ✚ | O item pedido não existe mais | app · api 404 | Este item não existe mais — pode ter sido apagado em outro aparelho. | Voltar para a lista |
 | `E-REQ-03` ✚ | App antigo demais para a API (RNF-COMPAT-05) | api 426 | Esta versão do app ficou antiga para falar com o servidor. Seus lançamentos pendentes continuam guardados. Instale a versão {versão} para enviar. | Ver como atualizar |
 | `E-REQ-04` ✚ | Texto enviado acima do limite da API | api 413 | Este comprovante tem texto demais para analisar de uma vez. Usei as regras locais — confira a categoria antes de lançar. | Lançar · Conferir depois |
 | `E-SRV-01` | Erro interno do servidor | api 500 | O servidor falhou ao {ação}. Seus dados estão guardados; foi só esta consulta que não voltou. | Tentar de novo |

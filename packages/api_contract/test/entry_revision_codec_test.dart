@@ -62,6 +62,16 @@ void main() {
       expect(_back(json).revisedAt, isNull);
     });
 
+    test('carimbo sem fuso vale como nenhum: um servidor em outro fuso o '
+        'deslocaria, e três horas decidem quem venceu', () {
+      final json = {
+        ...EntryCodec.fromEntry(_entry()).toJson(),
+        'revisedAt': '2026-09-21T12:30:00',
+      };
+
+      expect(_back(json).revisedAt, isNull);
+    });
+
     test('o pedido é estrito: campo fora do contrato continua sendo recusado '
         '(E-REQ-01)', () {
       final json = {
