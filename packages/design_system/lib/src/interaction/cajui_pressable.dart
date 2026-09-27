@@ -83,8 +83,12 @@ class _CajuiPressableState extends State<CajuiPressable> {
     if (!_enabled || widget.busy) return;
     final feedback = CajuiFeedbackScope.of(context);
     final toggled = widget.toggled;
-    toggled == null ? feedback.tap() : feedback.toggle(on: !toggled);
+    // A ação vem **antes** do retorno sensorial, e a ordem importa: a chave
+    // que liga os sons tocava o "ligou" com o som ainda desligado — e por
+    // isso ficava muda ao ligar e só soava ao desligar. Feito primeiro o
+    // que a pessoa pediu, o som já sai obedecendo à escolha nova.
     widget.onPressed!();
+    toggled == null ? feedback.tap() : feedback.toggle(on: !toggled);
   }
 
   Set<WidgetState> get _visibleStates => {

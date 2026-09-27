@@ -1,6 +1,5 @@
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
-import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 
 /// A subida que acontece sozinha, depois de cada lançamento (RN-781).
 ///
@@ -20,10 +19,10 @@ import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 /// já está gravado, e falhar em copiá-lo não é erro de quem acabou de
 /// lançar. O que não subiu sobe na próxima.
 final class QuietSync {
-  /// Cria a subida silenciosa sobre [_uplink].
-  new(this._uplink);
+  /// Cria a subida silenciosa sobre [_sync].
+  new(this._sync);
 
-  final LedgerUplink _uplink;
+  final LedgerSync _sync;
   Future<void>? _running;
   LedgerBook? _queued;
 
@@ -33,7 +32,7 @@ final class QuietSync {
   /// O que for pedido enquanto uma está no ar espera e sobe logo depois, já
   /// com o livro mais recente — nenhum lançamento fica para trás.
   void schedule(LedgerBook book) {
-    if (!_uplink.hasOpenSession) return;
+    if (!_sync.uplink.hasOpenSession) return;
     if (_running != null) {
       _queued = book;
       return;
@@ -51,7 +50,7 @@ final class QuietSync {
 
   Future<void> _run(LedgerBook book) async {
     try {
-      await LedgerSync(_uplink).run(book);
+      await _sync.run(book);
     } on Object {
       // Sem rede, sem servidor, sessão vencida no meio: nada disso é assunto
       // de quem acabou de lançar.

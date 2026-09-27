@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/quiet_sync.dart';
 import 'package:domain/domain.dart';
@@ -59,8 +60,14 @@ final class _FakeUplink implements LedgerUplink {
   Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async => null;
 
   @override
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
-      (const <String, String>{}, null);
+  Future<(RemoteEntries, ErrorCode?)> remoteEntries() async => (
+    (
+      signatures: const <String, String>{},
+      revisedAt: const <String, DateTime>{},
+      cancelled: const <String>{},
+    ),
+    null,
+  );
 
   @override
   Future<ErrorCode?> sendCategory(Map<String, Object?> category) async => null;
@@ -110,7 +117,7 @@ void main() {
   group('RN-781 · o livro sobe sozinho depois de lançar', () {
     test('com sessão aberta, sobe sem ninguém pedir', () async {
       final uplink = _FakeUplink();
-      final quiet = QuietSync(uplink)..schedule(_book(['e1']));
+      final quiet = QuietSync(LedgerSync(uplink))..schedule(_book(['e1']));
 
       await quiet.settled;
 
@@ -121,7 +128,7 @@ void main() {
         'no meio do lançamento', () async {
       final uplink = _FakeUplink(session: false);
 
-      QuietSync(uplink).schedule(_book(['e1']));
+      QuietSync(LedgerSync(uplink)).schedule(_book(['e1']));
       await Future<void>.delayed(Duration.zero);
 
       expect(uplink.runs, 0);
@@ -131,7 +138,7 @@ void main() {
     test('lançar três coisas seguidas não abre três subidas, e a última '
         'sobe com o livro mais recente', () async {
       final uplink = _FakeUplink()..hold = Completer<void>();
-      final quiet = QuietSync(uplink)..schedule(_book(['e1']));
+      final quiet = QuietSync(LedgerSync(uplink))..schedule(_book(['e1']));
       await Future<void>.delayed(Duration.zero);
 
       quiet
@@ -148,7 +155,7 @@ void main() {
 
     test('falhar não chega à tela: o livro daqui já está gravado', () async {
       final uplink = _FakeUplink()..refuse = ErrorCode.srv01;
-      final quiet = QuietSync(uplink)..schedule(_book(['e1']));
+      final quiet = QuietSync(LedgerSync(uplink))..schedule(_book(['e1']));
 
       await expectLater(quiet.settled, completes);
       expect(uplink.sent, isEmpty);

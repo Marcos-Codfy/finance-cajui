@@ -7,6 +7,7 @@ import 'package:domain/src/ledger/payment_line.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:domain/src/money/tender.dart';
 import 'package:domain/src/money/tender_amounts.dart';
+import 'package:domain/src/shared/edit_stamp.dart';
 import 'package:domain/src/shared/failure.dart';
 import 'package:domain/src/shared/result.dart';
 import 'package:meta/meta.dart';
@@ -32,6 +33,7 @@ final class Entry {
     required this.isExceptional,
     required this.origin,
     required this.installmentPlan,
+    required this.revisedAt,
   }) : assert(
          installmentPlan == null || _planMatches(installmentPlan, paymentLines),
          'O parcelamento precisa valer exatamente a linha do cartão parcelado.',
@@ -64,6 +66,16 @@ final class Entry {
 
   /// O parcelamento, quando a linha do cartão foi parcelada.
   final InstallmentPlan? installmentPlan;
+
+  /// Quando este lançamento foi corrigido pela última vez, em UTC; `null`
+  /// quando nunca foi. É o que decide entre dois celulares que corrigiram
+  /// a mesma compra: vale a correção mais nova, e não a que sincronizou
+  /// por último (BL-062).
+  final DateTime? revisedAt;
+
+  /// Se esta versão é mais nova que [other], pelo carimbo de correção.
+  bool isNewerThan(Entry other) =>
+      EditStamp.isNewer(revisedAt, other.revisedAt);
 
   /// Quanto saiu em dinheiro e quanto saiu em vale, separados (RN-111).
   TenderAmounts get paidByTender => _sum(paymentLines);
@@ -99,6 +111,7 @@ final class Entry {
     bool isExceptional = false,
     EntryOrigin origin = EntryOrigin.manual,
     InstallmentPlan? installmentPlan,
+    DateTime? revisedAt,
   }) {
     return _validate(amount, paymentLines, occurredOn, today, category) ??
         Ok(
@@ -112,6 +125,7 @@ final class Entry {
             isExceptional: isExceptional,
             origin: origin,
             installmentPlan: installmentPlan,
+            revisedAt: revisedAt?.toUtc(),
           ),
         );
   }

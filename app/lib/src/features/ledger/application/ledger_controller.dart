@@ -4,8 +4,11 @@ import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_changes.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
+import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/quiet_sync.dart';
 import 'package:domain/domain.dart';
@@ -50,10 +53,12 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     LedgerBook book, {
     required String id,
     required EntryOrigin origin,
+    DateTime? revisedAt,
   }) {
     return Entry.create(
       id: id,
       origin: origin,
+      revisedAt: revisedAt,
       description: draft.description.trim(),
       amount: Money.fromCents(draft.amountCents),
       // `isComplete` já garantiu os dois: o rascunho não chega aqui sem
@@ -62,7 +67,9 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       category: draft.category!,
       paymentLines: draft.lines,
       today: ref.read(clockProvider).today(),
-      installmentPlan: _planOf(draft, book),
+      installmentPlan: draft.installmentPlanFor(
+        book.cardOf(draft.method?.id ?? ''),
+      ),
     );
   }
 
@@ -77,6 +84,9 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       book,
       id: original.id,
       origin: original.origin,
+      // O carimbo é o que decide entre dois celulares que corrigiram a
+      // mesma compra: vale a correção mais nova (BL-062).
+      revisedAt: ref.read(clockProvider).now(),
     );
     final entry = result.valueOrNull;
     if (entry == null) return result;
@@ -136,24 +146,6 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     return result;
   }
 
-  /// O parcelamento de [draft], quando a compra foi feita em mais de uma vez
-  /// num cartão cadastrado. As parcelas saem do domínio, a partir do ciclo
-  /// do cartão: a primeira é cobrada na fatura do ciclo da compra (RN-311).
-  InstallmentPlan? _planOf(EntryDraft draft, LedgerBook book) {
-    final card = book.cardOf(draft.method?.id ?? '');
-    if (card == null || draft.installmentCount < 2) return null;
-    final each = draft.installmentAmountCents;
-    return InstallmentPlan.forPurchase(
-      card: card,
-      purchasedOn: draft.occurredOn!,
-      principal: Money.fromCents(draft.amountCents),
-      count: draft.installmentCount,
-      // Parcela informada só quando ela **não** é o total dividido: aí a
-      // diferença é juros, e o domínio a guarda como tal (RN-314).
-      installmentAmount: each == null ? null : Money.fromCents(each),
-    );
-  }
-
   /// Cadastra ou altera um cartão de crédito. Dia inválido volta como falha
   /// do domínio (`E-CARD-01`), e nada é gravado.
   Future<Result<CreditCard>> defineCard({
@@ -203,60 +195,26 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     );
   }
 
-  /// Registra uma renda recebida. Em dinheiro, [fromPlan] diz se é a renda do
-  /// plano — que passa a valer no lugar da esperada no mês (RN-131) — ou uma
-  /// entrada avulsa, contada só no mês em que entrou (RN-133). No vale, é o
-  /// crédito que entra no saldo (RN-120). Valor zero não gera fato.
-  Future<void> receiveIncome({
-    required Tender tender,
-    required Money amount,
-    required LocalDate receivedOn,
-    bool fromPlan = true,
-  }) async {
-    if (!amount.isPositive) return;
-    final book = await future;
-    final ofPlan = fromPlan && tender == Tender.cash;
-    await _commit(
-      book,
-      IncomeReceived(
-        IncomeReceipt(
-          id: ref.read(newIdProvider)(),
-          sourceId: ofPlan ? LedgerBook.cashIncomeSourceId : null,
-          tender: tender,
-          amount: amount,
-          receivedOn: receivedOn,
-        ),
-      ),
-    );
-  }
-
-  /// Corrige o saldo do vale para [actual], o que a operadora mostra
-  /// (RN-123). Saldo que já bate não gera fato nenhum.
-  Future<void> setVoucherBalance(Money actual, {required String reason}) async {
-    final book = await future;
-    final adjustment = book.voucher.adjustmentTo(actual);
-    if (adjustment.isZero) return;
-    await _commit(
-      book,
-      VoucherBalanceAdjusted(
-        VoucherAdjustment(
-          id: ref.read(newIdProvider)(),
-          amount: adjustment,
-          on: ref.read(clockProvider).today(),
-          reason: reason,
-        ),
-      ),
-    );
-  }
-
   /// Passa a valer o plano [setup]. Plano igual ao que já vale não gera fato.
   Future<void> definePlan(MonthSetup setup) async {
     final book = await future;
     if (identical(setup, book.setup)) return;
     await _commit(
       book,
-      PlanDefined(id: 'plan-${ref.read(newIdProvider)()}', setup: setup),
+      PlanDefined(
+        id: 'plan-${ref.read(newIdProvider)()}',
+        // O carimbo é o que decide entre dois celulares: o plano editado
+        // por último vence, e não o que chegou por último ao servidor.
+        setup: setup.stamped(ref.read(clockProvider).now()),
+      ),
     );
+  }
+
+  /// Grava um fato que **veio do servidor** — o que outro aparelho fez
+  /// (BL-062). Igual a [append], menos numa coisa: não dispara nova subida,
+  /// porque o que desceu não precisa voltar.
+  Future<void> absorb(LedgerEvent event) async {
+    await _commit(await future, event, quietly: true);
   }
 
   /// Grava [event] e só então muda o que a tela vê. É a porta por onde os
@@ -266,14 +224,23 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     await _commit(await future, event);
   }
 
-  Future<void> _commit(LedgerBook book, LedgerEvent event) async {
+  Future<void> _commit(
+    LedgerBook book,
+    LedgerEvent event, {
+    bool quietly = false,
+  }) async {
     await ref.read(ledgerJournalProvider).append(event);
-    var next = book.apply(event);
+    // Aplica sobre o livro **em vigor**, e não sobre o que o caso de uso leu
+    // antes de gravar: entre uma coisa e outra pode ter descido um fato de
+    // outro aparelho, e aplicar sobre o livro velho o apagaria da tela até
+    // o app reabrir.
+    final before = state.value ?? book;
+    var next = before.apply(event);
     state = AsyncData(next);
     // Fato com data em mês já fechado é lançamento tardio: o fechamento não
     // é reescrito, ganha uma revisão (RN-441).
     for (final revision in CloseRevision.after(
-      before: book,
+      before: before,
       after: next,
       event: event,
       today: ref.read(clockProvider).today(),
@@ -282,11 +249,21 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
       next = next.apply(revision);
       state = AsyncData(next);
     }
-    quietSync.schedule(next);
+    if (!quietly) quietSync.schedule(next);
   }
 
-  /// A cópia para o servidor, que acontece sozinha e não aparece na tela.
-  late final QuietSync quietSync = QuietSync(ref.read(ledgerUplinkProvider));
+  /// A cópia para o servidor, que acontece sozinha e não aparece na tela —
+  /// e que traz de volta o que outro aparelho fez.
+  late final QuietSync quietSync = QuietSync(
+    LedgerSync(
+      ref.read(ledgerUplinkProvider),
+      pull: LedgerPull(
+        ref.read(ledgerDownlinkProvider),
+        clock: ref.read(clockProvider),
+        absorb: absorb,
+      ),
+    ),
+  );
 }
 
 /// O livro de lançamentos em vigor.

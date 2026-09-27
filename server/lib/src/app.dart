@@ -13,6 +13,7 @@ import 'package:server/src/auth/device_routes.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/web_codes.dart';
+import 'package:server/src/http/cors.dart';
 import 'package:server/src/http/middlewares.dart';
 import 'package:server/src/http/rate_limiter.dart';
 import 'package:server/src/ledger/income_routes.dart';
@@ -40,6 +41,7 @@ final class App {
     RateLimiter? rateLimiter,
     ReceiptClassifier classifier = const RuleBasedClassifier(),
     AssistantService? assistant,
+    String webOrigin = defaultWebOrigin,
   }) : this._shared(
          store: store,
          devices: DeviceRegistry(store),
@@ -51,6 +53,7 @@ final class App {
          classifier: classifier,
          assistant: assistant,
          webCodes: WebCodes(),
+         webOrigin: webOrigin,
        );
 
   new _shared({
@@ -64,6 +67,7 @@ final class App {
     required this.classifier,
     required this.assistant,
     required WebCodes webCodes,
+    required this.webOrigin,
   }) : _clock = clock,
        _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
        _auth = AuthRoutes(
@@ -99,6 +103,14 @@ final class App {
   /// Quem atende a conversa com o assistente; `null` num servidor sem a
   /// credencial da IA, que responde `E-AI-01` às perguntas.
   final AssistantService? assistant;
+
+  /// A única origem de navegador que pode ler as respostas: a web de
+  /// consulta. Vem da composição para o teste e um ambiente de ensaio
+  /// poderem apontar para outra.
+  final String webOrigin;
+
+  /// Onde a web de consulta mora (ADR-011, desvio 2 do plano).
+  static const defaultWebOrigin = 'https://cajui-teal.vercel.app';
 
   final Clock _clock;
   final void Function(String line) _log;
@@ -140,7 +152,9 @@ final class App {
   /// A ordem importa: o identificador nasce primeiro, para todo o resto poder
   /// citá-lo; o registro de acesso vê a resposta final, inclusive a de erro;
   /// o limite de taxa vem **antes** da autenticação, para que tentar senha
-  /// errada também gaste cota.
+  /// errada também gaste cota — e a pergunta prévia do navegador também;
+  /// a origem cruzada vem antes da autenticação porque a recusa `401`
+  /// precisa chegar legível à web.
   Handler get handler {
     final routes = Router()
       ..get('/health', _health)
@@ -155,6 +169,7 @@ final class App {
         .addMiddleware(Middlewares.accessLog(_log))
         .addMiddleware(Middlewares.errorBoundary(_log))
         .addMiddleware(Middlewares.rateLimit(_limiter))
+        .addMiddleware(Cors.allow(webOrigin))
         .addMiddleware(Authenticate.middleware(sessions))
         .addHandler(routes.call);
   }

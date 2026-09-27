@@ -2,13 +2,13 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
-import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Mandar o livro para o servidor, quando a pessoa quiser.
+/// Sincronizar o livro com o servidor, quando a pessoa quiser: sobe o que
+/// falta lá e traz o que outro aparelho fez (BL-062).
 ///
 /// Depois do primeiro envio do dia, cada lançamento sobe sozinho — é o que
 /// a `QuietSync` faz. Esta tela continua existindo porque **o primeiro** não
@@ -31,6 +31,7 @@ class SyncPage extends ConsumerStatefulWidget {
 class _SyncPageState extends ConsumerState<SyncPage> {
   bool _sending = false;
   int? _sent;
+  int _received = 0;
   ErrorCode? _problem;
 
   Future<void> _send() async {
@@ -41,13 +42,13 @@ class _SyncPageState extends ConsumerState<SyncPage> {
       _problem = null;
       _sent = null;
     });
-    final (enviados, erro) = await LedgerSync(ref.read(ledgerUplinkProvider))
-        .run(book);
+    final outcome = await ref.read(ledgerSyncProvider).run(book);
     if (!mounted) return;
     setState(() {
       _sending = false;
-      _sent = enviados;
-      _problem = erro;
+      _sent = outcome.sent;
+      _received = outcome.received;
+      _problem = outcome.error;
     });
   }
 
@@ -76,6 +77,18 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     );
   }
 
+  /// O que subiu e o que desceu, cada um só quando houve.
+  String _summary(int enviados) {
+    final partes = [
+      if (enviados > 0) 'Foram $enviados lançamentos para o servidor.',
+      if (_received > 0) 'Chegaram $_received novidades do outro aparelho.',
+    ];
+    if (partes.isEmpty) {
+      return 'Este aparelho e o servidor têm exatamente as mesmas coisas.';
+    }
+    return '${partes.join(' ')} O assistente e a consulta na web já enxergam.';
+  }
+
   List<Widget> _resultado() {
     final code = _problem;
     final enviados = _sent;
@@ -88,11 +101,10 @@ class _SyncPageState extends ConsumerState<SyncPage> {
         )
       else if (enviados != null)
         CajuiEmptyState(
-          title: enviados == 0 ? 'Já estava tudo lá' : 'Enviado',
-          message: enviados == 0
-              ? 'O servidor já tinha todos os lançamentos deste aparelho.'
-              : 'Foram $enviados lançamentos. O assistente e a consulta na '
-                    'web já enxergam.',
+          title: enviados == 0 && _received == 0
+              ? 'Já estava tudo em dia'
+              : 'Sincronizado',
+          message: _summary(enviados),
         ),
     ];
   }

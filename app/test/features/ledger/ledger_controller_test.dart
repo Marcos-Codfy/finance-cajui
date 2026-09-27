@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -43,6 +44,7 @@ void main() {
   late ProviderContainer container;
 
   LedgerController controller() => container.read(ledgerProvider.notifier);
+  IncomeService income() => container.read(incomeServiceProvider);
   Future<int> recorded() async => (await journal.readAll()).length;
 
   setUp(() {
@@ -80,7 +82,7 @@ void main() {
 
   group('dividir entre vale e dinheiro (UC-ENTRY-02)', () {
     setUp(() async {
-      await controller().setVoucherBalance(
+      await income().setVoucherBalance(
         const Money.fromCents(3000),
         reason: 'teste',
       );
@@ -126,7 +128,7 @@ void main() {
 
   group('saldo do vale (RN-123)', () {
     test('informar o saldo real grava um ajuste, não um lançamento', () async {
-      await controller().setVoucherBalance(
+      await income().setVoucherBalance(
         const Money.fromCents(16210),
         reason: 'saldo da operadora',
       );
@@ -139,7 +141,7 @@ void main() {
     });
 
     test('saldo que já bate não gera fato nenhum', () async {
-      await controller().setVoucherBalance(Money.zero, reason: 'igual');
+      await income().setVoucherBalance(Money.zero, reason: 'igual');
 
       expect(await recorded(), 0);
     });
@@ -156,7 +158,7 @@ void main() {
   });
 
   test('reabrir o app reconstrói o mesmo livro a partir dos fatos', () async {
-    await controller().setVoucherBalance(
+    await income().setVoucherBalance(
       const Money.fromCents(3000),
       reason: 'teste',
     );
@@ -234,8 +236,14 @@ final class _OpenUplink implements LedgerUplink {
   Future<ErrorCode?> sendPlan(Map<String, Object?> plan) async => null;
 
   @override
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
-      (const <String, String>{}, null);
+  Future<(RemoteEntries, ErrorCode?)> remoteEntries() async => (
+    (
+      signatures: const <String, String>{},
+      revisedAt: const <String, DateTime>{},
+      cancelled: const <String>{},
+    ),
+    null,
+  );
 
   @override
   Future<ErrorCode?> sendCategory(Map<String, Object?> category) async => null;

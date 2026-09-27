@@ -57,6 +57,7 @@ final class LedgerState {
   final Map<String, Category> _categories = {};
   final Map<String, CreditCard> _cards = {};
   final List<Entry> _entries = [];
+  final Set<String> _cancelled = {};
   final Map<String, IncomeReceipt> _receipts = {};
   final Map<String, Map<String, Object?>> _adjustments = {};
   final Map<String, Reversal> _reversals = {};
@@ -70,6 +71,11 @@ final class LedgerState {
 
   /// Os lançamentos, na ordem em que entraram.
   List<Entry> get entries => List.unmodifiable(_entries);
+
+  /// Os lançamentos que algum aparelho cancelou. Ficam listados para os
+  /// outros aparelhos cancelarem também, em vez de mandá-los de volta
+  /// (BL-062).
+  Set<String> get cancelledIds => Set.unmodifiable(_cancelled);
 
   /// O plano do mês como o aparelho o cadastrou.
   MonthSetup get plan => _plan;
@@ -127,12 +133,36 @@ final class LedgerState {
         final card = CardCodec.decodeCard(event.payload);
         _cards[card.id] = card;
       case planDefined:
-        _plan = MonthSetupCodec.decode(event.payload);
+        // O plano mais novo pelo carimbo vence, e não o que chegou por
+        // último: dois celulares sincronizam em horas diferentes, e o que
+        // sincroniza tarde não pode apagar a edição mais recente do outro.
+        final incoming = MonthSetupCodec.decode(event.payload);
+        if (!_plan.isNewerThan(incoming)) _plan = incoming;
       case incomeReceived:
         final receipt = IncomeCodec.decode(event.payload);
         _receipts[receipt.id] = receipt;
       case voucherAdjusted:
         _adjustments['${event.payload['id']}'] = event.payload;
+      case entryCreated || entryRevised || entryCancelled || entryReversed:
+        _applyEntry(event);
+    }
+  }
+
+  /// Os fatos que mexem nos lançamentos: criar, corrigir, cancelar, estornar.
+  void _applyEntry(StoredEvent event) {
+    switch (event.type) {
+      case entryCreated:
+        // Recriar o que já foi cancelado não acontece pela rota — ela recusa
+        // —, mas o registro é a fonte da verdade, e a projeção não pode
+        // depender de a rota ter existido.
+        if (!_cancelled.contains(event.payload['id'])) {
+          _entries.add(_replayed(event));
+        }
+      case entryRevised:
+        _replace(_replayed(event));
+      case entryCancelled:
+        _entries.removeWhere((entry) => entry.id == event.payload['id']);
+        _cancelled.add('${event.payload['id']}');
       case entryReversed:
         // O estorno já foi aceito quando aconteceu; reaplicá-lo não pode
         // falhar. Lançamento que sumiu da projeção leva o estorno junto.
@@ -140,23 +170,23 @@ final class LedgerState {
           final reversal = tryReverse(event.payload, entry).valueOrNull;
           if (reversal != null) _reversals[reversal.id] = reversal;
         }
-      case entryCreated:
-        _entries.add(_replayed(event));
-      case entryRevised:
-        _replace(_replayed(event));
-      case entryCancelled:
-        _entries.removeWhere((entry) => entry.id == event.payload['id']);
     }
   }
 
   /// Põe [entry] no lugar da versão anterior, **na mesma posição**: corrigir
   /// um lançamento não o manda para o fim da lista.
+  ///
+  /// Versão mais velha que a que está não entra: o outro aparelho corrigiu
+  /// depois, e é a correção dele que vale (BL-062). A rota já recusa isso,
+  /// mas o registro é a fonte da verdade, e a projeção não pode depender
+  /// de a rota ter existido.
   void _replace(Entry entry) {
     final at = _entries.indexWhere((existing) => existing.id == entry.id);
     if (at < 0) {
       _entries.add(entry);
       return;
     }
+    if (_entries[at].isNewerThan(entry)) return;
     _entries[at] = entry;
   }
 

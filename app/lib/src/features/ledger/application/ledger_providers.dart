@@ -23,6 +23,9 @@ class _DeviceClock implements Clock {
 
   @override
   LocalDate today() => LocalDate.fromDateTime(DateTime.now());
+
+  @override
+  DateTime now() => DateTime.now().toUtc();
 }
 
 final _random = Random.secure();

@@ -5,6 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// recebimentos e dos acertos de saldo do vale que ele conhece.
 typedef RemoteIncome = ({Set<String> receipts, Set<String> adjustments});
 
+/// O que o servidor tem de lançamentos: a assinatura dos vivos, por
+/// identificador, o carimbo da última correção de cada um (só dos que já
+/// foram corrigidos), e os que **já foram cancelados** em algum aparelho.
+/// Sem a última parte, o celular que ainda tinha o lançamento o mandaria
+/// de volta, desfazendo o cancelamento feito no outro; sem o carimbo, o
+/// celular atrasado empurraria a versão velha por cima da nova (BL-062).
+typedef RemoteEntries = ({
+  Map<String, String> signatures,
+  Map<String, DateTime> revisedAt,
+  Set<String> cancelled,
+});
+
 /// O caminho de subida do livro: o que está no aparelho chegando ao servidor
 /// (RN-781).
 ///
@@ -26,18 +38,31 @@ abstract interface class LedgerUplink {
   /// dia é a pedido e os seguintes acontecem sozinhos.
   bool get hasOpenSession;
 
-  /// A assinatura de um lançamento, para saber se o servidor tem a versão
-  /// em vigor.
+  /// A assinatura de um lançamento: tudo o que nele é **conteúdo**, num
+  /// texto comparável. É por ela que se sabe se o servidor tem a versão
+  /// em vigor — e, entre dois aparelhos, se um deles corrigiu algo.
   ///
-  /// São os quatro campos que **mudam número na resposta do assistente**.
-  /// Correção que só troca a forma de pagamento não muda nenhuma conta do
-  /// contexto, e por isso não obriga uma subida.
-  static String signature({
-    required int cents,
-    required String occurredOn,
-    required String categoryId,
-    required String description,
-  }) => '$cents|$occurredOn|$categoryId|$description';
+  /// Antes eram só os quatro campos que mudam número na resposta do
+  /// assistente. Com dois celulares, trocar a forma de pagamento também
+  /// precisa atravessar: é o que diz se saiu do vale ou do dinheiro
+  /// (RN-111). Ficam de fora o carimbo — ele diz **quando**, não **o
+  /// quê** — e o valor da parcela, que o servidor recalcula sem juros e
+  /// faria toda compra com juros parecer corrigida para sempre (BL-054).
+  static String signatureOf(CreateEntryRequest request) {
+    final lines = [
+      for (final line in request.paymentLines)
+        '${line.paymentMethodId}:${line.kind}:${line.amountCents}',
+    ].join('+');
+    return [
+      request.amountCents,
+      request.occurredOn,
+      request.categoryId,
+      request.description,
+      lines,
+      request.installments ?? 1,
+      request.isExceptional,
+    ].join('|');
+  }
 
   /// As categorias que o servidor já conhece.
   Future<(Set<String>, ErrorCode?)> remoteCategories();
@@ -66,8 +91,8 @@ abstract interface class LedgerUplink {
   /// cabe (BL-049).
   Future<ErrorCode?> sendPlan(Map<String, Object?> plan);
 
-  /// As assinaturas dos lançamentos que o servidor tem, por identificador.
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries();
+  /// Os lançamentos que o servidor tem, e os que ele já cancelou.
+  Future<(RemoteEntries, ErrorCode?)> remoteEntries();
 
   /// Cadastra a categoria no servidor.
   Future<ErrorCode?> sendCategory(Map<String, Object?> category);

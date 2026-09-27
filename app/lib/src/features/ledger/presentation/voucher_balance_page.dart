@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -28,7 +29,7 @@ class _VoucherBalancePageState extends ConsumerState<VoucherBalancePage> {
     final navigator = Navigator.of(context);
     final feedback = CajuiFeedbackScope.of(context);
     await ref
-        .read(ledgerProvider.notifier)
+        .read(incomeServiceProvider)
         .setVoucherBalance(
           Money.fromCents(cents),
           reason: 'Saldo informado a partir da operadora',

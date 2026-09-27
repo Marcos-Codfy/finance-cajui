@@ -153,6 +153,9 @@ final class LedgerRoutes {
       'entries': [
         for (final entry in entries) EntryCodec.fromEntry(entry).toJson(),
       ],
+      // O que morreu também é informação: é o que faz o outro aparelho
+      // cancelar em vez de mandar de volta (BL-062).
+      'cancelledIds': [...state.cancelledIds],
     });
   }
 
@@ -160,6 +163,11 @@ final class LedgerRoutes {
     final command = CreateEntryRequest.fromJson(await JsonBody.read(request));
     if (!state.categories.containsKey(command.categoryId)) {
       return Responses.error(request, ErrorCode.req02);
+    }
+    // Lançamento que algum aparelho já cancelou não ressuscita por outro
+    // que ainda o tinha: o cancelamento é a ordem mais recente.
+    if (state.cancelledIds.contains(command.id)) {
+      return Responses.json({'id': command.id, 'cancelled': true});
     }
     final known = state.entries.any((entry) => entry.id == command.id);
     final result = state.tryCreate(command, today: clock.today());
@@ -186,10 +194,18 @@ final class LedgerRoutes {
     if (!state.categories.containsKey(command.categoryId)) {
       return Responses.error(request, ErrorCode.req02);
     }
-    final failure = state
-        .tryCreate(command, today: clock.today())
-        .failureOrNull;
-    if (failure != null) return _refuse(request, failure);
+    if (state.cancelledIds.contains(id)) {
+      return Responses.json({'id': id, 'cancelled': true});
+    }
+    final result = state.tryCreate(command, today: clock.today());
+    if (result.failureOrNull case final failure?) {
+      return _refuse(request, failure);
+    }
+    // A versão mais velha não passa por cima da mais nova: quem corrigiu
+    // depois vence, e é a correção dele que desce (BL-062).
+    if (state.entryOf(id)?.isNewerThan(result.valueOrNull!) ?? false) {
+      return Responses.json({'id': id, 'kept': true});
+    }
     final payload = command.toJson();
     final event = await store.append(
       id: 'entry-revised-$id-${_fingerprint(payload)}',

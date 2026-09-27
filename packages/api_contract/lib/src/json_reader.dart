@@ -41,6 +41,14 @@ final class JsonReader {
   int? optionalInteger(String field) =>
       _json[field] == null ? null : _read<int>(field);
 
+  /// Um instante ISO 8601 opcional, devolvido em UTC. Carimbo ilegível
+  /// vale como nenhum: quem o carrega continua valendo, só perde a vez na
+  /// disputa entre dois aparelhos.
+  DateTime? optionalInstant(String field) {
+    final raw = optionalString(field, maxLength: 40);
+    return raw == null ? null : DateTime.tryParse(raw)?.toUtc();
+  }
+
   /// Um texto opcional; ausente, nulo ou vazio devolve `null`.
   String? optionalString(String field, {int maxLength = 200}) {
     if (_json[field] == null) return null;

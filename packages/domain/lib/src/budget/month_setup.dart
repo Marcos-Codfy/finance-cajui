@@ -3,6 +3,7 @@ import 'package:domain/src/budget/month_plan.dart';
 import 'package:domain/src/budget/variable_budget.dart';
 import 'package:domain/src/calendar/budget_month.dart';
 import 'package:domain/src/money/money.dart';
+import 'package:domain/src/shared/edit_stamp.dart';
 import 'package:meta/meta.dart';
 
 /// O que a pessoa cadastrou para o app conseguir planejar o mês: a renda em
@@ -22,6 +23,7 @@ final class MonthSetup {
     this.debtInstallments = Money.zero,
     this.fixedExpenses = const [],
     this.variableBudgets = const [],
+    this.definedAt,
   });
 
   /// O cadastro de quem acabou de instalar o app.
@@ -41,6 +43,28 @@ final class MonthSetup {
 
   /// As faixas dos gastos variáveis, uma por categoria.
   final List<VariableBudget> variableBudgets;
+
+  /// Quando este cadastro passou a valer, em UTC; `null` num registro
+  /// antigo, de antes de dois aparelhos poderem discordar.
+  ///
+  /// É o que decide entre dois celulares: o plano com o `definedAt` mais
+  /// novo vence, e não o que chegou por último ao servidor — quem sincroniza
+  /// depois não apaga o que o outro editou antes por acaso.
+  final DateTime? definedAt;
+
+  /// Se este cadastro é mais novo que [other]. Sem carimbo dos dois lados,
+  /// ninguém é mais novo, e vale o que já está.
+  bool isNewerThan(MonthSetup other) =>
+      EditStamp.isNewer(definedAt, other.definedAt);
+
+  /// O mesmo cadastro carimbado com o instante [at] em que passou a valer.
+  MonthSetup stamped(DateTime at) => MonthSetup(
+    cashIncome: cashIncome,
+    debtInstallments: debtInstallments,
+    fixedExpenses: fixedExpenses,
+    variableBudgets: variableBudgets,
+    definedAt: at.toUtc(),
+  );
 
   /// Se ainda não há nada cadastrado.
   bool get isEmpty =>
@@ -82,6 +106,7 @@ final class MonthSetup {
         debtInstallments: debtInstallments ?? this.debtInstallments,
         fixedExpenses: fixedExpenses,
         variableBudgets: variableBudgets,
+        definedAt: definedAt,
       );
 
   /// O mesmo cadastro com o fixo [expense] incluído, no lugar do que tivesse
@@ -118,5 +143,6 @@ final class MonthSetup {
     debtInstallments: debtInstallments,
     fixedExpenses: fixedExpenses ?? this.fixedExpenses,
     variableBudgets: variableBudgets ?? this.variableBudgets,
+    definedAt: definedAt,
   );
 }

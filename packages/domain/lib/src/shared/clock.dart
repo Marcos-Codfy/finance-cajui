@@ -9,4 +9,8 @@ import 'package:domain/src/calendar/local_date.dart';
 abstract interface class Clock {
   /// O dia de hoje, no fuso de quem usa o app.
   LocalDate today();
+
+  /// O instante de agora, em UTC. É o que decide quem venceu quando dois
+  /// aparelhos mexeram na mesma coisa: o mais novo vale.
+  DateTime now();
 }

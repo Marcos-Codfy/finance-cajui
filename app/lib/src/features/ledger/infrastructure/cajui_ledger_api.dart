@@ -68,9 +68,11 @@ final class CajuiLedgerApi implements LedgerUplink {
     );
   }
 
+  /// Os identificadores de uma lista do servidor — de objetos com `id`, ou
+  /// de textos soltos, como a lista dos cancelados.
   static Set<String> _idsOf(Object? list) => {
     for (final item in (list as List<Object?>? ?? const []))
-      '${(item! as Map<String, Object?>)['id']}',
+      if (item is Map) '${item['id']}' else '$item',
   };
 
   @override
@@ -100,24 +102,36 @@ final class CajuiLedgerApi implements LedgerUplink {
   }
 
   @override
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async {
+  Future<(RemoteEntries, ErrorCode?)> remoteEntries() async {
     final outcome = await _api.authenticated(
       (token) => _api.send('GET', '/v1/entries', token: token),
     );
     final list = outcome.body?['entries'] as List<Object?>? ?? const [];
-    return ({for (final item in list) ..._signed(item)}, outcome.failure?.code);
+    final requests = [for (final item in list) ?_requestOf(item)];
+    return (
+      (
+        signatures: {
+          for (final request in requests)
+            request.id: LedgerUplink.signatureOf(request),
+        },
+        revisedAt: {
+          for (final request in requests) request.id: ?request.revisedAt,
+        },
+        cancelled: _idsOf(outcome.body?['cancelledIds']),
+      ),
+      outcome.failure?.code,
+    );
   }
 
-  Map<String, String> _signed(Object? item) {
-    final entry = item! as Map<String, Object?>;
-    return {
-      '${entry['id']}': LedgerUplink.signature(
-        cents: entry['amountCents']! as int,
-        occurredOn: '${entry['occurredOn']}',
-        categoryId: '${entry['categoryId']}',
-        description: '${entry['description']}',
-      ),
-    };
+  /// Lançamento que não se lê — formato de um servidor mais novo — fica de
+  /// fora da comparação, e não derruba a subida inteira.
+  static CreateEntryRequest? _requestOf(Object? item) {
+    if (item is! Map) return null;
+    try {
+      return CreateEntryRequest.fromJson(item.cast<String, Object?>());
+    } on Object {
+      return null;
+    }
   }
 
   @override

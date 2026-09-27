@@ -39,7 +39,7 @@ A web de consulta não guarda nada no navegador — nem dado, nem sessão em dis
 - **Bom:** a chave de idempotência torna a nova tentativa segura — inclusive depois de uma queda entre enviar e receber a resposta.
 - **Custo:** o app mostra, por alguns instantes, um estado que o servidor ainda não confirmou. A interface é honesta sobre isso: o item pendente é marcado, e a fila é visível (RNF-REL-03).
 - **Custo:** toda regra que roda no aparelho roda de novo no servidor, e os dois têm de concordar — o que o domínio único garante por construção.
-- **Limite:** dois aparelhos editando o mesmo lançamento offline caem no conflito e pedem escolha manual. Aceitável para um usuário.
+- **Limite:** dois aparelhos editando o mesmo lançamento offline caem no conflito e pedem escolha manual. Aceitável para um usuário. **Substituído pela [ADR-019](ADR-019-dois-aparelhos-um-livro.md) em 27/09/2026:** a escolha manual nunca foi construída; vale a edição mais nova pelo carimbo.
 
 ## Como se confere
 

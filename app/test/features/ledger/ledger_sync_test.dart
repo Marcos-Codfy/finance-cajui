@@ -9,23 +9,26 @@ import '../../support/fake_uplink.dart';
 
 final _today = LocalDate(2026, 9, 22);
 
-Entry _entry(String id, String what, int cents) => Entry.create(
-  id: id,
-  description: what,
-  amount: Money.fromCents(cents),
-  occurredOn: _today,
-  category: DefaultCatalog.emptyBook.categoryOf('groceries'),
-  paymentLines: [
-    DefaultCatalog.emptyBook.methodOf('pix').line(Money.fromCents(cents)),
-  ],
-  today: _today,
-).valueOrNull!;
+Entry _entry(String id, String what, int cents, {DateTime? revisedAt}) =>
+    Entry.create(
+      id: id,
+      revisedAt: revisedAt,
+      description: what,
+      amount: Money.fromCents(cents),
+      occurredOn: _today,
+      category: DefaultCatalog.emptyBook.categoryOf('groceries'),
+      paymentLines: [
+        DefaultCatalog.emptyBook.methodOf('pix').line(Money.fromCents(cents)),
+      ],
+      today: _today,
+    ).valueOrNull!;
 
 LedgerBook _bookOf(
   List<Entry> entries, {
   MonthSetup? setup,
   List<IncomeReceipt> receipts = const [],
   List<VoucherAdjustment> adjustments = const [],
+  Set<String> cancelled = const {},
 }) {
   final base = DefaultCatalog.emptyBook;
   return LedgerBook(
@@ -35,6 +38,7 @@ LedgerBook _bookOf(
     receipts: receipts,
     voucherAdjustments: adjustments,
     setup: setup ?? MonthSetup.empty,
+    cancelledIds: cancelled,
   );
 }
 
@@ -78,8 +82,8 @@ void main() {
     test('o que falta sobe, e o que já está lá não sobe de novo', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
 
-      final (first, _) = await sync.run(book);
-      final (second, _) = await sync.run(book);
+      final (sent: first, received: _, error: _) = await sync.run(book);
+      final (sent: second, received: _, error: _) = await sync.run(book);
 
       expect(first, 1);
       expect(second, 0, reason: 'a segunda subida não tem o que mandar');
@@ -91,7 +95,7 @@ void main() {
       () async {
         await sync.run(_bookOf([_entry('e1', 'Padaria', 850)]));
 
-        final (sent, _) = await sync.run(
+        final (:sent, received: _, error: _) = await sync.run(
           _bookOf([_entry('e1', 'Padaria', 900)]),
         );
 
@@ -101,12 +105,64 @@ void main() {
       },
     );
 
+    test(
+      'BL-062 · o que o servidor tem e este aparelho nunca teve NÃO é '
+      'cancelado: ainda não desceu, e cancelar apagaria o do outro',
+      () async {
+        uplink.entries['do-outro'] = 'x';
+
+        await sync.run(_bookOf(const []));
+
+        expect(uplink.calls, isNot(contains('cancelou do-outro')));
+        expect(uplink.entries.keys, contains('do-outro'));
+      },
+    );
+
+    test('BL-062 · versão mais velha que a do servidor não sobe por cima: é a '
+        'descida que a corrige', () async {
+      await sync.run(_bookOf([_entry('e1', 'Padaria', 850)]));
+      uplink.entries['e1'] = 'corrigido-no-outro';
+      uplink.revisedOnServer['e1'] = DateTime.utc(2026, 9, 22, 12);
+
+      final (:sent, received: _, error: _) = await sync.run(
+        _bookOf([_entry('e1', 'Padaria', 850)]),
+      );
+
+      expect(sent, 0);
+      expect(uplink.calls, ['criou e1'], reason: 'não corrigiu por cima');
+    });
+
+    test(
+      'BL-062 · a correção mais nova daqui sobe por cima da do servidor',
+      () async {
+        await sync.run(_bookOf([_entry('e1', 'Padaria', 850)]));
+        uplink.entries['e1'] = 'corrigido-no-outro';
+        uplink.revisedOnServer['e1'] = DateTime.utc(2026, 9, 22, 12);
+
+        final (:sent, received: _, error: _) = await sync.run(
+          _bookOf([
+            _entry(
+              'e1',
+              'Padaria',
+              900,
+              revisedAt: DateTime.utc(2026, 9, 22, 13),
+            ),
+          ]),
+        );
+
+        expect(sent, 1);
+        expect(uplink.calls.last, 'corrigiu e1');
+      },
+    );
+
     test('lançamento cancelado aqui é cancelado lá (RN-995)', () async {
       await sync.run(
         _bookOf([_entry('e1', 'Padaria', 850), _entry('e2', 'Feira', 2000)]),
       );
 
-      final (sent, _) = await sync.run(_bookOf([_entry('e1', 'Padaria', 850)]));
+      final (:sent, received: _, error: _) = await sync.run(
+        _bookOf([_entry('e1', 'Padaria', 850)], cancelled: {'e2'}),
+      );
 
       expect(sent, 1);
       expect(uplink.calls.last, 'cancelou e2');
@@ -120,7 +176,7 @@ void main() {
       final teimoso = _RefusingOne('e2');
       final sync = LedgerSync(teimoso);
 
-      final (sent, error) = await sync.run(
+      final (:sent, received: _, :error) = await sync.run(
         _bookOf([
           _entry('e1', 'Padaria', 850),
           _entry('e2', 'Fogão', 96000),
@@ -136,7 +192,8 @@ void main() {
     test('aparelho sem cadastro não tenta subir nada', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
 
-      final (sent, error) = await LedgerSync(_UnpairedUplink()).run(book);
+      final (:sent, received: _, :error) = await LedgerSync(_UnpairedUplink())
+          .run(book);
 
       expect(sent, 0);
       expect(error, ErrorCode.auth03);
