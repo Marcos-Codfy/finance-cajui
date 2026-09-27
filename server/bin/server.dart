@@ -116,6 +116,8 @@ Future<void> _serve(Directory data, String keyFile) async {
     sessions: SessionBook(),
     classifier: ai.classifier,
     assistant: ai.assistant,
+    // Um ensaio em outra Vercel troca a origem sem recompilar.
+    webOrigin: Platform.environment['WEB_ORIGIN'] ?? App.defaultWebOrigin,
   );
   // Só na própria máquina: quem recebe a internet é o Caddy (ADR-003 · T-36).
   final host = Platform.environment['HOST'] ?? '127.0.0.1';

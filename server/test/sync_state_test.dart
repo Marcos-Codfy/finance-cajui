@@ -111,7 +111,7 @@ void main() {
           '/v1/entries',
           token: token,
         );
-        final entry = (listado['entries'] as List<Object?>).single! as Map;
+        final entry = (listado['entries']! as List<Object?>).single! as Map;
 
         expect(status, 200);
         expect(body['kept'], isTrue);
@@ -147,7 +147,7 @@ void main() {
           '/v1/entries',
           token: token,
         );
-        final entry = (listado['entries'] as List<Object?>).single! as Map;
+        final entry = (listado['entries']! as List<Object?>).single! as Map;
 
         expect(entry['amountCents'], 7000);
       },

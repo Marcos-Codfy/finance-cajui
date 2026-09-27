@@ -57,6 +57,16 @@ final class TestApp {
   String token({SessionScope scope = SessionScope.device}) =>
       app.sessions.open('test-device', scope: scope);
 
+  /// Faz uma requisição crua e devolve a resposta inteira, cabeçalhos
+  /// inclusive — é o que o teste de origem cruzada precisa ver.
+  Future<Response> send(
+    String method,
+    String path, {
+    Map<String, String> headers = const {},
+  }) async => await app.handler(
+    Request(method, Uri.parse('http://localhost$path'), headers: headers),
+  );
+
   /// Faz uma requisição e devolve o status e o corpo, já lido como JSON.
   Future<(int, Map<String, Object?>)> call(
     String method,
