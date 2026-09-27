@@ -12,6 +12,9 @@ abstract final class MonthSetupCodec {
   static Map<String, Object?> encode(MonthSetup setup) => {
     'cashIncomeCents': setup.cashIncome.cents,
     'debtInstallmentsCents': setup.debtInstallments.cents,
+    // Só viaja quando existe: registro antigo não tem carimbo, e continua
+    // abrindo igual.
+    'definedAt': ?setup.definedAt?.toIso8601String(),
     'fixed': [
       for (final fixed in setup.fixedExpenses)
         {
@@ -38,6 +41,7 @@ abstract final class MonthSetupCodec {
   static MonthSetup decode(Map<String, Object?> payload) => MonthSetup(
     cashIncome: _money(payload['cashIncomeCents']),
     debtInstallments: _money(payload['debtInstallmentsCents']),
+    definedAt: _instant(payload['definedAt']),
     fixedExpenses: [
       for (final raw in _maps(payload['fixed']))
         FixedExpense(
@@ -79,9 +83,11 @@ abstract final class MonthSetupCodec {
         'debtInstallmentsCents',
         'fixed',
         'variables',
+        'definedAt',
       },
     );
     return MonthSetup(
+      definedAt: body.optionalInstant('definedAt'),
       cashIncome: _positive(body.integer('cashIncomeCents'), 'cashIncomeCents'),
       debtInstallments: _positive(
         body.integer('debtInstallmentsCents'),
@@ -150,6 +156,11 @@ abstract final class MonthSetupCodec {
   }
 
   static Money _money(Object? cents) => Money.fromCents(cents as int? ?? 0);
+
+  /// O carimbo, quando há um e quando dá para ler. Carimbo ilegível vale
+  /// como nenhum: o plano continua abrindo, só perde a vez na disputa.
+  static DateTime? _instant(Object? raw) =>
+      raw is String ? DateTime.tryParse(raw)?.toUtc() : null;
 
   static Iterable<Map<String, Object?>> _maps(Object? list) =>
       (list as List<Object?>? ?? const []).whereType<Map<String, Object?>>();

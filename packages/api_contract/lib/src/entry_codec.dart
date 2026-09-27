@@ -23,6 +23,7 @@ abstract final class EntryCodec {
     // morto em todo lançamento parcelado.
     installmentAmountCents: _interestBearing(entry.installmentPlan),
     origin: entry.origin == EntryOrigin.manual ? null : entry.origin.name,
+    revisedAt: entry.revisedAt,
     paymentLines: [
       for (final line in entry.paymentLines)
         PaymentLineDto(
@@ -66,6 +67,7 @@ abstract final class EntryCodec {
       origin: named(EntryOrigin.values, request.origin ?? 'manual'),
       paymentLines: lines,
       installmentPlan: _plan(request, lines, on, cardOf, fromOwnJournal),
+      revisedAt: request.revisedAt,
     );
   }
 

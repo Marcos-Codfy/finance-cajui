@@ -21,6 +21,7 @@ final class CreateEntryRequest {
     this.installments,
     this.installmentAmountCents,
     this.origin,
+    this.revisedAt,
   });
 
   /// Lê o comando, recusando o que estiver fora do formato (`E-REQ-01`).
@@ -41,6 +42,7 @@ final class CreateEntryRequest {
     installments: reader.optionalInteger('installments'),
     installmentAmountCents: reader.optionalInteger('installmentAmountCents'),
     origin: reader.optionalString('origin', maxLength: 16),
+    revisedAt: reader.optionalInstant('revisedAt'),
   );
 
   /// Os campos que o pedido pode ter, e só eles: campo a mais é
@@ -56,6 +58,7 @@ final class CreateEntryRequest {
     'installments',
     'installmentAmountCents',
     'origin',
+    'revisedAt',
   };
 
   /// O identificador do lançamento, criado no aparelho.
@@ -99,6 +102,11 @@ final class CreateEntryRequest {
   /// sumia ao reabrir o app (BL-054).
   final String? origin;
 
+  /// Quando o lançamento foi corrigido pela última vez, em UTC; ausente
+  /// quando nunca foi. Entre dois celulares, é o que decide qual correção
+  /// vale: a mais nova, e não a que chegou por último (BL-062).
+  final DateTime? revisedAt;
+
   /// O comando em JSON.
   Map<String, Object?> toJson() => {
     'id': id,
@@ -113,5 +121,6 @@ final class CreateEntryRequest {
     'installments': ?installments,
     'installmentAmountCents': ?installmentAmountCents,
     'origin': ?origin,
+    'revisedAt': ?revisedAt?.toIso8601String(),
   };
 }
