@@ -76,6 +76,7 @@ export 'src/receipts/receipt_layout.dart';
 export 'src/receipts/receipt_text.dart';
 export 'src/receipts/rule_based_classifier.dart';
 export 'src/shared/clock.dart';
+export 'src/shared/edit_stamp.dart';
 export 'src/shared/failure.dart';
 export 'src/shared/result.dart';
 export 'src/voice/voice_guide.dart';
