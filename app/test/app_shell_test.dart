@@ -82,8 +82,12 @@ void main() {
     await tester.pump();
 
     expect(player.preloads, 1);
+    // A própria chave que liga os sons já soa ao ligar: o retorno sensorial
+    // sai **depois** da ação, obedecendo à escolha nova. Antes ficava muda
+    // ao ligar e só soava ao desligar.
+    expect(player.played, [CajuiSound.toggleOn]);
     await tester.tap(find.bySemanticsLabel('Painel'));
-    expect(player.played, isNotEmpty);
+    expect(player.played.length, greaterThan(1));
   });
 
   testWidgets('abre no claro mesmo com o aparelho no escuro: o tema é '
