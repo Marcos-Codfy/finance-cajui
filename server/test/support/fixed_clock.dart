@@ -7,4 +7,7 @@ final class FixedClock implements Clock {
 
   @override
   LocalDate today() => LocalDate(2026, 9, 20);
+
+  @override
+  DateTime now() => DateTime.utc(2026, 9, 20, 12);
 }

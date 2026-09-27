@@ -14,6 +14,9 @@ final class SystemClock implements Clock {
   final Duration offset;
 
   @override
+  DateTime now() => DateTime.now().toUtc();
+
+  @override
   LocalDate today() =>
       LocalDate.fromDateTime(DateTime.now().toUtc().add(offset));
 }
