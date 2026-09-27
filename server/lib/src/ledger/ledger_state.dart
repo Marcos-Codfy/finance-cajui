@@ -155,7 +155,8 @@ final class LedgerState {
         // Recriar o que já foi cancelado não acontece pela rota — ela recusa
         // —, mas o registro é a fonte da verdade, e a projeção não pode
         // depender de a rota ter existido.
-        if (!_cancelled.contains(event.payload['id'])) {
+        final id = '${event.payload['id']}';
+        if (!_cancelled.contains(id) && entryOf(id) == null) {
           _entries.add(_replayed(event));
         }
       case entryRevised:
@@ -181,6 +182,7 @@ final class LedgerState {
   /// mas o registro é a fonte da verdade, e a projeção não pode depender
   /// de a rota ter existido.
   void _replace(Entry entry) {
+    if (_cancelled.contains(entry.id)) return;
     final at = _entries.indexWhere((existing) => existing.id == entry.id);
     if (at < 0) {
       _entries.add(entry);
