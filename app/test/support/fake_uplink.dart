@@ -7,6 +7,12 @@ import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 /// usam: o do livro e o do que entrou.
 base class FakeUplink implements LedgerUplink {
   final Map<String, String> entries = {};
+
+  /// O que o servidor já cancelou por ordem de outro aparelho.
+  final Set<String> cancelledOnServer = {};
+
+  /// O carimbo da última correção que o servidor tem, por lançamento.
+  final Map<String, DateTime> revisedOnServer = {};
   final Set<String> categories = {};
   final List<String> calls = [];
 
@@ -67,8 +73,14 @@ base class FakeUplink implements LedgerUplink {
   }
 
   @override
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
-      (Map.of(entries), null);
+  Future<(RemoteEntries, ErrorCode?)> remoteEntries() async => (
+    (
+      signatures: Map.of(entries),
+      revisedAt: Map.of(revisedOnServer),
+      cancelled: cancelledOnServer,
+    ),
+    null,
+  );
 
   @override
   Future<ErrorCode?> sendCategory(Map<String, Object?> category) async {
@@ -87,6 +99,7 @@ base class FakeUplink implements LedgerUplink {
   Future<ErrorCode?> reviseEntry(CreateEntryRequest entry) async {
     calls.add('corrigiu ${entry.id}');
     entries[entry.id] = _signature(entry);
+    if (entry.revisedAt case final at?) revisedOnServer[entry.id] = at;
     return null;
   }
 
@@ -110,10 +123,6 @@ base class FakeUplink implements LedgerUplink {
     return null;
   }
 
-  String _signature(CreateEntryRequest entry) => LedgerUplink.signature(
-    cents: entry.amountCents,
-    occurredOn: entry.occurredOn,
-    categoryId: entry.categoryId,
-    description: entry.description,
-  );
+  String _signature(CreateEntryRequest entry) =>
+      LedgerUplink.signatureOf(entry);
 }

@@ -5,8 +5,8 @@ import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/insights/application/insights.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -63,7 +63,7 @@ class AssistantViewModel extends Notifier<AssistantState> {
   Future<void> _pushLedger() async {
     final book = ref.read(ledgerProvider).value;
     if (book == null) return;
-    await LedgerSync(ref.read(ledgerUplinkProvider)).run(book);
+    await ref.read(ledgerSyncProvider).run(book);
   }
 
   /// A resposta que o aparelho dá sozinho, quando dá. Sem livro aberto ainda,

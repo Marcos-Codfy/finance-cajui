@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
-import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_state.dart';
@@ -40,7 +40,7 @@ void main() {
   /// Mercado de R$ 86,00 no vale, com R$ 30,00 de saldo.
   Future<void> groceriesOnVoucher() async {
     await container
-        .read(ledgerProvider.notifier)
+        .read(incomeServiceProvider)
         .setVoucherBalance(const Money.fromCents(3000), reason: 'teste');
     form().edit(
       (d) => d.copyWith(

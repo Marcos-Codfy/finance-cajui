@@ -1,10 +1,15 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:domain/domain.dart';
 
+/// O resultado de uma sincronização: o que subiu, o que desceu e a primeira
+/// recusa, se houve.
+typedef SyncOutcome = ({int sent, int received, ErrorCode? error});
+
 /// Leva o livro do aparelho ao servidor, para o assistente ter com que
-/// responder (RN-781, RN-915).
+/// responder (RN-781, RN-915) — e traz de volta o que outro aparelho fez.
 ///
 /// Não guarda marcador de "já enviei": **o servidor é o marcador**. A cada
 /// subida se pergunta o que ele tem, e manda-se a diferença. Assim um
@@ -16,32 +21,43 @@ import 'package:domain/domain.dart';
 /// Ajustes. Sincronizar a cada lançamento pediria a digital a cada
 /// lançamento, e isso ninguém merece.
 final class LedgerSync {
-  /// Cria o sincronismo sobre [uplink].
-  const new(this.uplink);
+  /// Cria o sincronismo sobre [uplink]. Com [pull], depois de subir ele
+  /// também **desce** o que os outros aparelhos fizeram (BL-062).
+  const new(this.uplink, {this.pull});
 
   /// Por onde o livro sobe.
   final LedgerUplink uplink;
 
-  /// Manda o que falta. Devolve quantos lançamentos subiram e o primeiro
-  /// erro, se houver — a primeira recusa interrompe: insistir com o servidor
-  /// recusando só gasta bateria.
-  Future<(int sent, ErrorCode? error)> run(LedgerBook book) async {
-    if (!uplink.isPaired) return (0, ErrorCode.auth03);
+  /// Por onde o livro desce; `null` onde não há o que descer.
+  final LedgerPull? pull;
+
+  /// Manda o que falta e traz o que falta. Devolve quantos lançamentos
+  /// subiram, quantos fatos desceram e o primeiro erro, se houver.
+  ///
+  /// A ordem é **subir, depois descer**, e ela importa: subindo primeiro,
+  /// tudo o que este aparelho tem já está no servidor quando a descida
+  /// compara — e o que o servidor cancelou é cancelado aqui em vez de voltar.
+  Future<SyncOutcome> run(LedgerBook book) async {
+    if (!uplink.isPaired) {
+      return (sent: 0, received: 0, error: ErrorCode.auth03);
+    }
     final cadastro = await _sendCategories(book) ?? await _sendCards(book);
-    if (cadastro != null) return (0, cadastro);
+    if (cadastro != null) return (sent: 0, received: 0, error: cadastro);
     final (remote, failure) = await uplink.remoteEntries();
-    if (failure != null) return (0, failure);
+    if (failure != null) return (sent: 0, received: 0, error: failure);
     final (sent, refused) = await _sendEntries(book, remote);
     // O plano e o que entrou vão por último e não interrompem nada: sem eles
     // o assistente ainda responde quanto saiu — só não responde quanto ainda
     // cabe nem quanto sobrou de vale.
-    return (
-      sent,
-      refused ??
-          await _sendReversals(book) ??
-          await _sendPlan(book) ??
-          await _sendIncome(book),
-    );
+    final error =
+        refused ??
+        await _sendReversals(book) ??
+        await _sendPlan(book) ??
+        await _sendIncome(book);
+    // A descida acontece mesmo com recusa na subida: o que o outro aparelho
+    // fez não depende do que este não conseguiu mandar.
+    final received = await pull?.run(book) ?? 0;
+    return (sent: sent, received: received, error: error);
   }
 
   /// Os estornos (RN-209). Vão **depois** dos lançamentos, e não antes: o
@@ -143,19 +159,27 @@ final class LedgerSync {
 
   Future<(int, ErrorCode?)> _sendEntries(
     LedgerBook book,
-    Map<String, String> remote,
+    RemoteEntries remote,
   ) async {
     var sent = 0;
     ErrorCode? refused;
     final live = {for (final entry in book.entries) entry.id: entry};
     for (final entry in book.entries) {
-      final pending = remote[entry.id] != _signatureOf(entry);
-      final error = await _sendOne(entry, remote[entry.id]);
+      if (!_hasToGo(entry, remote)) continue;
+      final error = await _sendOne(
+        entry,
+        isKnown: remote.signatures.containsKey(entry.id),
+      );
       refused ??= error;
-      if (error == null && pending) sent++;
+      if (error == null) sent++;
     }
-    // O que o servidor tem e o aparelho não tem mais foi cancelado aqui.
-    for (final id in remote.keys.where((id) => !live.containsKey(id))) {
+    // Só o que foi cancelado **aqui** é cancelado lá. "O servidor tem e eu
+    // não" também descreve o que ainda não desceu do outro aparelho — e
+    // cancelar isso apagaria o que ele acabou de lançar (BL-062).
+    final gone = remote.signatures.keys.where(
+      (id) => !live.containsKey(id) && book.cancelledIds.contains(id),
+    );
+    for (final id in gone) {
       final error = await uplink.cancelEntry(id);
       refused ??= error;
       if (error == null) sent++;
@@ -163,17 +187,25 @@ final class LedgerSync {
     return (sent, refused);
   }
 
-  Future<ErrorCode?> _sendOne(Entry entry, String? remote) async {
-    final request = EntryCodec.fromEntry(entry);
-    if (remote == null) return await uplink.sendEntry(request);
-    if (remote == _signatureOf(entry)) return null;
-    return await uplink.reviseEntry(request);
+  /// Se [entry] tem o que subir.
+  ///
+  /// Cancelado em outro aparelho não volta a subir daqui: quem o cancela
+  /// por aqui é a descida, na sequência. E, quando o servidor tem uma versão
+  /// **mais nova** pelo carimbo, a daqui não sobe por cima — a descida traz
+  /// a nova para cá (BL-062).
+  bool _hasToGo(Entry entry, RemoteEntries remote) {
+    if (remote.cancelled.contains(entry.id)) return false;
+    if (remote.signatures[entry.id] == _signatureOf(entry)) return false;
+    return !EditStamp.isNewer(remote.revisedAt[entry.id], entry.revisedAt);
   }
 
-  static String _signatureOf(Entry entry) => LedgerUplink.signature(
-    cents: entry.amount.cents,
-    occurredOn: '${entry.occurredOn}',
-    categoryId: entry.categoryId,
-    description: entry.description,
-  );
+  Future<ErrorCode?> _sendOne(Entry entry, {required bool isKnown}) async {
+    final request = EntryCodec.fromEntry(entry);
+    return isKnown
+        ? await uplink.reviseEntry(request)
+        : await uplink.sendEntry(request);
+  }
+
+  static String _signatureOf(Entry entry) =>
+      LedgerUplink.signatureOf(EntryCodec.fromEntry(entry));
 }

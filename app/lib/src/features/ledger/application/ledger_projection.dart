@@ -84,6 +84,7 @@ abstract final class LedgerProjection {
         .fold(Money.zero, (sum, reversal) => sum + reversal.line.amount);
     final stillOut = entry.paidByTender.mealVoucher - alreadyBack;
     return book.copyWith(
+      cancelledIds: {...book.cancelledIds, entryId},
       entries: [...book.entries.where((known) => known.id != entryId)],
       reversals: [...book.reversals.where((r) => r.entryId != entryId)],
       voucher: book.voucher.reverse(stillOut),

@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/budget/application/month_closing.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
@@ -24,6 +25,7 @@ void main() {
   late ProviderContainer container;
 
   LedgerController ledger() => container.read(ledgerProvider.notifier);
+  IncomeService income() => container.read(incomeServiceProvider);
   MonthClosing closing() => container.read(monthClosingProvider);
   Future<LedgerBook> book() => container.read(ledgerProvider.future);
   Future<List<MonthClosed>> closings() async =>
@@ -60,7 +62,7 @@ void main() {
 
   test('RN-623 · o resultado é a renda que entrou menos as despesas em '
       'dinheiro do mês', () async {
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.cash,
       amount: const Money.fromCents(300000),
       receivedOn: _inAugust,
@@ -78,7 +80,7 @@ void main() {
   test(
     'RN-111 · o que saiu do vale não entra no resultado em dinheiro',
     () async {
-      await ledger().receiveIncome(
+      await income().receiveIncome(
         tender: Tender.cash,
         amount: const Money.fromCents(100000),
         receivedOn: _inAugust,

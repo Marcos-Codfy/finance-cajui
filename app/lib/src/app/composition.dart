@@ -14,6 +14,7 @@ import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.d
 import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/web_session_enrollment.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
+import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/infrastructure/cajui_ledger_api.dart';
@@ -57,6 +58,11 @@ abstract final class Composition {
       ),
       deviceDirectoryProvider.overrideWithValue(api),
       _journal(store, api, local: nativeCapture),
+      // A descida do livro (BL-062): o que outro aparelho fez chegando aqui.
+      // É o mesmo leitor que a web usa como livro inteiro.
+      ledgerDownlinkProvider.overrideWithValue(
+        RemoteLedgerJournal(api, categoryOf: _defaultCategory),
+      ),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
       _preferences(store, local: nativeCapture),
       ..._server(api),

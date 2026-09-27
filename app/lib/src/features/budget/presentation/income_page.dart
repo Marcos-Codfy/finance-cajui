@@ -1,4 +1,4 @@
-import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:design_system/design_system.dart';
@@ -44,7 +44,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
     final navigator = Navigator.of(context);
     final feedback = CajuiFeedbackScope.of(context);
     await ref
-        .read(ledgerProvider.notifier)
+        .read(incomeServiceProvider)
         .receiveIncome(
           tender: _tender,
           amount: Money.fromCents(_cents),

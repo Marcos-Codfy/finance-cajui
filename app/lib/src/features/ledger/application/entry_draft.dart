@@ -144,6 +144,23 @@ final class EntryDraft {
     ];
   }
 
+  /// O plano de parcelas desta compra em [card]; `null` à vista ou sem
+  /// cartão. As parcelas saem do domínio, a partir do ciclo do cartão: a
+  /// primeira é cobrada na fatura do ciclo da compra (RN-311).
+  InstallmentPlan? installmentPlanFor(CreditCard? card) {
+    if (card == null || installmentCount < 2) return null;
+    final each = installmentAmountCents;
+    return InstallmentPlan.forPurchase(
+      card: card,
+      purchasedOn: occurredOn!,
+      principal: Money.fromCents(amountCents),
+      count: installmentCount,
+      // Parcela informada só quando ela **não** é o total dividido: aí a
+      // diferença é juros, e o domínio a guarda como tal (RN-314).
+      installmentAmount: each == null ? null : Money.fromCents(each),
+    );
+  }
+
   /// O valor de parcela que sobrevive a uma troca.
   ///
   /// Trocar o valor da compra ou o número de parcelas invalida o que estava

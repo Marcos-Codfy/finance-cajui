@@ -7,6 +7,7 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
+import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -36,6 +37,9 @@ class FixedClock implements Clock {
 
   @override
   LocalDate today() => day;
+
+  @override
+  DateTime now() => DateTime.utc(day.year, day.month, day.day, 12);
 }
 
 /// As trocas que todo teste do app faz: som mudo, livro na memória, dia fixo,
@@ -51,6 +55,7 @@ List<Override> testOverrides({
   AssistantGateway? assistant,
   PreferencesStore? preferences,
   LedgerUplink? uplink,
+  LedgerDownlink? downlink,
 }) {
   var next = 0;
   return [
@@ -65,6 +70,7 @@ List<Override> testOverrides({
     // O teste roda como celular cadastrado: é lá que a camada local
     // responde, e o livro não sobe para lugar nenhum.
     ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
+    ledgerDownlinkProvider.overrideWithValue(downlink ?? const _NoDownlink()),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
     ..._extras(preferences),
   ];
@@ -116,8 +122,14 @@ final class _PairedUplink implements LedgerUplink {
       (const <String>{}, null);
 
   @override
-  Future<(Map<String, String>, ErrorCode?)> remoteEntries() async =>
-      (const <String, String>{}, null);
+  Future<(RemoteEntries, ErrorCode?)> remoteEntries() async => (
+    (
+      signatures: const <String, String>{},
+      revisedAt: const <String, DateTime>{},
+      cancelled: const <String>{},
+    ),
+    null,
+  );
 
   @override
   Future<ErrorCode?> sendCategory(Map<String, Object?> category) async => null;
@@ -155,6 +167,15 @@ final class _PairedUplink implements LedgerUplink {
 
   @override
   Future<ErrorCode?> cancelEntry(String id) async => null;
+}
+
+/// Uma descida que nunca tem nada: o teste de tela mede o que a tela faz,
+/// e não o que outro aparelho fez.
+final class _NoDownlink implements LedgerDownlink {
+  const new();
+
+  @override
+  Future<LedgerSnapshot?> snapshot() async => null;
 }
 
 /// Um assistente que nunca foi pareado. Vive aqui, e não em `lib/`: é dublê

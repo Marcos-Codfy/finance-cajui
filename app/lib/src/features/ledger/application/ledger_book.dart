@@ -24,6 +24,7 @@ final class LedgerBook {
     this.debtPayments = const {},
     this.closes = const [],
     this.setup = MonthSetup.empty,
+    this.cancelledIds = const {},
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
 
@@ -66,6 +67,13 @@ final class LedgerBook {
   /// O plano do mês em vigor.
   final MonthSetup setup;
 
+  /// Os lançamentos cancelados **neste aparelho** (RN-208). Não somem do
+  /// registro, e a sincronização precisa deles: só o que foi cancelado aqui
+  /// é cancelado no servidor. "O servidor tem e eu não" também descreve o
+  /// que ainda não desceu — e cancelar isso apagaria o que o outro aparelho
+  /// acabou de lançar (BL-062).
+  final Set<String> cancelledIds;
+
   /// A conta do vale, com o saldo em vigor.
   final VoucherAccount voucher;
 
@@ -98,6 +106,7 @@ final class LedgerBook {
     List<MonthClose>? closes,
     VoucherAccount? voucher,
     MonthSetup? setup,
+    Set<String>? cancelledIds,
   }) => LedgerBook(
     categories: categories,
     paymentMethods: paymentMethods,
@@ -111,6 +120,7 @@ final class LedgerBook {
     debtPayments: debtPayments ?? this.debtPayments,
     closes: closes ?? this.closes,
     setup: setup ?? this.setup,
+    cancelledIds: cancelledIds ?? this.cancelledIds,
     voucher: voucher ?? this.voucher,
   );
 

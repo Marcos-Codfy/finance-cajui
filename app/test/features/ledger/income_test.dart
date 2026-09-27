@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cajui/src/core/storage/event_store_opener_file.dart';
+import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
@@ -20,6 +21,7 @@ void main() {
   late ProviderContainer container;
 
   LedgerController ledger() => container.read(ledgerProvider.notifier);
+  IncomeService income() => container.read(incomeServiceProvider);
   Future<LedgerBook> book() => container.read(ledgerProvider.future);
   MonthOverview overview() => container.read(monthOverviewProvider)!;
 
@@ -33,12 +35,12 @@ void main() {
 
   test('RN-120 · saldo do vale = saldo + créditos − compras no vale: 50 + 600 '
       '− 480 = 170', () async {
-    await ledger().setVoucherBalance(
+    await income().setVoucherBalance(
       const Money.fromCents(5000),
       reason: 'saldo inicial do exemplo',
     );
 
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.mealVoucher,
       amount: const Money.fromCents(60000),
       receivedOn: testToday,
@@ -61,7 +63,7 @@ void main() {
       'foi recebido', () async {
     expect(overview().plan.cashIncome.cents, 320000);
 
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.cash,
       amount: const Money.fromCents(231000),
       receivedOn: testToday,
@@ -76,7 +78,7 @@ void main() {
 
   test('RN-133 · entrada avulsa soma no mês em que entrou, e não aparece no '
       'mês seguinte', () async {
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.cash,
       amount: const Money.fromCents(15000),
       receivedOn: testToday,
@@ -90,7 +92,7 @@ void main() {
 
   test('RN-132 e RN-111 · recebimento não é lançamento, e o vale não entra '
       'na renda em dinheiro', () async {
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.mealVoucher,
       amount: const Money.fromCents(60000),
       receivedOn: testToday,
@@ -103,7 +105,7 @@ void main() {
   });
 
   test('valor zero não gera fato', () async {
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.cash,
       amount: Money.zero,
       receivedOn: testToday,
@@ -131,7 +133,7 @@ void main() {
     }
 
     container = await open();
-    await ledger().receiveIncome(
+    await income().receiveIncome(
       tender: Tender.mealVoucher,
       amount: const Money.fromCents(60000),
       receivedOn: testToday,
