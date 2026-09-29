@@ -72,6 +72,65 @@ void main() {
       );
     });
 
+    test('RN-124 fato que já aconteceu não é recusado: o saldo para em zero '
+        'e a diferença fica a descoberto', () {
+      final account = VoucherAccount(balance: const Money.fromCents(10000))
+          .settle(const Money.fromCents(8000))
+          .settle(const Money.fromCents(8000));
+
+      expect(account.balance, Money.zero);
+      expect(account.overdrawn, const Money.fromCents(6000));
+    });
+
+    test('RN-124 o crédito seguinte cobre primeiro o descoberto', () {
+      final account = VoucherAccount(balance: const Money.fromCents(10000))
+          .settle(const Money.fromCents(16000))
+          .credit(const Money.fromCents(5000));
+
+      expect(account.balance, Money.zero);
+      expect(account.overdrawn, const Money.fromCents(1000));
+    });
+
+    test('RN-124 a ordem de chegada dos fatos não muda o saldo', () {
+      const credit = Money.fromCents(10000);
+      const late = Money.fromCents(5000);
+      const spent = Money.fromCents(8000);
+
+      final noCelularA = VoucherAccount()
+          .credit(credit)
+          .settle(spent)
+          .settle(spent)
+          .credit(late);
+      final noCelularB = VoucherAccount()
+          .settle(spent)
+          .credit(late)
+          .settle(spent)
+          .credit(credit);
+
+      expect(noCelularA, noCelularB);
+      expect(noCelularA.overdrawn, const Money.fromCents(1000));
+    });
+
+    test('RN-124 a descoberto, nenhum pagamento novo passa (RN-122)', () {
+      final account = VoucherAccount().settle(const Money.fromCents(100));
+
+      final failure = account.pay(const Money.fromCents(1)).failureOrNull;
+
+      expect(failure, isA<VoucherBalanceExceeded>());
+      expect(account.coverableFor(const Money.fromCents(500)), Money.zero);
+    });
+
+    test('RN-124 acertar o saldo cobre o descoberto: vale o que a operadora '
+        'mostra', () {
+      final account = VoucherAccount().settle(const Money.fromCents(6000));
+
+      final adjustment = account.adjustmentTo(const Money.fromCents(2000));
+
+      expect(adjustment, const Money.fromCents(8000));
+      expect(account.adjust(adjustment).balance, const Money.fromCents(2000));
+      expect(account.adjust(adjustment).overdrawn, Money.zero);
+    });
+
     test('RN-123 o ajuste é a diferença entre o saldo real e o calculado', () {
       final account = VoucherAccount(balance: const Money.fromCents(17000));
 

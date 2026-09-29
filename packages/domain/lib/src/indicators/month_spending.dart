@@ -59,7 +59,9 @@ final class MonthSpending {
   /// O gasto de rotina de cada categoria.
   final Map<String, Money> routineByCategory;
 
-  /// O total dos gastos fora do padrão do mês (RN-240).
+  /// O total dos gastos fora do padrão do mês (RN-240). Compra parcelada
+  /// fica de fora daqui, marcada ou não: ela conta parcela a parcela, em
+  /// dívidas (RN-242, RN-312).
   final Money exceptional;
 
   /// O gasto de rotina feito **antes** de [day], no mês (RN-646).

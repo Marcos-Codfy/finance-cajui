@@ -21,6 +21,7 @@ export 'src/calendar/budget_month.dart';
 export 'src/calendar/calendar_words.dart';
 export 'src/calendar/local_date.dart';
 export 'src/calendar/month_span.dart';
+export 'src/card/card_limit_usage.dart';
 export 'src/card/card_statement.dart';
 export 'src/card/credit_card.dart';
 export 'src/card/installment.dart';

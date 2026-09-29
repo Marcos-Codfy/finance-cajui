@@ -47,6 +47,7 @@ O centro desta área é a separação que dá sentido ao produto: **o que foi co
 |---|---|---|---|
 | RN-240 | "Fora do padrão" é um atributo do lançamento, independente da categoria, para que gastos que não se repetem possam ser somados entre categorias | Conserto do celular (categoria "manutenção") e presente de casamento (categoria "presentes") entram no mesmo acumulado de fora do padrão | D-UX-11 |
 | RN-241 | Ao marcar um lançamento como fora do padrão, o app mostra o acumulado do ano e a média mensal desses gastos | "4º gasto fora do padrão do ano; somam R$ 1.310 (média de R$ 146 por mês)" | D-UX-11 · Sussman2012 |
+| RN-242 | Compra **parcelada** marcada fora do padrão entra no acumulado do ano (RN-241) pelo **valor da compra, inteiro**, no mês em que foi feita: o acumulado mede a decisão, não o desembolso. No resultado do mês ela segue a RN-312 — conta parcela a parcela, no bloco de dívidas — e por isso não entra no fora do padrão do mês (RN-648). Os dois números nunca se somam | TV de R$ 3.000,00 em 10×, fora do padrão, em março: o acumulado do ano sobe R$ 3.000,00 em março; o resultado de março não muda por causa dela, e de abril em diante cada mês leva a parcela de R$ 300,00, em dívidas | decisão 2026-09-29, por delegação |
 
 ## Em que mês um lançamento conta
 
