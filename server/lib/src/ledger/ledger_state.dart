@@ -106,20 +106,30 @@ final class LedgerState {
   /// É derivado, e não guardado ao lado, de propósito: corrigir e cancelar
   /// um lançamento já mexem na lista de lançamentos, e um saldo guardado
   /// teria de ser desfeito à mão em cada um desses caminhos.
-  Money get voucherBalance {
-    var total = _adjustments.values.fold(
-      Money.zero,
-      (sum, raw) => sum + Money.fromCents(raw['adjustmentCents']! as int),
-    );
+  Money get voucherBalance => voucher.balance;
+
+  /// A conta do vale, pela **mesma regra do aparelho**: a do domínio. A
+  /// ordem dos fatos não muda o resultado, e o que passar do saldo fica a
+  /// descoberto em vez de sumir (RN-124). O estorno em vale devolve saldo
+  /// (RN-211) — só o de lançamento vivo: cancelado leva os estornos junto.
+  VoucherAccount get voucher {
+    var account = VoucherAccount();
+    for (final raw in _adjustments.values) {
+      account = account.adjust(Money.fromCents(raw['adjustmentCents']! as int));
+    }
     for (final receipt in _receipts.values) {
-      if (receipt.tender == Tender.mealVoucher) total += receipt.amount;
+      if (receipt.tender != Tender.mealVoucher) continue;
+      account = account.credit(receipt.amount);
     }
     for (final entry in _entries) {
-      total -= entry.paidByTender.mealVoucher;
+      account = account.settle(entry.paidByTender.mealVoucher);
     }
-    // Registro antigo pode dizer que o vale pagou mais do que tinha; o saldo
-    // para em zero, como na projeção do aparelho (RN-122).
-    return total.isNegative ? Money.zero : total;
+    for (final reversal in _reversals.values) {
+      final alive = entryOf(reversal.entryId) != null;
+      if (!alive || reversal.line.tender != Tender.mealVoucher) continue;
+      account = account.reverse(reversal.line.amount);
+    }
+    return account;
   }
 
   /// Aplica um evento ao estado. Tipo desconhecido é ignorado: um servidor

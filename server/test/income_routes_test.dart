@@ -106,6 +106,76 @@ void main() {
       expect(lido['voucherBalanceCents'], 0);
     });
 
+    test('RN-124 · dois aparelhos gastaram o mesmo saldo: o crédito '
+        'seguinte cobre primeiro o descoberto', () async {
+      Future<void> spend(String id) => server.call(
+        'POST',
+        '/v1/entries',
+        body: entryBody(
+          id: id,
+          cents: 8000,
+          lines: [
+            {
+              'paymentMethodId': 'voucher',
+              'kind': 'mealVoucher',
+              'amountCents': 8000,
+            },
+          ],
+        ),
+        token: token,
+      );
+      await server.call(
+        'POST',
+        '/v1/income',
+        body: _receipt(cents: 10000),
+        token: token,
+      );
+      await spend('do-celular-a');
+      await spend('do-celular-b');
+      final (_, antes) = await server.call('GET', '/v1/income', token: token);
+
+      await server.call(
+        'POST',
+        '/v1/income',
+        body: _receipt(id: 'r2', cents: 5000),
+        token: token,
+      );
+      final (_, depois) = await server.call('GET', '/v1/income', token: token);
+
+      expect(antes['voucherBalanceCents'], 0);
+      expect(depois['voucherBalanceCents'], 0, reason: 'ainda faltam 10,00');
+    });
+
+    test(
+      'RN-211 · o estorno de compra no vale devolve saldo ao vale',
+      () async {
+        await server.call('POST', '/v1/income', body: _receipt(), token: token);
+        await server.call(
+          'POST',
+          '/v1/entries',
+          body: entryBody(),
+          token: token,
+        );
+
+        final (status, _) = await server.call(
+          'POST',
+          '/v1/entries/e1/reversals',
+          body: {
+            'id': 'rev1',
+            'entryId': 'e1',
+            'paymentMethodId': 'voucher',
+            'amountCents': 1000,
+            'occurredOn': '2026-09-15',
+          },
+          token: token,
+        );
+        final (_, lido) = await server.call('GET', '/v1/income', token: token);
+
+        expect(status, 201);
+        expect(lido['voucherBalanceCents'], 48000);
+      },
+    );
+
     test('RN-111 · dinheiro e vale não se somam no que entrou', () async {
       await server.call('POST', '/v1/income', body: _receipt(), token: token);
       await server.call(
