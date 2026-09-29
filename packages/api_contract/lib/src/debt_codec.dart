@@ -1,8 +1,11 @@
-import 'package:api_contract/api_contract.dart';
-import 'package:cajui/src/features/ledger/application/ledger_event.dart';
+import 'package:api_contract/src/entry_codec.dart';
 import 'package:domain/domain.dart';
 
-/// A ida e a volta das dívidas com o registro.
+/// A ligação entre um lançamento e a dívida cuja parcela ele pagou.
+typedef DebtPayment = ({String debtId, String entryId});
+
+/// A ida e a volta das dívidas com o registro — o do aparelho e, desde a
+/// ADR-019, o do servidor, que as guarda para o outro celular.
 ///
 /// Da dívida se guarda o que a pessoa informou — credor, parcela, quantas são
 /// e quantas já foram — e, se houver, o valor para quitar que o credor disse
@@ -54,17 +57,15 @@ abstract final class DebtCodec {
     return BudgetMonth(year, month);
   }
 
-  /// O que gravar para o pagamento de parcela [event].
-  static Map<String, Object?> encodePayment(DebtInstallmentPaid event) => {
-    'debtId': event.debtId,
-    'entryId': event.entryId,
+  /// O que gravar para o pagamento de parcela [payment].
+  static Map<String, Object?> encodePayment(DebtPayment payment) => {
+    'debtId': payment.debtId,
+    'entryId': payment.entryId,
   };
 
   /// O pagamento de parcela gravado em [payload].
-  static DebtInstallmentPaid decodePayment(Map<String, Object?> payload) {
-    return DebtInstallmentPaid(
-      debtId: payload['debtId']! as String,
-      entryId: payload['entryId']! as String,
-    );
-  }
+  static DebtPayment decodePayment(Map<String, Object?> payload) => (
+    debtId: payload['debtId']! as String,
+    entryId: payload['entryId']! as String,
+  );
 }

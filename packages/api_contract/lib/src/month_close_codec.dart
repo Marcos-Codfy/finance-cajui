@@ -1,4 +1,4 @@
-import 'package:api_contract/api_contract.dart';
+import 'package:api_contract/src/entry_codec.dart';
 import 'package:domain/domain.dart';
 
 /// A ida e a volta do fechamento do mês com o registro.
