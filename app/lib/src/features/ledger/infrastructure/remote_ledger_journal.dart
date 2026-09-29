@@ -1,5 +1,6 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
+import 'package:cajui/src/features/ledger/application/device_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
@@ -65,7 +66,35 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
       CardDefined(id: 'card-remoto-${card.id}', card: card),
     for (final entry in entries) EntryRecorded(entry),
     ...await _reversals(entries),
+    ...await _facts(),
   ];
+
+  /// Os fatos que o servidor guarda sem fazer conta: fatura paga, dívida,
+  /// parcela de dívida paga e mês fechado (ADR-019). Vêm por último — a
+  /// parcela paga aponta para um lançamento. Fato que esta versão não lê
+  /// é pulado, e não derruba os outros.
+  Future<List<LedgerEvent>> _facts() async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', '/v1/facts', token: token),
+    );
+    final list = outcome.body?['facts'] as List<Object?>? ?? const [];
+    return [for (final item in list) ?_factOf(item)];
+  }
+
+  static LedgerEvent? _factOf(Object? item) {
+    if (item is! Map) return null;
+    try {
+      return DeviceFacts.toEvent(
+        DeviceFact(
+          id: '${item['id']}',
+          type: '${item['type']}',
+          payload: (item['payload']! as Map).cast<String, Object?>(),
+        ),
+      );
+    } on Object {
+      return null;
+    }
+  }
 
   /// Os cartões, por identificador. Sem eles, toda compra parcelada era
   /// **silenciosamente pulada** na consulta: o plano de parcelas é

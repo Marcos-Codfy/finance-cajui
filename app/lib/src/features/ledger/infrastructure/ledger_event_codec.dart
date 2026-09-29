@@ -1,9 +1,6 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
-
-import 'package:cajui/src/features/ledger/infrastructure/debt_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/entry_fact_codec.dart';
-import 'package:cajui/src/features/ledger/infrastructure/month_close_codec.dart';
 import 'package:domain/domain.dart';
 
 /// O tipo e o conteúdo com que um fato do livro é gravado.
@@ -92,7 +89,8 @@ final class LedgerEventCodec {
     ),
     IncomeReceived(:final receipt) => _encodeReceipt(receipt),
     DebtDefined(:final debt) => DebtCodec.encodeDebt(debt),
-    DebtInstallmentPaid() => DebtCodec.encodePayment(event),
+    DebtInstallmentPaid(:final debtId, :final entryId) =>
+      DebtCodec.encodePayment((debtId: debtId, entryId: entryId)),
     MonthClosed(:final close) => MonthCloseCodec.encode(close),
     VoucherBalanceAdjusted(:final adjustment) => IncomeCodec.encodeAdjustment(
       id: adjustment.id,
@@ -148,11 +146,16 @@ final class LedgerEventCodec {
       statementSettled => StatementSettled(CardCodec.decodeSettlement(payload)),
       incomeReceived => IncomeReceived(_decodeReceipt(payload)),
       debtDefined => DebtDefined(id: id, debt: DebtCodec.decodeDebt(payload)),
-      debtInstallmentPaid => DebtCodec.decodePayment(payload),
+      debtInstallmentPaid => _decodePayment(payload),
       monthClosed => MonthClosed(MonthCloseCodec.decode(payload)),
       voucherAdjusted => _decodeVoucher(id, payload),
       _ => null,
     };
+  }
+
+  static DebtInstallmentPaid _decodePayment(Map<String, Object?> payload) {
+    final (:debtId, :entryId) = DebtCodec.decodePayment(payload);
+    return DebtInstallmentPaid(debtId: debtId, entryId: entryId);
   }
 
   /// O identificador do acerto vem do próprio fato quando ele está lá, e do
@@ -176,10 +179,6 @@ final class LedgerEventCodec {
       category: categoryOf(request.categoryId),
       today: _endOfTime,
       cardOf: cardOf,
-      // Este registro é deste aparelho, escrito por ele: o valor da parcela
-      // gravado vale, e o plano com juros volta com os juros (BL-054). O
-      // mesmo campo vindo da rede continua sendo ignorado.
-      fromOwnJournal: true,
     ).valueOrNull!;
   }
 }

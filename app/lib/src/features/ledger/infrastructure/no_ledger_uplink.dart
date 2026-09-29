@@ -77,5 +77,12 @@ final class NoLedgerUplink implements LedgerUplink {
       ErrorCode.auth03;
 
   @override
+  Future<(Set<String>, ErrorCode?)> remoteFacts() async =>
+      (const <String>{}, ErrorCode.auth03);
+
+  @override
+  Future<ErrorCode?> sendFact(DeviceFact fact) async => ErrorCode.auth03;
+
+  @override
   Future<ErrorCode?> cancelEntry(String id) async => ErrorCode.auth03;
 }

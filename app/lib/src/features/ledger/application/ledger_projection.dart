@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/ledger/application/device_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:domain/domain.dart';
@@ -10,7 +11,17 @@ import 'package:domain/domain.dart';
 /// total — é ignorado, em vez de virar erro na abertura do app.
 abstract final class LedgerProjection {
   /// O livro [book] depois de [event].
+  ///
+  /// Os fatos que sobem ao servidor como estão ficam guardados no livro, e
+  /// o mesmo fato duas vezes muda o livro **uma**: duas descidas próximas
+  /// não contam a mesma parcela paga em dobro (ADR-019).
   static LedgerBook apply(LedgerBook book, LedgerEvent event) {
+    if (!DeviceFacts.covers(event)) return _applied(book, event);
+    if (book.factIds.contains(event.id)) return book;
+    return _applied(book.copyWith(trail: book.trail.keeping(event)), event);
+  }
+
+  static LedgerBook _applied(LedgerBook book, LedgerEvent event) {
     return switch (event) {
       EntryRecorded(:final entry) => _recorded(book, entry),
       EntryCorrected(:final entry) => _corrected(book, entry),
@@ -35,12 +46,18 @@ abstract final class LedgerProjection {
     };
   }
 
-  static LedgerBook _closed(LedgerBook book, MonthClose close) => book.copyWith(
-    closes: [
-      ...book.closes.where((known) => known.month != close.month),
-      close,
-    ],
-  );
+  /// A revisão mais velha, chegando depois — de outro aparelho —, não passa
+  /// por cima da mais nova.
+  static LedgerBook _closed(LedgerBook book, MonthClose close) {
+    final known = book.closeOf(close.month);
+    if (known != null && known.revision > close.revision) return book;
+    return book.copyWith(
+      closes: [
+        ...book.closes.where((other) => other.month != close.month),
+        close,
+      ],
+    );
+  }
 
   /// O fato já foi aceito quando aconteceu — aqui ou em outro aparelho — e
   /// não se recusa depois. Se os pagamentos passam do saldo, a conta mostra
@@ -88,7 +105,7 @@ abstract final class LedgerProjection {
         .fold(Money.zero, (sum, reversal) => sum + reversal.line.amount);
     final stillOut = entry.paidByTender.mealVoucher - alreadyBack;
     return book.copyWith(
-      cancelledIds: {...book.cancelledIds, entryId},
+      trail: book.trail.cancelling(entryId),
       entries: [...book.entries.where((known) => known.id != entryId)],
       reversals: [...book.reversals.where((r) => r.entryId != entryId)],
       voucher: book.voucher.reverse(stillOut),

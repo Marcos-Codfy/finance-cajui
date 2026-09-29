@@ -1,5 +1,6 @@
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_projection.dart';
+import 'package:cajui/src/features/ledger/application/sync_trail.dart';
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
 
@@ -24,7 +25,7 @@ final class LedgerBook {
     this.debtPayments = const {},
     this.closes = const [],
     this.setup = MonthSetup.empty,
-    this.cancelledIds = const {},
+    this.trail = const SyncTrail(),
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
 
@@ -67,12 +68,18 @@ final class LedgerBook {
   /// O plano do mês em vigor.
   final MonthSetup setup;
 
-  /// Os lançamentos cancelados **neste aparelho** (RN-208). Não somem do
-  /// registro, e a sincronização precisa deles: só o que foi cancelado aqui
-  /// é cancelado no servidor. "O servidor tem e eu não" também descreve o
-  /// que ainda não desceu — e cancelar isso apagaria o que o outro aparelho
-  /// acabou de lançar (BL-062).
-  final Set<String> cancelledIds;
+  /// O que a sincronização precisa saber além do estado: o que foi
+  /// cancelado aqui e os fatos que sobem como estão.
+  final SyncTrail trail;
+
+  /// Os lançamentos cancelados **neste aparelho** (RN-208).
+  Set<String> get cancelledIds => trail.cancelledIds;
+
+  /// Os fatos que sobem ao servidor como estão (ADR-019).
+  List<LedgerEvent> get facts => trail.facts;
+
+  /// Os identificadores de [facts].
+  Set<String> get factIds => trail.factIds;
 
   /// A conta do vale, com o saldo em vigor.
   final VoucherAccount voucher;
@@ -106,7 +113,7 @@ final class LedgerBook {
     List<MonthClose>? closes,
     VoucherAccount? voucher,
     MonthSetup? setup,
-    Set<String>? cancelledIds,
+    SyncTrail? trail,
   }) => LedgerBook(
     categories: categories,
     paymentMethods: paymentMethods,
@@ -120,7 +127,7 @@ final class LedgerBook {
     debtPayments: debtPayments ?? this.debtPayments,
     closes: closes ?? this.closes,
     setup: setup ?? this.setup,
-    cancelledIds: cancelledIds ?? this.cancelledIds,
+    trail: trail ?? this.trail,
     voucher: voucher ?? this.voucher,
   );
 

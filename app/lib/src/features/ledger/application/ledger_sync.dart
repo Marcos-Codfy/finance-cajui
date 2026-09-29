@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/ledger/application/device_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -52,6 +53,7 @@ final class LedgerSync {
     final error =
         refused ??
         await _sendReversals(book) ??
+        await _sendFacts(book) ??
         await _sendPlan(book) ??
         await _sendIncome(book);
     // A descida acontece mesmo com recusa na subida: o que o outro aparelho
@@ -81,6 +83,21 @@ final class LedgerSync {
     for (final reversal in book.reversals) {
       if (known.contains(reversal.id)) continue;
       final error = await uplink.sendReversal(ReversalCodec.encode(reversal));
+      if (error != null) return error;
+    }
+    return null;
+  }
+
+  /// Os fatos que o servidor guarda como estão (ADR-019). Vão depois dos
+  /// lançamentos: a parcela de dívida paga aponta para um deles.
+  Future<ErrorCode?> _sendFacts(LedgerBook book) async {
+    if (book.facts.isEmpty) return null;
+    final (known, failure) = await uplink.remoteFacts();
+    if (failure != null) return failure;
+    for (final event in book.facts) {
+      final fact = DeviceFacts.of(event);
+      if (fact == null || known.contains(fact.id)) continue;
+      final error = await uplink.sendFact(fact);
       if (error != null) return error;
     }
     return null;
