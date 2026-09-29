@@ -11,6 +11,7 @@ import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_reader.dart';
@@ -59,6 +60,7 @@ List<Override> testOverrides({
   LedgerUplink? uplink,
   LedgerDownlink? downlink,
   String idPrefix = 'id',
+  bool quietSend = true,
 }) {
   var next = 0;
   return [
@@ -70,7 +72,7 @@ List<Override> testOverrides({
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const _SilentGateway(),
     ),
-    ..._server(uplink, downlink),
+    ..._server(uplink, downlink, quietSend: quietSend),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
     ..._extras(preferences),
   ];
@@ -79,9 +81,16 @@ List<Override> testOverrides({
 /// O servidor: o teste roda como celular cadastrado — é lá que a camada
 /// local responde —, e o livro não sobe nem desce de lugar nenhum, a não
 /// ser que o teste mande.
-List<Override> _server(LedgerUplink? uplink, LedgerDownlink? downlink) => [
+/// O aviso de envio parado só aparece para o teste que o pede, com
+/// [quietSend] falso.
+List<Override> _server(
+  LedgerUplink? uplink,
+  LedgerDownlink? downlink, {
+  required bool quietSend,
+}) => [
   ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
   ledgerDownlinkProvider.overrideWithValue(downlink ?? const _NoDownlink()),
+  quietSendProvider.overrideWith((ref) async => quietSend),
 ];
 
 /// A captura: nada chega, a não ser que o teste mande.
@@ -116,10 +125,10 @@ final class _PairedUplink implements LedgerUplink {
   @override
   bool get isPaired => true;
 
-  /// Sem sessão aberta: o teste de tela não sobe nada sozinho, e continua
-  /// medindo só o que a tela faz.
+  /// Sem envio silencioso: o teste de tela não sobe nada sozinho, e
+  /// continua medindo só o que a tela faz.
   @override
-  bool get hasOpenSession => false;
+  Future<bool> canSendQuietly() async => false;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>

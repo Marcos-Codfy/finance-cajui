@@ -68,6 +68,19 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   /// Se há sessão aberta agora.
   bool get isOpen => _session?.isValidAt(_now()) ?? false;
 
+  /// Abre a sessão **sem perguntar nada a ninguém**, se a chave do dia
+  /// ainda estiver liberada, e diz se há sessão (BL-061). A sessão dura
+  /// quinze minutos; a liberação da chave, um dia.
+  Future<bool> openQuietly() async {
+    if (isOpen || !_keys.exists) return isOpen;
+    final outcome = await _withKey(() async {
+      final probe = await _keys.signQuietly(Uint8List(1));
+      if (probe.isNotEmpty) return await _open(quietly: true);
+      return (body: null, failure: _local(ErrorCode.auth02));
+    });
+    return outcome.failure == null && isOpen;
+  }
+
   /// Cadastra este aparelho com o código mostrado pelo servidor. Código
   /// errado, usado ou vencido volta como `E-AUTH-04` (RN-906).
   @override
@@ -171,7 +184,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   }
 
   /// A sessão em vigor, ou uma nova, provada pela chave do aparelho.
-  Future<ApiOutcome> _open() async {
+  Future<ApiOutcome> _open({bool quietly = false}) async {
     if (isOpen) return (body: null, failure: null);
     // Sem chave — a web —, não há o que assinar: a sessão só entra pelo
     // código do celular, e enquanto ela não veio, o servidor é quem recusa.
@@ -182,7 +195,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
         'deviceId': deviceIdOf(publicKey),
       });
       if (challenge.body case final issued?) {
-        return await _sign(issued);
+        return await _sign(issued, quietly: quietly);
       }
       return challenge;
     });
@@ -201,9 +214,13 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     }
   }
 
-  Future<ApiOutcome> _sign(Map<String, Object?> challenge) async {
+  Future<ApiOutcome> _sign(
+    Map<String, Object?> challenge, {
+    required bool quietly,
+  }) async {
     final nonce = base64Decode(challenge['nonce']! as String);
-    final signature = await _keys.sign(Uint8List.fromList(nonce));
+    final sign = quietly ? _keys.signQuietly : _keys.sign;
+    final signature = await sign(nonce);
     // Caixa de diálogo fechada sem confirmar: não há o que mandar, e o
     // servidor não precisa saber que alguém desistiu.
     if (signature.isEmpty) {

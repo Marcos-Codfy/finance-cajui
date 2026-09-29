@@ -20,7 +20,7 @@ final class CajuiLedgerApi implements LedgerUplink {
   bool get isPaired => true;
 
   @override
-  bool get hasOpenSession => _api.isOpen;
+  Future<bool> canSendQuietly() => _api.openQuietly();
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async {

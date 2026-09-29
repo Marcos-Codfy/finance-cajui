@@ -27,6 +27,11 @@ final class NativeDeviceKeyStore implements DeviceKeyStore {
   Future<Uint8List> sign(Uint8List message) async =>
       await _ask<Uint8List>('sign', {'message': message}) ?? Uint8List(0);
 
+  @override
+  Future<Uint8List> signQuietly(Uint8List message) async =>
+      await _ask<Uint8List>('signQuietly', {'message': message}) ??
+      Uint8List(0);
+
   /// Pergunta ao lado nativo e traduz a recusa dele.
   ///
   /// O canal devolve o código do catálogo no lugar do nome da exceção, então

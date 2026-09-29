@@ -19,12 +19,12 @@ base class FakeUplink implements LedgerUplink {
   @override
   bool get isPaired => true;
 
-  /// Nasce sem sessão: a subida silenciosa só age quando há uma aberta, e o
+  /// Nasce sem envio silencioso: a subida silenciosa só age quando dá, e o
   /// teste que a quer ligada diz isso na cara.
   bool session = false;
 
   @override
-  bool get hasOpenSession => session;
+  Future<bool> canSendQuietly() async => session;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>

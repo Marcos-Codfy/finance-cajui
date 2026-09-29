@@ -64,6 +64,7 @@ class AssistantViewModel extends Notifier<AssistantState> {
     final book = ref.read(ledgerProvider).value;
     if (book == null) return;
     await ref.read(ledgerSyncProvider).run(book);
+    ref.invalidate(quietSendProvider);
   }
 
   /// A resposta que o aparelho dá sozinho, quando dá. Sem livro aberto ainda,

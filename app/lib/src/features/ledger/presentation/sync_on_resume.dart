@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -44,6 +45,9 @@ class _SyncOnResumeState extends ConsumerState<SyncOnResume> {
     // dia — que é justamente quando há mais coisa esperando.
     final book = await ref.read(ledgerProvider.future);
     if (!mounted) return;
+    // Voltar ao app no dia seguinte é quando a liberação da chave pode ter
+    // vencido: o aviso do painel confere de novo.
+    ref.invalidate(quietSendProvider);
     ref.read(ledgerProvider.notifier).quietSync.schedule(book);
   }
 

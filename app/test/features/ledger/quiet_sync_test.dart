@@ -26,7 +26,7 @@ final class _FakeUplink implements LedgerUplink {
   bool get isPaired => true;
 
   @override
-  bool get hasOpenSession => session;
+  Future<bool> canSendQuietly() async => session;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async {
@@ -122,7 +122,7 @@ LedgerBook _book(List<String> ids) {
 
 void main() {
   group('RN-781 · o livro sobe sozinho depois de lançar', () {
-    test('com sessão aberta, sobe sem ninguém pedir', () async {
+    test('com a chave do dia liberada, sobe sem ninguém pedir', () async {
       final uplink = _FakeUplink();
       final quiet = QuietSync(LedgerSync(uplink))..schedule(_book(['e1']));
 
@@ -131,7 +131,7 @@ void main() {
       expect(uplink.sent, ['e1']);
     });
 
-    test('sem sessão aberta não sobe nada: abrir sessão pediria a digital '
+    test('sem a chave do dia não sobe nada: abrir sessão pediria a digital '
         'no meio do lançamento', () async {
       final uplink = _FakeUplink(session: false);
 

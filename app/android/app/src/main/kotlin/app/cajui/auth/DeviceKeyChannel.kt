@@ -31,6 +31,12 @@ class DeviceKeyChannel(
                 "canAuthenticate" -> result.success(key.canAuthenticate)
                 "publicKey" -> result.success(key.publicKey())
                 "sign" -> sign(call, result)
+                // Assina só se a janela do dia ainda estiver aberta, e nunca
+                // abre a caixa de diálogo: é o que deixa o envio automático
+                // acontecer sem interromper ninguém.
+                "signQuietly" -> result.success(
+                    key.trySign(call.argument<ByteArray>("message")!!),
+                )
                 "forget" -> result.success(key.forget())
                 else -> result.notImplemented()
             }

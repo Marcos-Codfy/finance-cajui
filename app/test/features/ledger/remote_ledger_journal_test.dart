@@ -24,6 +24,14 @@ final class _FakeKeys implements DeviceKeyStore {
 
   @override
   Future<Uint8List> sign(Uint8List message) async => message;
+
+  /// Se a liberação do dia ainda vale; o teste muda para ensaiar o dia
+  /// seguinte.
+  bool unlocked = false;
+
+  @override
+  Future<Uint8List> signQuietly(Uint8List message) async =>
+      unlocked ? message : Uint8List(0);
 }
 
 Map<String, Object?> _entry({String id = 'e1', int cents = 8600}) => {

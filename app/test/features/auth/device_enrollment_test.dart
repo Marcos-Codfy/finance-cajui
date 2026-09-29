@@ -33,6 +33,19 @@ final class _FakeKeys implements DeviceKeyStore {
     signatures++;
     return message;
   }
+
+  /// Se a liberação do dia ainda vale.
+  bool unlocked = false;
+
+  /// Quantas assinaturas saíram sem ninguém ser perguntado.
+  int quiet = 0;
+
+  @override
+  Future<Uint8List> signQuietly(Uint8List message) async {
+    if (!unlocked) return Uint8List(0);
+    quiet++;
+    return message;
+  }
 }
 
 /// Uma chave que recusa: é o Keystore dizendo não, como no aparelho.
@@ -48,6 +61,10 @@ final class _RefusingKeys implements DeviceKeyStore {
 
   @override
   Future<Uint8List> sign(Uint8List message) async =>
+      throw const DeviceKeyFailure(ErrorCode.auth01);
+
+  @override
+  Future<Uint8List> signQuietly(Uint8List message) async =>
       throw const DeviceKeyFailure(ErrorCode.auth01);
 }
 
@@ -90,6 +107,50 @@ void main() {
         expect(await api.enroll('errado', name: 'Celular'), ErrorCode.auth04);
       },
     );
+  });
+
+  group('BL-061 · a sessão que abre sozinha', () {
+    test('com a chave do dia liberada, a sessão abre sem ninguém ser '
+        'perguntado', () async {
+      keys.unlocked = true;
+
+      final open = await api.openQuietly();
+
+      expect(open, isTrue);
+      expect(api.isOpen, isTrue);
+      expect(keys.signatures, 0, reason: 'a caixa de diálogo não abriu');
+      expect(server.paths, ['/v1/auth/challenge', '/v1/auth/session']);
+    });
+
+    test('com a janela do dia fechada, nem fala com o servidor', () async {
+      final open = await api.openQuietly();
+
+      expect(open, isFalse);
+      expect(api.isOpen, isFalse);
+      expect(server.paths, isEmpty);
+      expect(keys.signatures, 0);
+    });
+
+    test('com a sessão ainda aberta, não assina nada de novo', () async {
+      await api.devices();
+      final before = server.paths.length;
+
+      final open = await api.openQuietly();
+
+      expect(open, isTrue);
+      expect(server.paths, hasLength(before));
+      expect(keys.quiet, 0);
+    });
+
+    test('chave que recusa não vira exceção: é só "não agora"', () async {
+      final refusing = CajuiApi(
+        baseUrl: server.baseUrl,
+        keys: _RefusingKeys(),
+        client: server.client,
+      );
+
+      expect(await refusing.openQuietly(), isFalse);
+    });
   });
 
   group('sessão', () {

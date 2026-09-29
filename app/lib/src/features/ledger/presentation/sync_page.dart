@@ -54,6 +54,7 @@ class _SyncPageState extends ConsumerState<SyncPage> {
       // Aconteça o que acontecer, o botão volta: preso em "enviando" ele
       // não serve para tentar de novo.
       if (mounted) setState(() => _sending = false);
+      ref.invalidate(quietSendProvider);
     }
   }
 
