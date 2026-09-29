@@ -54,6 +54,21 @@ final class StatementView {
     ];
   }
 
+  /// Quanto do limite de [card] está tomado em [today]; `null` quando o
+  /// cartão não tem limite informado. A conta é do domínio (RN-305).
+  static CardLimitUsage? limitOf(
+    LedgerBook book,
+    CreditCard card,
+    LocalDate today,
+  ) => CardLimitUsage.of(
+    card,
+    entries: book.entries,
+    today: today,
+    reversals: book.reversals,
+    settlements: book.settlements,
+    legacy: book.debts,
+  );
+
   /// O ciclo: de quando a quando, e o vencimento.
   final StatementCycle cycle;
 
