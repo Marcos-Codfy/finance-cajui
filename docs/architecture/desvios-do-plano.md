@@ -55,17 +55,17 @@ Para quem vai usar de verdade. Nenhuma delas é escondida na interface.
 3. **O que o outro celular fez chega quando este sincroniza** — ao abrir o app, ao voltar do segundo plano, depois de cada lançamento e antes de uma pergunta ao assistente, sempre **com sessão aberta**; ou em Ajustes → Enviar ao servidor. O servidor não empurra nada para o aparelho.
 4. **O primeiro envio do dia pede a digital.** Até ele, os lançamentos ficam só no aparelho, e a tela não diz quantos esperam (BL-061).
 5. **Correções concorrentes: a mais nova pelo relógio vence.** Celular com hora errada pode ganhar ou perder uma disputa que não devia (ADR-019).
-6. **Juros de compra parcelada não atravessam** para o outro celular: o servidor recalcula as parcelas a partir do cartão e ignora o valor da parcela (BL-063).
+6. **Editar a dívida num celular e pagar parcela dela no outro**, sem sincronizar no meio, deixa a contagem de parcelas diferente nos dois; e dois celulares que fecham o mesmo mês antes de sincronizar ficam cada um com o seu fechamento (BL-066).
 7. **Cancelar é definitivo entre aparelhos.** O que um cancelou, o outro cancela na próxima sincronização, e nada o recria.
 8. **A IA de comprovante só entra com sessão aberta**; sem ela, valem as regras locais — exatas no que sabem, e sem chute de categoria.
 9. **Sem rede, o celular funciona inteiro**; o assistente, não — ele mora no servidor.
 10. **Backup só dentro da VM** até o dono criar a chave da Oracle (BL-058). Perder a VM é perder o servidor; os celulares continuam com o livro.
 11. **APK de depuração, por cabo ou cópia manual.** Não está em loja e não é assinado.
 12. **Sem pinning de certificado** (BL-047): a proteção da conexão é o TLS comum.
-13. **Dois números para "fora do padrão"** (BL-052) e **"quanto do limite está tomado"** (BL-040) esperam decisão do dono — a especificação não decide.
+13. **Preferências são de cada aparelho**: som, vibração e tema não atravessam — de propósito. Comprovante guardado para conferir depois também fica só no aparelho que o recebeu.
 14. **Sessão web curta e em memória**: fechar a aba é sair.
 15. **Um mês por vez nas telas**; os meses fechados existem no livro e ainda não têm lista (BL-044).
-16. **Edição de cartão e plano zerado não atravessam** entre os celulares; e dois celulares gastando o mesmo saldo do vale sem rede deixam o saldo divergente entre app e servidor (BL-065 — a regra é decisão do dono).
+16. **Edição de cartão e plano zerado não atravessam** entre os celulares (BL-065). Nenhuma tela edita cartão hoje, então na prática é só o plano zerado.
 17. **Os dois celulares precisam do mesmo APK.** Um APK de antes de 27/09 não carimba a correção: o servidor a mantém (`kept`) em silêncio e aquele celular fica divergente até ser atualizado.
 
 ## O que não mudou

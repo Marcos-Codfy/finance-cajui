@@ -265,5 +265,12 @@ final class _OpenUplink implements LedgerUplink {
   Future<ErrorCode?> sendReversal(Map<String, Object?> reversal) async => null;
 
   @override
+  Future<(Set<String>, ErrorCode?)> remoteFacts() async =>
+      (const <String>{}, null);
+
+  @override
+  Future<ErrorCode?> sendFact(DeviceFact fact) async => null;
+
+  @override
   Future<ErrorCode?> cancelEntry(String id) async => null;
 }

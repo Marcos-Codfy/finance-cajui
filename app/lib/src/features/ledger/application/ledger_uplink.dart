@@ -45,9 +45,10 @@ abstract interface class LedgerUplink {
   /// Antes eram só os quatro campos que mudam número na resposta do
   /// assistente. Com dois celulares, trocar a forma de pagamento também
   /// precisa atravessar: é o que diz se saiu do vale ou do dinheiro
-  /// (RN-111). Ficam de fora o carimbo — ele diz **quando**, não **o
-  /// quê** — e o valor da parcela, que o servidor recalcula sem juros e
-  /// faria toda compra com juros parecer corrigida para sempre (BL-054).
+  /// (RN-111). Fica de fora o carimbo: ele diz **quando**, não **o
+  /// quê**. O valor da parcela entrou em 29/09, quando o servidor passou
+  /// a guardá-lo (BL-063) — antes ele o descartava, e toda compra com
+  /// juros pareceria corrigida para sempre.
   static String signatureOf(CreateEntryRequest request) {
     final lines = [
       for (final line in request.paymentLines)
@@ -60,6 +61,7 @@ abstract interface class LedgerUplink {
       request.description,
       lines,
       request.installments ?? 1,
+      request.installmentAmountCents ?? 0,
       request.isExceptional,
     ].join('|');
   }
@@ -108,6 +110,13 @@ abstract interface class LedgerUplink {
 
   /// Manda um estorno: dinheiro de uma compra que voltou (RN-209).
   Future<ErrorCode?> sendReversal(Map<String, Object?> reversal);
+
+  /// Os fatos do aparelho que o servidor já guarda, pelo identificador:
+  /// fatura paga, dívida, parcela de dívida paga, mês fechado (ADR-019).
+  Future<(Set<String>, ErrorCode?)> remoteFacts();
+
+  /// Manda um fato para o servidor guardar como está.
+  Future<ErrorCode?> sendFact(DeviceFact fact);
 
   /// Avisa que um lançamento foi cancelado e não vale mais.
   Future<ErrorCode?> cancelEntry(String id);

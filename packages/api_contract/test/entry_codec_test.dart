@@ -96,23 +96,55 @@ void main() {
       ).valueOrNull!;
 
       final json = EntryCodec.fromEntry(comJuros).toJson();
-      Entry volta({required bool proprio}) => EntryCodec.toEntry(
-        CreateEntryRequest.fromJson(json),
+      Entry volta(Map<String, Object?> pedido) => EntryCodec.toEntry(
+        CreateEntryRequest.fromJson(pedido),
         category: _groceries,
         today: _today,
         cardOf: (id) => card,
-        fromOwnJournal: proprio,
       ).valueOrNull!;
 
-      final daqui = volta(proprio: true);
-      final daRede = volta(proprio: false);
+      final daqui = volta(json);
+      final semJuros = volta({...json}..remove('installmentAmountCents'));
 
       expect(daqui.installmentPlan!.interestTotal.cents, 12000);
       expect(daqui.origin, EntryOrigin.share, reason: 'a origem sobrevive');
       expect(
-        daRede.installmentPlan!.interestTotal,
+        semJuros.installmentPlan!.interestTotal,
         Money.zero,
-        reason: 'parcela vinda da rede não se usa: o plano é recalculado',
+        reason: 'sem o valor da parcela, é o total dividido',
+      );
+    });
+
+    test('BL-063 · parcelas que somam menos que a compra são pedido '
+        'malformado, e não juros negativos', () {
+      final json = {
+        ...EntryCodec.fromEntry(_split()).toJson(),
+        'amountCents': 96000,
+        'installments': 6,
+        'installmentAmountCents': 100,
+        'paymentLines': [
+          {
+            'paymentMethodId': 'card-1',
+            'kind': 'creditCard',
+            'amountCents': 96000,
+          },
+        ],
+      };
+      final card = CreditCard.create(
+        id: 'card-1',
+        name: 'Cartão',
+        closingDay: 25,
+        dueDay: 5,
+      ).valueOrNull!;
+
+      expect(
+        () => EntryCodec.toEntry(
+          CreateEntryRequest.fromJson(json),
+          category: _groceries,
+          today: _today,
+          cardOf: (id) => card,
+        ),
+        throwsFormatException,
       );
     });
 

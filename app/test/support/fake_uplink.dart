@@ -116,6 +116,19 @@ base class FakeUplink implements LedgerUplink {
     return null;
   }
 
+  /// Os fatos do aparelho que o servidor já guarda.
+  final Set<String> facts = {};
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteFacts() async => (facts, null);
+
+  @override
+  Future<ErrorCode?> sendFact(DeviceFact fact) async {
+    calls.add('guardou ${fact.id}');
+    facts.add(fact.id);
+    return null;
+  }
+
   @override
   Future<ErrorCode?> cancelEntry(String id) async {
     calls.add('cancelou $id');

@@ -40,19 +40,16 @@ abstract final class EntryCodec {
   /// data que não existe, tipo de pagamento desconhecido. Regra de negócio
   /// recusada não é exceção: volta como falha no resultado.
   ///
-  /// [cardOf] acha o cartão de uma compra parcelada. O parcelamento é
-  /// **recalculado** a partir do cartão e da data da compra (RN-311): o
-  /// pedido traz só quantas parcelas, nunca o valor de cada uma.
-  ///
-  /// [fromOwnJournal] diz que o pedido veio do registro **deste** aparelho,
-  /// e não da rede. Só então o valor de parcela gravado é aceito, para um
-  /// plano com juros não voltar com os juros zerados (BL-054).
+  /// [cardOf] acha o cartão de uma compra parcelada. As **datas** das
+  /// parcelas são sempre recalculadas a partir do cartão e da data da
+  /// compra (RN-311). O **valor** de cada uma vem do pedido só quando há
+  /// juros — e é conferido: parcelas que somam menos que a compra são
+  /// pedido malformado, e não juros negativos (RN-314, BL-063).
   static Result<Entry> toEntry(
     CreateEntryRequest request, {
     required Category category,
     required LocalDate today,
     CreditCard? Function(String id)? cardOf,
-    bool fromOwnJournal = false,
   }) {
     final on = parseDate(request.occurredOn);
     final lines = _lines(request);
@@ -66,7 +63,7 @@ abstract final class EntryCodec {
       isExceptional: request.isExceptional,
       origin: named(EntryOrigin.values, request.origin ?? 'manual'),
       paymentLines: lines,
-      installmentPlan: _plan(request, lines, on, cardOf, fromOwnJournal),
+      installmentPlan: _plan(request, lines, on, cardOf),
       revisedAt: request.revisedAt,
     );
   }
@@ -96,16 +93,18 @@ abstract final class EntryCodec {
     List<PaymentLine> lines,
     LocalDate purchasedOn,
     CreditCard? Function(String id)? cardOf,
-    bool fromOwnJournal,
   ) {
     final count = request.installments;
-    final cents = fromOwnJournal ? request.installmentAmountCents : null;
+    final cents = request.installmentAmountCents;
     if (count == null || count < 2) return null;
     if (count > maxInstallments) throw const FormatException('parcelas');
     final onCard = lines.where((line) => line.kind.isCreditCard).firstOrNull;
     final card = onCard == null ? null : cardOf?.call(onCard.paymentMethodId);
     if (onCard == null || card == null) {
       throw const FormatException('parcelamento sem cartão conhecido');
+    }
+    if (cents != null && cents * count < onCard.amount.cents) {
+      throw const FormatException('parcelas somam menos que a compra');
     }
     return InstallmentPlan.forPurchase(
       card: card,

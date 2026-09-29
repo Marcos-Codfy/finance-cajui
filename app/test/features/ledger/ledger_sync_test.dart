@@ -1,7 +1,9 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
+import 'package:cajui/src/features/ledger/application/sync_trail.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -29,6 +31,7 @@ LedgerBook _bookOf(
   List<IncomeReceipt> receipts = const [],
   List<VoucherAdjustment> adjustments = const [],
   Set<String> cancelled = const {},
+  List<LedgerEvent> facts = const [],
 }) {
   final base = DefaultCatalog.emptyBook;
   return LedgerBook(
@@ -38,7 +41,7 @@ LedgerBook _bookOf(
     receipts: receipts,
     voucherAdjustments: adjustments,
     setup: setup ?? MonthSetup.empty,
-    cancelledIds: cancelled,
+    trail: SyncTrail(cancelledIds: cancelled, facts: facts),
   );
 }
 
@@ -154,6 +157,17 @@ void main() {
         expect(uplink.calls.last, 'corrigiu e1');
       },
     );
+
+    test('ADR-019 · a parcela de dívida paga sobe depois do lançamento '
+        'que a pagou, e não sobe de novo', () async {
+      const paid = DebtInstallmentPaid(debtId: 'debt-1', entryId: 'e1');
+      final book = _bookOf([_entry('e1', 'Parcela', 21200)], facts: [paid]);
+
+      await sync.run(book);
+      await sync.run(book);
+
+      expect(uplink.calls, ['criou e1', 'guardou debt-payment-e1']);
+    });
 
     test('lançamento cancelado aqui é cancelado lá (RN-995)', () async {
       await sync.run(

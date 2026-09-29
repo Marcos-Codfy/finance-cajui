@@ -27,6 +27,7 @@ A ADR-012 previa, para o caso de dois aparelhos editarem o mesmo lançamento, o 
    | Plano do mês | A mais nova pelo carimbo (`MonthSetup.definedAt`) | Mesmo motivo |
    | Cancelamento | O que um cancelou, os outros cancelam. **Nunca o contrário**: nada recria o que o servidor diz que morreu | Cancelar é a decisão mais deliberada que existe no app (RN-208, RN-995) |
    | Estorno, renda, acerto do vale, cartão | Por identificador: quem não tem, ganha | São fatos, não versões |
+   | Fatura paga, dívida, parcela de dívida paga, mês fechado | Por identificador do fato, aplicados na ordem em que chegaram ao servidor. Do fechamento vale a revisão mais alta | O servidor os guarda **sem fazer conta com eles** (item 7) |
 
    A régua é uma só, `EditStamp.isNewer`, no domínio: carimbo mais novo vence; sem carimbo aqui, nunca; sem carimbo lá, sempre; sem carimbo dos dois lados — registros de antes desta ADR —, ninguém, e vale o que já está.
 
@@ -35,6 +36,10 @@ A ADR-012 previa, para o caso de dois aparelhos editarem o mesmo lançamento, o 
 5. **A assinatura do lançamento passa a cobrir todo o conteúdo** — valor, data, categoria, descrição, linhas de pagamento, número de parcelas e "fora do padrão". Antes eram só os quatro campos que mudavam número na resposta do assistente; com dois aparelhos, uma correção que só troca a forma de pagamento também precisa atravessar — é ela que diz se saiu do vale ou do dinheiro (RN-111).
 
 6. **Só o que foi cancelado neste aparelho é cancelado no servidor.** "O servidor tem e eu não" também descreve o que o outro aparelho acabou de lançar e ainda não desceu. O `LedgerBook` passa a lembrar o que cancelou (`cancelledIds`), e é só isso que sobe como cancelamento. Foi o defeito que o teste de ponta a ponta achou primeiro: o celular B apagava no servidor o que A tinha lançado.
+
+7. **Os fatos que só o aparelho interpreta também atravessam** (acrescentado em 29/09). Fatura paga, dívida, parcela de dívida paga e mês fechado não entram em conta nenhuma do servidor — mas sem eles no servidor, o outro celular não os via, e o celular reinstalado pedia tudo de novo. O servidor passou a **guardá-los e devolvê-los como estão** (`GET` e `POST /v1/facts`), com a chave que o aparelho deu a cada um. Guardar sem interpretar não é guardar sem conferir (T-05): o conteúdo passa pelo mesmo codec que o aparelho usa, agora no contrato, e o que o domínio recusa não é guardado.
+
+8. **O valor da parcela com juros atravessa** (29/09, BL-063). O servidor descartava o valor da parcela e recalculava o plano sem juros. Agora aceita o valor **depois de conferido** — parcelas que somam menos que a compra são pedido malformado —, e as datas continuam recalculadas a partir do cartão (RN-311). Quem manda é sempre um aparelho cadastrado do próprio dono.
 
 ## Alternativas descartadas
 
@@ -52,8 +57,8 @@ A ADR-012 previa, para o caso de dois aparelhos editarem o mesmo lançamento, o 
 - **Bom:** sincronizar de novo não duplica nada, em nenhum dos lados; um aparelho reinstalado se completa sozinho a partir do servidor.
 - **Custo:** o desempate depende dos **relógios dos dois aparelhos**. Um celular com hora errada pode ganhar ou perder uma disputa que não devia. Celular sincroniza a hora pela rede, então na prática não acontece — mas é uma restrição declarada, não um problema resolvido.
 - **Custo:** o que o outro aparelho fez só chega **quando este sincroniza** — ao abrir o app, ao voltar do segundo plano, depois de cada lançamento e antes de uma pergunta ao assistente, sempre com sessão aberta, ou em Ajustes → Enviar ao servidor. Não há empurrão do servidor para o aparelho.
-- **Limite:** o servidor recalcula o plano de parcelas a partir do cartão e **ignora o valor da parcela** que o app manda (T-05, BL-054). Por isso os **juros de uma compra parcelada não atravessam**: no outro celular a compra chega com as parcelas certas e os juros zerados. Registrado como BL-063.
-- **Limite:** a correção que **só** muda o valor da parcela com juros não é vista como correção pela assinatura — de propósito, para uma compra com juros não parecer corrigida para sempre. É o mesmo limite do item anterior.
+- **Limite:** a dívida carrega a contagem de parcelas pagas **dentro** do fato que a cadastra. Editar a dívida num celular e pagar uma parcela dela no outro, sem sincronizar entre uma coisa e outra, deixa a contagem diferente nos dois até a próxima edição. Raro, e registrado como BL-066.
+- **Limite:** dois celulares que fecham o **mesmo mês** antes de sincronizar gravam fechamentos com a mesma chave; vale o que chegou primeiro ao servidor, e o outro celular fica com o dele. Fechar depois de sincronizar evita (BL-066).
 - `E-SYNC-02` continua no catálogo, sem produtor. Sai dele quando o catálogo for revisado.
 
 ## Como se confere
@@ -62,3 +67,5 @@ A ADR-012 previa, para o caso de dois aparelhos editarem o mesmo lançamento, o 
 - `app/test/features/ledger/ledger_sync_test.dart`: a versão mais velha não sobe por cima; a mais nova sobe; o que o servidor tem e o aparelho nunca teve não é cancelado.
 - `server/test/sync_state_test.dart`: cancelado fica listado; não ressuscita por `POST` nem por `PUT`; correção e plano mais velhos não apagam os mais novos; sem carimbo, vale o último.
 - `packages/domain/test/shared/edit_stamp_test.dart` e `packages/api_contract/test/entry_revision_codec_test.dart`.
+- `app/test/features/ledger/two_phones_facts_test.dart`: dívida, parcela paga, fatura paga, mês fechado e juros atravessando; e o **celular reinstalado**, que no primeiro envio recebe tudo de volta.
+- `server/test/fact_routes_test.dart` e `packages/api_contract/test/device_fact_test.dart`.

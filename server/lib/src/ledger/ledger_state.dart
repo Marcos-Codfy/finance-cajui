@@ -61,6 +61,7 @@ final class LedgerState {
   final Map<String, IncomeReceipt> _receipts = {};
   final Map<String, Map<String, Object?>> _adjustments = {};
   final Map<String, Reversal> _reversals = {};
+  final Map<String, DeviceFact> _facts = {};
   MonthSetup _plan = MonthSetup.empty;
 
   /// As categorias, por identificador.
@@ -79,6 +80,12 @@ final class LedgerState {
 
   /// O plano do mês como o aparelho o cadastrou.
   MonthSetup get plan => _plan;
+
+  /// Os fatos que só o aparelho interpreta — fatura paga, dívida, parcela
+  /// de dívida, mês fechado —, na ordem em que chegaram. O servidor não
+  /// faz conta com eles: guarda para o outro celular ter de onde trazer
+  /// (ADR-019).
+  List<DeviceFact> get facts => List.unmodifiable(_facts.values);
 
   /// Os estornos, por identificador.
   Map<String, Reversal> get reversals => Map.unmodifiable(_reversals);
@@ -155,8 +162,19 @@ final class LedgerState {
         _adjustments['${event.payload['id']}'] = event.payload;
       case entryCreated || entryRevised || entryCancelled || entryReversed:
         _applyEntry(event);
+      case final type when DeviceFact.types.contains(type):
+        final id = '${event.payload['id']}';
+        _facts.putIfAbsent(id, () => _factOf(event));
     }
   }
+
+  /// O fato do aparelho como foi gravado: o evento leva o identificador e
+  /// o conteúdo do fato lado a lado.
+  static DeviceFact _factOf(StoredEvent event) => DeviceFact(
+    id: '${event.payload['id']}',
+    type: event.type,
+    payload: (event.payload['payload']! as Map).cast<String, Object?>(),
+  );
 
   /// Os fatos que mexem nos lançamentos: criar, corrigir, cancelar, estornar.
   void _applyEntry(StoredEvent event) {
@@ -229,9 +247,10 @@ final class LedgerState {
       request,
       category: _categories[request.categoryId]!,
       today: today,
-      // Sem isto, toda compra parcelada é recusada: o plano de parcelas é
-      // **recalculado** a partir do cartão (T-05, nunca se confia na parcela
-      // que o app mandou), e sem o cartão não há de onde recalcular.
+      // Sem isto, toda compra parcelada é recusada: as datas das parcelas
+      // são **recalculadas** a partir do cartão (RN-311), e sem o cartão
+      // não há de onde recalcular. O valor da parcela é aceito só depois
+      // de conferido pelo codec (BL-063).
       cardOf: (id) => _cards[id],
     );
   }

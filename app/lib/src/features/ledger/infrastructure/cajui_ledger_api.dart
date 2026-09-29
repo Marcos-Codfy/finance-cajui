@@ -186,6 +186,22 @@ final class CajuiLedgerApi implements LedgerUplink {
   }
 
   @override
+  Future<(Set<String>, ErrorCode?)> remoteFacts() async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', '/v1/facts', token: token),
+    );
+    return (_idsOf(outcome.body?['facts']), outcome.failure?.code);
+  }
+
+  @override
+  Future<ErrorCode?> sendFact(DeviceFact fact) async {
+    final outcome = await _api.authenticated(
+      (token) => _api.post('/v1/facts', fact.toJson(), token: token),
+    );
+    return outcome.failure?.code;
+  }
+
+  @override
   Future<ErrorCode?> cancelEntry(String id) async {
     final outcome = await _api.authenticated(
       (token) => _api.send('DELETE', '/v1/entries/$id', token: token),

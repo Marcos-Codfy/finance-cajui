@@ -98,11 +98,11 @@ final class CreateEntryRequest {
   /// O valor de cada parcela, quando a compra tem **juros** e as parcelas
   /// não são o valor dividido em partes iguais (RN-314).
   ///
-  /// O servidor **ignora** este campo, de propósito: parcela vinda do
-  /// cliente é número que alguém poderia forjar, e lá o plano é sempre
-  /// recalculado a partir do cartão (T-05, RN-311). Ele existe para o
-  /// aparelho reler o **próprio** registro sem perder os juros — antes do
-  /// BL-054, um plano com juros voltava com `interestTotal` zerado.
+  /// Até o BL-063 o servidor ignorava este campo, e por isso os juros não
+  /// chegavam ao outro celular. Agora ele é aceito **depois de conferido**:
+  /// as datas das parcelas continuam recalculadas a partir do cartão
+  /// (RN-311), e parcelas que somam menos que a compra são recusadas. Quem
+  /// manda é sempre um aparelho cadastrado do próprio dono (ADR-008).
   final int? installmentAmountCents;
 
   /// Como o lançamento nasceu: `manual` ou `share`. Ausente vale `manual`.

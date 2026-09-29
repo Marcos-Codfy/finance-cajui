@@ -76,8 +76,12 @@ final class LedgerPull {
     EntryReversed(:final reversal) =>
       book.entryOf(reversal.entryId) != null &&
           !book.reversals.any((r) => r.id == reversal.id),
-    // O resto — fechamento, dívida, fatura — não desce do servidor.
-    _ => false,
+    // Fatura paga, dívida, parcela de dívida e mês fechado: pelo
+    // identificador do fato, que é o mesmo nos dois aparelhos.
+    StatementSettled() ||
+    DebtDefined() ||
+    DebtInstallmentPaid() ||
+    MonthClosed() => !book.factIds.contains(event.id),
   };
 
   Iterable<LedgerEvent> _candidates(
@@ -117,8 +121,8 @@ final class LedgerPull {
       id: 'card-sync-${card.id}',
       card: card,
     ),
-    IncomeReceived() || VoucherBalanceAdjusted() || EntryReversed() => event,
-    _ => null,
+    EntryCorrected() || EntryCancelled() => null,
+    _ => event,
   };
 
   /// O que o servidor já cancelou não volta por aqui de jeito nenhum.

@@ -1,5 +1,6 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
+import 'package:cajui/src/features/ledger/application/device_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -137,6 +138,21 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
     return null;
   }
 
+  final Map<String, DeviceFact> _facts = {};
+
+  @override
+  Future<(Set<String>, ErrorCode?)> remoteFacts() async =>
+      (_facts.keys.toSet(), null);
+
+  /// Lido pelo mesmo leitor estrito do servidor de verdade, e guardado na
+  /// ordem de chegada.
+  @override
+  Future<ErrorCode?> sendFact(DeviceFact fact) async {
+    final kept = DeviceFact.read(fact.toJson());
+    _facts.putIfAbsent(kept.id, () => kept);
+    return null;
+  }
+
   List<Reversal> _reversalsOn(List<Entry> entries) {
     final byId = {for (final entry in entries) entry.id: entry};
     final reversals = <Reversal>[];
@@ -177,6 +193,7 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
           CardDefined(id: 'card-remoto-${card.id}', card: card),
         for (final entry in entries) EntryRecorded(entry),
         for (final reversal in reversals) EntryReversed(reversal),
+        for (final fact in _facts.values) ?DeviceFacts.toEvent(fact),
       ],
       cancelled: Set.of(_cancelled),
     );
