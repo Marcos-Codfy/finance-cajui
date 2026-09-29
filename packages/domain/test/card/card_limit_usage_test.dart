@@ -103,6 +103,45 @@ void main() {
       expect(usage.taken, const Money.fromCents(50000));
     });
 
+    test('RN-211 estorno que cai na fatura seguinte devolve o limite do '
+        'mesmo jeito', () {
+      // Compra em 20/09, fatura que fecha dia 25; estorno inteiro em 26/09,
+      // já no ciclo seguinte — onde não há compra nenhuma para descontar.
+      final bought = entry(
+        id: 'compra',
+        cents: 10000,
+        lines: [credit(10000)],
+        on: LocalDate(2026, 9, 20),
+      );
+      final back = Reversal.create(
+        id: 'r',
+        entry: bought,
+        paymentMethodId: 'card',
+        amount: const Money.fromCents(10000),
+        occurredOn: LocalDate(2026, 9, 26),
+      ).valueOrNull!;
+
+      final usage = _usage(entries: [bought], reversals: [back]);
+
+      expect(usage.taken, Money.zero);
+    });
+
+    test('RN-211 compra parcelada estornada inteira devolve o limite '
+        'inteiro', () {
+      final stove = _stove();
+      final back = Reversal.create(
+        id: 'r',
+        entry: stove,
+        paymentMethodId: 'card',
+        amount: const Money.fromCents(96000),
+        occurredOn: LocalDate(2026, 7, 20),
+      ).valueOrNull!;
+
+      final usage = _usage(entries: [stove], reversals: [back]);
+
+      expect(usage.taken, Money.zero);
+    });
+
     test('RN-521 parcela de compra anterior ao app também toma limite', () {
       final sofa = Debt.create(
         id: 'sofa',
