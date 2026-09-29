@@ -38,10 +38,34 @@ class _VoucherBalancePageState extends ConsumerState<VoucherBalancePage> {
     navigator.pop();
   }
 
+  /// Há mais gasto lançado no vale do que saldo (RN-124): o saldo daqui
+  /// parou em zero, e o que a pessoa informar passa a valer.
+  static List<Widget> _overdrawnNotice(Money overdrawn) => [
+    CajuiNotice(
+      intent: CajuiNoticeIntent.info,
+      what:
+          'O vale tem ${BrlFormatter.format(overdrawn.cents)} lançados '
+          'além do saldo.',
+      meaning:
+          'Informe abaixo o saldo que a operadora mostra: ele passa a '
+          'valer, e a diferença fica registrada como ajuste.',
+    ),
+    const SizedBox(height: CajuiSpacing.lg),
+  ];
+
+  static Widget _explanation(CajuiThemeData theme) => Text(
+    'O Cajui não fala com a operadora do vale. Se o saldo daqui não bate '
+    'com o do cartão, informe o saldo de verdade. A diferença fica '
+    'registrada como ajuste: não vira despesa nem renda.',
+    style: theme.typography.body.copyWith(color: theme.colors.text.muted),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
-    final current = ref.watch(ledgerProvider).value?.voucher.balance.cents ?? 0;
+    final voucher = ref.watch(ledgerProvider).value?.voucher;
+    final current = voucher?.balance.cents ?? 0;
+    final overdrawn = voucher?.overdrawn ?? Money.zero;
     final cents = _typedCents ?? current;
     return CajuiScreen(
       title: 'Saldo do vale',
@@ -53,12 +77,8 @@ class _VoucherBalancePageState extends ConsumerState<VoucherBalancePage> {
         onPressed: () => _save(cents),
       ),
       children: [
-        Text(
-          'O Cajui não fala com a operadora do vale. Se o saldo daqui não '
-          'bate com o do cartão, informe o saldo de verdade. A diferença '
-          'fica registrada como ajuste: não vira despesa nem renda.',
-          style: theme.typography.body.copyWith(color: theme.colors.text.muted),
-        ),
+        if (overdrawn.isPositive) ..._overdrawnNotice(overdrawn),
+        _explanation(theme),
         const SizedBox(height: CajuiSpacing.xl),
         CajuiAmountField(
           label: 'Saldo que a operadora mostra',

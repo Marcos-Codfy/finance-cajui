@@ -42,12 +42,13 @@ abstract final class LedgerProjection {
     ],
   );
 
-  /// O fato já foi aceito quando aconteceu. Se o registro antigo disser que
-  /// o vale pagou mais do que tinha, o saldo para em zero: é melhor abrir
-  /// com saldo zerado do que não abrir.
+  /// O fato já foi aceito quando aconteceu — aqui ou em outro aparelho — e
+  /// não se recusa depois. Se os pagamentos passam do saldo, a conta mostra
+  /// zero e guarda a diferença a descoberto, em vez de esquecer o que já
+  /// somou: parar em zero no meio fazia dois celulares, com os mesmos
+  /// fatos em outra ordem, chegarem a saldos diferentes (RN-124).
   static VoucherAccount _paying(VoucherAccount account, Entry entry) =>
-      account.pay(entry.paidByTender.mealVoucher).valueOrNull ??
-      VoucherAccount();
+      account.settle(entry.paidByTender.mealVoucher);
 
   /// O mesmo fato duas vezes muda o livro **uma**: o registro já ignora o
   /// repetido, e a projeção faz o mesmo — é o que impede duas descidas

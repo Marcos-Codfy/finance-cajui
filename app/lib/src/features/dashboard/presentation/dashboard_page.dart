@@ -10,6 +10,7 @@ import 'package:cajui/src/features/insights/application/insights.dart';
 import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/features/ledger/presentation/voucher_balance_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -114,6 +115,10 @@ class DashboardPage extends ConsumerWidget {
         _waitingCaptures(ref, state.pendingCaptures),
         gap,
       ],
+      if (state.overview.voucher.overdrawn.isPositive) ...[
+        _voucherOverdrawn(context, state.overview.voucher.overdrawn),
+        gap,
+      ],
       if (state.overview.indicators.requiredAdjustment.isPositive) ...[
         _howToClose(context, state.overview),
         gap,
@@ -153,6 +158,24 @@ class DashboardPage extends ConsumerWidget {
       ),
     );
   }
+
+  /// Há mais gasto lançado no vale do que saldo (RN-124): o saldo mostrado
+  /// é zero, e o aviso diz o porquê e por onde se acerta.
+  Widget _voucherOverdrawn(BuildContext context, Money overdrawn) =>
+      CajuiNotice(
+        intent: CajuiNoticeIntent.info,
+        what:
+            'O vale tem ${MoneyFormat.brl(overdrawn)} lançados além do '
+            'saldo.',
+        meaning:
+            'Acontece quando dois celulares usam o mesmo saldo sem '
+            'internet, ou quando falta lançar um crédito. Confira o saldo '
+            'no aplicativo da operadora.',
+        primaryAction: CajuiNoticeAction(
+          label: 'Acertar o saldo',
+          onPressed: () => VoucherBalancePage.open(context),
+        ),
+      );
 
   Widget _missingIncome(BuildContext context) => CajuiNotice(
     what: 'Falta a renda do mês.',

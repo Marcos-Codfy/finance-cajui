@@ -44,7 +44,9 @@ class FixedClock implements Clock {
 
 /// As trocas que todo teste do app faz: som mudo, livro na memória, dia fixo,
 /// identificadores em sequência (`id-0`, `id-1`…) e nenhuma captura chegando
-/// — a não ser que o teste passe [inbox] e [reader].
+/// — a não ser que o teste passe [inbox] e [reader]. [idPrefix] troca o
+/// começo dos identificadores: dois aparelhos no mesmo teste não podem
+/// gerar os mesmos.
 List<Override> testOverrides({
   LedgerJournal? journal,
   MutePlayer? player,
@@ -56,25 +58,31 @@ List<Override> testOverrides({
   PreferencesStore? preferences,
   LedgerUplink? uplink,
   LedgerDownlink? downlink,
+  String idPrefix = 'id',
 }) {
   var next = 0;
   return [
     soundPlayerProvider.overrideWithValue(player ?? MutePlayer()),
     ledgerJournalProvider.overrideWithValue(journal ?? MemoryLedgerJournal()),
     clockProvider.overrideWithValue(FixedClock(today ?? testToday)),
-    newIdProvider.overrideWithValue(() => 'id-${next++}'),
+    newIdProvider.overrideWithValue(() => '$idPrefix-${next++}'),
     ..._capture(inbox, reader, captureStore),
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const _SilentGateway(),
     ),
-    // O teste roda como celular cadastrado: é lá que a camada local
-    // responde, e o livro não sobe para lugar nenhum.
-    ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
-    ledgerDownlinkProvider.overrideWithValue(downlink ?? const _NoDownlink()),
+    ..._server(uplink, downlink),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
     ..._extras(preferences),
   ];
 }
+
+/// O servidor: o teste roda como celular cadastrado — é lá que a camada
+/// local responde —, e o livro não sobe nem desce de lugar nenhum, a não
+/// ser que o teste mande.
+List<Override> _server(LedgerUplink? uplink, LedgerDownlink? downlink) => [
+  ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
+  ledgerDownlinkProvider.overrideWithValue(downlink ?? const _NoDownlink()),
+];
 
 /// A captura: nada chega, a não ser que o teste mande.
 List<Override> _capture(

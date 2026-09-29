@@ -34,11 +34,16 @@ class StatementPage extends ConsumerWidget {
     final today = ref.watch(clockProvider).today();
     final views = StatementView.current(book, card, today);
     final nothingYet = views.every((view) => view.statement.total.isZero);
+    final limit = StatementView.limitOf(book, card, today);
     return CajuiScreen(
       title: card.name,
       overline: 'fecha dia ${card.closingDay} · vence dia ${card.dueDay}',
       onBack: Navigator.of(context).pop,
       children: [
+        if (limit != null) ...[
+          _limitCard(limit),
+          const SizedBox(height: CajuiSpacing.lg),
+        ],
         if (nothingYet) _noPurchasesYet,
         for (final view in views)
           if (!view.statement.total.isZero)
@@ -49,6 +54,24 @@ class StatementPage extends ConsumerWidget {
               onSettle: (amount) => _settle(ref, view, amount),
             ),
       ],
+    );
+  }
+
+  /// O limite livre, com o medidor do que está tomado (RN-305). Passar do
+  /// limite não vira alarme: o medidor enche, e a frase diz quanto passou.
+  static Widget _limitCard(CardLimitUsage usage) {
+    final limit = BrlFormatter.format(usage.limit.cents);
+    final taken = BrlFormatter.format(usage.taken.cents);
+    final over = BrlFormatter.format(usage.exceeded.cents);
+    return CajuiStatCard(
+      label: 'Limite livre',
+      cents: usage.available.cents,
+      meter: usage.fraction,
+      caption: usage.exceeded.isPositive
+          ? 'O tomado passou $over do limite de $limit. Conta as faturas '
+                'em aberto e as parcelas por vencer.'
+          : '$taken tomados de $limit: faturas em aberto e parcelas por '
+                'vencer.',
     );
   }
 

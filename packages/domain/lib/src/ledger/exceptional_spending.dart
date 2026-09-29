@@ -12,6 +12,11 @@ import 'package:meta/meta.dart';
 final class ExceptionalSpending {
   /// Soma os lançamentos fora do padrão de [entries] no ano de [upTo], até o
   /// mês [upTo], inclusive.
+  ///
+  /// Compra parcelada entra pelo **valor da compra, inteiro**, no mês em que
+  /// foi feita (RN-242): o acumulado mede a decisão, não o desembolso. Quem
+  /// mede o que pesa em cada mês é o resultado do mês, que leva só a
+  /// parcela — e os dois números nunca se somam.
   factory of(Iterable<Entry> entries, {required BudgetMonth upTo}) {
     final counted = entries.where(
       (entry) =>
