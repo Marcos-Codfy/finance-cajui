@@ -25,6 +25,11 @@ abstract interface class DeviceKeyStore {
   /// Vazia quando a pessoa fechou a caixa de diálogo: desistir não é erro, e
   /// quem chamou trata como "não agora".
   Future<Uint8List> sign(Uint8List message);
+
+  /// A assinatura de [message] **sem perguntar nada a ninguém**: só sai se
+  /// a liberação do dia ainda vale. Vazia quando a janela fechou — e aí
+  /// quem chamou espera o próximo envio pedido, em vez de interromper.
+  Future<Uint8List> signQuietly(Uint8List message);
 }
 
 /// A chave deste aparelho. A raiz do app decide qual.

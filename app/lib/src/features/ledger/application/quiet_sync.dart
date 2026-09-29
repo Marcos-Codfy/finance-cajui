@@ -9,11 +9,11 @@ import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 ///
 /// Duas regras a governam.
 ///
-/// **Só sobe com sessão já aberta.** Abrir sessão pede a digital, e pedir a
-/// digital no meio de um lançamento é pior do que não subir na hora: quem
-/// está lançando está com pressa. Como a sessão dura um dia, na prática o
-/// primeiro envio do dia é a pedido — pelo assistente ou por Ajustes — e
-/// todos os seguintes acontecem sozinhos.
+/// **Só sobe quando dá para subir em silêncio.** Pedir a digital no meio
+/// de um lançamento é pior do que não subir na hora: quem está lançando
+/// está com pressa. A liberação da chave vale um dia; então o primeiro
+/// envio do dia é a pedido — pelo assistente, por Ajustes ou pelo aviso do
+/// painel — e todos os seguintes acontecem sozinhos.
 ///
 /// **Nada disto chega à tela.** A subida é uma cópia: o livro deste aparelho
 /// já está gravado, e falhar em copiá-lo não é erro de quem acabou de
@@ -32,7 +32,6 @@ final class QuietSync {
   /// O que for pedido enquanto uma está no ar espera e sobe logo depois, já
   /// com o livro mais recente — nenhum lançamento fica para trás.
   void schedule(LedgerBook book) {
-    if (!_sync.uplink.hasOpenSession) return;
     if (_running != null) {
       _queued = book;
       return;
@@ -50,6 +49,7 @@ final class QuietSync {
 
   Future<void> _run(LedgerBook book) async {
     try {
+      if (!await _sync.uplink.canSendQuietly()) return;
       await _sync.run(book);
     } on Object {
       // Sem rede, sem servidor, sessão vencida no meio: nada disso é assunto

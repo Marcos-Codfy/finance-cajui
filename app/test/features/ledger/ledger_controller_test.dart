@@ -207,7 +207,7 @@ final class _OpenUplink implements LedgerUplink {
   bool get isPaired => true;
 
   @override
-  bool get hasOpenSession => true;
+  Future<bool> canSendQuietly() async => true;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>

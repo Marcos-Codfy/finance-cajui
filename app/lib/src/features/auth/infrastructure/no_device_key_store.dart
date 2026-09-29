@@ -23,4 +23,7 @@ final class NoDeviceKeyStore implements DeviceKeyStore {
 
   @override
   Future<Uint8List> sign(Uint8List message) async => Uint8List(0);
+
+  @override
+  Future<Uint8List> signQuietly(Uint8List message) async => Uint8List(0);
 }

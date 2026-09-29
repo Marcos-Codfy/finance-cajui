@@ -34,10 +34,10 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
   @override
   bool get isPaired => true;
 
-  /// Sem sessão aberta, de propósito: a subida silenciosa fica de fora e o
-  /// teste sincroniza só quando manda, para saber o que aconteceu quando.
+  /// Sem envio silencioso, de propósito: o teste sincroniza só quando
+  /// manda, para saber o que aconteceu quando.
   @override
-  bool get hasOpenSession => false;
+  Future<bool> canSendQuietly() async => false;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>

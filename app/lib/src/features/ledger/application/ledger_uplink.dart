@@ -30,13 +30,17 @@ abstract interface class LedgerUplink {
   /// Se este aparelho já tem com quem falar.
   bool get isPaired;
 
-  /// Se há sessão aberta com o servidor **agora**.
+  /// Se dá para falar com o servidor **agora, sem pedir nada a quem usa**:
+  /// a sessão está aberta, ou a chave do dia ainda está liberada e abre
+  /// uma em silêncio.
   ///
-  /// Quem pergunta é a subida silenciosa: abrir sessão pede a digital, e
-  /// pedir a digital no meio de um lançamento é pior do que não subir na
-  /// hora. Com a sessão de um dia, isso quer dizer que o primeiro envio do
-  /// dia é a pedido e os seguintes acontecem sozinhos.
-  bool get hasOpenSession;
+  /// Quem pergunta é a subida silenciosa: pedir a digital no meio de um
+  /// lançamento é pior do que não subir na hora. A liberação vale um dia,
+  /// então o primeiro envio do dia é a pedido e os seguintes acontecem
+  /// sozinhos. Antes a pergunta era "há sessão aberta?" — e a sessão do
+  /// servidor dura quinze minutos: o envio automático parava logo depois
+  /// do primeiro envio do dia.
+  Future<bool> canSendQuietly();
 
   /// A assinatura de um lançamento: tudo o que nele é **conteúdo**, num
   /// texto comparável. É por ela que se sabe se o servidor tem a versão

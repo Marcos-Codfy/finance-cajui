@@ -13,7 +13,7 @@ final class NoLedgerUplink implements LedgerUplink {
   bool get isPaired => false;
 
   @override
-  bool get hasOpenSession => false;
+  Future<bool> canSendQuietly() async => false;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async =>

@@ -9,7 +9,9 @@ import 'package:cajui/src/features/dashboard/presentation/dashboard_state.dart';
 import 'package:cajui/src/features/insights/application/insights.dart';
 import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/features/ledger/presentation/sync_page.dart';
 import 'package:cajui/src/features/ledger/presentation/voucher_balance_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -109,7 +111,10 @@ class DashboardPage extends ConsumerWidget {
     DashboardReady state,
   ) {
     const gap = SizedBox(height: CajuiSpacing.lg);
+    final paired = ref.watch(ledgerUplinkProvider).isPaired;
+    final stopped = ref.watch(quietSendProvider).value == false;
     return [
+      if (paired && stopped) ...[_sendStopped(context), gap],
       if (!state.overview.hasIncome) ...[_missingIncome(context), gap],
       if (state.pendingCaptures > 0) ...[
         _waitingCaptures(ref, state.pendingCaptures),
@@ -158,6 +163,22 @@ class DashboardPage extends ConsumerWidget {
       ),
     );
   }
+
+  /// O envio automático está parado (BL-061): falta a digital do dia, ou
+  /// não há rede. Até o próximo envio, o que for lançado não chega ao
+  /// outro celular, à web nem ao assistente — e a tela passa a dizer isso.
+  Widget _sendStopped(BuildContext context) => CajuiNotice(
+    intent: CajuiNoticeIntent.info,
+    what: 'O envio automático está parado.',
+    meaning:
+        'O que você lançar fica guardado neste celular. Para o outro '
+        'celular, a web e o assistente verem, faça um envio: ele pede a '
+        'digital uma vez por dia.',
+    primaryAction: CajuiNoticeAction(
+      label: 'Enviar agora',
+      onPressed: () => SyncPage.open(context),
+    ),
+  );
 
   /// Há mais gasto lançado no vale do que saldo (RN-124): o saldo mostrado
   /// é zero, e o aviso diz o porquê e por onde se acerta.

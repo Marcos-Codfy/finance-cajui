@@ -52,8 +52,8 @@ Para quem vai usar de verdade. Nenhuma delas é escondida na interface.
 
 1. **Só um usuário.** Não há conta, convite nem partilha. Dois celulares, sim; duas pessoas, não.
 2. **A web é só consulta.** Lançar, corrigir, cancelar, capturar comprovante e exportar são coisas do celular. A web mostra o mesmo livro e conversa com o assistente.
-3. **O que o outro celular fez chega quando este sincroniza** — ao abrir o app, ao voltar do segundo plano, depois de cada lançamento e antes de uma pergunta ao assistente, sempre **com sessão aberta**; ou em Ajustes → Enviar ao servidor. O servidor não empurra nada para o aparelho.
-4. **O primeiro envio do dia pede a digital.** Até ele, os lançamentos ficam só no aparelho, e a tela não diz quantos esperam (BL-061).
+3. **O que o outro celular fez chega quando este sincroniza** — ao abrir o app, ao voltar do segundo plano, depois de cada lançamento e antes de uma pergunta ao assistente, sempre **com a digital do dia já dada**; ou em Ajustes → Enviar ao servidor. O servidor não empurra nada para o aparelho.
+4. **O primeiro envio do dia pede a digital.** Até ele, os lançamentos ficam só no aparelho — e o painel avisa: "O envio automático está parado". Depois dele, tudo sobe e desce sozinho pelo resto do dia.
 5. **Correções concorrentes: a mais nova pelo relógio vence.** Celular com hora errada pode ganhar ou perder uma disputa que não devia (ADR-019).
 6. **Editar a dívida num celular e pagar parcela dela no outro**, sem sincronizar no meio, deixa a contagem de parcelas diferente nos dois; e dois celulares que fecham o mesmo mês antes de sincronizar ficam cada um com o seu fechamento (BL-066).
 7. **Cancelar é definitivo entre aparelhos.** O que um cancelou, o outro cancela na próxima sincronização, e nada o recria.

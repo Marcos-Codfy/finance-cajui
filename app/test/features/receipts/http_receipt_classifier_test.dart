@@ -23,6 +23,14 @@ final class _FakeKeys implements DeviceKeyStore {
 
   @override
   Future<Uint8List> sign(Uint8List message) async => message;
+
+  /// Se a liberação do dia ainda vale; o teste muda para ensaiar o dia
+  /// seguinte.
+  bool unlocked = false;
+
+  @override
+  Future<Uint8List> signQuietly(Uint8List message) async =>
+      unlocked ? message : Uint8List(0);
 }
 
 ClassificationRequest _request() => ClassificationRequest(
@@ -36,20 +44,31 @@ void main() {
   late FakeServer server;
   late HttpReceiptClassifier classifier;
   late CajuiApi api;
+  late _FakeKeys keys;
 
   setUp(() async {
     server = await FakeServer.start();
     addTearDown(server.stop);
     api = CajuiApi(
       baseUrl: server.baseUrl,
-      keys: _FakeKeys(),
+      keys: keys = _FakeKeys(),
       client: server.client,
     );
     classifier = HttpReceiptClassifier(api, const RuleBasedClassifier());
   });
 
   group('ADR-010 · a IA do servidor por cima das regras locais', () {
-    test('sem sessão aberta, nem tenta o servidor: a digital não se pede no '
+    test('BL-061 · com a chave do dia liberada, a IA entra mesmo com a '
+        'sessão de quinze minutos vencida', () async {
+      keys.unlocked = true;
+      server.bodies['/v1/receipts/classify'] = const <String, Object?>{};
+
+      await classifier.classify(_request());
+
+      expect(server.paths, contains('/v1/receipts/classify'));
+    });
+
+    test('sem a chave do dia, nem tenta o servidor: a digital não se pede no '
         'meio de uma conferência', () async {
       final proposta = await classifier.classify(_request());
 
