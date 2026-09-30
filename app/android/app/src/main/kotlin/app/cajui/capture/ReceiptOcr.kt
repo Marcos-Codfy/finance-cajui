@@ -29,7 +29,15 @@ class ReadFailure(val code: String) : Exception(code)
  */
 class ReceiptOcr(private val context: Context) {
 
-    private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    /**
+     * O leitor só nasce na primeira leitura. Criado junto com a atividade,
+     * uma falha dele acontecia dentro de `configureFlutterEngine` e **fechava
+     * o app ao abrir**; agora o pior que acontece é um comprovante que não
+     * deu para ler, com o código do catálogo.
+     */
+    private val recognizer by lazy {
+        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    }
 
     /** O texto de [path]. [onPage] recebe o progresso real: página lida, total (RNF-PERF-06). */
     fun read(path: String, kind: String, onPage: (Int, Int) -> Unit): Map<String, Any> {
