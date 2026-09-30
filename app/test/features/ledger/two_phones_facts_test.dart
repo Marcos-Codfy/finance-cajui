@@ -137,6 +137,30 @@ void main() {
       expect(plan.interestTotal, const Money.fromCents(12000));
     });
 
+    test('pagar, cancelar e pagar de novo: o celular que recebe tudo do '
+        'servidor conta uma parcela só', () async {
+      final debt = await loanOn(a);
+      final book = await a.read(ledgerProvider.future);
+      final pix = book.methodOf('pix');
+      final first = await a
+          .read(debtsServiceProvider)
+          .payInstallment(debt, method: pix, on: testToday);
+      await a
+          .read(ledgerProvider.notifier)
+          .cancel(first.valueOrNull!.id, reason: 'paguei errado');
+      final again = (await a.read(ledgerProvider.future)).debts.single;
+      await a
+          .read(debtsServiceProvider)
+          .payInstallment(again, method: pix, on: testToday);
+      final onA = await TwoPhones.sync(a);
+
+      final onB = await TwoPhones.sync(b);
+
+      expect(onA.debts.single.paidInstallments, 6);
+      expect(onB.debts.single.paidInstallments, 6);
+      expect(onB.entries, hasLength(1));
+    });
+
     test('sincronizar de novo não conta nada em dobro', () async {
       final debt = await loanOn(a);
       final book = await a.read(ledgerProvider.future);
@@ -182,6 +206,15 @@ void main() {
             amount: const Money.fromCents(80000),
           );
       await a.read(monthClosingProvider).close(_august);
+      final bought = (await a.read(ledgerProvider.future)).entries.first;
+      await a
+          .read(ledgerProvider.notifier)
+          .reverse(
+            entry: bought,
+            paymentMethodId: 'pix',
+            amount: const Money.fromCents(1000),
+            occurredOn: testToday,
+          );
       final before = await TwoPhones.sync(a);
 
       final reinstalled = TwoPhones.on(server);
@@ -193,6 +226,7 @@ void main() {
       expect(after.entries, hasLength(before.entries.length));
       expect(after.debts.single.paidInstallments, 6);
       expect(after.settlements, hasLength(1));
+      expect(after.reversals.single.line.amount.cents, 1000);
       expect(after.closeOf(_august), isNotNull);
     });
   });

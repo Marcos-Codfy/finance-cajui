@@ -51,14 +51,18 @@ final class MonthOverview {
   });
 
   /// O plano do mês, com o vale que ele tem para gastar: o que resta mais o
-  /// que já saiu.
+  /// que já saiu — menos o que saiu **a descoberto** (RN-124), que é gasto
+  /// lançado sem vale que o cobrisse. Contá-lo faria o plano cobrir variável
+  /// com vale que não existe.
   static MonthPlan _planOf(
     LedgerBook book,
     BudgetMonth month,
     TenderAmounts spent,
   ) => book.setup.planFor(
     month,
-    voucherAvailable: book.voucher.balance + spent.mealVoucher,
+    voucherAvailable:
+        (book.voucher.balance - book.voucher.overdrawn + spent.mealVoucher)
+            .orZeroIfNegative,
     installmentsDue: book.installmentsDueIn(month),
     receivedCashIncome: book.cashIncomeIn(month),
   );

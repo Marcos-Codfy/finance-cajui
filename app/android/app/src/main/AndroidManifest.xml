@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Falar com o servidor do Cajui. Os manifestos de depuração já a
+         traziam; a versão de uso só a tinha por acaso, herdada de uma
+         biblioteca — e ficaria sem rede no dia em que ela saísse. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Cajui"
         android:allowBackup="false"

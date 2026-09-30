@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
+import 'package:cajui/src/features/auth/presentation/enroll_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:design_system/design_system.dart';
@@ -53,9 +56,20 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     } finally {
       // Aconteça o que acontecer, o botão volta: preso em "enviando" ele
       // não serve para tentar de novo.
-      if (mounted) setState(() => _sending = false);
-      ref.invalidate(quietSendProvider);
+      if (mounted) {
+        setState(() => _sending = false);
+        ref.invalidate(quietSendProvider);
+      }
     }
+  }
+
+  /// A saída do erro. Aparelho que o servidor não conhece não tem o que
+  /// tentar de novo: o caminho é cadastrá-lo, e enviar em seguida.
+  Future<void> _resolve(ErrorCode code) async {
+    setState(() => _problem = null);
+    if (code != ErrorCode.auth03) return;
+    final enrolled = await EnrollPage.open(context);
+    if (enrolled ?? false) await _send();
   }
 
   @override
@@ -103,7 +117,7 @@ class _SyncPageState extends ConsumerState<SyncPage> {
       if (code != null)
         ErrorNotice(
           error: (code: code, text: AssistantReplyView.textOf(code)),
-          onAction: (_) => setState(() => _problem = null),
+          onAction: (_) => unawaited(_resolve(code)),
         )
       else if (enviados != null)
         CajuiEmptyState(

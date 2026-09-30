@@ -94,10 +94,15 @@ final class EntryDraft {
   final int? installmentAmountCents;
 
   /// Quanto de juros a compra tem, em centavos; zero quando não há.
+  ///
+  /// Parcelas que somam **menos** que a compra não são juros negativos:
+  /// R$ 33,33 em 3× de R$ 100,00 é o arredondamento que a loja imprime.
+  /// Aí a compra é sem juros, e o total é dividido sem perder centavo.
   int get interestCents {
     final each = installmentAmountCents;
     if (each == null || installmentCount < 2) return 0;
-    return each * installmentCount - amountCents;
+    final interest = each * installmentCount - amountCents;
+    return interest > 0 ? interest : 0;
   }
 
   /// As parcelas que contam: mais de uma, só em compra paga inteira num
@@ -149,7 +154,7 @@ final class EntryDraft {
   /// primeira é cobrada na fatura do ciclo da compra (RN-311).
   InstallmentPlan? installmentPlanFor(CreditCard? card) {
     if (card == null || installmentCount < 2) return null;
-    final each = installmentAmountCents;
+    final each = interestCents > 0 ? installmentAmountCents : null;
     return InstallmentPlan.forPurchase(
       card: card,
       purchasedOn: occurredOn!,

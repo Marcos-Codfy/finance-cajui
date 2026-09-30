@@ -55,15 +55,8 @@ final class LedgerPull {
   /// fato — duas descidas próximas contavam um lançamento em dobro —, ou a
   /// pessoa pode ter corrigido por cima.
   static bool accepts(LedgerBook book, LedgerEvent event) => switch (event) {
-    // O que foi cancelado **aqui** não volta pela descida, nem quando o
-    // cancelamento ainda não conseguiu subir: sumiria e reapareceria.
-    EntryRecorded(:final entry) =>
-      book.entryOf(entry.id) == null && !book.cancelledIds.contains(entry.id),
-    EntryCorrected(:final entry) => switch (book.entryOf(entry.id)) {
-      null => false,
-      final local =>
-        !local.isNewerThan(entry) && _signatureOf(local) != _signatureOf(entry),
-    },
+    EntryRecorded(:final entry) => _isNewEntry(book, entry),
+    EntryCorrected(:final entry) => _corrects(book, entry),
     EntryCancelled(:final entryId) => book.entryOf(entryId) != null,
     PlanDefined(:final setup) => setup.isNewerThan(book.setup),
     CardDefined(:final card) => book.cardOf(card.id) == null,
@@ -76,13 +69,29 @@ final class LedgerPull {
     EntryReversed(:final reversal) =>
       book.entryOf(reversal.entryId) != null &&
           !book.reversals.any((r) => r.id == reversal.id),
-    // Fatura paga, dívida, parcela de dívida e mês fechado: pelo
-    // identificador do fato, que é o mesmo nos dois aparelhos.
+    // A parcela de dívida só desce junto do lançamento que a pagou: sem
+    // ele — cancelado —, ela não conta, e não tem por que entrar.
+    DebtInstallmentPaid(:final entryId) =>
+      book.entryOf(entryId) != null && !book.factIds.contains(event.id),
+    // Fatura paga, dívida e mês fechado: pelo identificador do fato, que
+    // é o mesmo nos dois aparelhos.
     StatementSettled() ||
     DebtDefined() ||
-    DebtInstallmentPaid() ||
     MonthClosed() => !book.factIds.contains(event.id),
   };
+
+  /// O que foi cancelado **aqui** não volta pela descida, nem quando o
+  /// cancelamento ainda não conseguiu subir: sumiria e reapareceria.
+  static bool _isNewEntry(LedgerBook book, Entry entry) =>
+      book.entryOf(entry.id) == null && !book.cancelledIds.contains(entry.id);
+
+  /// A versão do servidor entra no lugar da daqui quando diz outra coisa e
+  /// a daqui não é mais nova pelo carimbo.
+  static bool _corrects(LedgerBook book, Entry entry) {
+    final local = book.entryOf(entry.id);
+    if (local == null || local.isNewerThan(entry)) return false;
+    return _signatureOf(local) != _signatureOf(entry);
+  }
 
   Iterable<LedgerEvent> _candidates(
     LedgerBook book,
@@ -90,7 +99,8 @@ final class LedgerPull {
   ) sync* {
     for (final event in snapshot.events) {
       final local = _asLocal(book, snapshot, event);
-      if (local != null && accepts(book, local)) yield local;
+      if (local == null) continue;
+      if (_waitsForEntry(local) || accepts(book, local)) yield local;
     }
     // O que outro aparelho cancelou e este ainda mostra.
     for (final id in snapshot.cancelled) {
@@ -103,6 +113,14 @@ final class LedgerPull {
       if (accepts(book, cancellation)) yield cancellation;
     }
   }
+
+  /// O estorno e a parcela de dívida apontam para um lançamento, e ele pode
+  /// estar chegando **nesta mesma descida**. Conferi-los contra o livro do
+  /// começo da sincronização os deixaria de fora, e o celular novo só os
+  /// receberia no segundo envio. Quem decide é quem grava, já com o
+  /// lançamento no livro.
+  static bool _waitsForEntry(LedgerEvent event) =>
+      event is EntryReversed || event is DebtInstallmentPaid;
 
   /// O fato do servidor como fato **deste** aparelho: com a chave nascida do
   /// conteúdo, e trocado de tipo quando o livro daqui pede — o lançamento
