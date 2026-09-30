@@ -45,11 +45,12 @@ class DashboardPage extends ConsumerWidget {
     };
   }
 
-  /// A primeira vez — ou, na web, o mês que ainda não subiu.
+  /// A primeira vez — ou, na web, a consulta que ainda não entrou.
   ///
   /// A web **não pode oferecer "Começar"**: ela não tem onde guardar, e o
-  /// plano montado ali se perderia ao fechar a aba. Modo consulta que
-  /// convida a cadastrar é pior que modo consulta vazio.
+  /// plano montado ali se perderia ao fechar a aba. O que ela oferece é a
+  /// entrada com o código do celular; "recarregue a página", que era o
+  /// conselho de antes, perdia a sessão — e a página nunca saía daqui.
   Widget _firstUse(BuildContext context, WidgetRef ref) {
     final consulta = !ref.read(ledgerUplinkProvider).isPaired;
     return CajuiScreen(
@@ -62,16 +63,16 @@ class DashboardPage extends ConsumerWidget {
               : 'Seu mês começa aqui',
           message: consulta
               ? 'Esta é a consulta: o plano e os lançamentos ficam no '
-                    'celular. Abra o Cajui no aparelho e toque em Ajustes, '
-                    'Enviar ao servidor — e recarregue esta página.'
+                    'celular e chegam aqui pelo servidor. Entre com o código '
+                    'que o celular mostra em Ajustes, Aparelhos com acesso, '
+                    'Abrir no computador.'
               : 'Com a renda e as contas fixas, o Cajui já diz quanto dá '
                     'para gastar por semana. Leva uns cinco minutos.',
-          action: consulta
-              ? null
-              : CajuiNoticeAction(
-                  label: 'Começar',
-                  onPressed: () => PlanPage.open(context),
-                ),
+          action: CajuiNoticeAction(
+            label: consulta ? 'Entrar com o código' : 'Começar',
+            onPressed: () =>
+                consulta ? EnrollPage.open(context) : PlanPage.open(context),
+          ),
         ),
       ],
     );
@@ -85,51 +86,63 @@ class DashboardPage extends ConsumerWidget {
   ) {
     final week = overview.week.week;
     final month = DateLabels.month(overview.plan.month).split(' ').first;
+    // A consulta mostra o mês e não lança, não edita o plano nem acerta o
+    // vale: gravar ali estoura por construção (T-12), e a porta nem aparece.
+    final consulta = !ref.read(ledgerUplinkProvider).isPaired;
     return CajuiScreen(
       title: month[0].toUpperCase() + month.substring(1),
       overline: 'Semana de ${week.start.day} a ${week.end.day}',
-      trailing: CajuiIconButton(
-        icon: CajuiIconData.sliders,
-        semanticLabel: 'Plano do mês',
-        onPressed: () => PlanPage.open(context),
-      ),
-      footer: CajuiButton(
-        label: 'Novo lançamento',
-        icon: CajuiIconData.plus,
-        expand: true,
-        onPressed: () => EntryFormPage.open(context),
-      ),
+      trailing: consulta ? null : _planButton(context),
+      footer: consulta ? null : _newEntryButton(context),
       children: [
-        ..._notices(context, ref, state),
+        ..._notices(context, ref, state, consulta: consulta),
         ...DashboardBlocks.of(overview),
         _summaries(context, ref),
       ],
     );
   }
 
+  Widget _planButton(BuildContext context) => CajuiIconButton(
+    icon: CajuiIconData.sliders,
+    semanticLabel: 'Plano do mês',
+    onPressed: () => PlanPage.open(context),
+  );
+
+  Widget _newEntryButton(BuildContext context) => CajuiButton(
+    label: 'Novo lançamento',
+    icon: CajuiIconData.plus,
+    expand: true,
+    onPressed: () => EntryFormPage.open(context),
+  );
+
   /// O que precisa ser dito antes dos números: renda que falta e
   /// comprovantes que ainda não entraram neles.
   List<Widget> _notices(
     BuildContext context,
     WidgetRef ref,
-    DashboardReady state,
-  ) {
+    DashboardReady state, {
+    required bool consulta,
+  }) {
     const gap = SizedBox(height: CajuiSpacing.lg);
-    final paired = ref.watch(ledgerUplinkProvider).isPaired;
     final stopped = ref.watch(quietSendProvider).value == false;
+    final overview = state.overview;
+    final overdrawn = overview.voucher.overdrawn;
     return [
-      if (paired && stopped) ...[_sendNotice(context, ref), gap],
-      if (!state.overview.hasIncome) ...[_missingIncome(context), gap],
+      if (!consulta && stopped) ...[_sendNotice(context, ref), gap],
+      if (!overview.hasIncome) ...[
+        _missingIncome(context, consulta: consulta),
+        gap,
+      ],
       if (state.pendingCaptures > 0) ...[
         _waitingCaptures(ref, state.pendingCaptures),
         gap,
       ],
-      if (state.overview.voucher.overdrawn.isPositive) ...[
-        _voucherOverdrawn(context, state.overview.voucher.overdrawn),
+      if (overdrawn.isPositive) ...[
+        _voucherOverdrawn(context, overdrawn, consulta: consulta),
         gap,
       ],
-      if (state.overview.indicators.requiredAdjustment.isPositive) ...[
-        _howToClose(context, state.overview),
+      if (overview.indicators.requiredAdjustment.isPositive) ...[
+        _howToClose(context, overview, consulta: consulta),
         gap,
       ],
     ];
@@ -149,7 +162,11 @@ class DashboardPage extends ConsumerWidget {
 
   /// O mês não fecha: o painel deixa de só informar e passa a oferecer o
   /// caminho que o domínio já sabia calcular (RN-662).
-  Widget _howToClose(BuildContext context, MonthOverview overview) {
+  Widget _howToClose(
+    BuildContext context,
+    MonthOverview overview, {
+    required bool consulta,
+  }) {
     final indicators = overview.indicators;
     final falta = MoneyFormat.brl(indicators.requiredAdjustment);
     return CajuiNotice(
@@ -161,10 +178,13 @@ class DashboardPage extends ConsumerWidget {
           ? 'Faltam $falta, e há folga nos variáveis para remanejar.'
           : 'Os variáveis cobrem parte; o resto depende da renda, de um '
                 'fixo ou de uma dívida.',
-      primaryAction: CajuiNoticeAction(
-        label: 'Ver os ajustes',
-        onPressed: () => AdjustmentsPage.open(context),
-      ),
+      // Os ajustes se aplicam ao plano, e a consulta não grava.
+      primaryAction: consulta
+          ? null
+          : CajuiNoticeAction(
+              label: 'Ver os ajustes',
+              onPressed: () => AdjustmentsPage.open(context),
+            ),
     );
   }
 
@@ -217,32 +237,38 @@ class DashboardPage extends ConsumerWidget {
 
   /// Há mais gasto lançado no vale do que saldo (RN-124): o saldo mostrado
   /// é zero, e o aviso diz o porquê e por onde se acerta.
-  Widget _voucherOverdrawn(BuildContext context, Money overdrawn) =>
-      CajuiNotice(
-        intent: CajuiNoticeIntent.info,
-        what:
-            'O vale tem ${MoneyFormat.brl(overdrawn)} lançados além do '
-            'saldo.',
-        meaning:
-            'Acontece quando dois celulares usam o mesmo saldo sem '
-            'internet, ou quando falta lançar um crédito. Confira o saldo '
-            'no aplicativo da operadora.',
-        primaryAction: CajuiNoticeAction(
-          label: 'Acertar o saldo',
-          onPressed: () => VoucherBalancePage.open(context),
-        ),
-      );
-
-  Widget _missingIncome(BuildContext context) => CajuiNotice(
-    what: 'Falta a renda do mês.',
+  Widget _voucherOverdrawn(
+    BuildContext context,
+    Money overdrawn, {
+    required bool consulta,
+  }) => CajuiNotice(
+    intent: CajuiNoticeIntent.info,
+    what: 'O vale tem ${MoneyFormat.brl(overdrawn)} lançados além do saldo.',
     meaning:
-        'Sem ela não dá para dizer quanto sobra nem quanto dá para gastar. '
-        'Os lançamentos continuam valendo.',
-    primaryAction: CajuiNoticeAction(
-      label: 'Cadastrar a renda',
-      onPressed: () => PlanPage.open(context),
-    ),
+        'Acontece quando dois celulares usam o mesmo saldo sem '
+        'internet, ou quando falta lançar um crédito. Confira o saldo '
+        'no aplicativo da operadora.',
+    primaryAction: consulta
+        ? null
+        : CajuiNoticeAction(
+            label: 'Acertar o saldo',
+            onPressed: () => VoucherBalancePage.open(context),
+          ),
   );
+
+  Widget _missingIncome(BuildContext context, {required bool consulta}) =>
+      CajuiNotice(
+        what: 'Falta a renda do mês.',
+        meaning:
+            'Sem ela não dá para dizer quanto sobra nem quanto dá para '
+            'gastar. Os lançamentos continuam valendo.',
+        primaryAction: consulta
+            ? null
+            : CajuiNoticeAction(
+                label: 'Cadastrar a renda',
+                onPressed: () => PlanPage.open(context),
+              ),
+      );
 
   Widget _waitingCaptures(WidgetRef ref, int pending) => CajuiNotice(
     intent: CajuiNoticeIntent.info,
