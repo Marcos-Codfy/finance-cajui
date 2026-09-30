@@ -41,14 +41,10 @@ abstract final class CardCodec {
 
   /// O pagamento de fatura gravado em [payload].
   static Settlement decodeSettlement(Map<String, Object?> payload) {
-    final [year, month] = (payload['dueMonth']! as String)
-        .split('-')
-        .map(int.parse)
-        .toList();
     return Settlement(
       id: payload['id']! as String,
       cardId: payload['cardId']! as String,
-      dueMonth: BudgetMonth(year, month),
+      dueMonth: EntryCodec.parseMonth(payload['dueMonth']! as String),
       amount: Money.fromCents(payload['amountCents']! as int),
       paidOn: EntryCodec.parseDate(payload['paidOn']! as String),
     );

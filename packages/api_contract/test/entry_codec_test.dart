@@ -115,8 +115,8 @@ void main() {
       );
     });
 
-    test('BL-063 · parcelas que somam menos que a compra são pedido '
-        'malformado, e não juros negativos', () {
+    test('BL-063 · parcelas que somam menos que a compra são ignoradas: o '
+        'total é dividido, e o registro continua abrindo', () {
       final json = {
         ...EntryCodec.fromEntry(_split()).toJson(),
         'amountCents': 96000,
@@ -137,15 +137,25 @@ void main() {
         dueDay: 5,
       ).valueOrNull!;
 
-      expect(
-        () => EntryCodec.toEntry(
-          CreateEntryRequest.fromJson(json),
-          category: _groceries,
-          today: _today,
-          cardOf: (id) => card,
-        ),
-        throwsFormatException,
-      );
+      Entry lido(int parcela) => EntryCodec.toEntry(
+        CreateEntryRequest.fromJson({
+          ...json,
+          'installmentAmountCents': parcela,
+        }),
+        category: _groceries,
+        today: _today,
+        cardOf: (id) => card,
+      ).valueOrNull!;
+
+      // R$ 1,00 por parcela soma menos que a compra; R$ 9.999.999,99 passa
+      // da compra inteira. Nenhum dos dois é juros.
+      for (final parcela in [100, 999999999]) {
+        final plan = lido(parcela).installmentPlan!;
+
+        expect(plan.interestTotal, Money.zero);
+        expect(plan.total, const Money.fromCents(96000));
+      }
+      expect(lido(18000).installmentPlan!.interestTotal.cents, 12000);
     });
 
     test('BL-054 · lançamento à vista e digitado à mão não engorda o pedido '

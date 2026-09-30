@@ -43,8 +43,8 @@ abstract final class EntryCodec {
   /// [cardOf] acha o cartão de uma compra parcelada. As **datas** das
   /// parcelas são sempre recalculadas a partir do cartão e da data da
   /// compra (RN-311). O **valor** de cada uma vem do pedido só quando há
-  /// juros — e é conferido: parcelas que somam menos que a compra são
-  /// pedido malformado, e não juros negativos (RN-314, BL-063).
+  /// juros de verdade; o que não fecha é **ignorado**, e não recusado —
+  /// ver [_honoured] (RN-314, BL-063).
   static Result<Entry> toEntry(
     CreateEntryRequest request, {
     required Category category,
@@ -81,7 +81,7 @@ abstract final class EntryCodec {
   /// O valor da parcela de um plano **com juros**; `null` quando as parcelas
   /// são o principal dividido em partes iguais.
   static int? _interestBearing(InstallmentPlan? plan) =>
-      plan == null || plan.interestTotal.isZero
+      plan == null || !plan.interestTotal.isPositive
       ? null
       : plan.installments.first.amount.cents;
 
@@ -95,7 +95,6 @@ abstract final class EntryCodec {
     CreditCard? Function(String id)? cardOf,
   ) {
     final count = request.installments;
-    final cents = request.installmentAmountCents;
     if (count == null || count < 2) return null;
     if (count > maxInstallments) throw const FormatException('parcelas');
     final onCard = lines.where((line) => line.kind.isCreditCard).firstOrNull;
@@ -103,9 +102,11 @@ abstract final class EntryCodec {
     if (onCard == null || card == null) {
       throw const FormatException('parcelamento sem cartão conhecido');
     }
-    if (cents != null && cents * count < onCard.amount.cents) {
-      throw const FormatException('parcelas somam menos que a compra');
-    }
+    final cents = _honoured(
+      request.installmentAmountCents,
+      count,
+      onCard.amount.cents,
+    );
     return InstallmentPlan.forPurchase(
       card: card,
       purchasedOn: purchasedOn,
@@ -113,6 +114,30 @@ abstract final class EntryCodec {
       count: count,
       installmentAmount: cents == null ? null : Money.fromCents(cents),
     );
+  }
+
+  /// O valor da parcela só vale quando **há juros de verdade**: as parcelas
+  /// somam mais que a compra, e nenhuma é maior que a compra inteira.
+  ///
+  /// O resto é ignorado, e o total é dividido em partes iguais: R$ 33,33 em
+  /// 3× de R$ 100,00 é arredondamento da loja, não juros negativos. Ignorar,
+  /// e **não recusar**: este codec também relê o que já foi gravado, e um
+  /// registro antigo não pode impedir o livro de abrir nem o servidor de
+  /// subir.
+  static int? _honoured(int? each, int count, int principal) {
+    if (each == null || each > principal) return null;
+    return each * count > principal ? each : null;
+  }
+
+  /// Um mês `AAAA-MM` que existe. `BudgetMonth` confere o mês só em modo
+  /// de depuração; aqui mês 13 é pedido malformado também em produção.
+  static BudgetMonth parseMonth(String text) {
+    final match = RegExp(r'^(\d{4})-(\d{2})$').firstMatch(text);
+    final month = int.tryParse(match?.group(2) ?? '') ?? 0;
+    if (match == null || month < 1 || month > 12) {
+      throw FormatException('mês: $text');
+    }
+    return BudgetMonth(int.parse(match.group(1)!), month);
   }
 
   /// O maior número de parcelas aceito.
