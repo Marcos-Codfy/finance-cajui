@@ -18,4 +18,8 @@ final class WebSessionEnrollment implements DeviceEnrollment {
   @override
   Future<ErrorCode?> enroll(String code, {required String name}) =>
       _api.openWithCode(code);
+
+  /// O navegador não tem chave para o servidor recusar.
+  @override
+  bool get isRefused => false;
 }

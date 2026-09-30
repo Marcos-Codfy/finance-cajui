@@ -53,6 +53,10 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   final DateTime Function() _now;
 
   ServerSession? _session;
+  bool _refused = false;
+
+  @override
+  bool get isRefused => _refused;
 
   /// Onde o servidor do Cajui mora. É um nome, e nunca um IP: o endereço da
   /// VM muda quando ela é parada e ligada de novo.
@@ -69,10 +73,10 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   bool get isOpen => _session?.isValidAt(_now()) ?? false;
 
   /// Abre a sessão **sem perguntar nada a ninguém**, se a chave do dia
-  /// ainda estiver liberada, e diz se há sessão (BL-061). A sessão dura
-  /// quinze minutos; a liberação da chave, um dia.
+  /// ainda estiver liberada, e diz se há sessão (BL-061). Aparelho que o
+  /// servidor já recusou não insiste: o que falta a ele é o cadastro.
   Future<bool> openQuietly() async {
-    if (isOpen || !_keys.exists) return isOpen;
+    if (isOpen || !_keys.exists || _refused) return isOpen;
     final outcome = await _withKey(() async {
       final probe = await _keys.signQuietly(Uint8List(1));
       if (probe.isNotEmpty) return await _open(quietly: true);
@@ -94,6 +98,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
         'publicKey': base64Encode(publicKey),
       });
     });
+    if (outcome.failure == null) _refused = false;
     return outcome.failure?.code;
   }
 
@@ -106,19 +111,13 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
       return (
         [
           for (final device in (body['devices'] as List?) ?? const [])
-            if (device is Map) _device(device.cast<String, Object?>()),
+            if (device is Map) KnownDevice.read(device),
         ],
         null,
       );
     }
     return (const <KnownDevice>[], outcome.failure?.code);
   }
-
-  KnownDevice _device(Map<String, Object?> json) => KnownDevice(
-    id: json['id'] as String? ?? '',
-    name: json['name'] as String? ?? 'Aparelho',
-    isWeb: json['kind'] == 'web',
-  );
 
   @override
   Future<(DeviceInvite?, ErrorCode?)> invite() => _invite('/v1/devices/codes');
@@ -230,6 +229,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
       'challengeId': challenge['challengeId'],
       'signature': base64Encode(signature),
     });
+    _refused = opened.failure?.code == ErrorCode.auth03;
     if (opened.body case final session?) {
       final seconds = session['expiresInSeconds']! as int;
       _session = ServerSession(

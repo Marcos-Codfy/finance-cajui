@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:cajui/src/app/home_tab.dart';
 import 'package:cajui/src/app/home_tab_controller.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/features/auth/application/device_enrollment.dart';
+import 'package:cajui/src/features/auth/presentation/enroll_page.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/budget/presentation/adjustments_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
@@ -114,7 +118,7 @@ class DashboardPage extends ConsumerWidget {
     final paired = ref.watch(ledgerUplinkProvider).isPaired;
     final stopped = ref.watch(quietSendProvider).value == false;
     return [
-      if (paired && stopped) ...[_sendStopped(context), gap],
+      if (paired && stopped) ...[_sendNotice(context, ref), gap],
       if (!state.overview.hasIncome) ...[_missingIncome(context), gap],
       if (state.pendingCaptures > 0) ...[
         _waitingCaptures(ref, state.pendingCaptures),
@@ -162,6 +166,37 @@ class DashboardPage extends ConsumerWidget {
         onPressed: () => AdjustmentsPage.open(context),
       ),
     );
+  }
+
+  /// Nada sobe sozinho agora — e o motivo decide o que se oferece. Aparelho
+  /// que o servidor não conhece precisa do cadastro, e não de um envio: o
+  /// primeiro uso no celular mostrou o painel pedindo a digital a quem
+  /// faltava era o código.
+  Widget _sendNotice(BuildContext context, WidgetRef ref) =>
+      ref.watch(deviceEnrollmentProvider).isRefused
+      ? _notEnrolled(context, ref)
+      : _sendStopped(context);
+
+  Widget _notEnrolled(BuildContext context, WidgetRef ref) => CajuiNotice(
+    intent: CajuiNoticeIntent.info,
+    what: 'Este celular ainda não está cadastrado no servidor.',
+    meaning:
+        'O que você lançar fica guardado aqui. Para o outro celular, a web '
+        'e o assistente verem, cadastre este aparelho com o código que o '
+        'servidor gera.',
+    primaryAction: CajuiNoticeAction(
+      label: 'Cadastrar este aparelho',
+      onPressed: () => unawaited(_enroll(context, ref)),
+    ),
+  );
+
+  /// Cadastrou, já segue para o envio: é ele que leva o que está aqui e
+  /// traz o que o outro celular fez.
+  Future<void> _enroll(BuildContext context, WidgetRef ref) async {
+    final enrolled = await EnrollPage.open(context);
+    if (!(enrolled ?? false) || !context.mounted) return;
+    ref.invalidate(quietSendProvider);
+    await SyncPage.open(context);
   }
 
   /// O envio automático está parado (BL-061): falta a digital do dia, ou
