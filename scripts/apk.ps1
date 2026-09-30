@@ -5,8 +5,18 @@
 # sobrescrevem, e dá para voltar para a de ontem sem recompilar.
 #
 # Uso, da raiz do projeto (o PowerShell do Windows basta; não há `pwsh` aqui):
-#   .\scripts\apk.ps1             depuração, instala se houver celular no cabo
-#   .\scripts\apk.ps1 -Release    assinado, só quando existir chave
+#   .\scripts\apk.ps1             depuração, para desenvolver: 200 MB e lento
+#   .\scripts\apk.ps1 -Release    de uso: pequeno e rápido, é o do dia a dia
+#
+# **O número da versão sobe a cada APK.** O Android recusa instalar por cima
+# um APK de número menor, e a saída seria desinstalar — que apaga o livro
+# do aparelho e a chave dele. Por isso o número é o tempo, e por isso o de
+# uso **não** usa `--split-per-abi`: aquilo multiplica o número por mil e
+# prende o celular numa linha de que ele não volta.
+#
+# **Os APKs daqui só se atualizam entre si.** Todos são assinados pela
+# chave de depuração deste computador; o que sair de outra máquina, ou da
+# conferência do GitHub, não instala por cima.
 
 param([switch]$Release)
 
@@ -22,7 +32,12 @@ $modo = if ($Release) { 'release' } else { 'debug' }
 Push-Location (Join-Path $raiz 'app')
 try {
     Write-Host "compilando o APK de $modo…"
-    flutter build apk "--$modo"
+    $numero = [int]((Get-Date) - (Get-Date '2026-01-01')).TotalMinutes
+    $opcoes = @("--$modo", "--build-number=$numero")
+    # Só 64 bits no de uso: é o que os celulares de hoje têm, e o arquivo
+    # fica com um terço do tamanho.
+    if ($Release) { $opcoes += '--target-platform=android-arm64' }
+    flutter build apk @opcoes
     if ($LASTEXITCODE -ne 0) { throw "a compilação falhou" }
 } finally {
     Pop-Location
