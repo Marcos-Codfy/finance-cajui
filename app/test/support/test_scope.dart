@@ -7,6 +7,7 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
+import 'package:cajui/src/features/auth/application/device_directory.dart';
 import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
@@ -23,6 +24,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:persistence/event_store.dart';
 
+import 'fake_directory.dart';
 import 'fake_enrollment.dart';
 import 'memory_ledger_journal.dart';
 import 'mute_player.dart';
@@ -64,6 +66,7 @@ List<Override> testOverrides({
   String idPrefix = 'id',
   bool quietSend = true,
   DeviceEnrollment? enrollment,
+  DeviceDirectory? directory,
 }) {
   var next = 0;
   return [
@@ -76,8 +79,7 @@ List<Override> testOverrides({
       assistant ?? const _SilentGateway(),
     ),
     ..._server(uplink, downlink, quietSend: quietSend),
-    speechInputProvider.overrideWithValue(const NoSpeechInput()),
-    ..._extras(preferences, enrollment),
+    ..._extras(preferences, enrollment, directory),
   ];
 }
 
@@ -115,15 +117,18 @@ List<Override> _capture(
 /// As preferências do teste começam sempre no padrão, e não sobrevivem
 /// entre um teste e outro: teste que herda escolha de outro mente. O
 /// aparelho do teste é um que o servidor conhece, a não ser que o teste
-/// passe outro cadastro.
+/// passe outro cadastro; a lista de aparelhos tem dois celulares.
 List<Override> _extras(
   PreferencesStore? preferences,
   DeviceEnrollment? enrollment,
+  DeviceDirectory? directory,
 ) => [
   preferencesStoreProvider.overrideWithValue(
     preferences ?? const NoPreferencesStore(),
   ),
   deviceEnrollmentProvider.overrideWithValue(enrollment ?? FakeEnrollment()),
+  deviceDirectoryProvider.overrideWithValue(directory ?? FakeDirectory()),
+  speechInputProvider.overrideWithValue(const NoSpeechInput()),
 ];
 
 /// Uma subida que diz "este aparelho tem livro próprio": é o celular

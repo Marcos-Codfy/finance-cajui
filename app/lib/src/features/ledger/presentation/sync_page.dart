@@ -97,11 +97,15 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     );
   }
 
-  /// O que subiu e o que desceu, cada um só quando houve.
+  /// O que subiu e o que desceu, cada um só quando houve — e no singular
+  /// quando foi um: "Chegaram 1 novidades" foi a primeira frase que o S22
+  /// mostrou depois de cadastrado.
   String _summary(int enviados) {
     final partes = [
-      if (enviados > 0) 'Foram $enviados lançamentos para o servidor.',
-      if (_received > 0) 'Chegaram $_received novidades do outro aparelho.',
+      if (enviados == 1) 'Foi 1 lançamento para o servidor.',
+      if (enviados > 1) 'Foram $enviados lançamentos para o servidor.',
+      if (_received == 1) 'Chegou 1 novidade do outro aparelho.',
+      if (_received > 1) 'Chegaram $_received novidades do outro aparelho.',
     ];
     if (partes.isEmpty) {
       return 'Este aparelho e o servidor têm exatamente as mesmas coisas.';

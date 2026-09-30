@@ -41,13 +41,14 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   /// O código que abre a consulta no navegador. É outro código, com outro
   /// prazo: ele não cadastra aparelho nenhum, só abre uma leitura.
   Future<void> _openOnComputer() =>
-      _issue(ref.read(deviceDirectoryProvider).webInvite);
+      _issue(ref.read(deviceDirectoryProvider).webInvite, forWeb: true);
 
   Future<void> _invite() => _issue(ref.read(deviceDirectoryProvider).invite);
 
   Future<void> _issue(
-    Future<(DeviceInvite?, ErrorCode?)> Function() emitir,
-  ) async {
+    Future<(DeviceInvite?, ErrorCode?)> Function() emitir, {
+    bool forWeb = false,
+  }) async {
     setState(() => _problem = null);
     final (invite, error) = await emitir();
     if (!mounted) return;
@@ -58,7 +59,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
       setState(() => _problem = error ?? ErrorCode.srv01);
       return;
     }
-    await InviteSheet.show(context, invite);
+    await InviteSheet.show(context, invite, forWeb: forWeb);
     _reload();
   }
 

@@ -64,7 +64,7 @@ Para quem vai usar de verdade. Nenhuma delas é escondida na interface.
 11. **APK de uso, por cabo ou cópia manual**, assinado pela chave de depuração deste computador. Não está em loja. Os APKs só se atualizam entre si: o que sair de outra máquina não instala por cima — e aí o caminho é desinstalar, cadastrar de novo e deixar o primeiro envio trazer tudo de volta.
 12. **Sem pinning de certificado** (BL-047): a proteção da conexão é o TLS comum.
 13. **Preferências são de cada aparelho**: som, vibração e tema não atravessam — de propósito. Comprovante guardado para conferir depois também fica só no aparelho que o recebeu.
-14. **Sessão web curta e em memória**: fechar a aba é sair.
+14. **Sessão web curta e em memória**: fechar a aba — ou recarregar a página — é sair. Entrar de novo é um código de dois minutos que o celular mostra em Ajustes, Aparelhos com acesso, Abrir no computador.
 15. **Um mês por vez nas telas**; os meses fechados existem no livro e ainda não têm lista (BL-044).
 16. **Edição de cartão e plano zerado não atravessam** entre os celulares (BL-065). Nenhuma tela edita cartão hoje, então na prática é só o plano zerado.
 17. **Os dois celulares precisam do mesmo APK.** Um APK de antes de 27/09 não carimba a correção: o servidor a mantém (`kept`) em silêncio e aquele celular fica divergente até ser atualizado.
