@@ -58,19 +58,21 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
   @override
   bool get isRefused => _refused;
 
-  /// Onde o servidor do Cajui mora. É um nome, e nunca um IP: o endereço da
-  /// VM muda quando ela é parada e ligada de novo.
+  /// Onde o servidor mora: um nome, nunca um IP — o da VM muda ao religar.
   static final Uri production = Uri.parse('https://api.cajui.example');
 
   /// Quanto tempo se espera pelo servidor antes de desistir.
   static const timeout = Duration(seconds: 20);
 
-  /// Uma falha que nasceu **no aparelho** — sem rede, Keystore recusando —
-  /// e por isso sem `ref`: não há ocorrência no registro do servidor.
+  /// Uma falha nascida **no aparelho** — sem rede, Keystore recusando —,
+  /// sem `ref`: não há ocorrência no registro do servidor.
   static ApiError _local(ErrorCode code) => ApiError(code: code, ref: '');
 
   /// Se há sessão aberta agora.
   bool get isOpen => _session?.isValidAt(_now()) ?? false;
+
+  @override
+  bool get hasSession => isOpen;
 
   /// Abre a sessão **sem perguntar nada a ninguém**, se a chave do dia
   /// ainda estiver liberada, e diz se há sessão (BL-061). Aparelho que o
@@ -248,8 +250,7 @@ final class CajuiApi implements DeviceEnrollment, DeviceDirectory {
     String? token,
   }) async => await _post(path, body, token: token);
 
-  /// Um pedido qualquer com a sessão já aberta, para quem precisa de outro
-  /// verbo além de POST.
+  /// Um pedido com a sessão já aberta, em qualquer verbo.
   Future<ApiOutcome> send(
     String method,
     String path, {

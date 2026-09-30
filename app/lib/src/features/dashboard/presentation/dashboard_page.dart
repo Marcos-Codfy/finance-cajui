@@ -10,6 +10,7 @@ import 'package:cajui/src/features/budget/presentation/adjustments_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_blocks.dart';
 import 'package:cajui/src/features/dashboard/presentation/dashboard_state.dart';
+import 'package:cajui/src/features/dashboard/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/insights/application/insights.dart';
 import 'package:cajui/src/features/insights/presentation/insights_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -40,40 +41,35 @@ class DashboardPage extends ConsumerWidget {
           CajuiSkeleton(height: 112),
         ],
       ),
-      DashboardFirstUse() => _firstUse(context, ref),
+      DashboardFirstUse(:final entered) => _firstUse(context, ref, entered),
       DashboardReady(:final overview) => _ready(context, ref, state, overview),
     };
   }
 
-  /// A primeira vez — ou, na web, a consulta que ainda não entrou.
+  /// A primeira vez — ou, na web, a consulta vazia.
   ///
   /// A web **não pode oferecer "Começar"**: ela não tem onde guardar, e o
-  /// plano montado ali se perderia ao fechar a aba. O que ela oferece é a
-  /// entrada com o código do celular; "recarregue a página", que era o
-  /// conselho de antes, perdia a sessão — e a página nunca saía daqui.
-  Widget _firstUse(BuildContext context, WidgetRef ref) {
+  /// plano montado ali se perderia ao fechar a aba. O que ela oferece está
+  /// em `WebEmptyState`, e depende de já ter entrado ou não.
+  Widget _firstUse(BuildContext context, WidgetRef ref, bool entered) {
     final consulta = !ref.read(ledgerUplinkProvider).isPaired;
     return CajuiScreen(
       title: 'Painel',
       children: [
-        CajuiEmptyState(
-          illustration: const CajuiHeroFruit(),
-          title: consulta
-              ? 'Nada deste mês por aqui ainda'
-              : 'Seu mês começa aqui',
-          message: consulta
-              ? 'Esta é a consulta: o plano e os lançamentos ficam no '
-                    'celular e chegam aqui pelo servidor. Entre com o código '
-                    'que o celular mostra em Ajustes, Aparelhos com acesso, '
-                    'Abrir no computador.'
-              : 'Com a renda e as contas fixas, o Cajui já diz quanto dá '
-                    'para gastar por semana. Leva uns cinco minutos.',
-          action: CajuiNoticeAction(
-            label: consulta ? 'Entrar com o código' : 'Começar',
-            onPressed: () =>
-                consulta ? EnrollPage.open(context) : PlanPage.open(context),
+        if (consulta)
+          WebEmptyState(entered: entered)
+        else
+          CajuiEmptyState(
+            illustration: const CajuiHeroFruit(),
+            title: 'Seu mês começa aqui',
+            message:
+                'Com a renda e as contas fixas, o Cajui já diz quanto dá '
+                'para gastar por semana. Leva uns cinco minutos.',
+            action: CajuiNoticeAction(
+              label: 'Começar',
+              onPressed: () => PlanPage.open(context),
+            ),
           ),
-        ),
       ],
     );
   }

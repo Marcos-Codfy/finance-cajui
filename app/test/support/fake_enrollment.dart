@@ -17,14 +17,22 @@ final class FakeEnrollment implements DeviceEnrollment {
   final codes = <String>[];
 
   bool _refused;
+  bool _session = false;
 
   @override
   bool get isRefused => _refused;
 
+  /// Aberta pelo primeiro cadastro que deu certo, como na web.
+  @override
+  bool get hasSession => _session;
+
   @override
   Future<ErrorCode?> enroll(String code, {required String name}) async {
     codes.add(code);
-    if (failure == null) _refused = false;
+    if (failure == null) {
+      _refused = false;
+      _session = true;
+    }
     return failure;
   }
 }

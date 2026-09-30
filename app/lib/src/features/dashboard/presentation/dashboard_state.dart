@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
@@ -20,7 +21,19 @@ final class DashboardLoading extends DashboardState {
 /// primeiro passo, em vez de mostrar zeros.
 final class DashboardFirstUse extends DashboardState {
   /// Cria o estado de primeiro uso.
-  const new();
+  const new({this.entered = false});
+
+  /// Na web: se a pessoa já entrou com o código. Faz parte do estado porque
+  /// a tela muda com ele — e o livro relido depois de entrar continua vazio
+  /// enquanto o celular não enviar: sem isto no estado, nada a redesenhava.
+  final bool entered;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DashboardFirstUse && other.entered == entered;
+
+  @override
+  int get hashCode => entered.hashCode;
 }
 
 /// Há o que mostrar. Sem renda cadastrada, [overview] ainda vale para o que
@@ -44,7 +57,11 @@ final dashboardStateProvider = Provider<DashboardState>((ref) {
   final book = ref.watch(ledgerProvider).value;
   if (overview == null || book == null) return const DashboardLoading();
   final untouched = book.setup.isEmpty && book.entries.isEmpty;
-  if (untouched) return const DashboardFirstUse();
+  if (untouched) {
+    return DashboardFirstUse(
+      entered: ref.read(deviceEnrollmentProvider).hasSession,
+    );
+  }
   return DashboardReady(
     overview,
     pendingCaptures: ref.watch(pendingCapturesProvider).value?.length ?? 0,
