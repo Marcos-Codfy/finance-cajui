@@ -39,7 +39,7 @@ abstract final class DebtCodec {
       totalInstallments: payload['totalInstallments']! as int,
       paidInstallments: payload['paidInstallments']! as int,
       dueDay: payload['dueDay']! as int,
-      firstMonth: _month(payload['firstMonth']! as String),
+      firstMonth: EntryCodec.parseMonth(payload['firstMonth']! as String),
       cardId: payload['cardId'] as String?,
     ).valueOrNull!;
     final payoff = payload['payoffCents'] as int?;
@@ -50,11 +50,6 @@ abstract final class DebtCodec {
         quotedOn: EntryCodec.parseDate(payload['payoffQuotedOn']! as String),
       ),
     );
-  }
-
-  static BudgetMonth _month(String text) {
-    final [year, month] = text.split('-').map(int.parse).toList();
-    return BudgetMonth(year, month);
   }
 
   /// O que gravar para o pagamento de parcela [payment].

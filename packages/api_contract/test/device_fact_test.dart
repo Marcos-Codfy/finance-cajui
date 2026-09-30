@@ -87,6 +87,40 @@ void main() {
       }
     });
 
+    test('T-05 · o que não tem cabimento não é guardado: mês 13, valor pago '
+        'negativo, revisão negativa, texto sem fim', () {
+      final recusados = [
+        _fact(DeviceFact.statementSettled, {
+          'id': 's1',
+          'cardId': 'card-1',
+          'dueMonth': '2026-13',
+          'amountCents': 80000,
+          'paidOn': '2026-10-05',
+        }),
+        _fact(DeviceFact.statementSettled, {
+          'id': 's1',
+          'cardId': 'card-1',
+          'dueMonth': '2026-10',
+          'amountCents': -80000,
+          'paidOn': '2026-10-05',
+        }),
+        _fact(DeviceFact.monthClosed, {
+          'month': '2026-08',
+          'revision': -7,
+          'cashResultCents': 0,
+          'closedOn': '2026-09-02',
+        }),
+        _fact(DeviceFact.debtDefined, {
+          ...DebtCodec.encodeDebt(_debt),
+          'creditor': 'x' * 60000,
+        }),
+      ];
+
+      for (final fact in recusados) {
+        expect(() => DeviceFact.read(fact), throwsFormatException);
+      }
+    });
+
     test('tipo fora dos quatro e campo a mais são recusados (E-REQ-01)', () {
       final outroTipo = _fact('entry.created', const {});
       final campoAMais = {

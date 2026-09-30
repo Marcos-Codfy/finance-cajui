@@ -99,10 +99,11 @@ final class CreateEntryRequest {
   /// não são o valor dividido em partes iguais (RN-314).
   ///
   /// Até o BL-063 o servidor ignorava este campo, e por isso os juros não
-  /// chegavam ao outro celular. Agora ele é aceito **depois de conferido**:
-  /// as datas das parcelas continuam recalculadas a partir do cartão
-  /// (RN-311), e parcelas que somam menos que a compra são recusadas. Quem
-  /// manda é sempre um aparelho cadastrado do próprio dono (ADR-008).
+  /// chegavam ao outro celular. Agora ele vale **quando há juros de
+  /// verdade**: as datas das parcelas continuam recalculadas a partir do
+  /// cartão (RN-311), e valor que soma menos que a compra, ou que passa
+  /// dela, é ignorado. Quem manda é sempre um aparelho cadastrado do
+  /// próprio dono (ADR-008).
   final int? installmentAmountCents;
 
   /// Como o lançamento nasceu: `manual` ou `share`. Ausente vale `manual`.

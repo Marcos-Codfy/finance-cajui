@@ -17,12 +17,8 @@ abstract final class MonthCloseCodec {
 
   /// O fechamento gravado em [payload].
   static MonthClose decode(Map<String, Object?> payload) {
-    final [year, month] = (payload['month']! as String)
-        .split('-')
-        .map(int.parse)
-        .toList();
     return MonthClose.restore(
-      month: BudgetMonth(year, month),
+      month: EntryCodec.parseMonth(payload['month']! as String),
       revision: payload['revision']! as int,
       cashResult: Money.fromCents(payload['cashResultCents']! as int),
       closedOn: EntryCodec.parseDate(payload['closedOn']! as String),

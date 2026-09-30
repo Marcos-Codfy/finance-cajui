@@ -77,18 +77,45 @@ final class DeviceFact {
     Map<String, Object?> payload,
   ) {
     try {
-      return switch (type) {
-        statementSettled => CardCodec.encodeSettlement(
-          CardCodec.decodeSettlement(payload),
-        ),
+      final normalized = switch (type) {
+        statementSettled => _settlement(payload),
         debtDefined => DebtCodec.encodeDebt(DebtCodec.decodeDebt(payload)),
         debtInstallmentPaid => DebtCodec.encodePayment(
           DebtCodec.decodePayment(payload),
         ),
-        _ => MonthCloseCodec.encode(MonthCloseCodec.decode(payload)),
+        _ => _close(payload),
       };
+      return _bounded(normalized);
     } on Object {
       throw FormatException('fato: $type');
     }
   }
+
+  /// A fatura paga: o que não tem valor pago não é pagamento.
+  static Map<String, Object?> _settlement(Map<String, Object?> payload) {
+    final settlement = CardCodec.decodeSettlement(payload);
+    if (!settlement.amount.isPositive) throw const FormatException('valor');
+    return CardCodec.encodeSettlement(settlement);
+  }
+
+  /// O mês fechado: revisão negativa não existe.
+  static Map<String, Object?> _close(Map<String, Object?> payload) {
+    final close = MonthCloseCodec.decode(payload);
+    if (close.revision < 0) throw const FormatException('revisão');
+    return MonthCloseCodec.encode(close);
+  }
+
+  /// Nenhum texto de um fato passa de [maxText] caracteres: o servidor
+  /// guarda o que recebe, e sem teto guardaria qualquer coisa.
+  static Map<String, Object?> _bounded(Map<String, Object?> payload) {
+    for (final value in payload.values) {
+      if (value is String && value.length > maxText) {
+        throw const FormatException('texto longo demais');
+      }
+    }
+    return payload;
+  }
+
+  /// O maior texto aceito num campo de um fato.
+  static const maxText = 80;
 }

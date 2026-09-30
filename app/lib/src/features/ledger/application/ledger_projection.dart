@@ -153,6 +153,11 @@ abstract final class LedgerProjection {
     DebtInstallmentPaid event,
   ) {
     if (book.debtPayments.containsKey(event.entryId)) return book;
+    // Parcela paga por um lançamento que não existe aqui não conta: ele foi
+    // cancelado, e no celular que recebe tudo do servidor ele nunca
+    // chegou a existir. Sem isto, pagar, cancelar e pagar de novo contava
+    // duas parcelas no aparelho reinstalado.
+    if (book.entryOf(event.entryId) == null) return book;
     return book.copyWith(
       debts: _withPaid(book, event.debtId, 1),
       debtPayments: {...book.debtPayments, event.entryId: event.debtId},

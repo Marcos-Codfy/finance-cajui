@@ -15,9 +15,10 @@ import 'package:meta/meta.dart';
 ///
 /// Tomado é tudo o que foi comprado no cartão e ainda não foi pago: o que
 /// resta das faturas ainda não liquidadas, mais as parcelas que ainda vão
-/// vencer. É a conta que o banco faz — compra parcelada toma o limite pelo
-/// valor inteiro e o devolve parcela a parcela, conforme as faturas são
-/// pagas —, para o número daqui bater com o do aplicativo do banco.
+/// vencer, menos o que foi estornado. É a conta que o banco faz — compra
+/// parcelada toma o limite pelo valor inteiro e o devolve parcela a parcela,
+/// conforme as faturas são pagas —, para o número daqui bater com o do
+/// aplicativo do banco.
 ///
 /// Como a fatura, é uma **visão calculada**: nada aqui é gravado, e nada
 /// aqui é despesa.
@@ -40,20 +41,21 @@ final class CardLimitUsage {
   }) {
     final limit = card.creditLimit;
     if (limit == null) return null;
-    var taken = _legacyOn(card, legacy);
-    for (final closing in _closingMonths(card, entries, reversals, today)) {
-      final cycle = StatementCycle.closingIn(card, closing);
-      final statement = CardStatement.of(
-        cycle,
-        entries: entries,
-        reversals: reversals,
-      );
-      final paid = _paidOf(card, cycle.dueMonth, settlements);
-      // Fatura paga a mais não devolve limite às outras: cada uma fecha em
-      // zero, e a sobra é assunto do que falta lançar (RN-344).
-      taken += (statement.total - paid).orZeroIfNegative;
-    }
-    return CardLimitUsage._(limit: limit, taken: taken);
+    // Só o que passou por este cartão entra na conta: com anos de
+    // lançamentos, olhar todos a cada fatura pesaria na abertura da tela.
+    final bought = [
+      for (final entry in entries)
+        if (_isOn(card, entry)) entry,
+    ];
+    final back = [
+      for (final reversal in reversals)
+        if (reversal.line.paymentMethodId == card.id) reversal,
+    ];
+    final owed =
+        _legacyOn(card, legacy) +
+        _openOn(card, bought, settlements, today, back) -
+        back.fold(Money.zero, (sum, r) => sum + r.line.amount);
+    return CardLimitUsage._(limit: limit, taken: owed.orZeroIfNegative);
   }
 
   /// O limite de crédito informado.
@@ -72,6 +74,32 @@ final class CardLimitUsage {
   /// limite zero conta como todo tomado.
   double get fraction => limit.isZero ? 1 : taken.cents / limit.cents;
 
+  /// O que foi cobrado e ainda não foi pago, fatura a fatura, **sem** os
+  /// estornos.
+  ///
+  /// Fatura paga a mais fecha em zero e não devolve limite às outras
+  /// (RN-344). O estorno é diferente: é dinheiro que voltou ao cartão, e
+  /// devolve limite caia na fatura que cair — por isso ele sai do total, e
+  /// não de cada fatura. Descontado fatura a fatura, o estorno de uma compra
+  /// parcelada sumia em todas as faturas menos na dele.
+  static Money _openOn(
+    CreditCard card,
+    List<Entry> bought,
+    Iterable<Settlement> settlements,
+    LocalDate today,
+    List<Reversal> back,
+  ) {
+    var open = Money.zero;
+    for (final closing in _closingMonths(card, bought, back, today)) {
+      final cycle = StatementCycle.closingIn(card, closing);
+      final statement = CardStatement.of(cycle, entries: bought);
+      final charged = statement.purchases + statement.installments;
+      final paid = _paidOf(card, cycle.dueMonth, settlements);
+      open += (charged - paid).orZeroIfNegative;
+    }
+    return open;
+  }
+
   static Money _paidOf(
     CreditCard card,
     BudgetMonth dueMonth,
@@ -88,16 +116,14 @@ final class CardLimitUsage {
   /// compra até a última parcela, o último estorno ou a fatura aberta hoje.
   static Iterable<BudgetMonth> _closingMonths(
     CreditCard card,
-    Iterable<Entry> entries,
-    Iterable<Reversal> reversals,
+    List<Entry> bought,
+    List<Reversal> back,
     LocalDate today,
   ) sync* {
     final dates = [
       today,
-      for (final entry in entries)
-        if (_isOn(card, entry)) ..._datesOf(card, entry),
-      for (final reversal in reversals)
-        if (reversal.line.paymentMethodId == card.id) reversal.occurredOn,
+      for (final entry in bought) ..._datesOf(card, entry),
+      for (final reversal in back) reversal.occurredOn,
     ];
     final months = [
       for (final date in dates)
