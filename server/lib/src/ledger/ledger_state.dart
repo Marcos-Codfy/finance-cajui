@@ -132,11 +132,23 @@ final class LedgerState {
       account = account.settle(entry.paidByTender.mealVoucher);
     }
     for (final reversal in _reversals.values) {
-      final alive = entryOf(reversal.entryId) != null;
-      if (!alive || reversal.line.tender != Tender.mealVoucher) continue;
+      if (!_stillOnVoucher(reversal)) continue;
       account = account.reverse(reversal.line.amount);
     }
     return account;
+  }
+
+  /// Se o estorno ainda devolve saldo ao vale: foi no vale, o lançamento
+  /// está vivo e **continua pago por ali**. Lançamento corrigido para outra
+  /// forma de pagamento não tem mais o que devolver ao vale — e o servidor
+  /// aceita a correção sem conferir os estornos, que no aparelho é papel
+  /// do `CorrectionGuard`.
+  bool _stillOnVoucher(Reversal reversal) {
+    if (reversal.line.tender != Tender.mealVoucher) return false;
+    final lines = entryOf(reversal.entryId)?.paymentLines ?? const [];
+    return lines.any(
+      (line) => line.paymentMethodId == reversal.line.paymentMethodId,
+    );
   }
 
   /// Aplica um evento ao estado. Tipo desconhecido é ignorado: um servidor

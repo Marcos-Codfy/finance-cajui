@@ -176,6 +176,39 @@ void main() {
       },
     );
 
+    test('RN-211 · estorno em vale de lançamento que saiu do vale não '
+        'devolve saldo nenhum', () async {
+      await server.call('POST', '/v1/income', body: _receipt(), token: token);
+      await server.call('POST', '/v1/entries', body: entryBody(), token: token);
+      await server.call(
+        'POST',
+        '/v1/entries/e1/reversals',
+        body: {
+          'id': 'rev1',
+          'entryId': 'e1',
+          'paymentMethodId': 'voucher',
+          'amountCents': 1000,
+          'occurredOn': '2026-09-15',
+        },
+        token: token,
+      );
+
+      // O outro celular, sem rede, corrige a compra para o Pix.
+      await server.call(
+        'PUT',
+        '/v1/entries/e1',
+        body: entryBody(
+          lines: [
+            {'paymentMethodId': 'pix', 'kind': 'pix', 'amountCents': 8600},
+          ],
+        ),
+        token: token,
+      );
+      final (_, lido) = await server.call('GET', '/v1/income', token: token);
+
+      expect(lido['voucherBalanceCents'], 50000);
+    });
+
     test('RN-111 · dinheiro e vale não se somam no que entrou', () async {
       await server.call('POST', '/v1/income', body: _receipt(), token: token);
       await server.call(
