@@ -9,6 +9,14 @@ abstract interface class DeviceEnrollment {
   /// Cadastra com [code]. `null` quando deu certo; senão, o código do
   /// catálogo — `E-AUTH-04` para código errado, usado ou vencido.
   Future<ErrorCode?> enroll(String code, {required String name});
+
+  /// Se o servidor já disse que **não conhece este aparelho**.
+  ///
+  /// É o que separa "falta a confirmação do dia" de "falta cadastrar": nos
+  /// dois casos nada sobe sozinho, mas a saída é outra, e o painel mandava
+  /// fazer um envio quem precisava era de um código. Vale até o cadastro dar
+  /// certo ou o servidor aceitar a chave.
+  bool get isRefused;
 }
 
 /// Quem cadastra o aparelho. A raiz do app decide.

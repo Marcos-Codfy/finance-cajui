@@ -7,6 +7,7 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
+import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -22,6 +23,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:persistence/event_store.dart';
 
+import 'fake_enrollment.dart';
 import 'memory_ledger_journal.dart';
 import 'mute_player.dart';
 
@@ -61,6 +63,7 @@ List<Override> testOverrides({
   LedgerDownlink? downlink,
   String idPrefix = 'id',
   bool quietSend = true,
+  DeviceEnrollment? enrollment,
 }) {
   var next = 0;
   return [
@@ -74,7 +77,7 @@ List<Override> testOverrides({
     ),
     ..._server(uplink, downlink, quietSend: quietSend),
     speechInputProvider.overrideWithValue(const NoSpeechInput()),
-    ..._extras(preferences),
+    ..._extras(preferences, enrollment),
   ];
 }
 
@@ -110,11 +113,17 @@ List<Override> _capture(
 /// estourar o limite de linhas.
 ///
 /// As preferências do teste começam sempre no padrão, e não sobrevivem
-/// entre um teste e outro: teste que herda escolha de outro mente.
-List<Override> _extras(PreferencesStore? preferences) => [
+/// entre um teste e outro: teste que herda escolha de outro mente. O
+/// aparelho do teste é um que o servidor conhece, a não ser que o teste
+/// passe outro cadastro.
+List<Override> _extras(
+  PreferencesStore? preferences,
+  DeviceEnrollment? enrollment,
+) => [
   preferencesStoreProvider.overrideWithValue(
     preferences ?? const NoPreferencesStore(),
   ),
+  deviceEnrollmentProvider.overrideWithValue(enrollment ?? FakeEnrollment()),
 ];
 
 /// Uma subida que diz "este aparelho tem livro próprio": é o celular

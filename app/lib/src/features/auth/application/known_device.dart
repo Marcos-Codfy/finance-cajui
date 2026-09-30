@@ -6,6 +6,14 @@ final class KnownDevice {
   /// Cria o aparelho.
   const new({required this.id, required this.name, required this.isWeb});
 
+  /// Lê o aparelho como o servidor o lista. Campo que falte vira o padrão:
+  /// uma linha sem nome na lista ainda deixa descadastrar o aparelho.
+  factory read(Map<Object?, Object?> json) => KnownDevice(
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? 'Aparelho',
+    isWeb: json['kind'] == 'web',
+  );
+
   /// O identificador, derivado da chave pública dele.
   final String id;
 
