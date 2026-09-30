@@ -33,6 +33,12 @@ android {
             // Assinado com a chave de depuração até a Fase 7, que cria a chave de
             // publicação fora do repositório (nenhuma chave é versionada).
             signingConfig = signingConfigs.getByName("debug")
+            // As regras do próprio app somam-se às do Flutter e às das
+            // bibliotecas: ver `proguard-rules.pro`.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
