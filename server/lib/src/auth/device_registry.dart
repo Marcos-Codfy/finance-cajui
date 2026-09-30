@@ -25,9 +25,20 @@ final class DeviceRegistry {
   final Map<String, List<int>> _publicKeys = {};
   final Map<String, EnrolledDevice> _devices = {};
 
+  /// Quantos eventos de cada tipo o aparelho já teve. É o que dá a cada
+  /// cadastro e a cada revogação um identificador **próprio**: o registro é
+  /// idempotente por identificador, e o mesmo aparelho voltando depois de
+  /// revogado — a chave é a mesma, então o identificador também — devolvia
+  /// o evento antigo sem gravar nada. Ele entrava só na memória, com o nome
+  /// velho, e sumia no próximo reinício do servidor. Foi o que aconteceu
+  /// com o S22 em 30/09.
+  final Map<String, int> _enrollments = {};
+  final Map<String, int> _revocations = {};
+
   void _apply(StoredEvent event) {
     final deviceId = '${event.payload['deviceId']}';
     if (event.type == enrolled) {
+      _enrollments[deviceId] = (_enrollments[deviceId] ?? 0) + 1;
       _publicKeys[deviceId] = base64Decode('${event.payload['publicKey']}');
       _devices[deviceId] = EnrolledDevice(
         id: deviceId,
@@ -39,9 +50,17 @@ final class DeviceRegistry {
             : SessionScope.device,
       );
     } else if (event.type == revoked) {
+      _revocations[deviceId] = (_revocations[deviceId] ?? 0) + 1;
       _publicKeys.remove(deviceId);
       _devices.remove(deviceId);
     }
+  }
+
+  /// O identificador do próximo evento de [deviceId]: o primeiro cadastro
+  /// mantém a forma antiga, que já está gravada nos registros existentes.
+  String _nextId(String prefix, String deviceId, Map<String, int> counts) {
+    final count = counts[deviceId] ?? 0;
+    return count == 0 ? '$prefix-$deviceId' : '$prefix-$deviceId-$count';
   }
 
   /// A chave pública de [deviceId]; nulo se ele não existe ou foi revogado.
@@ -60,7 +79,7 @@ final class DeviceRegistry {
   Future<void> revoke(String deviceId) async {
     if (!_devices.containsKey(deviceId)) return;
     final event = await _store.append(
-      id: 'device-revoked-$deviceId-${_devices.length}',
+      id: _nextId('device-revoked', deviceId, _revocations),
       type: revoked,
       payload: {'deviceId': deviceId},
     );
@@ -75,7 +94,7 @@ final class DeviceRegistry {
     SessionScope scope = SessionScope.device,
   }) async {
     final event = await _store.append(
-      id: 'device-$deviceId',
+      id: _nextId('device', deviceId, _enrollments),
       type: enrolled,
       payload: {
         'deviceId': deviceId,
