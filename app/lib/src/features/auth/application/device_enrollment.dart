@@ -17,6 +17,11 @@ abstract interface class DeviceEnrollment {
   /// fazer um envio quem precisava era de um código. Vale até o cadastro dar
   /// certo ou o servidor aceitar a chave.
   bool get isRefused;
+
+  /// Se há sessão aberta com o servidor agora. Na web, é "já entrei": é o
+  /// que separa a página vazia porque **ninguém entrou** da página vazia
+  /// porque **o servidor ainda não tem o mês** — e cada uma tem sua saída.
+  bool get hasSession;
 }
 
 /// Quem cadastra o aparelho. A raiz do app decide.

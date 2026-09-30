@@ -19,10 +19,14 @@ final class _ServerBook implements LedgerJournal {
   final FakeEnrollment _enrollment;
   int reads = 0;
 
+  /// O servidor com sessão aberta e nada do mês: o celular ainda não enviou.
+  bool alwaysEmpty = false;
+
   @override
   Future<List<LedgerEvent>> readAll() async {
     reads++;
-    return _enrollment.codes.isEmpty ? const [] : samplePlanEvents;
+    if (alwaysEmpty || _enrollment.codes.isEmpty) return const [];
+    return samplePlanEvents;
   }
 
   @override
@@ -85,6 +89,53 @@ void main() {
       expect(find.text('Novo lançamento'), findsNothing);
       expect(find.bySemanticsLabel('Plano do mês'), findsNothing);
       expect(find.text('Cadastrar a renda'), findsNothing);
+    });
+
+    testWidgets('entrou, mas o servidor não tem o mês: a página diz isso e '
+        '"Atualizar" relê sem perder a sessão', (tester) async {
+      final enrollment = FakeEnrollment();
+      final book = _ServerBook(enrollment)..alwaysEmpty = true;
+      tester.view.physicalSize = const Size(400, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: testOverrides(
+            journal: book,
+            uplink: const NoLedgerUplink(),
+            enrollment: enrollment,
+          ),
+          child: const CajuiApp(),
+        ),
+      );
+      await _settle(tester);
+      await tester.tap(find.text('Entrar com o código'));
+      await _settle(tester);
+      await tester.enterText(find.byType(EditableText).first, '5BHMRM6J');
+      await tester.pump();
+      await tester.tap(find.text('Entrar'));
+      await _settle(tester);
+
+      expect(
+        find.text('O servidor ainda não tem nada deste mês'),
+        findsOneWidget,
+      );
+      expect(find.text('Entrar com o código'), findsNothing);
+      final readsBefore = book.reads;
+      book.alwaysEmpty = false;
+      await tester.tap(find.text('Atualizar'));
+      await _settle(tester);
+
+      expect(book.reads, greaterThan(readsBefore));
+      expect(
+        enrollment.codes,
+        hasLength(1),
+        reason: 'não pediu código de novo',
+      );
+      expect(
+        find.text('O servidor ainda não tem nada deste mês'),
+        findsNothing,
+      );
     });
 
     testWidgets('no celular, a tela continua sendo o cadastro', (tester) async {

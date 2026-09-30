@@ -22,4 +22,7 @@ final class WebSessionEnrollment implements DeviceEnrollment {
   /// O navegador não tem chave para o servidor recusar.
   @override
   bool get isRefused => false;
+
+  @override
+  bool get hasSession => _api.isOpen;
 }
