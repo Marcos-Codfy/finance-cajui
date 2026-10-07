@@ -127,13 +127,14 @@ final class EntryDraft {
   /// Quanto falta para as duas linhas fecharem o valor. Negativo se passaram.
   int get unassignedCents => amountCents - firstCents - secondCents;
 
-  /// Se já há o bastante para tentar gravar.
+  /// Se já há o bastante para tentar gravar: um valor e um dia. O resto o
+  /// app decide quando a pessoa não decidiu — categoria pelo nome do lugar
+  /// ou Outros, forma pela última usada ou Pix, descrição pela categoria
+  /// (ver `DraftDefaults`). Pagamento dividido pede as duas formas.
   bool get isComplete =>
-      description.trim().isNotEmpty &&
-      category != null &&
+      amountCents > 0 &&
       occurredOn != null &&
-      method != null &&
-      (!isSplit || secondMethod != null);
+      (!isSplit || (method != null && secondMethod != null));
 
   /// As linhas de pagamento que o rascunho descreve.
   List<PaymentLine> get lines {

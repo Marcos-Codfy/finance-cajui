@@ -1,6 +1,9 @@
 import 'package:cajui/src/app/home_shell.dart';
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/feedback_providers.dart';
+import 'package:cajui/src/features/auth/application/household_key_presence.dart';
+import 'package:cajui/src/features/auth/presentation/key_page.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/sync_on_resume.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -36,7 +39,16 @@ class CajuiApp extends ConsumerWidget {
         feedback: ref.watch(feedbackProvider),
         child: child!,
       ),
-      home: const SyncOnResume(child: HomeShell()),
+      home: _home(ref),
     );
+  }
+
+  /// A consulta na web sem a chave da casa mostra só a entrada: o livro
+  /// dela é o do servidor, e sem chave não há livro (ADR-020). No celular a
+  /// chave vem no APK, e a casca abre direto.
+  static Widget _home(WidgetRef ref) {
+    final consulta = !ref.watch(ledgerUplinkProvider).isPaired;
+    if (consulta && !ref.watch(hasHouseholdKeyProvider)) return const KeyPage();
+    return const SyncOnResume(child: HomeShell());
   }
 }

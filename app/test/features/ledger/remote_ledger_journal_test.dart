@@ -8,30 +8,16 @@ import 'package:cajui/src/features/ledger/infrastructure/remote_ledger_journal.d
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/fake_household_key.dart';
 import '../../support/fake_server.dart';
 
-/// Uma chave que assina devolvendo a mensagem: quem confere é o servidor, e
-/// aqui ele é o dublê.
-final class _FakeKeys implements DeviceKeyStore {
+/// A identidade do aparelho de teste: uma chave pública qualquer.
+final class _FakeIdentity implements DeviceKeyStore {
   @override
   bool get exists => true;
 
   @override
-  Future<bool> canAuthenticate() async => true;
-
-  @override
   Future<Uint8List> publicKey() async => Uint8List.fromList([1, 2, 3, 4]);
-
-  @override
-  Future<Uint8List> sign(Uint8List message) async => message;
-
-  /// Se a liberação do dia ainda vale; o teste muda para ensaiar o dia
-  /// seguinte.
-  bool unlocked = false;
-
-  @override
-  Future<Uint8List> signQuietly(Uint8List message) async =>
-      unlocked ? message : Uint8List(0);
 }
 
 Map<String, Object?> _entry({String id = 'e1', int cents = 8600}) => {
@@ -59,7 +45,11 @@ void main() {
   setUp(() async {
     server = await FakeServer.start();
     addTearDown(server.stop);
-    final api = CajuiApi(baseUrl: server.baseUrl, keys: _FakeKeys());
+    final api = CajuiApi(
+      baseUrl: server.baseUrl,
+      keys: FakeHouseholdKey(),
+      identity: _FakeIdentity(),
+    );
     journal = RemoteLedgerJournal(
       api,
       categoryOf: DefaultCatalog.emptyBook.categoryOf,

@@ -4,7 +4,11 @@ import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:flutter/services.dart';
 
 /// A chave do aparelho guardada no Keystore do Android, pelo canal
-/// `app.cajui/device` (ADR-008).
+/// `app.cajui/device`.
+///
+/// Só a chave pública atravessa: assinar deixou de ser preciso quando a
+/// chave da casa passou a provar quem somos (ADR-020). O lado nativo
+/// continua sabendo assinar, e ninguém mais pede.
 final class NativeDeviceKeyStore implements DeviceKeyStore {
   /// Cria a porta. O canal entra por parâmetro para o teste simular o lado
   /// nativo.
@@ -16,21 +20,8 @@ final class NativeDeviceKeyStore implements DeviceKeyStore {
   bool get exists => true;
 
   @override
-  Future<bool> canAuthenticate() async =>
-      await _ask<bool>('canAuthenticate') ?? false;
-
-  @override
   Future<Uint8List> publicKey() async =>
       await _ask<Uint8List>('publicKey') ?? Uint8List(0);
-
-  @override
-  Future<Uint8List> sign(Uint8List message) async =>
-      await _ask<Uint8List>('sign', {'message': message}) ?? Uint8List(0);
-
-  @override
-  Future<Uint8List> signQuietly(Uint8List message) async =>
-      await _ask<Uint8List>('signQuietly', {'message': message}) ??
-      Uint8List(0);
 
   /// Pergunta ao lado nativo e traduz a recusa dele.
   ///

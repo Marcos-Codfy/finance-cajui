@@ -7,13 +7,11 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
-import 'package:cajui/src/features/auth/application/device_directory.dart';
-import 'package:cajui/src/features/auth/application/device_enrollment.dart';
+import 'package:cajui/src/features/auth/application/household_key_store.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
-import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_reader.dart';
@@ -24,8 +22,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:persistence/event_store.dart';
 
-import 'fake_directory.dart';
-import 'fake_enrollment.dart';
+import 'fake_household_key.dart';
 import 'memory_ledger_journal.dart';
 import 'mute_player.dart';
 
@@ -48,10 +45,10 @@ class FixedClock implements Clock {
 }
 
 /// As trocas que todo teste do app faz: som mudo, livro na memória, dia fixo,
-/// identificadores em sequência (`id-0`, `id-1`…) e nenhuma captura chegando
-/// — a não ser que o teste passe [inbox] e [reader]. [idPrefix] troca o
-/// começo dos identificadores: dois aparelhos no mesmo teste não podem
-/// gerar os mesmos.
+/// identificadores em sequência (`id-0`, `id-1`…), a chave da casa presente
+/// e nenhuma captura chegando — a não ser que o teste passe [inbox] e
+/// [reader]. [idPrefix] troca o começo dos identificadores: dois aparelhos
+/// no mesmo teste não podem gerar os mesmos.
 List<Override> testOverrides({
   LedgerJournal? journal,
   MutePlayer? player,
@@ -63,10 +60,8 @@ List<Override> testOverrides({
   PreferencesStore? preferences,
   LedgerUplink? uplink,
   LedgerDownlink? downlink,
+  HouseholdKeyStore? householdKey,
   String idPrefix = 'id',
-  bool quietSend = true,
-  DeviceEnrollment? enrollment,
-  DeviceDirectory? directory,
 }) {
   var next = 0;
   return [
@@ -78,24 +73,16 @@ List<Override> testOverrides({
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const _SilentGateway(),
     ),
-    ..._server(uplink, downlink, quietSend: quietSend),
-    ..._extras(preferences, enrollment, directory),
+    ..._server(uplink, downlink),
+    ..._extras(preferences, householdKey),
   ];
 }
 
-/// O servidor: o teste roda como celular cadastrado — é lá que a camada
-/// local responde —, e o livro não sobe nem desce de lugar nenhum, a não
-/// ser que o teste mande.
-/// O aviso de envio parado só aparece para o teste que o pede, com
-/// [quietSend] falso.
-List<Override> _server(
-  LedgerUplink? uplink,
-  LedgerDownlink? downlink, {
-  required bool quietSend,
-}) => [
+/// O servidor: o teste roda como celular — é lá que se lança —, e o livro
+/// não sobe nem desce de lugar nenhum, a não ser que o teste mande.
+List<Override> _server(LedgerUplink? uplink, LedgerDownlink? downlink) => [
   ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
   ledgerDownlinkProvider.overrideWithValue(downlink ?? const _NoDownlink()),
-  quietSendProvider.overrideWith((ref) async => quietSend),
 ];
 
 /// A captura: nada chega, a não ser que o teste mande.
@@ -111,36 +98,30 @@ List<Override> _capture(
   ),
 ];
 
-/// As trocas que nasceram depois e não cabem na lista principal sem
-/// estourar o limite de linhas.
-///
 /// As preferências do teste começam sempre no padrão, e não sobrevivem
-/// entre um teste e outro: teste que herda escolha de outro mente. O
-/// aparelho do teste é um que o servidor conhece, a não ser que o teste
-/// passe outro cadastro; a lista de aparelhos tem dois celulares.
+/// entre um teste e outro: teste que herda escolha de outro mente. A chave
+/// da casa está presente, como no celular do dono (ADR-020), a não ser que
+/// o teste passe outra.
 List<Override> _extras(
   PreferencesStore? preferences,
-  DeviceEnrollment? enrollment,
-  DeviceDirectory? directory,
+  HouseholdKeyStore? householdKey,
 ) => [
   preferencesStoreProvider.overrideWithValue(
     preferences ?? const NoPreferencesStore(),
   ),
-  deviceEnrollmentProvider.overrideWithValue(enrollment ?? FakeEnrollment()),
-  deviceDirectoryProvider.overrideWithValue(directory ?? FakeDirectory()),
+  householdKeyProvider.overrideWithValue(householdKey ?? FakeHouseholdKey()),
   speechInputProvider.overrideWithValue(const NoSpeechInput()),
 ];
 
-/// Uma subida que diz "este aparelho tem livro próprio": é o celular
-/// cadastrado, onde a camada local de respostas vale. Não manda nada.
+/// Uma subida que diz "este aparelho tem livro próprio": é o celular. Não
+/// manda nada — e não sobe sozinha: o teste de tela mede só o que a tela
+/// faz.
 final class _PairedUplink implements LedgerUplink {
   const new();
 
   @override
   bool get isPaired => true;
 
-  /// Sem envio silencioso: o teste de tela não sobe nada sozinho, e
-  /// continua medindo só o que a tela faz.
   @override
   Future<bool> canSendQuietly() async => false;
 
@@ -216,15 +197,13 @@ final class _NoDownlink implements LedgerDownlink {
   Future<LedgerSnapshot?> snapshot() async => null;
 }
 
-/// Um assistente que nunca foi pareado. Vive aqui, e não em `lib/`: é dublê
-/// de teste, e código que só o teste usa não tem por que viajar no APK.
+/// Um assistente sem servidor por perto. Vive aqui, e não em `lib/`: é
+/// dublê de teste, e código que só o teste usa não tem por que viajar no
+/// APK.
 final class _SilentGateway implements AssistantGateway {
   const new();
 
   @override
-  bool get isPaired => false;
-
-  @override
   Future<AssistantReply> ask(String message) async =>
-      const AssistantNotPaired();
+      const AssistantFailed(ErrorCode.net01);
 }

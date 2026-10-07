@@ -15,7 +15,7 @@ import 'package:domain/domain.dart';
 /// rota aceita: o comprovante é lido no aparelho, e o que viaja é o que o
 /// OCR extraiu.
 ///
-/// **As regras são a rede, e não o contrário.** Sem a chave do dia, sem rede,
+/// **As regras são a rede, e não o contrário.** Sem a chave da casa, sem rede,
 /// servidor fora do ar, IA sem crédito — em qualquer um desses casos vale a
 /// proposta local, que é exata no que sabe. Nada quebra por falta de IA
 /// (RN-752).
@@ -29,10 +29,8 @@ final class HttpReceiptClassifier implements ReceiptClassifier {
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {
     final local = await _rules.classify(request);
-    // Pedir a digital no meio de uma conferência de comprovante é pior do
-    // que classificar só com as regras. Depois do primeiro envio do dia a
-    // chave está liberada, e a IA entra sem custo para quem está usando.
-    if (!await _api.openQuietly()) return local;
+    // Sem a chave da casa não há servidor, e as regras bastam (ADR-020).
+    if (!_api.hasKey) return local;
     return await _fromServer(request) ?? local;
   }
 

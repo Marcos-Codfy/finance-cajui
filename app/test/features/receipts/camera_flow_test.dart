@@ -71,11 +71,11 @@ void main() {
     // O cupom traz o valor pago, o nome da loja e a categoria do ramo.
     expect(find.text('653,58'), findsOneWidget);
     expect(find.text('Mar Doce Supermercados'), findsOneWidget);
-    // RN-744 e RN-782: regra fixa sugere e não marca. O ramo do nome vira um
-    // chip para tocar, e a categoria só entra no campo depois do toque.
-    expect(find.textContaining('parece mercado'), findsOneWidget);
-    await _tap(tester, find.widgetWithText(CajuiChip, 'Mercado'));
-    expect(find.text('Mercado'), findsWidgets);
+    // O ramo do nome já vem no campo: supermercado é mercado. Nada mais a
+    // tocar além de "Lançar".
+    expect(find.text('Mercado'), findsOneWidget);
+    expect(find.textContaining('parece mercado'), findsNothing);
+    expect(find.widgetWithText(CajuiChip, 'Mercado'), findsNothing);
   });
 
   testWidgets('aparelho sem câmera não mostra o botão', (tester) async {

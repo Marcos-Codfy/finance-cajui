@@ -24,9 +24,6 @@ class ScriptedAssistant implements AssistantGateway {
   void release() => _gate?.complete();
 
   @override
-  bool get isPaired => true;
-
-  @override
   Future<AssistantReply> ask(String message) async {
     asked.add(message);
     await _gate?.future;

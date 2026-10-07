@@ -2,17 +2,22 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/error_text.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
-import 'package:cajui/src/features/assistant/application/answer_source.dart';
+import 'package:cajui/src/features/assistant/application/assistant_action_done.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// O que voltou de uma pergunta, na conversa: a resposta com a origem dos
-/// números, ou o erro do catálogo com as suas saídas.
-class AssistantReplyView extends StatelessWidget {
-  /// Mostra [reply]. [onRetry] pergunta de novo.
-  const new({required this.reply, required this.onRetry, super.key});
+/// O que voltou de uma pergunta, na conversa: a resposta, com o que o
+/// assistente fez e o botão de desfazer, ou o erro do catálogo.
+class AssistantReplyView extends StatefulWidget {
+  /// Mostra [reply]. [onRetry] pergunta de novo; [onUndo] desfaz uma ação.
+  const new({
+    required this.reply,
+    required this.onRetry,
+    required this.onUndo,
+    super.key,
+  });
 
   /// O que voltou.
   final AssistantReply reply;
@@ -20,38 +25,18 @@ class AssistantReplyView extends StatelessWidget {
   /// Chamado por "Perguntar de novo" e "Tentar de novo".
   final VoidCallback onRetry;
 
-  @override
-  Widget build(BuildContext context) => switch (reply) {
-    AssistantAnswered(:final text, :final sources) => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        CajuiChatBubble(text),
-        if (sources.isNotEmpty) _Sources(sources),
-      ],
-    ),
-    AssistantFailed(:final code, :final retryAfterSeconds) => Padding(
-      padding: const EdgeInsets.only(bottom: CajuiSpacing.md),
-      child: ErrorNotice(
-        error: (code: code, text: _textOf(code, retryAfterSeconds)),
-        onAction: (_) => onRetry(),
-      ),
-    ),
-    AssistantNotPaired() => const SizedBox.shrink(),
-  };
+  /// Chamado por "Desfazer", com a ação a desfazer.
+  final Future<void> Function(AssistantActionDone action) onUndo;
 
   /// A frase do assistente para [code]. O catálogo traz, em alguns códigos,
   /// uma frase por tela; aqui vale a do assistente, e só a saída que faz
   /// sentido numa conversa.
   ///
   /// Qualquer código pode chegar aqui — o servidor devolve o que ele quiser
-  /// —, e chave sem valor derruba a tela que deveria contar o erro. Já
-  /// aconteceu duas vezes. Quando falta valor para montar a frase exata, sai
-  /// a genérica: **dizer menos é melhor do que cair**, e melhor ainda do que
-  /// mostrar uma frase com buraco. Um teste percorre o catálogo inteiro.
-  static ErrorText textOf(ErrorCode code, {int? retryAfterSeconds}) =>
-      _textOf(code, retryAfterSeconds);
-
-  static ErrorText _textOf(ErrorCode code, int? retryAfterSeconds) {
+  /// —, e chave sem valor derruba a tela que deveria contar o erro. Quando
+  /// falta valor para montar a frase exata, sai a genérica: **dizer menos é
+  /// melhor do que cair**. Um teste percorre o catálogo inteiro.
+  static ErrorText textOf(ErrorCode code, {int? retryAfterSeconds}) {
     final values = {
       'recurso': 'O assistente',
       'segundos': '${retryAfterSeconds ?? 60}',
@@ -71,46 +56,68 @@ class AssistantReplyView extends StatelessWidget {
     final retry = text.actions.where((a) => a.contains('de novo')).take(1);
     return ErrorText(text.message, actions: retry.toList());
   }
-}
-
-/// "De onde vieram os números" (RN-947): recolhida por padrão, e montada com
-/// o que o servidor mandou — não com o texto da IA.
-class _Sources extends StatefulWidget {
-  const new(this.sources);
-
-  final List<AnswerSource> sources;
 
   @override
-  State<_Sources> createState() => _SourcesState();
+  State<AssistantReplyView> createState() => _AssistantReplyViewState();
 }
 
-class _SourcesState extends State<_Sources> {
-  bool _open = false;
+class _AssistantReplyViewState extends State<AssistantReplyView> {
+  /// O que já foi desfeito nesta resposta: o botão vira "Desfeito".
+  final Set<String> _undone = {};
+
+  Future<void> _undo(AssistantActionDone action) async {
+    setState(() => _undone.add(action.id));
+    await widget.onUndo(action);
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => switch (widget.reply) {
+    AssistantAnswered(:final text, :final actions) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CajuiChatBubble(text),
+        for (final action in actions)
+          if (action.isUndoable) _undoRow(context, action),
+      ],
+    ),
+    AssistantFailed(:final code, :final retryAfterSeconds) => Padding(
+      padding: const EdgeInsets.only(bottom: CajuiSpacing.md),
+      child: ErrorNotice(
+        error: (
+          code: code,
+          text: AssistantReplyView.textOf(
+            code,
+            retryAfterSeconds: retryAfterSeconds,
+          ),
+        ),
+        onAction: (_) => widget.onRetry(),
+      ),
+    ),
+  };
+
+  /// "Desfazer" ao lado do que foi lançado: um toque, sem pergunta. Já
+  /// desfeito, a linha fica como registro do que aconteceu.
+  Widget _undoRow(BuildContext context, AssistantActionDone action) {
     final theme = CajuiTheme.of(context);
-    final muted = theme.typography.caption.copyWith(
-      color: theme.colors.text.muted,
-    );
+    final done = _undone.contains(action.id);
     return Padding(
       padding: const EdgeInsets.only(bottom: CajuiSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
+          Expanded(
+            child: Text(
+              '${action.label} · ${BrlFormatter.format(action.amountCents)}',
+              style: theme.typography.caption.copyWith(
+                color: theme.colors.text.muted,
+              ),
+            ),
+          ),
           CajuiButton(
-            label: _open ? 'Esconder os números' : 'De onde vieram os números',
+            label: done ? 'Desfeito' : 'Desfazer',
             variant: CajuiButtonVariant.ghost,
             size: CajuiButtonSize.compact,
-            onPressed: () => setState(() => _open = !_open),
+            onPressed: done ? null : () => _undo(action),
           ),
-          if (_open)
-            for (final source in widget.sources)
-              Text(
-                '${source.label}: ${BrlFormatter.format(source.cents)} · '
-                '${source.kindLabel}, ${source.period}',
-                style: muted,
-              ),
         ],
       ),
     );

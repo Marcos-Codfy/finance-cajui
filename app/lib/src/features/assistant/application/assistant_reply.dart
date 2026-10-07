@@ -1,5 +1,5 @@
 import 'package:api_contract/api_contract.dart';
-import 'package:cajui/src/features/assistant/application/answer_source.dart';
+import 'package:cajui/src/features/assistant/application/assistant_action_done.dart';
 import 'package:meta/meta.dart';
 
 /// O que voltou de uma pergunta ao assistente.
@@ -8,27 +8,18 @@ sealed class AssistantReply {
   const new();
 }
 
-/// A resposta, já validada pelo servidor. Chega inteira: texto parcial da IA
-/// nunca é exibido (RN-946).
+/// A resposta. Chega inteira: texto parcial da IA nunca é exibido (RN-946).
 final class AssistantAnswered extends AssistantReply {
-  /// Cria a resposta [text], com as origens [sources].
-  const new(
-    this.text, {
-    this.sources = const [],
-    this.outOfScope = false,
-    this.isFallback = false,
-  });
+  /// Cria a resposta [text], com o que foi feito em [actions].
+  const new(this.text, {this.actions = const [], this.isFallback = false});
 
   /// O texto. É mostrado como texto puro: nenhum endereço vira link (RN-948).
   final String text;
 
-  /// De onde vieram os números (RN-947).
-  final List<AnswerSource> sources;
+  /// O que o assistente fez no livro ao responder (ADR-021).
+  final List<AssistantActionDone> actions;
 
-  /// Se a pergunta ficou fora do que o assistente faz (RN-902).
-  final bool outOfScope;
-
-  /// Se é a resposta de formato fixo, sem texto da IA (RN-945).
+  /// Se é a resposta de formato fixo, sem texto da IA.
   final bool isFallback;
 }
 
@@ -43,11 +34,4 @@ final class AssistantFailed extends AssistantReply {
 
   /// Em quanto tempo dá para perguntar de novo, quando o erro traz contagem.
   final int? retryAfterSeconds;
-}
-
-/// Este aparelho ainda não está cadastrado no servidor, então não há com
-/// quem conversar. Não é erro: é o estado de quem ainda não pareou.
-final class AssistantNotPaired extends AssistantReply {
-  /// Cria o estado de aparelho não cadastrado.
-  const new();
 }

@@ -18,21 +18,6 @@ void main() {
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
   group('a recusa do Keystore atravessa o canal como falha tipada', () {
-    test('E-AUTH-01 · o Keystore não deixou usar a chave', () {
-      refuseWith('E-AUTH-01');
-
-      expect(
-        const NativeDeviceKeyStore().sign(Uint8List(4)),
-        throwsA(
-          isA<DeviceKeyFailure>().having(
-            (failure) => failure.code,
-            'código',
-            ErrorCode.auth01,
-          ),
-        ),
-      );
-    });
-
     test('E-AUTH-03 · digital trocada invalida a chave', () {
       refuseWith('E-AUTH-03');
 
@@ -52,9 +37,24 @@ void main() {
       refuseWith('QUALQUER_COISA');
 
       expect(
-        const NativeDeviceKeyStore().canAuthenticate(),
-        throwsA(isA<DeviceKeyFailure>()),
+        const NativeDeviceKeyStore().publicKey(),
+        throwsA(
+          isA<DeviceKeyFailure>().having(
+            (failure) => failure.code,
+            'código',
+            ErrorCode.auth01,
+          ),
+        ),
       );
+    });
+
+    test('a chave pública atravessa como veio', () async {
+      messenger.setMockMethodCallHandler(
+        channel,
+        (call) async => Uint8List.fromList([1, 2, 3]),
+      );
+
+      expect(await const NativeDeviceKeyStore().publicKey(), [1, 2, 3]);
     });
   });
 }

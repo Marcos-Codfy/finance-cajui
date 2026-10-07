@@ -7,30 +7,17 @@ import 'package:cajui/src/features/receipts/infrastructure/http_receipt_classifi
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/fake_household_key.dart';
 import '../../support/fake_server.dart';
 import '../../support/pix_receipt.dart';
 
-/// Uma chave que assina devolvendo a mensagem; quem confere é o servidor.
-final class _FakeKeys implements DeviceKeyStore {
+/// A identidade do aparelho de teste: uma chave pública qualquer.
+final class _FakeIdentity implements DeviceKeyStore {
   @override
   bool get exists => true;
 
   @override
-  Future<bool> canAuthenticate() async => true;
-
-  @override
   Future<Uint8List> publicKey() async => Uint8List.fromList([1, 2, 3, 4]);
-
-  @override
-  Future<Uint8List> sign(Uint8List message) async => message;
-
-  /// Se a liberação do dia ainda vale; o teste muda para ensaiar o dia
-  /// seguinte.
-  bool unlocked = false;
-
-  @override
-  Future<Uint8List> signQuietly(Uint8List message) async =>
-      unlocked ? message : Uint8List(0);
 }
 
 ClassificationRequest _request() => ClassificationRequest(
@@ -43,42 +30,36 @@ ClassificationRequest _request() => ClassificationRequest(
 void main() {
   late FakeServer server;
   late HttpReceiptClassifier classifier;
-  late CajuiApi api;
-  late _FakeKeys keys;
+  late FakeHouseholdKey keys;
 
   setUp(() async {
     server = await FakeServer.start();
     addTearDown(server.stop);
-    api = CajuiApi(
+    keys = FakeHouseholdKey();
+    final api = CajuiApi(
       baseUrl: server.baseUrl,
-      keys: keys = _FakeKeys(),
+      keys: keys,
+      identity: _FakeIdentity(),
       client: server.client,
     );
     classifier = HttpReceiptClassifier(api, const RuleBasedClassifier());
   });
 
   group('ADR-010 · a IA do servidor por cima das regras locais', () {
-    test('BL-061 · com a chave do dia liberada, a IA entra mesmo com a '
-        'sessão de quinze minutos vencida', () async {
-      keys.unlocked = true;
-      server.bodies['/v1/receipts/classify'] = const <String, Object?>{};
+    test(
+      'sem a chave da casa, nem tenta o servidor: as regras bastam',
+      () async {
+        keys.key = null;
 
-      await classifier.classify(_request());
+        final proposta = await classifier.classify(_request());
 
-      expect(server.paths, contains('/v1/receipts/classify'));
-    });
+        expect(server.paths, isEmpty);
+        expect(proposta.amount.value, isNotNull, reason: 'as regras leram');
+      },
+    );
 
-    test('sem a chave do dia, nem tenta o servidor: a digital não se pede no '
-        'meio de uma conferência', () async {
-      final proposta = await classifier.classify(_request());
-
-      expect(server.paths, isEmpty);
-      expect(proposta.amount.value, isNotNull, reason: 'as regras leram');
-    });
-
-    test('com sessão aberta, a proposta vem do servidor', () async {
-      // Abre a sessão como o app abre: uma chamada autenticada qualquer.
-      await api.devices();
+    test('ADR-020 · com a chave da casa, a proposta vem do servidor, e a '
+        'chave vai no cabeçalho com o nome do aparelho', () async {
       server.bodies['/v1/receipts/classify'] = const {
         'amountCents': {
           'value': 12345,
@@ -102,10 +83,12 @@ void main() {
       expect(proposta.amount.value, const Money.fromCents(12345));
       expect(proposta.category.value, 'groceries');
       expect(proposta.merchant, 'Mercado da Esquina');
+      final pedido = server.requests.single;
+      expect(pedido.authorization, 'Bearer ${keys.key}');
+      expect(pedido.device, isNotEmpty);
     });
 
     test('RN-742 · categoria que este aparelho não conhece cai fora', () async {
-      await api.devices();
       server.bodies['/v1/receipts/classify'] = const {
         'categoryId': {
           'value': 'categoria-inventada',
@@ -124,7 +107,6 @@ void main() {
     test(
       'RN-752 · servidor fora do ar cai nas regras, e nada quebra',
       () async {
-        await api.devices();
         await server.stop();
 
         final proposta = await classifier.classify(_request());
@@ -136,7 +118,6 @@ void main() {
     test(
       'T-24 · só o texto sai daqui, e o que o app aprendeu vai junto',
       () async {
-        await api.devices();
         server.bodies['/v1/receipts/classify'] = const {
           'warnings': <Object?>[],
         };

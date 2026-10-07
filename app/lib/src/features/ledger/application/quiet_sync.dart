@@ -9,11 +9,9 @@ import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 ///
 /// Duas regras a governam.
 ///
-/// **Só sobe quando dá para subir em silêncio.** Pedir a digital no meio
-/// de um lançamento é pior do que não subir na hora: quem está lançando
-/// está com pressa. A liberação da chave vale um dia; então o primeiro
-/// envio do dia é a pedido — pelo assistente, por Ajustes ou pelo aviso do
-/// painel — e todos os seguintes acontecem sozinhos.
+/// **Sobe sempre que dá.** Com a chave da casa (ADR-020) não há digital a
+/// pedir: cada lançamento sobe na hora, e traz de volta o que o outro
+/// celular fez. O que não sobe — sem rede — sobe na próxima.
 ///
 /// **Nada disto chega à tela.** A subida é uma cópia: o livro deste aparelho
 /// já está gravado, e falhar em copiá-lo não é erro de quem acabou de

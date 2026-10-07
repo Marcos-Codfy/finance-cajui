@@ -1,17 +1,19 @@
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
-import 'package:cajui/src/features/auth/presentation/devices_page.dart';
+import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
 import 'package:cajui/src/features/budget/presentation/month_close_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/cards/presentation/cards_page.dart';
 import 'package:cajui/src/features/debts/presentation/debts_page.dart';
-import 'package:cajui/src/features/ledger/presentation/sync_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// O que a pessoa regula no app: o plano do mês, as dívidas, o fechamento e
-/// o retorno sensorial.
+/// O que a pessoa regula no app: o plano do mês, os cartões, as dívidas, o
+/// fechamento, a chave da casa e o retorno sensorial.
+///
+/// Nada de servidor: o celular sincroniza sozinho (ADR-020), e o que havia
+/// aqui para mandar e para cadastrar aparelho deixou de existir.
 class SettingsPage extends ConsumerWidget {
   /// Cria a tela de ajustes.
   const new({super.key});
@@ -29,20 +31,6 @@ class SettingsPage extends ConsumerWidget {
   }
 
   /// O que a pessoa cadastra uma vez e revisita de vez em quando.
-  /// O que fala com o servidor: mandar o livro e dizer quem entra.
-  List<Widget> _servidor(BuildContext context) => [
-    _opens(
-      title: 'Enviar ao servidor',
-      subtitle: 'Para o assistente e a consulta na web verem os seus números',
-      onPressed: () => SyncPage.open(context),
-    ),
-    _opens(
-      title: 'Aparelhos com acesso',
-      subtitle: 'Quem entra nos seus dados — e cadastrar outro',
-      onPressed: () => DevicesPage.open(context),
-    ),
-  ];
-
   List<Widget> _cadastros(BuildContext context) => [
     _opens(
       title: 'Plano do mês',
@@ -59,11 +47,15 @@ class SettingsPage extends ConsumerWidget {
       subtitle: 'Quanto falta de cada uma, e quando termina',
       onPressed: () => DebtsPage.open(context),
     ),
-    ..._servidor(context),
     _opens(
       title: 'Fechar o mês',
       subtitle: 'O retrato do mês que terminou',
       onPressed: () => MonthClosePage.open(context),
+    ),
+    _opens(
+      title: 'Chave da casa',
+      subtitle: 'Para entrar na consulta pela web de outro computador',
+      onPressed: () => HouseholdKeyPage.open(context),
     ),
   ];
 

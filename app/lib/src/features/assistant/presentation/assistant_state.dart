@@ -7,13 +7,6 @@ sealed class AssistantState {
   const new();
 }
 
-/// O aparelho ainda não está cadastrado no servidor: não há com quem
-/// conversar, e a tela diz isso.
-final class AssistantUnpaired extends AssistantState {
-  /// Cria o estado de aparelho não cadastrado.
-  const new();
-}
-
 /// A conversa: as trocas já feitas e, se houver, a pergunta à espera.
 final class AssistantTalking extends AssistantState {
   /// Cria a conversa.
@@ -22,8 +15,8 @@ final class AssistantTalking extends AssistantState {
   /// As trocas, da mais antiga para a mais nova: a pergunta e o que voltou.
   final List<(String question, AssistantReply reply)> exchanges;
 
-  /// A pergunta que espera resposta. A resposta só aparece inteira, depois
-  /// de validada (RN-946): até lá, a tela mostra que está esperando.
+  /// A pergunta que espera resposta. A resposta só aparece inteira (RN-946):
+  /// até lá, a tela mostra que está esperando.
   final String? pending;
 
   /// Se há pergunta esperando.

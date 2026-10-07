@@ -213,12 +213,24 @@ void main() {
     expect(escaped.single, isA<StateError>(), reason: 'o erro não é engolido');
   });
 
-  test('rascunho incompleto não tenta gravar', () async {
-    form().edit((d) => d.copyWith(amountCents: 850));
+  test('sem valor não há o que gravar: o rascunho fica como está', () async {
+    form().edit((d) => d.copyWith(description: 'Ônibus'));
 
     await form().submit();
 
     expect(state(), isA<EntryFormEditing>());
     expect(editing().problem, isNull);
+  });
+
+  test('só o valor basta: categoria Outros, Pix e a descrição pela '
+      'categoria entram sozinhos', () async {
+    form().edit((d) => d.copyWith(amountCents: 850));
+
+    await form().submit();
+
+    final saved = state() as EntryFormSaved;
+    expect(saved.entry.categoryId, 'other');
+    expect(saved.entry.description, 'Outros');
+    expect(saved.entry.paymentLines.single.paymentMethodId, 'pix');
   });
 }

@@ -3,7 +3,6 @@ import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
-import 'package:cajui/src/features/ledger/presentation/cancel_entry_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_detail_sections.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
@@ -18,7 +17,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///
 /// Nenhuma das três ações reescreve o que foi gravado. Cada uma acrescenta
 /// um fato ao registro, e esta tela mostra sempre o estado mais recente.
-class EntryDetailPage extends ConsumerWidget {
+/// Cancelar é aqui mesmo, em dois toques no mesmo botão — sem tela própria
+/// e sem explicação: o lançamento sai das contas e o registro guarda que
+/// ele existiu (RN-995).
+class EntryDetailPage extends ConsumerStatefulWidget {
   /// Cria a tela do lançamento [entryId].
   const new({required this.entryId, super.key});
 
@@ -32,12 +34,21 @@ class EntryDetailPage extends ConsumerWidget {
     );
   }
 
+  @override
+  ConsumerState<EntryDetailPage> createState() => _EntryDetailPageState();
+}
+
+class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
+  /// O primeiro toque em "Cancelar lançamento" só arma o botão: o segundo
+  /// cancela. É a confirmação sem tela.
+  bool _confirmingCancel = false;
+
   static const _gap = SizedBox(height: CajuiSpacing.sm);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final book = ref.watch(ledgerProvider).value;
-    final entry = book?.entryOf(entryId);
+    final entry = book?.entryOf(widget.entryId);
     // Cancelado: não há mais o que mostrar, e a tela já está fechando.
     if (book == null || entry == null) return const SizedBox.shrink();
     final today = ref.watch(clockProvider).today();
@@ -85,12 +96,33 @@ class EntryDetailPage extends ConsumerWidget {
       ),
     ],
     _gap,
+    ..._cancelButtons(entry),
+  ];
+
+  /// Armado, o botão muda de cara e ganha um "Manter" ao lado: desistir é
+  /// tão fácil quanto confirmar.
+  List<Widget> _cancelButtons(Entry entry) => [
     CajuiButton(
-      label: 'Cancelar lançamento',
-      variant: CajuiButtonVariant.ghost,
+      label: _confirmingCancel
+          ? 'Confirmar o cancelamento'
+          : 'Cancelar lançamento',
+      variant: _confirmingCancel
+          ? CajuiButtonVariant.destructive
+          : CajuiButtonVariant.ghost,
       expand: true,
-      onPressed: () => _cancel(context, entry),
+      onPressed: _confirmingCancel
+          ? () => _cancel(entry)
+          : () => setState(() => _confirmingCancel = true),
     ),
+    if (_confirmingCancel) ...[
+      _gap,
+      CajuiButton(
+        label: 'Manter',
+        variant: CajuiButtonVariant.ghost,
+        expand: true,
+        onPressed: () => setState(() => _confirmingCancel = false),
+      ),
+    ],
   ];
 
   /// A correção reaproveita o formulário de lançar inteiro — mesmos campos,
@@ -118,9 +150,13 @@ class EntryDetailPage extends ConsumerWidget {
     );
   }
 
-  static Future<void> _cancel(BuildContext context, Entry entry) async {
+  Future<void> _cancel(Entry entry) async {
     final navigator = Navigator.of(context);
-    final cancelled = await CancelEntryPage.open(context, entry);
-    if (cancelled ?? false) navigator.pop();
+    final feedback = CajuiFeedbackScope.of(context);
+    await ref
+        .read(ledgerProvider.notifier)
+        .cancel(entry.id, reason: 'Cancelado pela pessoa');
+    feedback.saved();
+    navigator.pop();
   }
 }
