@@ -39,7 +39,7 @@ class CapturePage extends ConsumerWidget {
       title: 'Lendo o comprovante',
       overline: _waitingLabel(state.waiting),
       children: [
-        const Text('Lendo o comprovante no seu aparelho.'),
+        const Text('Lendo o comprovante.'),
         const SizedBox(height: CajuiSpacing.xl),
         Align(
           alignment: Alignment.centerLeft,

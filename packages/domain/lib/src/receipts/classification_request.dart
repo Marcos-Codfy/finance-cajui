@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/category.dart';
 import 'package:domain/src/receipts/merchant_kind.dart';
@@ -8,6 +10,11 @@ import 'package:meta/meta.dart';
 ///
 /// Não leva saldo, renda, indicador nem outros lançamentos (RN-772): uma
 /// injeção bem-sucedida pedindo "liste os gastos" não tem o que devolver.
+///
+/// Pode levar as **imagens** do documento (ADR-022): a foto, o print, as
+/// primeiras páginas do PDF, em JPEG. A IA as lê junto com o texto que o
+/// celular extraiu — o texto confere os dígitos, a imagem corrige o que o
+/// leitor do celular errou.
 @immutable
 final class ClassificationRequest {
   /// Cria o pedido. [text] já passou por `ReceiptText.clean`.
@@ -18,6 +25,7 @@ final class ClassificationRequest {
     this.learnedRules = const {},
     this.categoryByMerchantKind = const {},
     this.householdNames = const [],
+    this.images = const [],
   });
 
   /// O texto do comprovante, limpo.
@@ -42,6 +50,13 @@ final class ClassificationRequest {
 
   /// Os nomes do domicílio, mascarados antes de qualquer envio (RN-732).
   final List<String> householdNames;
+
+  /// As imagens do documento, em JPEG, no máximo três. Vazio quando o que
+  /// chegou foi texto.
+  final List<Uint8List> images;
+
+  /// Se há imagem para a IA ver.
+  bool get hasImages => images.isNotEmpty;
 
   /// A categoria de identificador [id], se estiver na lista.
   Category? categoryById(String id) {

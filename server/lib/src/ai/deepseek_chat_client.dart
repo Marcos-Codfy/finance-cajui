@@ -58,18 +58,21 @@ final class DeepSeekChatClient extends ChatClient {
 
   /// A conversa inteira vai a cada chamada — o provedor reaproveita o
   /// prefixo —, e as ferramentas vão descritas junto. Um pouco de
-  /// temperatura: redigir não é escolher numa lista.
+  /// temperatura para redigir; nenhuma para ler um comprovante, que é
+  /// pergunta de resposta certa, em JSON.
   @override
   Future<ChatReply> converse({
     required List<ChatMessage> messages,
     required int maxTokens,
     List<ChatTool> tools = const [],
+    bool json = false,
   }) => _send({
     'model': model,
     'messages': [for (final message in messages) message.toJson()],
     if (tools.isNotEmpty) 'tools': [for (final tool in tools) tool.toJson()],
+    if (json) 'response_format': {'type': 'json_object'},
     'thinking': {'type': 'disabled'},
-    'temperature': 0.3,
+    'temperature': json ? 0 : 0.3,
     'max_tokens': maxTokens,
   });
 

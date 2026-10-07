@@ -104,9 +104,10 @@ class CaptureChannel(
     private fun readText(call: MethodCall, result: MethodChannel.Result) {
         val path = call.argument<String>("path").orEmpty()
         val kind = call.argument<String>("kind").orEmpty()
+        val withImages = call.argument<Boolean>("withImages") ?: false
         worker.execute {
             try {
-                val read = ocr.read(path, kind) { page, of ->
+                val read = ocr.read(path, kind, withImages) { page, of ->
                     main.post { events?.success(mapOf("type" to "progress", "page" to page, "of" to of)) }
                 }
                 main.post { result.success(read) }

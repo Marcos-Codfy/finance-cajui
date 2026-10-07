@@ -42,12 +42,13 @@ class CaptureService {
             .read(item, onPage: onPage);
         return switch (read) {
           ReadFailed(:final code) => CaptureRefused(code),
-          ReadText(:final text) => await _propose(
+          ReadText(:final text, :final images) => await _propose(
             PendingCapture(
               id: id,
               receivedOn: today,
               text: text,
               filePath: path,
+              images: images,
             ),
           ),
         };
@@ -66,11 +67,23 @@ class CaptureService {
       // invisíveis fora antes de qualquer regra olhar para ele.
       text: ReceiptText.clean(raw.text),
       filePath: raw.filePath,
+      images: raw.images,
     );
-    final unreadable = clean.text.trim().isEmpty;
-    if (unreadable) return const CaptureRefused(ErrorCode.capt01);
-    return CaptureProposed(await _classify(clean));
+    final unreadable = clean.text.trim().length < minReadableChars;
+    if (unreadable && clean.images.isEmpty) {
+      return const CaptureRefused(ErrorCode.capt01);
+    }
+    final capture = await _classify(clean);
+    // O celular não leu, e a IA também não achou valor: aí não há o que
+    // conferir, e a saída é a mesma de sempre — outra foto, ou digitar.
+    if (unreadable && capture.proposal.amount.confidence == Confidence.low) {
+      return const CaptureRefused(ErrorCode.capt01);
+    }
+    return CaptureProposed(capture);
   }
+
+  /// Menos que isso não é comprovante lido: é ruído de foto escura.
+  static const minReadableChars = 8;
 
   Future<Capture> _classify(PendingCapture source) async {
     final book = await ref.read(ledgerProvider.future);
@@ -83,6 +96,7 @@ class CaptureService {
             today: ref.read(clockProvider).today(),
             learnedRules: await ref.read(captureShelfProvider).learnedRules(),
             categoryByMerchantKind: DefaultCatalog.categoryByMerchantKind,
+            images: source.images,
           ),
         );
     return Capture(source: source, proposal: proposal);

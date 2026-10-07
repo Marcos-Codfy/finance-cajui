@@ -20,6 +20,9 @@ final class ToolChatClient extends ChatClient {
   /// As ferramentas oferecidas em cada chamada.
   final List<List<ChatTool>> offered = [];
 
+  /// Se cada chamada pediu a resposta em JSON.
+  final List<bool> jsonModes = [];
+
   @override
   Future<ChatReply> complete({
     required String system,
@@ -35,9 +38,11 @@ final class ToolChatClient extends ChatClient {
     required List<ChatMessage> messages,
     required int maxTokens,
     List<ChatTool> tools = const [],
+    bool json = false,
   }) async {
     conversations.add(List.of(messages));
     offered.add(tools);
+    jsonModes.add(json);
     final index = conversations.length - 1;
     return index < replies.length ? replies[index] : replies.last;
   }

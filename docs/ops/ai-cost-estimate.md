@@ -54,6 +54,17 @@ estimativa de prompt erra para cima com facilidade.
 
 O custo fixo do projeto continua **R$ 0,00**: VM gratuita, TLS gratuito, DNS gratuito, repositório gratuito, Vercel no plano Hobby.
 
+## Com a foto (07/10/2026, ADR-022)
+
+A DeepSeek conta **até 1.024 tokens por imagem**, cobrados como entrada. Uma leitura com foto leva uns 1.650 tokens de entrada (texto lido, categorias e a imagem) e uns 100 a 200 de saída:
+
+| Por comprovante | No pico | Fora do pico |
+|---|---|---|
+| Só texto, como antes | US$ 0,0004 | US$ 0,0002 |
+| Com a foto | US$ 0,0007 | US$ 0,0004 |
+
+O cupom de mercado que as regras leem inteiro não chama a IA: custa zero. Cem fotos no mês dão uns US$ 0,07.
+
 ## A ressalva honesta
 
 O plano pedia tokens **medidos**, e estes são **estimados** a partir do tamanho do prompt e do contexto. O contador existe e é real — cada chamada grava o consumo como evento —, mas ler esses eventos exige entrar na VM, e a porta 22 estava fora do ar quando este documento foi escrito.

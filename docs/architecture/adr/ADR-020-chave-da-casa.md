@@ -1,8 +1,8 @@
 # ADR-020 — A chave da casa: um segredo só, em todos os aparelhos
 
 **Estado:** aceita · 07/10/2026 — por pedido do dono ("não quero esse lance de cadastrar dispositivo com código"; "sempre que eu atualizar algo no app que seja sincronizado")
-**Substitui:** [ADR-008](ADR-008-autenticacao.md) (cadastro de aparelho por código, desafio assinado pelo Keystore, pareamento da web por código de dois minutos) e [ADR-013](ADR-013-consulta-na-web.md) no que diz sobre a sessão da web morrer com a aba
-**Relacionada:** [ADR-019](ADR-019-dois-aparelhos-um-livro.md) (a sincronização que agora acontece sozinha) · [ADR-005](ADR-005-cifra-do-registro.md) (a credencial cifrada do systemd, reaproveitada)
+**Substitui:** [ADR-008](ADR-008-autenticacao.md) (cadastro de aparelho por código, desafio assinado pelo Keystore, pareamento da web por código de dois minutos) e [ADR-013](ADR-013-web-de-consulta-e-lighthouse.md) no que diz sobre a sessão da web morrer com a aba
+**Relacionada:** [ADR-019](ADR-019-dois-aparelhos-um-livro.md) (a sincronização que agora acontece sozinha) · [ADR-005](ADR-005-criptografia-em-repouso-e-dbtool.md) (a credencial cifrada do systemd, reaproveitada)
 
 ## Contexto
 

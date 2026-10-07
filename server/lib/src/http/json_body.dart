@@ -10,12 +10,13 @@ abstract final class JsonBody {
   static const int maxBytes = 64 * 1024;
 
   /// O JSON do corpo de [request]. Lança [PayloadTooLarge] acima de
-  /// [maxBytes] e [FormatException] quando não é JSON válido.
-  static Future<Object?> read(Request request) async {
+  /// [limit] — por padrão [maxBytes] — e [FormatException] quando não é JSON
+  /// válido. Só a rota que recebe a foto do comprovante pede mais.
+  static Future<Object?> read(Request request, {int limit = maxBytes}) async {
     final bytes = <int>[];
     await for (final chunk in request.read()) {
       bytes.addAll(chunk);
-      if (bytes.length > maxBytes) throw const PayloadTooLarge();
+      if (bytes.length > limit) throw const PayloadTooLarge();
     }
     return jsonDecode(utf8.decode(bytes));
   }

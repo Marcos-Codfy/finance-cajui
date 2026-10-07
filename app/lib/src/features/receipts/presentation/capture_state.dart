@@ -18,7 +18,7 @@ final class CaptureIdle extends CaptureState {
   const new();
 }
 
-/// Lendo o comprovante no aparelho. Em PDF, [page] de [of] vem do trabalho
+/// Lendo o comprovante. Em PDF, [page] de [of] vem do trabalho
 /// de verdade, e não de animação (RNF-PERF-06).
 final class CaptureReading extends CaptureState {
   /// Cria o estado de leitura.

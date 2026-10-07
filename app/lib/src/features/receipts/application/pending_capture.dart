@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
 
@@ -15,6 +17,7 @@ final class PendingCapture {
     required this.receivedOn,
     required this.text,
     this.filePath,
+    this.images = const [],
   });
 
   /// O identificador da chegada: a chave de idempotência do lançamento.
@@ -28,4 +31,8 @@ final class PendingCapture {
 
   /// O arquivo original no aparelho; `null` quando o que chegou foi texto.
   final String? filePath;
+
+  /// As imagens para a IA, da leitura de agora (ADR-022). Não ficam
+  /// guardadas: quem reabre uma captura guardada reclassifica pelo texto.
+  final List<Uint8List> images;
 }

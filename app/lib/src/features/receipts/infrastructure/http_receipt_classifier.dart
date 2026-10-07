@@ -1,23 +1,24 @@
+import 'dart:convert';
+
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
+import 'package:cajui/src/features/receipts/application/reading_strategy.dart';
 import 'package:domain/domain.dart';
 
-/// A classificação do comprovante com a IA do servidor, por cima das regras
-/// locais (ADR-010).
+/// A classificação do comprovante com a IA do servidor, junto das regras
+/// locais (ADR-010, ADR-022).
 ///
-/// O servidor tinha a rota `POST /v1/receipts/classify` desde a Fase 6 e
-/// **ninguém a chamava**: a IA estava construída e desligada, e todo
-/// comprovante era lido só pelas regras.
+/// Três coisas governam este adaptador.
 ///
-/// Duas coisas governam este adaptador.
+/// **O celular lê primeiro.** As regras rodam aqui, sobre o texto da foto.
+/// Quando elas bastam — o cupom de mercado com "TOTAL", data e nome do lugar
+/// —, nada sai do aparelho e o comprovante abre na hora.
 ///
-/// **Só o texto sai daqui, nunca a imagem.** É a regra do dono e é o que a
-/// rota aceita: o comprovante é lido no aparelho, e o que viaja é o que o
-/// OCR extraiu.
+/// **Quando não bastam, a foto vai junto.** A IA recebe a imagem e o texto
+/// lido dela, e o servidor junta as duas leituras campo a campo.
 ///
-/// **As regras são a rede, e não o contrário.** Sem a chave da casa, sem rede,
-/// servidor fora do ar, IA sem crédito — em qualquer um desses casos vale a
-/// proposta local, que é exata no que sabe. Nada quebra por falta de IA
+/// **As regras são a rede.** Sem a chave da casa, sem rede, servidor fora do
+/// ar, IA sem crédito: vale a proposta local. Nada quebra por falta de IA
 /// (RN-752).
 final class HttpReceiptClassifier implements ReceiptClassifier {
   /// Cria o classificador sobre [_api], com [_rules] por baixo.
@@ -29,17 +30,19 @@ final class HttpReceiptClassifier implements ReceiptClassifier {
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {
     final local = await _rules.classify(request);
-    // Sem a chave da casa não há servidor, e as regras bastam (ADR-020).
-    if (!_api.hasKey) return local;
-    return await _fromServer(request) ?? local;
+    if (!_api.hasKey || ReadingStrategy.rulesSuffice(local)) return local;
+    final remote = await _fromServer(request);
+    return remote == null ? local : ReadingStrategy.blend(remote, local);
   }
 
   Future<EntryProposal?> _fromServer(ClassificationRequest request) async {
     try {
       final outcome = await _api.authenticated(
         (token) => _api.post('/v1/receipts/classify', {
-          'text': request.text,
+          if (request.text.isNotEmpty) 'text': request.text,
           'examples': _examples(request),
+          if (request.hasImages)
+            'images': [for (final image in request.images) base64Encode(image)],
         }, token: token),
       );
       final body = outcome.body;
