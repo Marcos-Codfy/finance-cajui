@@ -21,6 +21,12 @@ class FakeInbox implements ReceiptInbox {
   /// O que a câmera devolve quando é chamada: o que chegaria pela fila.
   List<SharedItem> photo = const [];
 
+  /// Quantas vezes o app pediu o seletor de arquivos.
+  int pickRequests = 0;
+
+  /// O que o seletor devolve: o que chegaria pela fila.
+  List<SharedItem> picked = const [];
+
   /// Faz [items] chegarem, na ordem dada.
   void share(List<SharedItem> items) {
     _pending.addAll(items);
@@ -45,6 +51,16 @@ class FakeInbox implements ReceiptInbox {
     photoRequests++;
     if (!hasCamera) return false;
     if (photo.isNotEmpty) share(photo);
+    return true;
+  }
+
+  @override
+  bool get canPickFiles => hasCamera;
+
+  @override
+  Future<bool> pickFiles() async {
+    pickRequests++;
+    if (picked.isNotEmpty) share(picked);
     return true;
   }
 

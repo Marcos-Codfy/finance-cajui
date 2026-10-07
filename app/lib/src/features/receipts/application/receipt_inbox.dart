@@ -22,6 +22,14 @@ abstract interface class ReceiptInbox {
   /// e chega por [arrivals]. Fotografar e compartilhar são o mesmo caminho.
   Future<bool> takePhoto();
 
+  /// Se dá para escolher arquivos do aparelho por aqui. Falso na web.
+  bool get canPickFiles;
+
+  /// Abre o seletor do aparelho para escolher fotos, prints e PDFs. Como na
+  /// câmera, o que for escolhido não volta por aqui: chega por [arrivals].
+  /// Devolve `false` quando não há seletor.
+  Future<bool> pickFiles();
+
   /// Apaga o arquivo local de uma captura descartada (RN-723).
   Future<void> discard(SharedFile file);
 }

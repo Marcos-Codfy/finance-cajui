@@ -98,6 +98,13 @@ class CaptureService {
   /// Se dá para fotografar neste aparelho.
   bool get canPhotograph => ref.read(receiptInboxProvider).canPhotograph;
 
+  /// Abre o seletor do aparelho: foto da galeria, print, PDF de extrato. O
+  /// que for escolhido entra na mesma fila do compartilhamento.
+  Future<bool> pickFromDevice() => ref.read(receiptInboxProvider).pickFiles();
+
+  /// Se dá para escolher arquivos neste aparelho.
+  bool get canPickFiles => ref.read(receiptInboxProvider).canPickFiles;
+
   /// "Conferir depois": a captura fica guardada, fora de qualquer indicador.
   Future<void> defer(Capture capture) async {
     await ref.read(captureShelfProvider).defer(capture.source);

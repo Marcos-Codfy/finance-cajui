@@ -21,5 +21,12 @@ final class NoReceiptInbox implements ReceiptInbox {
   Future<bool> takePhoto() async => false;
 
   @override
+  bool get canPickFiles => false;
+
+  /// Na web não há seletor do aparelho: o modo consulta não captura.
+  @override
+  Future<bool> pickFiles() async => false;
+
+  @override
   Future<void> discard(SharedFile file) async {}
 }

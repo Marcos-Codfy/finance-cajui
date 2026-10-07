@@ -17,6 +17,9 @@ enum CajuiIconData {
   /// Câmera: fotografar um comprovante de papel.
   camera(_camera),
 
+  /// Imagem: escolher do aparelho uma foto, um print ou um PDF.
+  image(_image),
+
   /// Microfone: ditar em vez de digitar.
   microphone(_microphone),
 
@@ -234,6 +237,18 @@ void _sliders(Path p) {
 
 /// Corpo da câmera com a saliência do visor e a lente no meio: o gesto de
 /// fotografar, sem parecer o ícone de uma rede social.
+/// Uma moldura com o sol e o morro: o "foto" que todo celular desenha.
+void _image(Path p) {
+  _roundedBox(p, _box(3, 4.5, 18, 15));
+  p
+    ..addOval(Rect.fromCircle(center: const Offset(8.5, 9.5), radius: 1.6))
+    ..moveTo(3.5, 17.5)
+    ..lineTo(9, 12.5)
+    ..lineTo(13, 16)
+    ..lineTo(15.5, 13.8)
+    ..lineTo(20.5, 18);
+}
+
 void _camera(Path p) {
   p
     ..addRRect(

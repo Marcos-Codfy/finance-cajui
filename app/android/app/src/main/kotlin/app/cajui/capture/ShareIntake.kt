@@ -29,9 +29,21 @@ class ShareIntake(private val context: Context) {
         }
     }
 
+    /**
+     * Os arquivos que a pessoa escolheu no próprio aparelho, pelo seletor do
+     * Android (`FileIntake`). Passam pelas mesmas conferências do
+     * compartilhamento: tamanho, espaço, tipo pelos primeiros bytes.
+     */
+    fun receiveUris(uris: List<Uri>): List<Map<String, Any?>> =
+        uris.take(MAX_ITEMS).map { uri -> receiveStream(UUID.randomUUID().toString(), uri) }
+
     private fun receiveOne(intent: Intent, stream: Uri?): Map<String, Any?> {
         val id = UUID.randomUUID().toString()
         if (stream == null) return receiveText(id, intent.getStringExtra(Intent.EXTRA_TEXT))
+        return receiveStream(id, stream)
+    }
+
+    private fun receiveStream(id: String, stream: Uri): Map<String, Any?> {
         return try {
             receiveFile(id, stream)
         } catch (recusado: Exception) {
