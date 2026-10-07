@@ -46,7 +46,21 @@ abstract final class ReceiptFieldReader {
     r'\b(\d{1,2})\s?x\b|parc(?:ela)?\.?\s*\d{1,2}/(\d{1,2})|parcelado em (\d{1,2})',
     caseSensitive: false,
   );
+  // O vale vem antes de "crédito" e "débito": o cupom pago no vale costuma
+  // dizer "cartão" também, e vale lido como dinheiro soma duas moedas que
+  // nunca se somam (RN-111).
   static const Map<String, PaymentMethodKind> _paymentWords = {
+    'vale alimenta': PaymentMethodKind.mealVoucher,
+    'vale-alimenta': PaymentMethodKind.mealVoucher,
+    'vale refei': PaymentMethodKind.mealVoucher,
+    'vale-refei': PaymentMethodKind.mealVoucher,
+    'ticket alimenta': PaymentMethodKind.mealVoucher,
+    'ticket restaurante': PaymentMethodKind.mealVoucher,
+    'alelo': PaymentMethodKind.mealVoucher,
+    'sodexo': PaymentMethodKind.mealVoucher,
+    'pluxee': PaymentMethodKind.mealVoucher,
+    'vr benef': PaymentMethodKind.mealVoucher,
+    'voucher': PaymentMethodKind.mealVoucher,
     'pix': PaymentMethodKind.pix,
     'credito': PaymentMethodKind.creditCard,
     'crédito': PaymentMethodKind.creditCard,

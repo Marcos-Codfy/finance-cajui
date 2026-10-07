@@ -31,6 +31,12 @@ final class SuggestionCache {
       'v': ClassificationPrompt.version,
       'categories': [for (final category in request.categories) category.id],
       'examples': request.learnedRules,
+      // A mesma foto vale a mesma resposta; foto diferente com o mesmo
+      // texto lido, não (ADR-022).
+      'images': [
+        for (final image in request.images)
+          SecureRandom.hash(base64Encode(image)),
+      ],
     });
     return SecureRandom.hash('$lists\n$redacted');
   }

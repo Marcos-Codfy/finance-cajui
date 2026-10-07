@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
 
@@ -15,6 +17,8 @@ final class PendingCapture {
     required this.receivedOn,
     required this.text,
     this.filePath,
+    this.isPdf = false,
+    this.images = const [],
   });
 
   /// O identificador da chegada: a chave de idempotência do lançamento.
@@ -28,4 +32,23 @@ final class PendingCapture {
 
   /// O arquivo original no aparelho; `null` quando o que chegou foi texto.
   final String? filePath;
+
+  /// Se o arquivo é um PDF: quem reabre a captura lê o arquivo de novo, e a
+  /// leitura de PDF é outra.
+  final bool isPdf;
+
+  /// As imagens para a IA, da leitura de agora (ADR-022). Não ficam
+  /// guardadas — são grandes, e o arquivo continua no aparelho: quem reabre
+  /// a captura lê o arquivo de novo.
+  final List<Uint8List> images;
+
+  /// A mesma captura, com as imagens de uma leitura nova do arquivo.
+  PendingCapture withImages(List<Uint8List> images) => PendingCapture(
+    id: id,
+    receivedOn: receivedOn,
+    text: text,
+    filePath: filePath,
+    isPdf: isPdf,
+    images: images,
+  );
 }

@@ -22,8 +22,8 @@ class ReadFailure(val code: String) : Exception(code)
  *
  * Um caminho só para foto, captura de tela e PDF: o PDF vira imagem, página a
  * página, pelo `PdfRenderer` do próprio Android, e tudo passa pelo mesmo OCR
- * do ML Kit, com o modelo embutido no APK. Nenhuma imagem sai do aparelho, e
- * nenhum bitmap atravessa o canal para o Dart — só o texto.
+ * do ML Kit, com o modelo embutido no APK. Quando pedido, sai junto a imagem
+ * já reduzida que a IA vai ver (ADR-022): a foto, ou as primeiras páginas.
  *
  * Roda fora da thread principal; quem chama cuida disso.
  */
@@ -39,19 +39,43 @@ class ReceiptOcr(private val context: Context) {
         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     }
 
-    /** O texto de [path]. [onPage] recebe o progresso real: página lida, total (RNF-PERF-06). */
-    fun read(path: String, kind: String, onPage: (Int, Int) -> Unit): Map<String, Any> {
+    /**
+     * O texto de [path] e, com [withImages], as imagens para a IA. [onPage]
+     * recebe o progresso real: página lida, total (RNF-PERF-06).
+     *
+     * Sem texto legível, mas com imagem, a leitura **não** falha: a foto
+     * escura ou amassada que o celular não leu ainda pode ser lida pela IA.
+     */
+    fun read(
+        path: String,
+        kind: String,
+        withImages: Boolean,
+        onPage: (Int, Int) -> Unit,
+    ): Map<String, Any> {
         val file = File(path)
-        val pages = if (kind == "pdf") readPdf(file, onPage) else listOf(readImage(file))
+        val images = mutableListOf<ByteArray>()
+        val pages = if (kind == "pdf") {
+            readPdf(file, if (withImages) images else null, onPage)
+        } else {
+            if (withImages) forAi { AiImage.fromFile(file) }?.let(images::add)
+            listOf(orForAi(images) { readImage(file) })
+        }
         val text = pages.joinToString("\n").trim()
-        if (text.length < MIN_READABLE_CHARS) throw ReadFailure("E-CAPT-01")
-        return mapOf("text" to text, "pages" to pages.size)
+        if (text.length < MIN_READABLE_CHARS && images.isEmpty()) {
+            throw ReadFailure("E-CAPT-01")
+        }
+        return mapOf("text" to text, "pages" to pages.size, "images" to images)
     }
 
     private fun readImage(file: File): String =
         recognize(InputImage.fromFilePath(context, Uri.fromFile(file)))
 
-    private fun readPdf(file: File, onPage: (Int, Int) -> Unit): List<String> {
+    /** O texto de cada página; as primeiras [MAX_AI_PAGES] vão também para [images]. */
+    private fun readPdf(
+        file: File,
+        images: MutableList<ByteArray>?,
+        onPage: (Int, Int) -> Unit,
+    ): List<String> {
         val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         val renderer = try {
             PdfRenderer(descriptor)
@@ -64,7 +88,18 @@ class ReceiptOcr(private val context: Context) {
             val total = minOf(pdf.pageCount, MAX_PAGES)
             (0 until total).map { index ->
                 onPage(index + 1, total)
-                pdf.openPage(index).use { page -> recognize(InputImage.fromBitmap(render(page), 0)) }
+                pdf.openPage(index).use { page ->
+                    val bitmap = render(page)
+                    if (images != null && index < MAX_AI_PAGES) {
+                        forAi { AiImage.fromBitmap(bitmap) }?.let(images::add)
+                    }
+                    try {
+                        orForAi(images.orEmpty()) { recognize(InputImage.fromBitmap(bitmap, 0)) }
+                    } finally {
+                        // Uma página desenhada tem dezenas de MB: não espera o coletor.
+                        bitmap.recycle()
+                    }
+                }
             }
         }
     }
@@ -80,7 +115,31 @@ class ReceiptOcr(private val context: Context) {
         // Fundo branco: PDF sem fundo próprio sairia transparente, e o OCR leria preto no preto.
         bitmap.eraseColor(Color.WHITE)
         page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        // Já é opaca: sem isto, a imagem da IA copiaria a página de novo só
+        // para pôr fundo branco.
+        bitmap.setHasAlpha(false)
         return bitmap
+    }
+
+    /**
+     * A imagem para a IA é um extra: se ela não sai — decodificador recusou,
+     * faltou memória —, a leitura segue só com o texto, em vez de falhar.
+     */
+    private fun forAi(make: () -> ByteArray): ByteArray? = try {
+        make()
+    } catch (failure: Throwable) {
+        null
+    }
+
+    /**
+     * O OCR do aparelho demorou demais (E-CAPT-07). Com a imagem na mão, a IA
+     * ainda pode ler: o texto fica vazio, e a leitura segue. Sem ela, falha.
+     */
+    private fun orForAi(images: List<ByteArray>, read: () -> String): String = try {
+        read()
+    } catch (slow: ReadFailure) {
+        if (slow.code != "E-CAPT-07" || images.isEmpty()) throw slow
+        ""
     }
 
     private fun recognize(image: InputImage): String = try {
@@ -97,6 +156,9 @@ class ReceiptOcr(private val context: Context) {
         const val MAX_PAGES = 10
 
         const val RENDER_SIDE = 2000
+
+        /** Quantas páginas de um PDF a IA vê: a de cima do extrato basta quase sempre. */
+        const val MAX_AI_PAGES = 3
 
         /** Página que passa disso é interrompida (ADR-007, item 5). */
         const val PAGE_TIMEOUT_SECONDS = 10L

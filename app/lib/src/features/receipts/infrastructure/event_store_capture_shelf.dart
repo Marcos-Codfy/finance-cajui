@@ -36,6 +36,7 @@ final class EventStoreCaptureShelf implements CaptureShelf {
     receivedOn: EntryCodec.parseDate(event.payload['receivedOn']! as String),
     text: event.payload['text']! as String,
     filePath: event.payload['filePath'] as String?,
+    isPdf: event.payload['isPdf'] == true,
   );
 
   @override
@@ -47,6 +48,7 @@ final class EventStoreCaptureShelf implements CaptureShelf {
       'receivedOn': '${capture.receivedOn}',
       'text': capture.text,
       'filePath': capture.filePath,
+      if (capture.isPdf) 'isPdf': true,
     },
   );
 
@@ -62,12 +64,19 @@ final class EventStoreCaptureShelf implements CaptureShelf {
   }
 
   @override
-  Future<Map<String, String>> learnedRules() async => {
-    for (final event in store.events)
-      if (event.type == _learned)
-        event.payload['merchant']! as String:
-            event.payload['categoryId']! as String,
-  };
+  Future<Map<String, String>> learnedRules() async {
+    final rules = <String, String>{};
+    for (final event in store.events) {
+      if (event.type != _learned) continue;
+      final merchant = event.payload['merchant']! as String;
+      // Tirar antes de pôr leva a regra corrigida de novo para o fim: a ordem
+      // do mapa é a da correção mais recente, e é dela que saem os exemplos
+      // que vão para a IA quando são muitos.
+      rules.remove(merchant);
+      rules[merchant] = event.payload['categoryId']! as String;
+    }
+    return rules;
+  }
 
   @override
   Future<void> learn({

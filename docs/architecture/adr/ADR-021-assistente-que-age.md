@@ -1,7 +1,7 @@
 # ADR-021 — O assistente que age: ferramentas no lugar do roteiro
 
 **Estado:** aceita · 07/10/2026 — por pedido do dono ("deixe a IA com mais capacidade de pensar por si, tá muito restrita")
-**Substitui em parte:** [ADR-010](ADR-010-ia-por-cima-das-regras.md), no que diz sobre o assistente só redigir; e as regras RN-903, RN-904, RN-920 a RN-925, RN-942 a RN-947 e RN-960 de [assistant-and-privacy.md](../../spec/rules/assistant-and-privacy.md), como anotado lá
+**Substitui em parte:** [ADR-010](ADR-010-integracao-com-a-deepseek.md), no que diz sobre o assistente só redigir; e as regras RN-903, RN-904, RN-920 a RN-925, RN-942 a RN-947 e RN-960 de [assistant-and-privacy.md](../../spec/rules/assistant-and-privacy.md), como anotado lá
 **Relacionada:** [ADR-020](ADR-020-chave-da-casa.md) (a chave com que o app fala com ele) · [ADR-019](ADR-019-dois-aparelhos-um-livro.md) (o que ele grava desce aos celulares)
 
 ## Contexto

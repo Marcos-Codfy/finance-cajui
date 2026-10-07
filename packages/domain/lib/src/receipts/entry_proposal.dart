@@ -65,22 +65,26 @@ final class EntryProposal {
   /// `E-AI-01`, `E-AI-03`, `E-AI-04`. A proposta continua válida.
   final List<String> warnings;
 
-  /// A mesma proposta, com [category] e [warnings] trocados.
+  /// A mesma proposta, com os campos dados trocados.
   EntryProposal copyWith({
     ProposedField<String>? category,
     ProposedField<Money>? amount,
     ProposedField<DocumentKind>? documentKind,
+    ProposedField<LocalDate>? occurredOn,
+    ProposedField<PaymentMethodKind>? paymentKind,
     String? description,
+    String? merchant,
+    int? installments,
     List<String>? warnings,
   }) => EntryProposal(
     description: description ?? this.description,
     documentKind: documentKind ?? this.documentKind,
     amount: amount ?? this.amount,
-    occurredOn: occurredOn,
+    occurredOn: occurredOn ?? this.occurredOn,
     category: category ?? this.category,
-    paymentKind: paymentKind,
-    merchant: merchant,
-    installments: installments,
+    paymentKind: paymentKind ?? this.paymentKind,
+    merchant: merchant ?? this.merchant,
+    installments: installments ?? this.installments,
     warnings: warnings ?? this.warnings,
   );
 }

@@ -27,7 +27,7 @@ class FileIntake(private val activity: Activity) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
             .addCategory(Intent.CATEGORY_OPENABLE)
             .setType("*/*")
-            .putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "application/pdf"))
+            .putExtra(Intent.EXTRA_MIME_TYPES, ACCEPTED_TYPES)
             .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         return try {
             activity.startActivityForResult(intent, REQUEST)
@@ -51,5 +51,10 @@ class FileIntake(private val activity: Activity) {
 
     private companion object {
         const val REQUEST = 7202
+
+        /** Só o que a caixa de entrada aceita: oferecer GIF ou AVIF seria oferecer um erro. */
+        val ACCEPTED_TYPES = arrayOf(
+            "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf",
+        )
     }
 }

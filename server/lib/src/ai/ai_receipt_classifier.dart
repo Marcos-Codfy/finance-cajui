@@ -3,21 +3,25 @@ import 'dart:async';
 import 'package:domain/domain.dart';
 import 'package:server/src/ai/ai_suggestion.dart';
 import 'package:server/src/ai/chat_client.dart';
+import 'package:server/src/ai/chat_message.dart';
 import 'package:server/src/ai/chat_reply.dart';
 import 'package:server/src/ai/chat_unavailable.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/classification_prompt.dart';
+import 'package:server/src/ai/proposal_merge.dart';
+import 'package:server/src/ai/receipt_image.dart';
 import 'package:server/src/ai/suggestion_cache.dart';
 import 'package:server/src/ai/token_budget.dart';
 
-/// O classificador que consulta a IA — sempre **por cima** das regras locais,
-/// nunca no lugar delas (RN-750).
+/// O classificador que consulta a IA — sempre **junto** das regras locais,
+/// nunca no lugar delas (RN-750, ADR-022).
 ///
-/// As regras leem primeiro. A IA só é chamada para o que elas deixaram em
-/// aberto, e qualquer tropeço — sem orçamento, fora do ar, resposta fora do
-/// esquema — devolve a proposta das regras, com o código do catálogo que
-/// explica o porquê. Este método não lança: a captura nunca para por causa
-/// da IA.
+/// As regras leem primeiro. Com a foto, a IA é chamada sempre: ela vê o que
+/// o leitor do celular não viu. Só com texto, ela fica de fora quando a
+/// regra que a própria pessoa ensinou já resolveu a categoria. Qualquer
+/// tropeço — sem orçamento, fora do ar, resposta fora do esquema — devolve
+/// a proposta das regras, com o código do catálogo que explica o porquê.
+/// Este método não lança: a captura nunca para por causa da IA.
 final class AiReceiptClassifier implements ReceiptClassifier {
   /// Cria o classificador.
   new({
@@ -25,6 +29,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     required this.budget,
     required this.breaker,
     this.timeout = const Duration(seconds: 8),
+    this.imageTimeout = const Duration(seconds: 15),
     this.categoryAccuracy = const {},
     SuggestionCache? cache,
   }) : cache = cache ?? SuggestionCache();
@@ -38,9 +43,12 @@ final class AiReceiptClassifier implements ReceiptClassifier {
   /// O disjuntor.
   final CircuitBreaker breaker;
 
-  /// O prazo da IA (RNF-PERF-08): passado dele, valem as regras, e a resposta
-  /// que chegar depois é descartada.
+  /// O prazo da IA só com texto (RNF-PERF-08): passado dele, valem as
+  /// regras, e a resposta que chegar depois é descartada.
   final Duration timeout;
+
+  /// O prazo da IA com a foto: ler imagem leva mais que ler texto.
+  final Duration imageTimeout;
 
   /// A taxa real de acerto de cada categoria, de 0 a 1, medida pelas
   /// correções da pessoa (RN-792).
@@ -52,16 +60,17 @@ final class AiReceiptClassifier implements ReceiptClassifier {
 
   static const _rules = RuleBasedClassifier();
 
-  /// Os limiares sobre a confiança declarada (RN-743).
-  static const double _highFrom = 0.85;
-  static const double _mediumFrom = 0.55;
+  /// O teto da resposta: o objeto da proposta tem uns cem tokens.
+  static const _maxTokens = 300;
 
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {
     final local = await _rules.classify(request);
-    // Se as regras já resolveram a categoria, a IA não é chamada: é mais
-    // rápido, mais barato, e nada sai do servidor (RN-752).
-    if (local.category.confidence == Confidence.high) return local;
+    // Só com texto, e com a categoria resolvida pelo que a pessoa ensinou, a
+    // IA não acrescentaria nada que valha a espera (RN-752).
+    if (!request.hasImages && local.category.confidence == Confidence.high) {
+      return local;
+    }
     // O texto é mascarado **de novo** aqui, mesmo que o app já tenha feito:
     // o servidor não confia em ninguém para isso (RN-730).
     final redacted = PiiRedactor.redact(
@@ -74,7 +83,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     // ar: não custa nada. Só entra no cache o que passou na validação, então
     // o `!` é seguro.
     if (known != null) {
-      return _merge(local, AiSuggestion.parse(known, request)!);
+      return _merge(local, AiSuggestion.parse(known, request)!, request);
     }
     return await _consult(local, request, redacted: redacted, cacheKey: key);
   }
@@ -95,81 +104,81 @@ final class AiReceiptClassifier implements ReceiptClassifier {
       final suggestion = AiSuggestion.parse(reply.content, request);
       if (suggestion == null) return local.copyWith(warnings: ['E-AI-04']);
       cache[cacheKey] = reply.content;
-      return _merge(local, suggestion);
-    } on ChatUnavailable {
-      breaker.recordFailure();
-      return local.copyWith(warnings: ['E-AI-01']);
+      return _merge(local, suggestion, request);
+    } on ChatUnavailable catch (error) {
+      return await _unavailable(local, request, error);
     } on TimeoutException {
-      breaker.recordFailure();
+      // Foto leva mais tempo por natureza: prazo vencido lendo imagem não é
+      // sinal de IA fora do ar, e não desliga o assistente junto.
+      if (!request.hasImages) breaker.recordFailure();
       return local.copyWith(warnings: ['E-AI-01']);
     }
   }
 
+  /// A IA recusou o pedido, ou caiu. Recusa não é queda e não conta para o
+  /// disjuntor — que é o mesmo do assistente. Pedido com foto recusado tenta
+  /// uma vez só com o texto: o pedido de sempre, que a IA sabe responder.
+  Future<EntryProposal> _unavailable(
+    EntryProposal local,
+    ClassificationRequest request,
+    ChatUnavailable error,
+  ) async {
+    if (!error.rejected) {
+      breaker.recordFailure();
+      return local.copyWith(warnings: ['E-AI-01']);
+    }
+    if (!request.hasImages || request.text.trim().isEmpty) {
+      return local.copyWith(warnings: ['E-AI-04']);
+    }
+    return await classify(request.withoutImages());
+  }
+
+  /// Só com texto, a pergunta de uma vez, em JSON fechado. Com a foto, a
+  /// mesma pergunta numa mensagem que leva as imagens junto do texto lido.
   Future<ChatReply> _ask(String redacted, ClassificationRequest request) {
+    final user = ClassificationPrompt.user(
+      redacted,
+      request.categories,
+      examples: request.learnedRules,
+    );
+    if (!request.hasImages) {
+      return client
+          .complete(
+            system: ClassificationPrompt.system,
+            user: user,
+            maxTokens: _maxTokens,
+          )
+          .timeout(timeout);
+    }
     return client
-        .complete(
-          system: ClassificationPrompt.system,
-          user: ClassificationPrompt.user(
-            redacted,
-            request.categories,
-            examples: request.learnedRules,
-          ),
-          maxTokens: 200,
+        .converse(
+          messages: _withImages(user, request),
+          maxTokens: _maxTokens,
+          json: true,
         )
-        .timeout(timeout);
+        .timeout(imageTimeout);
   }
 
-  EntryProposal _merge(EntryProposal local, AiSuggestion ai) => local.copyWith(
-    category: _category(ai),
-    description: ai.description,
-    amount: _amount(local.amount, ai.amount),
-    documentKind: _kind(local.documentKind, ai.documentKind),
+  /// As instruções, e a pergunta com as imagens junto.
+  static List<ChatMessage> _withImages(
+    String user,
+    ClassificationRequest request,
+  ) => [
+    const ChatMessage.system(ClassificationPrompt.system),
+    ChatMessage.user(
+      user,
+      images: [for (final image in request.images) ReceiptImage.dataUrl(image)],
+    ),
+  ];
+
+  EntryProposal _merge(
+    EntryProposal local,
+    AiSuggestion ai,
+    ClassificationRequest request,
+  ) => ProposalMerge.of(
+    local,
+    ai,
+    sawImage: request.hasImages,
+    categoryAccuracy: categoryAccuracy,
   );
-
-  /// A confiança declarada pela IA, sozinha, nunca põe a categoria na zona
-  /// alta (RN-742): é preciso que a taxa real de acerto daquela categoria
-  /// também seja boa. "Confiança 100%" escrito num comprovante não compra
-  /// nada aqui.
-  ProposedField<String> _category(AiSuggestion ai) {
-    final id = ai.categoryId;
-    if (id == null || ai.confidence < _mediumFrom) {
-      return const ProposedField.unread();
-    }
-    final proven = (categoryAccuracy[id] ?? 0) >= 0.8;
-    return ai.confidence >= _highFrom && proven
-        ? ProposedField.resolved(id, source: FieldSource.ai)
-        : ProposedField.undecided([id], source: FieldSource.ai);
-  }
-
-  /// Regras e IA divergindo, o campo cai para a zona média, com o valor das
-  /// regras primeiro (RN-751). A IA nunca sobrescreve o que as regras leram.
-  ProposedField<Money> _amount(ProposedField<Money> local, Money? fromAi) {
-    final read = local.value;
-    if (fromAi == null || fromAi == read) return local;
-    if (read == null) {
-      return ProposedField.undecided(
-        {...local.candidates, fromAi}.take(3).toList(),
-        source: FieldSource.ai,
-      );
-    }
-    return ProposedField.undecided([
-      read,
-      fromAi,
-    ], source: FieldSource.fixedRule);
-  }
-
-  /// Divergência sobre o tipo do documento vira pergunta: nenhum caminho
-  /// automático transforma pagamento de fatura em despesa, nem o contrário
-  /// (RN-757).
-  ProposedField<DocumentKind> _kind(
-    ProposedField<DocumentKind> local,
-    DocumentKind? fromAi,
-  ) {
-    final read = local.value!;
-    if (fromAi == null || fromAi == read) return local;
-    return ProposedField.undecided([
-      read,
-      fromAi,
-    ], source: FieldSource.fixedRule);
-  }
 }

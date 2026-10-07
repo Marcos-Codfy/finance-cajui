@@ -111,6 +111,7 @@ class ShareIntake(private val context: Context) {
             head.startsWith(0xFF, 0xD8, 0xFF) -> "image"
             head.startsWith(0x89, 0x50, 0x4E, 0x47) -> "image"
             read >= 12 && head.hasAscii(0, "RIFF") && head.hasAscii(8, "WEBP") -> "image"
+            read >= 12 && head.hasAscii(4, "ftyp") && head.heifBrand() -> "image"
             head.hasAscii(0, "%PDF") -> "pdf"
             else -> null
         }
@@ -129,6 +130,14 @@ class ShareIntake(private val context: Context) {
     private fun ByteArray.startsWith(vararg bytes: Int): Boolean =
         bytes.withIndex().all { (index, byte) -> this[index] == byte.toByte() }
 
+    /**
+     * Foto HEIC/HEIF, como a câmera do Galaxy grava com "fotos de alta
+     * eficiência". O Android decodifica desde a versão 9, e a imagem que vai
+     * para a IA sai em JPEG de qualquer jeito.
+     */
+    private fun ByteArray.heifBrand(): Boolean =
+        HEIF_BRANDS.any { brand -> hasAscii(8, brand) }
+
     private fun ByteArray.hasAscii(offset: Int, text: String): Boolean =
         text.withIndex().all { (index, char) -> this[offset + index] == char.code.toByte() }
 
@@ -144,5 +153,8 @@ class ShareIntake(private val context: Context) {
 
         /** Compartilhamento em lote é conferido um por vez; mais que isso é engano. */
         const val MAX_ITEMS = 10
+
+        /** As marcas do contêiner HEIF que as fotos de celular usam. */
+        val HEIF_BRANDS = listOf("heic", "heix", "hevc", "heim", "heis", "mif1", "msf1")
     }
 }

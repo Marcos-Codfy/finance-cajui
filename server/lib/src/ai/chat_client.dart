@@ -7,9 +7,10 @@ import 'package:server/src/ai/chat_tool.dart';
 /// testes, um cliente de mentira devolve o que o roteiro mandar (ADR-010).
 ///
 /// Duas formas de perguntar. [complete] é a pergunta de uma vez só, em JSON
-/// fechado — a classificação de comprovante. [converse] é a conversa com
-/// histórico e ferramentas — o assistente. Quem só sabe a primeira ganha a
-/// segunda de graça, sem ferramentas: é o bastante para os dublês antigos.
+/// fechado — a classificação de comprovante só com texto. [converse] é a
+/// conversa com histórico, ferramentas e imagens — o assistente, e a leitura
+/// de um comprovante com a foto. Quem só sabe a primeira ganha a segunda de
+/// graça, sem ferramentas nem imagens: é o bastante para os dublês antigos.
 abstract class ChatClient {
   /// Cria a porta.
   const new();
@@ -24,11 +25,12 @@ abstract class ChatClient {
 
   /// Continua a conversa [messages], oferecendo [tools] ao modelo. A
   /// resposta traz texto, ou os pedidos de ferramenta a atender antes de
-  /// chamar de novo.
+  /// chamar de novo. Com [json], a resposta vem num objeto JSON só.
   Future<ChatReply> converse({
     required List<ChatMessage> messages,
     required int maxTokens,
     List<ChatTool> tools = const [],
+    bool json = false,
   }) {
     final system = [
       for (final message in messages)

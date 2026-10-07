@@ -18,6 +18,9 @@ class FakeInbox implements ReceiptInbox {
   /// Se o aparelho simulado tem câmera.
   bool hasCamera = true;
 
+  /// Se o aparelho simulado tem seletor de arquivos: no Android, sempre.
+  bool hasPicker = true;
+
   /// O que a câmera devolve quando é chamada: o que chegaria pela fila.
   List<SharedItem> photo = const [];
 
@@ -55,7 +58,7 @@ class FakeInbox implements ReceiptInbox {
   }
 
   @override
-  bool get canPickFiles => hasCamera;
+  bool get canPickFiles => hasPicker;
 
   @override
   Future<bool> pickFiles() async {
