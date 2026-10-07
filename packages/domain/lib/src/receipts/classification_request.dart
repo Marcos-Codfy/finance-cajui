@@ -58,6 +58,17 @@ final class ClassificationRequest {
   /// Se há imagem para a IA ver.
   bool get hasImages => images.isNotEmpty;
 
+  /// O mesmo pedido, só com o texto: o que se faz quando a IA não aceita a
+  /// imagem.
+  ClassificationRequest withoutImages() => ClassificationRequest(
+    text: text,
+    categories: categories,
+    today: today,
+    learnedRules: learnedRules,
+    categoryByMerchantKind: categoryByMerchantKind,
+    householdNames: householdNames,
+  );
+
   /// A categoria de identificador [id], se estiver na lista.
   Category? categoryById(String id) {
     for (final category in categories) {

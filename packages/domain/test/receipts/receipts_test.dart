@@ -148,6 +148,23 @@ void main() {
       expect(ReceiptFieldReader.installmentsIn(_coupon), isNull);
     });
 
+    test('RN-754 e RN-111 · cupom pago no vale é vale, mesmo dizendo cartão '
+        'e crédito', () {
+      for (final line in const [
+        'CARTAO DE CREDITO - VALE ALIMENTACAO',
+        'Alelo Refeição',
+        'PLUXEE (SODEXO)',
+        'Ticket Restaurante',
+        'Vale-Refeição 41,90',
+      ]) {
+        expect(
+          ReceiptFieldReader.paymentKindIn(line),
+          PaymentMethodKind.mealVoucher,
+          reason: line,
+        );
+      }
+    });
+
     test(
       'RN-756 a 759 pagamento de fatura, recebimento e saque não são compra',
       () {
