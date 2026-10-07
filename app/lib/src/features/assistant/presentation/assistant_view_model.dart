@@ -3,6 +3,7 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,9 +30,19 @@ class AssistantViewModel extends Notifier<AssistantState> {
     await _syncLedger();
     final reply = await ref.read(assistantGatewayProvider).ask(question);
     if (reply is AssistantAnswered && reply.actions.isNotEmpty) {
-      await _syncLedger();
+      await _refreshLedger();
     }
     state = current.answered(question, reply);
+  }
+
+  /// O que o assistente gravou no servidor chega aqui: no celular, pela
+  /// descida; na consulta pela web, relendo o livro, que é o do servidor.
+  Future<void> _refreshLedger() async {
+    if (ref.read(ledgerUplinkProvider).isPaired) {
+      await _syncLedger();
+      return;
+    }
+    ref.invalidate(ledgerProvider);
   }
 
   /// Sobe o que falta e traz o que o servidor tem. Falha aqui não
