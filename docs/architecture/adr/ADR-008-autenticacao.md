@@ -1,6 +1,6 @@
 # ADR-008 — Autenticação: chave do aparelho no Android, pareamento na web
 
-- **Estado:** aceita em 2026-09-20, no checkpoint da Fase 4
+- **Estado:** **superada pela [ADR-020](ADR-020-chave-da-casa.md) em 2026-10-07** — aceita em 2026-09-20, no checkpoint da Fase 4. O que segue é o desenho que valeu até lá; a autenticação por aparelho cadastrado continua aceita pelo servidor só até os dois celulares atualizarem (BL-069)
 - **Data:** 2026-09-20
 - **Responde:** BL-006, BL-011 e BL-012
 

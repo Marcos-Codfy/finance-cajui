@@ -2,6 +2,8 @@
 
 Formato e convenções em [README.md](README.md). Termos em [glossary.md](../glossary.md). O desenho do contexto, os catálogos de consultas e simulações e os estados da tela estão em [assistant.md](../assistant.md); as conversas de exemplo, em [assistant-conversations.md](../assistant-conversations.md).
 
+> **Revisão de 07/10/2026 (ADR-021).** O dono pediu uma IA que pensa por si. O que mudou, regra a regra: RN-903 e RN-904 — o assistente **age**, por uma lista fechada de ferramentas (`lancar_despesa`, `cancelar_lancamento`, `listar_lancamentos`, `registrar_renda`) que gravam pelo mesmo caminho das rotas, e a tela mostra Desfazer; RN-920 a RN-925 — as consultas do catálogo viraram essas ferramentas, e a listagem traz os lançamentos com nome (RN-923 fica: até 60 linhas, sem comprovante nem identificador de aparelho); RN-942 a RN-947 — a resposta é texto livre, sem esquema, sem conferência de número, sem lista proibida e sem "De onde vieram os números"; vazia vira a frase de formato fixo; RN-905 e RN-906 — a web entra com a chave da casa (ADR-020) e continua só leitura por construção; RN-960 — o app não responde mais nada sozinho. Ficam: RN-901 e RN-902 (nas instruções), RN-907, RN-910 a RN-919 (o resumo), RN-950 a RN-957, RN-960 a RN-965. O parágrafo abaixo é o da Fase 6, mantido para a história.
+>
 > **A IA redige, o backend calcula, o usuário decide.** O assistente não faz conta, não consulta o banco por conta própria e não altera dado nenhum. O pior resultado possível de uma resposta ruim é um texto errado que o usuário ignora.
 
 ## O que o assistente faz e o que não faz

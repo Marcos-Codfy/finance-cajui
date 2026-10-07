@@ -51,6 +51,8 @@ Arquitetura limpa, organizada por feature, em quatro camadas — `domain`, `appl
 | [017](adr/ADR-017-fotografar-comprovante.md) | Fotografar o cupom pela câmera do sistema, por intenção | aceita |
 | [018](adr/ADR-018-ditar-a-pergunta.md) | Ditar a pergunta pelo reconhecedor do aparelho, por intenção | aceita |
 | [019](adr/ADR-019-dois-aparelhos-um-livro.md) | Dois aparelhos, um livro: cada sincronização sobe e desce; a edição mais nova vence pelo carimbo; cancelamento nunca é desfeito | aceita · substitui em parte a 012 |
+| [020](adr/ADR-020-chave-da-casa.md) | A chave da casa: um segredo só, compilado no APK e digitado uma vez na web; sincronização a cada gravação, sem cadastro de aparelho | aceita · substitui a 008 e parte da 013 |
+| [021](adr/ADR-021-assistente-que-age.md) | O assistente age: ferramentas no lugar do roteiro; resposta em texto livre; Desfazer ao lado do que lançou | aceita · substitui em parte a 010 |
 
 As 16 foram aceitas em 2026-09-20, no checkpoint da Fase 4. Toda ADR nasce como *proposta* e vira *aceita* num checkpoint. Decisão que mudar depois ganha ADR nova, que substitui a antiga — a antiga não é apagada.
 

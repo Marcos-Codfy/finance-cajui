@@ -2,6 +2,8 @@
 
 Formato e convenções em [README.md](README.md). Termos em [glossary.md](../glossary.md). O passo a passo, as telas e os textos estão em [sharing-flow.md](../sharing-flow.md).
 
+> **Revisão de 07/10/2026 (ADR-020 e ADR-021).** A conferência do comprovante continua — o dono pediu para mantê-la —, mas vem pronta para um toque: RN-744 e RN-782 — o **candidato mais provável já entra no campo** de categoria, e os outros aparecem ao lado como "Pode ser também"; RN-748 — data que não se leu vale o **dia em que o comprovante chegou**, marcado na tela; o aviso "Li o comprovante aqui no aparelho" e a segunda pergunta ao descartar deixaram de existir; RN-752 — sem a chave da casa valem as regras locais.
+
 Três princípios atravessam a área:
 
 1. **Texto extraído e saída da IA são entrada não confiável.** Um comprovante pode trazer texto escrito para manipular a IA. Parte-se de que a injeção vai funcionar; o desenho garante que o pior resultado seja uma proposta errada, que o usuário recusa (D-TOP10-11).
