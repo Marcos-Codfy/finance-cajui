@@ -138,6 +138,7 @@ void main() {
             description: 'Fatura',
             amount: const Money.fromCents(150000),
             kind: StatementLineKind.cardPayment,
+            doubtful: true,
           ),
         ],
       );
@@ -151,6 +152,8 @@ void main() {
       expect(volta.lines.first.categoryId, 'groceries');
       expect(volta.lines.first.paymentKind, PaymentMethodKind.debit);
       expect(volta.lines.last.kind, StatementLineKind.cardPayment);
+      expect(volta.lines.last.doubtful, isTrue);
+      expect(volta.lines.first.doubtful, isFalse);
       expect(volta.lines.last.amount, const Money.fromCents(150000));
     });
 

@@ -31,6 +31,7 @@ abstract final class ProposalCodec {
     'kind': line.kind.name,
     'categoryId': line.categoryId,
     'paymentKind': line.paymentKind?.name,
+    if (line.doubtful) 'doubtful': true,
   };
 
   /// As linhas de um extrato. Linha que não se lê — data impossível, valor
@@ -66,6 +67,7 @@ abstract final class ProposalCodec {
       paymentKind: payment == null
           ? null
           : EntryCodec.named(PaymentMethodKind.values, payment),
+      doubtful: raw['doubtful'] == true,
     );
   }
 
