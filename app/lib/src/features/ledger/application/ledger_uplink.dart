@@ -30,16 +30,12 @@ abstract interface class LedgerUplink {
   /// Se este aparelho já tem com quem falar.
   bool get isPaired;
 
-  /// Se dá para falar com o servidor **agora, sem pedir nada a quem usa**:
-  /// a sessão está aberta, ou a chave do dia ainda está liberada e abre
-  /// uma em silêncio.
+  /// Se dá para falar com o servidor **agora, sem pedir nada a quem usa**.
   ///
-  /// Quem pergunta é a subida silenciosa: pedir a digital no meio de um
-  /// lançamento é pior do que não subir na hora. A liberação vale um dia,
-  /// então o primeiro envio do dia é a pedido e os seguintes acontecem
-  /// sozinhos. Antes a pergunta era "há sessão aberta?" — e a sessão do
-  /// servidor dura quinze minutos: o envio automático parava logo depois
-  /// do primeiro envio do dia.
+  /// Com a chave da casa (ADR-020) a resposta do aparelho é sempre sim: não
+  /// há sessão para abrir nem digital para pedir, e cada lançamento sobe
+  /// na hora. A pergunta continua existindo para o teste decidir quando a
+  /// subida acontece — e para a web, que não sobe, dizer que não.
   Future<bool> canSendQuietly();
 
   /// A assinatura de um lançamento: tudo o que nele é **conteúdo**, num

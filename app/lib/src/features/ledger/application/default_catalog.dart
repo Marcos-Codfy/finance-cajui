@@ -75,6 +75,14 @@ abstract final class DefaultCatalog {
       block: Block.variable,
       groupId: 'housing',
     ),
+    // O que não cabe em nenhuma: é onde cai o lançamento de quem só
+    // digitou o valor, e de onde se tira com um toque.
+    Category(
+      id: 'other',
+      name: 'Outros',
+      block: Block.variable,
+      groupId: 'other',
+    ),
     Category(
       id: 'rent',
       name: 'Aluguel',

@@ -71,7 +71,7 @@ void main() {
     expect(await journal.readAll(), hasLength(1));
   });
 
-  testWidgets('E-ENTRY-03 · valor zerado: o texto fica sob o campo, e nada é '
+  testWidgets('sem valor não há o que lançar: o botão espera, e nada é '
       'gravado', (tester) async {
     final journal = MemoryLedgerJournal();
     await _openEntries(tester, journal);
@@ -79,14 +79,46 @@ void main() {
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
     await tester.enterText(_field('O que foi'), 'Ônibus');
-    await _choose(tester, 'Categoria', 'Transporte');
-    await _choose(tester, 'Por onde foi pago', 'Pix');
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(find.textContaining('Digite um valor maior que zero'), findsOne);
     expect(find.text('Nova despesa'), findsOneWidget);
     expect(await journal.readAll(), isEmpty);
+  });
+
+  testWidgets('só o valor basta: o resto o app decide — Outros, Pix, hoje, '
+      'e a descrição pela categoria', (tester) async {
+    final journal = MemoryLedgerJournal();
+    await _openEntries(tester, journal);
+
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+    await tester.enterText(_field('Valor'), '1250');
+    await _settle(tester);
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+
+    expect(find.text('Nova despesa'), findsNothing);
+    expect(find.text('Outros'), findsOneWidget);
+    expect(find.text('Outros · Pix · hoje'), findsOneWidget);
+    expect(await journal.readAll(), hasLength(1));
+  });
+
+  testWidgets('o nome do lugar escolhe a categoria: "Padaria Central" é '
+      'padaria, sem abrir lista nenhuma', (tester) async {
+    final journal = MemoryLedgerJournal();
+    await _openEntries(tester, journal);
+
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+    await tester.enterText(_field('Valor'), '850');
+    await tester.enterText(_field('O que foi'), 'Padaria Central');
+    await _settle(tester);
+    await tester.tap(find.text('Lançar'));
+    await _settle(tester);
+
+    expect(find.text('Padaria · Pix · hoje'), findsOneWidget);
+    expect(await journal.readAll(), hasLength(1));
   });
 
   testWidgets('RN-111 · o mês mostra dinheiro e vale em linhas separadas, e '

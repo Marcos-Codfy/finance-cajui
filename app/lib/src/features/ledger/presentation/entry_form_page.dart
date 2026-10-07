@@ -229,11 +229,17 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       CajuiSelectField(
         label: 'Categoria',
         value: draft.category?.name,
-        helper: _blockHelpers[draft.category?.block],
+        helper: _categoryHelper(draft),
         onPressed: () => _pickCategory(book, draft),
       ),
     ];
   }
+
+  /// Sem categoria o app decide pelo nome do lugar, ou deixa em Outros; a
+  /// frase diz isso para ninguém achar que o campo é obrigatório.
+  static String _categoryHelper(EntryDraft draft) =>
+      _blockHelpers[draft.category?.block] ??
+      'Sem escolher, vai pelo nome do lugar — ou em Outros';
 
   /// O "por onde": separado do "o quê" até no código da tela.
   Widget _howItWasPaid(LedgerBook book, EntryDraft draft, String? fieldError) {

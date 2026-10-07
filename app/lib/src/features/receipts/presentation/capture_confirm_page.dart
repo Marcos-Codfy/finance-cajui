@@ -14,9 +14,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// A tela de conferência de um comprovante (sharing-flow).
 ///
 /// É o mesmo formulário do lançamento à mão, já preenchido com o que a
-/// leitura resolveu: mesmos campos, mesmas regras, mesmos erros. A captura
-/// não tem um caminho próprio para gravar — e por isso não tem como gravar
-/// algo que o lançamento à mão recusaria.
+/// leitura resolveu e com o candidato mais provável onde ela ficou em
+/// dúvida: a pessoa bate o olho e confirma com um toque. A captura não tem
+/// um caminho próprio para gravar — e por isso não tem como gravar algo que
+/// o lançamento à mão recusaria.
 class CaptureConfirmPage extends ConsumerStatefulWidget {
   /// Cria a conferência de [capture], com [waiting] ainda na fila.
   const new({required this.capture, this.waiting = 0, super.key});
@@ -32,9 +33,6 @@ class CaptureConfirmPage extends ConsumerStatefulWidget {
 }
 
 class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
-  /// Descartar apaga o arquivo guardado: pede uma segunda confirmação.
-  bool _askingToDiscard = false;
-
   EntryDraft? _draft;
 
   CaptureViewModel get _capture => ref.read(captureProvider.notifier);
@@ -54,17 +52,23 @@ class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
         // Voltar é o caminho seguro: guarda para depois, não perde nada.
         onBack: () => _capture.defer(widget.capture),
         onSaved: (entry) => _capture.confirmed(widget.capture, entry),
-        header: (context, edit) => CaptureHeader(
-          capture: widget.capture,
-          book: book,
-          edit: edit,
-          today: today,
+        header: (context, edit) => Consumer(
+          // O cabeçalho sabe o que está no campo para não oferecer de novo.
+          builder: (context, ref, _) => CaptureHeader(
+            capture: widget.capture,
+            book: book,
+            edit: edit,
+            today: today,
+            selectedCategoryId: ref.watch(entryFormProvider).draft.category?.id,
+          ),
         ),
-        extraActions: _askingToDiscard ? [_discardQuestion()] : _actions(),
+        extraActions: _actions(),
       ),
     );
   }
 
+  /// Guardar para depois e descartar, cada um em um toque. Descartar só
+  /// apaga a foto guardada no app — o comprovante continua onde estava.
   List<Widget> _actions() => [
     CajuiButton(
       label: 'Conferir depois',
@@ -76,20 +80,7 @@ class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
       label: 'Descartar',
       variant: CajuiButtonVariant.ghost,
       expand: true,
-      onPressed: () => setState(() => _askingToDiscard = true),
-    ),
-  ];
-
-  Widget _discardQuestion() => CajuiNotice(
-    what: 'Descartar este comprovante?',
-    meaning: 'O arquivo guardado no app é apagado, e nada é lançado.',
-    primaryAction: CajuiNoticeAction(
-      label: 'Descartar',
       onPressed: () => _capture.discard(widget.capture),
     ),
-    secondaryAction: CajuiNoticeAction(
-      label: 'Manter',
-      onPressed: () => setState(() => _askingToDiscard = false),
-    ),
-  );
+  ];
 }

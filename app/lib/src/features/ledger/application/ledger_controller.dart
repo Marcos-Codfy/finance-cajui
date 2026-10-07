@@ -1,6 +1,7 @@
 import 'package:cajui/src/features/budget/application/close_revision.dart';
 import 'package:cajui/src/features/ledger/application/correction_guard.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
+import 'package:cajui/src/features/ledger/application/draft_defaults.dart';
 import 'package:cajui/src/features/ledger/application/entry_changes.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -31,10 +32,12 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     );
   }
 
-  /// Tenta lançar [draft]. A recusa de uma regra volta como falha tipada;
+  /// Tenta lançar [raw]. A recusa de uma regra volta como falha tipada;
   /// nada é gravado nesse caso.
-  Future<Result<Entry>> record(EntryDraft draft) async {
+  Future<Result<Entry>> record(EntryDraft raw) async {
     final book = await future;
+    // O que a pessoa não escolheu, o app escolhe (ver `DraftDefaults`).
+    final draft = DraftDefaults.complete(raw, book);
     // Lançamento que nasce de um comprovante usa a chave gerada na chegada
     // dele: confirmar duas vezes o mesmo comprovante grava um fato só.
     final id = draft.captureId ?? ref.read(newIdProvider)();
@@ -74,22 +77,22 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     );
   }
 
-  /// Corrige o lançamento que [draft] aponta em `correctionOf` (RN-208). As
+  /// Corrige o lançamento que [raw] aponta em `correctionOf` (RN-208). As
   /// regras são as mesmas de lançar; o original fica no registro, e a versão
   /// nova passa a valer em toda visão. Sem mudança, nenhum fato é gravado.
   /// Lançamento que já não existe — cancelado em outro aparelho enquanto a
   /// correção estava aberta — é recusado, e nada é gravado.
-  Future<Result<Entry>> correct(EntryDraft draft) async {
+  Future<Result<Entry>> correct(EntryDraft raw) async {
     final book = await future;
+    final draft = DraftDefaults.complete(raw, book);
     final original = book.entryOf(draft.correctionOf!);
     if (original == null) return Err(EntryNoLongerExists(draft.correctionOf!));
+    // O carimbo decide entre dois celulares: vale a correção mais nova.
     final result = _entryFrom(
       draft,
       book,
       id: original.id,
       origin: original.origin,
-      // O carimbo é o que decide entre dois celulares que corrigiram a
-      // mesma compra: vale a correção mais nova (BL-062).
       revisedAt: ref.read(clockProvider).now(),
     );
     final entry = result.valueOrNull;

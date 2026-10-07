@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/features/ledger/application/draft_defaults.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -16,11 +17,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// uma regra no erro do catálogo. Não valida nada por conta própria: a regra
 /// é do domínio, e a tela só mostra o que ele respondeu.
 class EntryFormViewModel extends Notifier<EntryFormState> {
+  /// Um lançamento novo nasce com hoje e com a última forma de pagamento
+  /// usada: quem paga tudo no Pix não escolhe Pix toda vez.
   @override
-  EntryFormState build() => EntryFormEditing(
-    ref.watch(initialDraftProvider) ??
-        EntryDraft(occurredOn: ref.read(clockProvider).today()),
-  );
+  EntryFormState build() =>
+      EntryFormEditing(ref.watch(initialDraftProvider) ?? _fresh());
+
+  EntryDraft _fresh() {
+    final book = ref.read(ledgerProvider).value;
+    return EntryDraft(
+      occurredOn: ref.read(clockProvider).today(),
+      method: book == null ? null : DraftDefaults.lastUsed(book),
+    );
+  }
 
   EntryDraft get _draft => state.draft;
 

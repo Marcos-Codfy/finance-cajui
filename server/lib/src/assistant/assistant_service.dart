@@ -3,12 +3,18 @@ import 'dart:async';
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:server/src/ai/chat_client.dart';
+import 'package:server/src/ai/chat_message.dart';
+import 'package:server/src/ai/chat_reply.dart';
+import 'package:server/src/ai/chat_tool.dart';
 import 'package:server/src/ai/chat_unavailable.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/token_budget.dart';
+import 'package:server/src/assistant/assistant_action.dart';
 import 'package:server/src/assistant/assistant_answer.dart';
 import 'package:server/src/assistant/assistant_context.dart';
 import 'package:server/src/assistant/assistant_prompt.dart';
+import 'package:server/src/assistant/assistant_tool_catalog.dart';
+import 'package:server/src/assistant/assistant_tools.dart';
 import 'package:server/src/assistant/conversation_window.dart';
 
 /// O que saiu de uma pergunta: a resposta, ou o erro do catálogo.
@@ -18,11 +24,12 @@ typedef AssistantOutcome = ({
   int? retryAfterSeconds,
 });
 
-/// Atende uma pergunta ao assistente (RN-901 a RN-964).
+/// Atende uma pergunta ao assistente (ADR-021).
 ///
-/// Não tem porta de escrita para fato financeiro (RN-904): recebe o contexto
-/// já montado e só fala com a IA. O único registro que uma conversa deixa é
-/// o consumo de tokens.
+/// A conversa é um laço: o modelo responde em texto, ou pede ferramentas;
+/// cada pedido é atendido e devolvido a ele, até [maxToolRounds] vezes;
+/// na última rodada ele não recebe ferramentas, e tem de responder com o
+/// que já tem. O que ele fez no livro no caminho vai junto com a resposta.
 final class AssistantService {
   /// Cria o serviço sobre o cliente de IA [client].
   new({
@@ -30,7 +37,7 @@ final class AssistantService {
     required this.budget,
     required this.breaker,
     ConversationWindow? window,
-    this.timeout = const Duration(seconds: 20),
+    this.timeout = const Duration(seconds: 25),
   }) : window = window ?? ConversationWindow();
 
   /// O cliente da IA.
@@ -45,72 +52,97 @@ final class AssistantService {
   /// A janela da conversa de cada sessão.
   final ConversationWindow window;
 
-  /// Quanto esperar pela IA.
+  /// Quanto esperar por cada chamada à IA.
   final Duration timeout;
 
-  /// Uma resposta reprovada gera **uma** nova tentativa (RN-945).
-  static const _attempts = 2;
+  /// Quantas rodadas de ferramenta uma pergunta pode disparar. Lançar, ver
+  /// e cancelar cabem em três; a quarta existe para o modelo corrigir um
+  /// argumento recusado.
+  static const maxToolRounds = 4;
 
-  /// Responde [message] da sessão [sessionId], com o [context] do mês.
+  /// Responde [message] da sessão [sessionId], com o [context] do mês, o
+  /// [catalog] de categorias e cartões, e as [tools] que mexem no livro.
   Future<AssistantOutcome> ask({
     required String sessionId,
     required String message,
     required AssistantContext context,
+    required Map<String, Object?> catalog,
+    required AssistantTools tools,
   }) async {
     // O limite é conferido antes de qualquer chamada sair (RN-962).
-    if (!budget.hasRoomIn(context.month)) {
-      return _failed(ErrorCode.ai03);
-    }
+    if (!budget.hasRoomIn(context.month)) return _failed(ErrorCode.ai03);
     if (!breaker.allowsCall) return _failed(ErrorCode.ai01);
     // A pergunta é mascarada antes de ser guardada ou enviada (RN-952).
     final question = PiiRedactor.redact(ReceiptText.clean(message));
+    final messages = AssistantPrompt.messages(
+      context: context,
+      catalog: catalog,
+      window: window.of(sessionId),
+      message: question,
+    );
     try {
-      final answer =
-          await _validAnswer(sessionId, question, context) ??
-          AssistantAnswer.fallback(context);
+      final answer = await _converse(messages, context, tools);
       window.add(sessionId, question, answer.text);
       return (answer: answer, error: null, retryAfterSeconds: null);
     } on ChatUnavailable catch (unavailable) {
-      breaker.recordFailure();
-      // O provedor pediu uma pausa: é outro erro, com a contagem (E-AI-02).
-      final wait = unavailable.retryAfterSeconds;
-      return _failed(wait == null ? ErrorCode.ai01 : ErrorCode.ai02, wait);
+      return _down(unavailable.retryAfterSeconds);
     } on TimeoutException {
-      breaker.recordFailure();
-      return _failed(ErrorCode.ai01);
+      return _down(null);
     }
+  }
+
+  /// A IA não respondeu. O provedor pedindo uma pausa é outro erro, com a
+  /// contagem (E-AI-02); o resto é "fora do ar" (E-AI-01).
+  AssistantOutcome _down(int? retryAfterSeconds) {
+    breaker.recordFailure();
+    return _failed(
+      retryAfterSeconds == null ? ErrorCode.ai01 : ErrorCode.ai02,
+      retryAfterSeconds,
+    );
   }
 
   static AssistantOutcome _failed(ErrorCode code, [int? retryAfterSeconds]) =>
       (answer: null, error: code, retryAfterSeconds: retryAfterSeconds);
 
-  /// A primeira resposta que passa na validação, em até [_attempts] chamadas.
-  Future<AssistantAnswer?> _validAnswer(
-    String sessionId,
-    String question,
+  /// O laço da conversa. [messages] cresce com cada pedido de ferramenta e
+  /// cada resultado, e é o que vai inteiro na chamada seguinte.
+  Future<AssistantAnswer> _converse(
+    List<ChatMessage> messages,
+    AssistantContext context,
+    AssistantTools tools,
+  ) async {
+    final actions = <AssistantAction>[];
+    for (var round = 0; round <= maxToolRounds; round++) {
+      final offered = round < maxToolRounds
+          ? AssistantToolCatalog.tools
+          : const <ChatTool>[];
+      final reply = await _call(messages, offered, context);
+      if (!reply.wantsTools) {
+        return AssistantAnswer.fromText(reply.content, actions: actions) ??
+            AssistantAnswer.fallback(actions: actions);
+      }
+      messages.add(
+        ChatMessage.assistant(reply.content, toolCalls: reply.toolCalls),
+      );
+      for (final call in reply.toolCalls) {
+        final outcome = await tools.run(call);
+        if (outcome.action case final action?) actions.add(action);
+        messages.add(ChatMessage.tool(outcome.json, toolCallId: call.id));
+      }
+    }
+    return AssistantAnswer.fallback(actions: actions);
+  }
+
+  Future<ChatReply> _call(
+    List<ChatMessage> messages,
+    List<ChatTool> tools,
     AssistantContext context,
   ) async {
-    for (var attempt = 0; attempt < _attempts; attempt++) {
-      final reply = await client
-          .complete(
-            system: AssistantPrompt.system,
-            user: AssistantPrompt.user(
-              context: context,
-              window: window.of(sessionId),
-              message: question,
-            ),
-            maxTokens: 400,
-          )
-          .timeout(timeout);
-      breaker.recordSuccess();
-      await budget.record(context.month, reply);
-      final answer = AssistantAnswer.parse(
-        reply.content,
-        context: context,
-        question: question,
-      );
-      if (answer != null) return answer;
-    }
-    return null;
+    final reply = await client
+        .converse(messages: messages, tools: tools, maxTokens: 600)
+        .timeout(timeout);
+    breaker.recordSuccess();
+    await budget.record(context.month, reply);
+    return reply;
   }
 }

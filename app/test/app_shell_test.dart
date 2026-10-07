@@ -33,7 +33,8 @@ void main() {
   testWidgets('abre no painel, com as quatro áreas na barra', (tester) async {
     await _open(tester);
 
-    expect(_screen('Painel'), findsOneWidget);
+    // O painel já nasce com o mês no título: não há mais tela de "comece".
+    expect(_screen('Setembro'), findsOneWidget);
     for (final label in ['Painel', 'Lançamentos', 'Assistente', 'Ajustes']) {
       expect(
         find.descendant(
@@ -53,7 +54,7 @@ void main() {
     await tester.pump();
 
     expect(_screen('Ajustes'), findsOneWidget);
-    expect(_screen('Painel'), findsNothing);
+    expect(_screen('Setembro'), findsNothing);
   });
 
   testWidgets('lançamentos vazios dizem o que fazer, e não "sem dados"', (

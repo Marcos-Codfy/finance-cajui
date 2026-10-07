@@ -75,7 +75,9 @@ void main() {
     // O cupom grita em maiúsculas; a tela mostra nome de gente.
     expect(draft.description, 'Lanchonete e Restaurante Sabor da Praca');
     expect(draft.method?.kind, PaymentMethodKind.pix);
-    expect(draft.category, isNull, reason: 'RN-782: sem palpite de categoria');
+    // O ramo do lugar já vem no campo: lanchonete é restaurante e lanche. A
+    // conferência mostra, e um toque troca.
+    expect(draft.category?.id, 'eating-out');
     expect(draft.origin, EntryOrigin.share);
   });
 

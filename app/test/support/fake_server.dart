@@ -10,6 +10,7 @@ typedef SentRequest = ({
   String path,
   Map<String, Object?> body,
   String authorization,
+  String device,
 });
 
 /// Um servidor de verdade, de mentira: fala HTTP no `localhost` e guarda o
@@ -90,6 +91,7 @@ final class FakeServer {
             ? decoded.cast<String, Object?>()
             : const <String, Object?>{},
         authorization: request.headers.value('authorization') ?? '',
+        device: request.headers.value('x-cajui-device') ?? '',
       ));
       _reply(request);
       await request.response.close();

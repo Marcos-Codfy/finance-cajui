@@ -50,7 +50,8 @@ class PaymentSection extends StatelessWidget {
   final String? lineError;
 
   String? _helperFor(PaymentMethod? method) {
-    if (method?.tender != Tender.mealVoucher) return null;
+    if (method == null) return 'Sem escolher, vai como Pix';
+    if (method.tender != Tender.mealVoucher) return null;
     return 'Saldo do vale: ${BrlFormatter.format(voucherBalance.cents)}';
   }
 

@@ -6,9 +6,11 @@ import 'package:domain/domain.dart';
 /// Leva a proposta de uma captura ao rascunho que a tela de conferência
 /// mostra.
 ///
-/// Só entra no rascunho o que a proposta **resolveu**. Campo em dúvida fica
-/// vazio, com os candidatos ao lado, e campo não lido fica vazio e pronto: o
-/// app não chuta para parecer esperto (sharing-flow, zonas de confiança).
+/// O que a proposta resolveu entra; o que ficou em dúvida entra com o
+/// **candidato mais provável** já no campo, e os outros ao lado para um
+/// toque trocar; a data que não se leu é o dia em que o comprovante chegou.
+/// A pessoa confere tudo numa tela e confirma com um toque — é a
+/// conferência que o dono pediu para manter, sem campo em branco.
 abstract final class CaptureDraft {
   /// O teto da descrição na tela de conferência (RN-775).
   static const maxDescriptionLength = 60;
@@ -20,13 +22,14 @@ abstract final class CaptureDraft {
       captureId: capture.source.id,
       amountCents: proposal.amount.value?.cents ?? 0,
       description: _short(proposal.displayDescription ?? ''),
-      category: _categoryOf(book, proposal.category.value),
+      category: _categoryOf(
+        book,
+        proposal.category.value ?? proposal.category.candidates.firstOrNull,
+      ),
       method: _methodOf(book, proposal.paymentKind.value),
-      // Data não lida fica **vazia**, e a tela oferece hoje, ontem e outro
-      // dia sem marcar nenhum (RN-748). Antes vinha "hoje" já escolhido,
-      // e um comprovante cortado acima da data gravava o dia errado sem
-      // ninguém notar.
-      occurredOn: proposal.occurredOn.value,
+      // Sem data no comprovante, vale o dia em que ele chegou: quase sempre
+      // é o da compra, e a tela mostra o dia marcado para quem quiser trocar.
+      occurredOn: proposal.occurredOn.value ?? capture.source.receivedOn,
     );
   }
 

@@ -1,6 +1,6 @@
-import 'package:cajui/src/features/auth/application/device_enrollment.dart';
 import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
@@ -17,23 +17,12 @@ final class DashboardLoading extends DashboardState {
   const new();
 }
 
-/// Primeiro uso: nada cadastrado. A tela explica o que vai aparecer e dá o
-/// primeiro passo, em vez de mostrar zeros.
+/// A consulta na web antes de o servidor ter o mês: o celular ainda não
+/// mandou nada. No celular este estado não existe — o painel mostra os
+/// números desde o primeiro dia, e é ver o painel que convida a lançar.
 final class DashboardFirstUse extends DashboardState {
-  /// Cria o estado de primeiro uso.
-  const new({this.entered = false});
-
-  /// Na web: se a pessoa já entrou com o código. Faz parte do estado porque
-  /// a tela muda com ele — e o livro relido depois de entrar continua vazio
-  /// enquanto o celular não enviar: sem isto no estado, nada a redesenhava.
-  final bool entered;
-
-  @override
-  bool operator ==(Object other) =>
-      other is DashboardFirstUse && other.entered == entered;
-
-  @override
-  int get hashCode => entered.hashCode;
+  /// Cria o estado de consulta vazia.
+  const new();
 }
 
 /// Há o que mostrar. Sem renda cadastrada, [overview] ainda vale para o que
@@ -56,11 +45,9 @@ final dashboardStateProvider = Provider<DashboardState>((ref) {
   final overview = ref.watch(monthOverviewProvider);
   final book = ref.watch(ledgerProvider).value;
   if (overview == null || book == null) return const DashboardLoading();
-  final untouched = book.setup.isEmpty && book.entries.isEmpty;
-  if (untouched) {
-    return DashboardFirstUse(
-      entered: ref.read(deviceEnrollmentProvider).hasSession,
-    );
+  final consulta = !ref.watch(ledgerUplinkProvider).isPaired;
+  if (consulta && book.setup.isEmpty && book.entries.isEmpty) {
+    return const DashboardFirstUse();
   }
   return DashboardReady(
     overview,

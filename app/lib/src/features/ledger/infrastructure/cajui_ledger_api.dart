@@ -4,23 +4,21 @@ import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 
 /// A subida do livro pela API do Cajui (RN-781).
 ///
-/// Cada chamada passa por `authenticated`, então a sessão se abre e se renova
-/// sozinha — e a digital é pedida uma vez só por sessão, não uma vez por
-/// lançamento.
+/// Cada chamada passa por `authenticated`, que põe a chave da casa no
+/// cabeçalho (ADR-020): não há sessão a abrir nem digital a pedir.
 final class CajuiLedgerApi implements LedgerUplink {
   /// Cria a subida sobre o cliente [_api].
   const new(this._api);
 
   final CajuiApi _api;
 
-  /// Há Keystore neste aparelho, então há identidade para provar. Se o
-  /// servidor ainda não o conhece, ele mesmo recusa — e a recusa vem com o
-  /// código do catálogo.
+  /// É o celular: há livro para subir.
   @override
   bool get isPaired => true;
 
+  /// Com a chave da casa, sempre: nada a perguntar a ninguém.
   @override
-  Future<bool> canSendQuietly() => _api.openQuietly();
+  Future<bool> canSendQuietly() async => _api.hasKey;
 
   @override
   Future<(Set<String>, ErrorCode?)> remoteCategories() async {

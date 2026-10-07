@@ -95,20 +95,27 @@ void main() {
     expect(find.textContaining(r'Lazer · Pix · hoje · voltou R$'), findsOne);
   });
 
-  testWidgets('RN-208 · cancelar tira o lançamento da lista, e o fato '
-      'original continua no registro', (tester) async {
+  testWidgets('RN-208 · cancelar é dois toques no mesmo botão, sem tela: o '
+      'lançamento sai da lista, e o fato original continua no registro', (
+    tester,
+  ) async {
     final journal = await _openCinema(tester);
 
     await _tap(tester, find.text('Cancelar lançamento'));
-    await _tap(tester, find.text('Não era uma despesa'));
-    await _tap(tester, find.text('Cancelar lançamento').last);
+    expect(find.text('Confirmar o cancelamento'), findsOneWidget);
+    await _tap(tester, find.text('Manter'));
+    expect(find.text('Confirmar o cancelamento'), findsNothing);
+    expect(await journal.readAll(), hasLength(1), reason: 'manter não grava');
+
+    await _tap(tester, find.text('Cancelar lançamento'));
+    await _tap(tester, find.text('Confirmar o cancelamento'));
 
     expect(find.text('Nada lançado ainda'), findsOneWidget);
     final facts = await journal.readAll();
     expect(facts.whereType<EntryRecorded>(), hasLength(1));
     expect(
       facts.whereType<EntryCancelled>().single.reason,
-      'Não era uma despesa',
+      'Cancelado pela pessoa',
     );
   });
 

@@ -31,6 +31,9 @@ dependencies:
   path_provider: ^2.1.5
   persistence:
     path: ../packages/persistence
+  # O armazenamento local do navegador, onde a chave da casa fica na web
+  # (ADR-020). Só é tocado no build web.
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:

@@ -4,12 +4,14 @@ import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// Os quatro números do painel, na ordem da pergunta que cada um responde:
-/// quanto dá para gastar agora, como o mês fecha, quanto há de vale e quanto
-/// da renda já tem dono.
+/// Os números do painel, na ordem da pergunta que cada um responde: quanto
+/// dá para gastar agora, como o mês fecha, quanto há de vale e quanto da
+/// renda já tem dono.
 ///
-/// O tom segue o guia de voz: falta é "faltam R$ X para fechar", com o que
-/// dá para fazer; nunca alarme, nunca julgamento (D-UX-22).
+/// Cada cartão mostra um número desde o primeiro dia: sem plano, o que há
+/// é o gasto; sem renda, o cartão da sobra diz onde a renda se cadastra.
+/// Nenhum cartão explica o que ele não é. O tom segue o guia de voz: falta
+/// é "faltam R$ X para fechar", nunca alarme (D-UX-22).
 abstract final class DashboardBlocks {
   /// Os cartões de [overview], de cima para baixo.
   static List<Widget> of(MonthOverview overview) => [
@@ -17,7 +19,7 @@ abstract final class DashboardBlocks {
     _result(overview),
     _voucher(overview),
     if (overview.hasCards) _reserve(overview),
-    _committed(overview),
+    if (overview.hasIncome) _committed(overview),
   ];
 
   /// A reserva da fatura: compra à vista no cartão já contou no dia em que
@@ -33,13 +35,18 @@ abstract final class DashboardBlocks {
 
   static String _brl(int cents) => BrlFormatter.format(cents);
 
+  /// Sem faixa no plano não há limite de semana; o que há é o gasto do mês,
+  /// que é o número que a pessoa veio ver.
   static Widget _week(MonthOverview overview) {
     final week = overview.week;
     if (overview.plan.variables.isEmpty) {
-      return const CajuiStatCard(
-        label: 'Dá para gastar esta semana',
+      return CajuiStatCard(
+        label: 'Gasto do mês em dinheiro',
+        cents: overview.spent.cash.cents,
         large: true,
-        caption: 'Aparece quando os gastos variáveis tiverem faixa no plano.',
+        caption:
+            'Com faixas no plano, aqui aparece quanto ainda dá para '
+            'gastar na semana.',
       );
     }
     return CajuiStatCard(
@@ -68,7 +75,10 @@ abstract final class DashboardBlocks {
   static Widget _result(MonthOverview overview) {
     final month = DateLabels.month(overview.plan.month).split(' ').first;
     if (!overview.hasIncome) {
-      return CajuiStatCard(label: 'Sobra prevista de $month');
+      return CajuiStatCard(
+        label: 'Sobra prevista de $month',
+        caption: 'Cadastre a renda no plano do mês para ver quanto sobra.',
+      );
     }
     final indicators = overview.indicators;
     final missing = indicators.requiredAdjustment;
@@ -98,6 +108,8 @@ abstract final class DashboardBlocks {
     sunken: true,
   );
 
+  /// Só com renda: sem ela a proporção é indefinida — nunca 0%, nunca
+  /// infinito (RN-604) —, e um cartão sem número só ocuparia lugar.
   static Widget _committed(MonthOverview overview) {
     final plan = overview.plan;
     final committed = plan.fixedTotal + plan.debtInstallments;
@@ -106,10 +118,8 @@ abstract final class DashboardBlocks {
       label: 'Renda comprometida',
       cents: committed.cents,
       meter: percent == null ? null : percent / 100,
-      // Sem renda, a proporção é indefinida: nunca 0%, nunca infinito
-      // (RN-604).
       caption: percent == null
-          ? 'Em fixos e dívidas. A proporção aparece com a renda cadastrada.'
+          ? 'Em fixos e dívidas.'
           : '$percent% da renda, em fixos e dívidas',
     );
   }

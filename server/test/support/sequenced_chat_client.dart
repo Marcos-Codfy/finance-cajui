@@ -3,7 +3,7 @@ import 'package:server/src/ai/chat_reply.dart';
 
 /// Um "modelo" que devolve uma resposta por chamada, na ordem dada; a última
 /// se repete. Serve para ensaiar a nova tentativa depois de uma reprovação.
-final class SequencedChatClient implements ChatClient {
+final class SequencedChatClient extends ChatClient {
   /// Cria o cliente com as respostas [contents].
   new(this.contents, {this.failure});
 

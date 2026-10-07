@@ -17,6 +17,10 @@
 # **Os APKs daqui só se atualizam entre si.** Todos são assinados pela
 # chave de depuração deste computador; o que sair de outra máquina, ou da
 # conferência do GitHub, não instala por cima.
+#
+# **A chave da casa vai compilada** (ADR-020): lida de
+# Documentos\Cajui\chave\cajui-chave-da-casa.txt, fora do repositório. Sem o
+# arquivo o APK nasce sem servidor — funciona sozinho, e não sincroniza.
 
 param([switch]$Release)
 
@@ -34,6 +38,16 @@ try {
     Write-Host "compilando o APK de $modo…"
     $numero = [int]((Get-Date) - (Get-Date '2026-01-01')).TotalMinutes
     $opcoes = @("--$modo", "--build-number=$numero")
+    $chaveDaCasa = Join-Path $HOME 'Documents\Cajui\chave\cajui-chave-da-casa.txt'
+    if (Test-Path $chaveDaCasa) {
+        # Lida sem BOM e sem quebra de linha: qualquer um deles vira "chave
+        # errada" no servidor.
+        $chave = ([System.IO.File]::ReadAllText($chaveDaCasa)).Trim([char]0xFEFF, ' ', "`r", "`n", "`t")
+        $opcoes += "--dart-define=CAJUI_ACCESS_KEY=$chave"
+        Write-Host 'com a chave da casa'
+    } else {
+        Write-Host "SEM a chave da casa ($chaveDaCasa não existe): o APK não fala com o servidor."
+    }
     # Só 64 bits no de uso: é o que os celulares de hoje têm, e o arquivo
     # fica com um terço do tamanho.
     if ($Release) { $opcoes += '--target-platform=android-arm64' }

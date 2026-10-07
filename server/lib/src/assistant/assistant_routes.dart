@@ -1,8 +1,11 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
+import 'package:persistence/persistence.dart';
 import 'package:server/src/assistant/assistant_context.dart';
 import 'package:server/src/assistant/assistant_prompt.dart';
 import 'package:server/src/assistant/assistant_service.dart';
+import 'package:server/src/assistant/assistant_tools.dart';
+import 'package:server/src/assistant/payment_choice.dart';
 import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
@@ -12,17 +15,24 @@ import 'package:shelf_router/shelf_router.dart';
 
 /// A rota da conversa com o assistente.
 ///
-/// Recebe **só a pergunta**. O contexto é montado aqui, no servidor, a partir
-/// do estado dos lançamentos (RN-915): o app nunca manda número para o chat,
-/// então não há como alguém forjar o contexto pelo lado de fora. E este
-/// código só **lê** o estado — não tem como gravar fato financeiro (RN-904).
+/// Recebe **só a pergunta**. O resumo do mês e o cadastro são montados aqui,
+/// no servidor, a partir do estado (RN-915); as ferramentas que a IA pede
+/// escrevem no mesmo registro das rotas, pelo mesmo caminho (ADR-021).
 final class AssistantRoutes {
   /// Cria as rotas. Sem [service] — servidor sem a credencial da IA —, toda
   /// pergunta recebe `E-AI-01`, e o resto do app segue funcionando.
-  new({required this.state, required this.clock, this.service});
+  new({
+    required this.state,
+    required this.store,
+    required this.clock,
+    this.service,
+  });
 
-  /// O estado dos lançamentos, só para leitura.
+  /// O estado dos lançamentos.
   final LedgerState state;
+
+  /// O registro de eventos, por onde as ferramentas gravam.
+  final EventStore store;
 
   /// De onde vem o dia de hoje.
   final Clock clock;
@@ -42,6 +52,23 @@ final class AssistantRoutes {
     voucherBalance: state.voucherBalance,
   );
 
+  /// O que a IA pode citar nas ferramentas: as categorias e os cartões
+  /// pelos identificadores, e as formas de pagamento fixas.
+  Map<String, Object?> get _catalog => {
+    'categorias': [
+      for (final category in state.categories.values)
+        {
+          'id': category.id,
+          'nome': category.name,
+          'bloco': category.block.name,
+        },
+    ],
+    'cartoes': [
+      for (final card in state.cards.values) {'id': card.id, 'nome': card.name},
+    ],
+    'formas_de_pagamento': PaymentChoice.options,
+  };
+
   /// O roteador, montado em `/v1/assistant`.
   Router get router => Router()..post('/ask', _ask);
 
@@ -56,11 +83,12 @@ final class AssistantRoutes {
     );
     final assistant = service;
     if (assistant == null) return Responses.error(request, ErrorCode.ai01);
-    final session = Authenticate.sessionOf(request);
     final outcome = await assistant.ask(
-      sessionId: '${session.deviceId}/${session.scope.name}',
+      sessionId: Authenticate.sessionOf(request).deviceId,
       message: message,
       context: _context,
+      catalog: _catalog,
+      tools: AssistantTools(state: state, store: store, clock: clock),
     );
     final (answer, error) = (outcome.answer, outcome.error);
     if (answer == null || error != null) {

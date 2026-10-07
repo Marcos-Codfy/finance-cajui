@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/app.dart';
 import 'package:server/src/assistant/assistant_service.dart';
+import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/http/rate_limiter.dart';
@@ -33,6 +34,7 @@ final class TestApp {
   static Future<TestApp> start({
     RateLimiter? rateLimiter,
     AssistantService? Function(FileEventStore store)? assistant,
+    HouseholdKey? householdKey,
   }) async {
     final data = Directory.systemTemp.createTempSync('cajui-server-');
     addTearDown(() => data.deleteSync(recursive: true));
@@ -49,6 +51,7 @@ final class TestApp {
       sessions: SessionBook(),
       rateLimiter: rateLimiter,
       assistant: assistant?.call(store),
+      householdKey: householdKey,
     );
     return TestApp._(app, store, data, logs);
   }
@@ -74,18 +77,24 @@ final class TestApp {
   );
 
   /// Faz uma requisição e devolve o status e o corpo, já lido como JSON.
+  /// [headers] entram por cima do portador: é por aí que o teste diz de
+  /// que aparelho vem a pergunta.
   Future<(int, Map<String, Object?>)> call(
     String method,
     String path, {
     Object? body,
     String? token,
+    Map<String, String> headers = const {},
   }) async {
     final response = await app.handler(
       Request(
         method,
         Uri.parse('http://localhost$path'),
         body: body == null ? null : jsonEncode(body),
-        headers: {if (token != null) 'authorization': 'Bearer $token'},
+        headers: {
+          if (token != null) 'authorization': 'Bearer $token',
+          ...headers,
+        },
       ),
     );
     final text = await response.readAsString();

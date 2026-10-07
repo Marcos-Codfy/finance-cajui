@@ -40,17 +40,18 @@ Finder _field(String label) => find.descendant(
 );
 
 void main() {
-  testWidgets('primeiro uso: o painel explica e leva ao plano, sem mostrar '
-      'zero nenhum', (tester) async {
+  testWidgets('primeiro uso: o painel já é o painel — o gasto do mês, a '
+      'sobra que espera a renda, e a porta para lançar', (tester) async {
     await _open(tester, const []);
 
-    expect(find.text('Seu mês começa aqui'), findsOneWidget);
-    expect(find.byType(CajuiStatCard), findsNothing);
+    expect(find.text('Seu mês começa aqui'), findsNothing);
+    expect(find.text('Gasto do mês em dinheiro'), findsOneWidget);
+    expect(find.textContaining('Cadastre a renda'), findsOneWidget);
+    expect(find.text('Novo lançamento'), findsOneWidget);
 
-    await tester.tap(find.text('Começar'));
+    await tester.tap(find.bySemanticsLabel('Plano do mês'));
     await _settle(tester);
 
-    expect(find.text('Plano do mês'), findsOneWidget);
     expect(find.text('Sobra planejada'), findsOneWidget);
   });
 
@@ -75,8 +76,9 @@ void main() {
       ),
     ]);
 
-    expect(find.text('Falta a renda do mês.'), findsOneWidget);
+    expect(find.textContaining('Cadastre a renda'), findsOneWidget);
     expect(find.textContaining('% da renda'), findsNothing);
+    expect(find.text('Renda comprometida'), findsNothing);
   });
 
   testWidgets('D-UX-22 · mês que não fecha: "faltam", com o que dá para '

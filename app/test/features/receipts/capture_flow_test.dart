@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cajui/src/app/cajui_app.dart';
 import 'package:cajui/src/core/storage/event_store_opener_file.dart';
+import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
 import 'package:cajui/src/features/receipts/infrastructure/event_store_capture_shelf.dart';
@@ -51,12 +52,10 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Pix'), findsOneWidget);
+    // O ramo do lugar já vem no campo: lanchonete é restaurante e lanche.
+    expect(find.text('Restaurante e lanche'), findsOneWidget);
     expect(await journal.readAll(), isEmpty, reason: 'RN-795: nada gravado');
 
-    await tester.tap(find.text('Categoria'));
-    await _settle(tester);
-    await tester.tap(find.text('Restaurante e lanche'));
-    await _settle(tester);
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
@@ -86,10 +85,6 @@ void main() {
       find.textContaining('parece um lançamento que já existe'),
       findsNothing,
     );
-    await tester.tap(find.text('Categoria'));
-    await _settle(tester);
-    await tester.tap(find.text('Restaurante e lanche'));
-    await _settle(tester);
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
@@ -106,8 +101,8 @@ void main() {
     );
   });
 
-  testWidgets('RN-748 · comprovante sem data legível não vem com "hoje" '
-      'marcado, e não deixa lançar sem escolha', (tester) async {
+  testWidgets('comprovante sem data legível vem com o dia em que chegou '
+      'marcado, e lança em um toque', (tester) async {
     tester.view.physicalSize = const Size(390, 2000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -124,22 +119,13 @@ void main() {
     // Um texto com valor e lugar, e sem data nenhuma.
     inbox.share(const [SharedText(id: 'c1', text: semData)]);
     await _settle(tester);
-    await tester.tap(find.text('Categoria'));
-    await _settle(tester);
-    await tester.tap(find.text('Restaurante e lanche'));
-    await _settle(tester);
 
-    // Nada gravado: a data é campo em dúvida, e sem ela não se lança.
-    await tester.tap(find.text('Lançar'));
-    await _settle(tester);
-    expect(await journal.readAll(), isEmpty);
-
-    await tester.tap(find.text('Hoje'));
-    await _settle(tester);
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(await journal.readAll(), hasLength(1));
+    final recorded = (await journal.readAll()).single;
+    expect(recorded, isA<EntryRecorded>());
+    expect((recorded as EntryRecorded).entry.occurredOn, testToday);
   });
 
   test('T-07 · o texto do comprovante guardado para depois não fica em claro '
