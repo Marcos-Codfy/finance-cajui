@@ -19,15 +19,27 @@ enum CaptureRoute {
   /// Pagamento de fatura ou transferência entre contas próprias.
   notAnExpense;
 
-  /// A rota de [proposal]. Tipo em dúvida é compra: na dúvida, a conferência
-  /// mostra tudo e a pessoa decide.
+  /// A rota de [proposal]. O tipo em dúvida que pode não ser compra — a
+  /// fatura que só a IA viu (RN-757) — vai para a tela dele, que pergunta e
+  /// tem "É uma despesa": a conferência de despesa, pronta para um toque,
+  /// lançaria o pagamento da fatura como gasto.
   static CaptureRoute of(EntryProposal proposal) {
     if (proposal.isStatement) return CaptureRoute.statement;
-    return switch (proposal.documentKind.value) {
+    return switch (kindOf(proposal)) {
       DocumentKind.incomeReceipt => CaptureRoute.income,
       DocumentKind.statementPayment ||
       DocumentKind.ownTransfer => CaptureRoute.notAnExpense,
       _ => CaptureRoute.expense,
     };
+  }
+
+  /// O tipo que decide a tela: o lido, ou, na dúvida, o primeiro candidato
+  /// que não é compra.
+  static DocumentKind? kindOf(EntryProposal proposal) {
+    final kind = proposal.documentKind;
+    return kind.value ??
+        kind.candidates
+            .where((candidate) => candidate != DocumentKind.purchase)
+            .firstOrNull;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:cajui/src/features/budget/application/income_service.dart';
+import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
@@ -11,8 +12,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Um comprovante de dinheiro que **entrou**: Pix recebido, transferência
 /// para a pessoa. Vira recebimento, nunca despesa (RN-758).
 ///
-/// Vem preenchido com o que foi lido; se a leitura errou e era uma compra,
-/// "É uma despesa" leva à conferência de sempre.
+/// Vem preenchido com o que foi lido, e já diz se parece a renda do mês: o
+/// salário que entra como avulso conta por cima do esperado, e a renda do
+/// mês dobra. Se a leitura errou e era uma compra, "É uma despesa" leva à
+/// conferência de sempre.
 class IncomeCapturePage extends ConsumerStatefulWidget {
   /// Cria a tela de [capture].
   const new({required this.capture, super.key});
@@ -29,41 +32,61 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
   late LocalDate? _on =
       _proposal.occurredOn.value ?? widget.capture.source.receivedOn;
   late Tender _tender = _proposal.paymentKind.value?.tender ?? Tender.cash;
-  bool _ofPlan = false;
+  late bool _ofPlan = _looksLikePlan();
   bool _saving = false;
 
   EntryProposal get _proposal => widget.capture.proposal;
 
-  CaptureViewModel get _capture => ref.read(captureProvider.notifier);
+  bool get _inDoubt => _proposal.documentKind.value == null;
+
+  CaptureViewModel get _vm => ref.read(captureProvider.notifier);
+
+  String get _intro => _inDoubt
+      ? 'Parece um comprovante de dinheiro recebido, mas não tenho certeza. '
+            'Se for, ele entra na renda do mês, e não nos gastos.'
+      : 'Li um comprovante de dinheiro recebido. Ele entra na renda do mês, '
+            'e não nos gastos.';
+
+  bool _looksLikePlan() {
+    final on = _on;
+    final book = ref.read(ledgerProvider).value;
+    if (on == null || book == null || _cents == 0) return false;
+    return book.looksLikePlanIncome(Money.fromCents(_cents), on);
+  }
 
   Future<void> _record() async {
     final on = _on;
     if (on == null) return;
-    setState(() => _saving = true);
+    // Lidos antes de esperar: a tela pode sair enquanto grava.
+    final capture = _vm;
+    final income = ref.read(incomeServiceProvider);
     final feedback = CajuiFeedbackScope.of(context);
-    await ref
-        .read(incomeServiceProvider)
-        .receiveIncome(
-          tender: _tender,
-          amount: Money.fromCents(_cents),
-          receivedOn: on,
-          fromPlan: _ofPlan,
-        );
-    feedback.saved();
-    await _capture.closed(widget.capture);
+    setState(() => _saving = true);
+    try {
+      await income.receiveIncome(
+        tender: _tender,
+        amount: Money.fromCents(_cents),
+        receivedOn: on,
+        fromPlan: _ofPlan,
+        id: widget.capture.source.id,
+      );
+      feedback.saved();
+      await capture.closed(widget.capture);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
     return CajuiScreen(
-      title: 'Dinheiro que entrou',
-      onBack: () => _capture.defer(widget.capture),
+      title: _inDoubt ? 'Dinheiro que entrou?' : 'Dinheiro que entrou',
+      onBack: _saving ? null : () => _vm.defer(widget.capture),
       footer: _footer(),
       children: [
         Text(
-          'Li um comprovante de dinheiro recebido. Ele entra na renda do mês, '
-          'e não nos gastos.',
+          _intro,
           style: theme.typography.body.copyWith(color: theme.colors.text.muted),
         ),
         const SizedBox(height: CajuiSpacing.xl),
@@ -122,13 +145,13 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
         label: 'É uma despesa',
         variant: CajuiButtonVariant.secondary,
         expand: true,
-        onPressed: _capture.treatAsExpense,
+        onPressed: _saving ? null : _vm.treatAsExpense,
       ),
       CajuiButton(
         label: 'Descartar',
         variant: CajuiButtonVariant.ghost,
         expand: true,
-        onPressed: () => _capture.discard(widget.capture),
+        onPressed: _saving ? null : () => _vm.discard(widget.capture),
       ),
     ],
   );

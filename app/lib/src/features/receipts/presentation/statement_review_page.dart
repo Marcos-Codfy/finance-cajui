@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -5,6 +6,7 @@ import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/application/statement_import.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
+import 'package:cajui/src/features/receipts/presentation/statement_line_labels.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -13,10 +15,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Um extrato lido: as movimentações em lista, para marcar o que lançar
 /// (RN-707).
 ///
-/// Já vêm marcadas as despesas que ainda não estão no Cajui. Entrada fica
-/// desmarcada — marcar a faz virar recebimento —, e pagamento de fatura e
-/// transferência entre contas suas aparecem só para mostrar que foram
-/// lidos: nunca viram despesa (RN-756, RN-759).
+/// Já vêm marcadas as despesas certas que ainda não estão no Cajui. Entrada
+/// fica desmarcada — marcar a faz virar recebimento —, e pagamento de fatura
+/// e transferência entre contas suas aparecem para mostrar que foram lidos
+/// (RN-756, RN-759); em dúvida, dá para marcar, e aí viram despesa.
 class StatementReviewPage extends ConsumerStatefulWidget {
   /// Cria a tela do extrato de [capture].
   const new({required this.capture, super.key});
@@ -32,11 +34,11 @@ class StatementReviewPage extends ConsumerStatefulWidget {
 class _StatementReviewPageState extends ConsumerState<StatementReviewPage> {
   Set<int>? _selected;
   Set<int> _known = const {};
+  final Set<int> _done = {};
+  String? _refusal;
   bool _saving = false;
 
   List<StatementLine> get _lines => widget.capture.proposal.lines;
-
-  CaptureViewModel get _capture => ref.read(captureProvider.notifier);
 
   void _toggle(int index) => setState(() {
     final selected = _selected!;
@@ -44,13 +46,35 @@ class _StatementReviewPageState extends ConsumerState<StatementReviewPage> {
   });
 
   Future<void> _record() async {
-    setState(() => _saving = true);
+    // Lidos antes de esperar: a tela pode sair enquanto grava.
+    final capture = ref.read(captureProvider.notifier);
+    final import = ref.read(statementImportProvider);
     final feedback = CajuiFeedbackScope.of(context);
-    await ref.read(statementImportProvider).record(widget.capture, {
-      ...?_selected,
-    });
-    feedback.saved();
-    await _capture.closed(widget.capture);
+    setState(() => _saving = true);
+    try {
+      final outcome = await import.record(widget.capture, {...?_selected});
+      if (outcome.refused.isEmpty) {
+        feedback.saved();
+        await capture.closed(widget.capture);
+        return;
+      }
+      if (mounted) setState(() => _keepRefused(outcome));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  /// O que entrou sai da lista de marcadas; o que o domínio recusou fica, com
+  /// o motivo do catálogo — nada some em silêncio.
+  void _keepRefused(StatementOutcome outcome) {
+    _done.addAll(outcome.recorded);
+    _selected!.removeAll(outcome.recorded);
+    final MapEntry(key: index, value: failure) = outcome.refused.entries.first;
+    final count = outcome.recorded.length;
+    _refusal =
+        '${count == 0 ? 'Nada entrou' : 'Lancei $count'}. '
+        '"${_lines[index].description}" não entrou: '
+        '${FailurePresenter.present(failure).text.message}';
   }
 
   @override
@@ -66,7 +90,7 @@ class _StatementReviewPageState extends ConsumerState<StatementReviewPage> {
     return CajuiScreen(
       title: 'Extrato',
       overline: '${_lines.length} movimentações',
-      onBack: () => _capture.defer(widget.capture),
+      onBack: _saving ? null : () => _vm.defer(widget.capture),
       footer: _footer(),
       children: [
         _explanation(context),
@@ -77,7 +101,13 @@ class _StatementReviewPageState extends ConsumerState<StatementReviewPage> {
     );
   }
 
+  CaptureViewModel get _vm => ref.read(captureProvider.notifier);
+
   Widget _explanation(BuildContext context) {
+    final refusal = _refusal;
+    if (refusal != null) {
+      return CajuiNotice(what: refusal, intent: CajuiNoticeIntent.info);
+    }
     final theme = CajuiTheme.of(context);
     return Text(
       'Marquei as despesas que ainda não estão no Cajui. Toque numa linha '
@@ -87,49 +117,43 @@ class _StatementReviewPageState extends ConsumerState<StatementReviewPage> {
   }
 
   Widget _row(LedgerBook book, int index, StatementLine line, LocalDate today) {
-    final selectable = StatementImport.isSelectable(line);
+    final done = _done.contains(index);
+    final selectable = !done && !_saving && StatementImport.isSelectable(line);
     final on = _selected!.contains(index);
-    final what = _what(book, line);
     final day = DateLabels.day(line.occurredOn, today: today);
-    final note = _known.contains(index) ? ' · parece já lançado' : '';
+    final what = done ? 'Lançada' : StatementLineLabels.what(line, book);
+    final note = !done && _known.contains(index) ? ' · parece já lançado' : '';
+    final state = selectable ? (on ? ', marcada' : ', desmarcada') : '';
     return CajuiListRow(
       title: line.description,
       subtitle: '$what · $day$note',
       semanticLabel:
           '${line.description}, ${BrlFormatter.format(line.amount.cents)}, '
-          '$what, $day$note${selectable ? (on ? ', marcada' : ', desmarcada') : ''}',
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CajuiAmountText(line.amount.cents),
-          if (selectable) ...[
-            const SizedBox(width: CajuiSpacing.sm),
-            CajuiSwitch(
-              value: on,
-              semanticLabel: 'Lançar ${line.description}',
-              onChanged: (_) => _toggle(index),
-            ),
-          ],
-        ],
-      ),
+          '$what, $day$note$state',
+      trailing: _trailing(index, line, on: on, selectable: selectable),
       onPressed: selectable ? () => _toggle(index) : null,
     );
   }
 
-  /// O que a linha é, em palavras: a categoria da despesa, ou por que ela
-  /// não vira despesa.
-  static String _what(LedgerBook book, StatementLine line) =>
-      switch (line.kind) {
-        StatementLineKind.expense =>
-          book.categories
-                  .where((category) => category.id == line.categoryId)
-                  .firstOrNull
-                  ?.name ??
-              'Despesa',
-        StatementLineKind.income => 'Entrada',
-        StatementLineKind.cardPayment => 'Pagamento de fatura, não é despesa',
-        StatementLineKind.ownTransfer => 'Entre contas suas, não é despesa',
-      };
+  Widget _trailing(
+    int index,
+    StatementLine line, {
+    required bool on,
+    required bool selectable,
+  }) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      CajuiAmountText(line.amount.cents),
+      if (selectable) ...[
+        const SizedBox(width: CajuiSpacing.sm),
+        CajuiSwitch(
+          value: on,
+          semanticLabel: 'Lançar ${line.description}',
+          onChanged: (_) => _toggle(index),
+        ),
+      ],
+    ],
+  );
 
   Widget _footer() {
     final count = _selected?.length ?? 0;
@@ -138,23 +162,23 @@ class _StatementReviewPageState extends ConsumerState<StatementReviewPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         CajuiButton(
-          label: count == 0
-              ? 'Marque o que lançar'
-              : count == 1
-              ? 'Lançar 1 movimentação'
-              : 'Lançar $count movimentações',
+          label: StatementLineLabels.recordLabel(count),
           expand: true,
           loading: _saving,
           onPressed: count == 0 || _saving ? null : _record,
         ),
         const SizedBox(height: CajuiSpacing.sm),
         CajuiButton(
-          label: 'Descartar',
+          label: _done.isEmpty ? 'Descartar' : 'Pronto',
           variant: CajuiButtonVariant.ghost,
           expand: true,
-          onPressed: () => _capture.discard(widget.capture),
+          onPressed: _saving ? null : _leave,
         ),
       ],
     );
   }
+
+  /// Sem nada lançado, descartar; com parte lançada, fechar sem apagar.
+  void _leave() =>
+      _done.isEmpty ? _vm.discard(widget.capture) : _vm.closed(widget.capture);
 }

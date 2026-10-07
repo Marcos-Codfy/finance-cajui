@@ -29,13 +29,20 @@ class IncomeService {
     required Money amount,
     required LocalDate receivedOn,
     bool fromPlan = true,
+    String? id,
   }) async {
     if (!amount.isPositive) return;
+    // Recebimento que nasce de um comprovante usa a chave dele: confirmar de
+    // novo, depois de adiar e reabrir, não registra a renda duas vezes.
+    if (id != null) {
+      final book = await ref.read(ledgerProvider.future);
+      if (book.receipts.any((receipt) => receipt.id == id)) return;
+    }
     final ofPlan = fromPlan && tender == Tender.cash;
     await _ledger.append(
       IncomeReceived(
         IncomeReceipt(
-          id: ref.read(newIdProvider)(),
+          id: id ?? ref.read(newIdProvider)(),
           sourceId: ofPlan ? LedgerBook.cashIncomeSourceId : null,
           tender: tender,
           amount: amount,
