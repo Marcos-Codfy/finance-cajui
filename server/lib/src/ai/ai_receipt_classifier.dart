@@ -105,13 +105,32 @@ final class AiReceiptClassifier implements ReceiptClassifier {
       if (suggestion == null) return local.copyWith(warnings: ['E-AI-04']);
       cache[cacheKey] = reply.content;
       return _merge(local, suggestion, request);
-    } on ChatUnavailable {
-      breaker.recordFailure();
-      return local.copyWith(warnings: ['E-AI-01']);
+    } on ChatUnavailable catch (error) {
+      return await _unavailable(local, request, error);
     } on TimeoutException {
+      // Foto leva mais tempo por natureza: prazo vencido lendo imagem não é
+      // sinal de IA fora do ar, e não desliga o assistente junto.
+      if (!request.hasImages) breaker.recordFailure();
+      return local.copyWith(warnings: ['E-AI-01']);
+    }
+  }
+
+  /// A IA recusou o pedido, ou caiu. Recusa não é queda e não conta para o
+  /// disjuntor — que é o mesmo do assistente. Pedido com foto recusado tenta
+  /// uma vez só com o texto: o pedido de sempre, que a IA sabe responder.
+  Future<EntryProposal> _unavailable(
+    EntryProposal local,
+    ClassificationRequest request,
+    ChatUnavailable error,
+  ) async {
+    if (!error.rejected) {
       breaker.recordFailure();
       return local.copyWith(warnings: ['E-AI-01']);
     }
+    if (!request.hasImages || request.text.trim().isEmpty) {
+      return local.copyWith(warnings: ['E-AI-04']);
+    }
+    return await classify(request.withoutImages());
   }
 
   /// Só com texto, a pergunta de uma vez, em JSON fechado. Com a foto, a

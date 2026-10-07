@@ -30,7 +30,7 @@ abstract final class ProposalMerge {
     Map<String, double> categoryAccuracy = const {},
   }) => local.copyWith(
     documentKind: _kind(local.documentKind, ai.documentKind),
-    amount: _amount(local.amount, ai.amount, sawImage: sawImage),
+    amount: _amount(local.amount, ai, sawImage: sawImage),
     occurredOn: _filled(local.occurredOn, ai.occurredOn),
     paymentKind: _filled(local.paymentKind, ai.paymentKind),
     category: _category(local.category, ai, categoryAccuracy),
@@ -45,7 +45,11 @@ abstract final class ProposalMerge {
   ) {
     final read = local.value;
     if (fromAi == null || read == null || fromAi == read) return local;
-    if (read == DocumentKind.purchase) {
+    // Pagamento de fatura só pela IA pergunta (RN-757): dar como certo faria
+    // uma despesa sumir — e a foto, que agora vai junto, pode trazer o texto
+    // de quem quer isso (INJ-07).
+    if (read == DocumentKind.purchase &&
+        fromAi != DocumentKind.statementPayment) {
       return ProposedField.resolved(fromAi, source: FieldSource.ai);
     }
     return ProposedField.undecided([
@@ -56,18 +60,20 @@ abstract final class ProposalMerge {
 
   static ProposedField<Money> _amount(
     ProposedField<Money> local,
-    Money? fromAi, {
+    AiSuggestion ai, {
     required bool sawImage,
   }) {
+    final fromAi = ai.amount;
     if (fromAi == null) return local;
     final read = local.value;
     if (read != null) {
-      return read == fromAi
-          ? local
-          : ProposedField.undecided([
-              read,
-              fromAi,
-            ], source: FieldSource.fixedRule);
+      // O rótulo do texto ("TOTAL") só divide o lugar com outro número do
+      // texto. O que a IA leu só da imagem pode ser a foto lida torta.
+      if (read == fromAi || !ai.amountInText) return local;
+      return ProposedField.undecided([
+        read,
+        fromAi,
+      ], source: FieldSource.fixedRule);
     }
     final candidates = local.candidates;
     if (candidates.isEmpty || candidates.contains(fromAi)) {

@@ -35,14 +35,15 @@ final class ReceiptRoutes {
   /// O roteador, montado em `/v1/receipts`.
   Router get router => Router()..post('/classify', _classify);
 
-  /// O maior corpo aceito aqui: três imagens e o texto.
-  static const int maxBodyBytes = 12 * 1024 * 1024;
+  /// O maior corpo aceito aqui: três imagens em base64 e o texto.
+  static const int maxBodyBytes = 9 * 1024 * 1024;
 
   /// Quantas imagens um comprovante leva: a foto, ou as primeiras páginas.
   static const maxImages = 3;
 
-  /// O maior tamanho de uma imagem, já decodificada.
-  static const int maxImageBytes = 4 * 1024 * 1024;
+  /// O maior tamanho de uma imagem, já decodificada. O celular manda JPEG de
+  /// até 2.000 px, que fica bem abaixo disto.
+  static const int maxImageBytes = 2 * 1024 * 1024;
 
   Future<Response> _classify(Request request) async {
     final json = await JsonBody.read(request, limit: maxBodyBytes);
@@ -85,6 +86,10 @@ final class ReceiptRoutes {
   }
 
   static Uint8List _image(String encoded) {
+    // O tamanho em base64 já diz se passa, sem decodificar nada.
+    if (encoded.length > maxImageBytes * 4 ~/ 3 + 4) {
+      throw const FormatException('imagem grande demais');
+    }
     final bytes = base64Decode(encoded);
     if (bytes.length > maxImageBytes || ReceiptImage.mimeOf(bytes) == null) {
       throw const FormatException('imagem fora do formato');
@@ -93,18 +98,21 @@ final class ReceiptRoutes {
   }
 
   /// O que o aparelho aprendeu com as correções (RN-769): estabelecimento →
-  /// categoria. É opcional e limitado; exemplo de categoria que o servidor
-  /// não conhece é ignorado, e qualquer outra coisa fora do formato é pedido
-  /// malformado.
+  /// categoria. É opcional; exemplo de categoria que o servidor não conhece
+  /// é ignorado, e qualquer outra coisa fora do formato é pedido malformado.
+  ///
+  /// Exemplo **a mais** não é: valem os últimos, os mais recentes. Recusar o
+  /// pedido inteiro desligava a IA, sem aviso, de quem já tinha corrigido
+  /// mais de vinte lojas.
   Map<String, String> _examples(Object? json) {
     final raw = json is Map<String, Object?> ? json['examples'] : null;
     if (raw == null) return const {};
-    if (raw is! List<Object?> ||
-        raw.length > ClassificationPrompt.maxExamples) {
+    if (raw is! List<Object?>) {
       throw const FormatException('campo "examples" fora do formato');
     }
+    final extra = raw.length - ClassificationPrompt.maxExamples;
     final examples = <String, String>{};
-    for (final item in raw) {
+    for (final item in extra > 0 ? raw.sublist(extra) : raw) {
       final reader = JsonReader(
         item,
         allowed: const {'merchant', 'categoryId'},

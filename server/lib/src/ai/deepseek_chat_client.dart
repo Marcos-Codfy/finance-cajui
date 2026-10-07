@@ -93,8 +93,14 @@ final class DeepSeekChatClient extends ChatClient {
     }
     if (response.statusCode != HttpStatus.ok) {
       await response.drain<void>();
+      // Só o número: o corpo pode repetir o pedido, e o pedido tem o
+      // comprovante. É o que diz no registro por que a IA não ajudou.
+      stderr.writeln('IA: o provedor respondeu HTTP ${response.statusCode}');
       final wait = int.tryParse(response.headers.value('retry-after') ?? '');
-      throw ChatUnavailable(retryAfterSeconds: wait);
+      throw ChatUnavailable(
+        retryAfterSeconds: wait,
+        status: response.statusCode,
+      );
     }
     return _reply(await response.transform(utf8.decoder).join());
   }

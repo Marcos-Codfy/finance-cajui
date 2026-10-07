@@ -129,7 +129,8 @@ final class AiSuggestion {
       id is String && request.categoryById(id) != null ? id : null;
 
   static Money? _money(Object? cents) {
-    if (cents is! num) return null;
+    // Número quebrado é a IA respondendo em reais: 23.9 viraria R$ 0,24.
+    if (cents is! num || cents != cents.roundToDouble()) return null;
     final rounded = cents.round();
     return rounded > 0 && rounded <= maxCents ? Money.fromCents(rounded) : null;
   }

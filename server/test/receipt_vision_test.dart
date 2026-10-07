@@ -87,14 +87,52 @@ void main() {
       expect(proposal.amount.value, const Money.fromCents(850));
     });
 
-    test('o rótulo TOTAL manda: se a IA diverge, os dois aparecem, o da '
-        'regra primeiro', () async {
+    test('o rótulo TOTAL manda: número que a IA leu só da imagem não tira o '
+        'valor do lugar', () async {
       final (classifier, _) = await _classifier({'amountCents': 8460});
 
       final proposal = await classifier.classify(_request(sampleCoupon));
 
+      expect(proposal.amount.value, const Money.fromCents(8640));
+    });
+
+    test('se a IA aponta outro número que também está no texto, os dois '
+        'aparecem, o da regra primeiro', () async {
+      final (classifier, _) = await _classifier({'amountCents': 1500});
+
+      final proposal = await classifier.classify(
+        _request('$sampleCoupon\nTROCO R\$ 15,00'),
+      );
+
       expect(proposal.amount.value, isNull);
-      expect(proposal.amount.candidates.map((m) => m.cents), [8640, 8460]);
+      expect(proposal.amount.candidates.map((m) => m.cents), [8640, 1500]);
+    });
+
+    test('valor quebrado é a IA respondendo em reais: não vale', () async {
+      final (classifier, _) = await _classifier({'amountCents': 23.9});
+
+      final proposal = await classifier.classify(
+        _request('PADARIA CENTRAL\n12/09/2026'),
+      );
+
+      expect(proposal.amount.value, isNull);
+    });
+
+    test('RN-757 · pagamento de fatura só pela IA pergunta, em vez de dar '
+        'como certo', () async {
+      final (classifier, _) = await _classifier({
+        'documentKind': 'statementPayment',
+      });
+
+      final proposal = await classifier.classify(
+        _request('Comprovante\nValor R\$ 1.240,00\n05/09/2026'),
+      );
+
+      expect(proposal.documentKind.value, isNull);
+      expect(proposal.documentKind.candidates, [
+        DocumentKind.purchase,
+        DocumentKind.statementPayment,
+      ]);
     });
 
     test(
