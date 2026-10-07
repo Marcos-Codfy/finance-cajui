@@ -45,6 +45,12 @@ final class CajuiApi {
   /// Quanto tempo se espera pelo servidor antes de desistir.
   static const timeout = Duration(seconds: 20);
 
+  /// Quanto se espera quando a IA olha fotos: subir até três imagens pela
+  /// rede do celular e ler um extrato inteiro leva mais do que um pedido
+  /// comum. Fica acima do limite do servidor, para a resposta dele — mesmo
+  /// a de "não deu" — chegar antes de o aparelho desistir.
+  static const readingTimeout = Duration(seconds: 50);
+
   /// O cabeçalho em que o aparelho diz quem é. Não prova nada — quem prova
   /// é a chave —; separa a conversa de cada celular com o assistente.
   static const deviceHeader = 'x-cajui-device';
@@ -88,7 +94,8 @@ final class CajuiApi {
     String path,
     Map<String, Object?> body, {
     String? token,
-  }) => _send('POST', path, token: token, body: body);
+    Duration waitFor = timeout,
+  }) => _send('POST', path, token: token, body: body, waitFor: waitFor);
 
   /// Um pedido em qualquer verbo.
   Future<ApiOutcome> send(
@@ -103,6 +110,7 @@ final class CajuiApi {
     String path, {
     String? token,
     Map<String, Object?>? body,
+    Duration waitFor = timeout,
   }) async {
     try {
       final request = Request(method, _baseUrl.resolve(path))
@@ -111,7 +119,7 @@ final class CajuiApi {
       if (token != null) request.headers['authorization'] = 'Bearer $token';
       if (body != null) request.body = jsonEncode(body);
       final response = await Response.fromStream(
-        await _client.send(request).timeout(timeout),
+        await _client.send(request).timeout(waitFor),
       );
       return _read(response.statusCode, utf8.decode(response.bodyBytes));
     } on Object {

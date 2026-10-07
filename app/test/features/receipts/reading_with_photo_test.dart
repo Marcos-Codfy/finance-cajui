@@ -5,22 +5,13 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/auth/application/device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
-import 'package:cajui/src/features/receipts/application/read_outcome.dart';
 import 'package:cajui/src/features/receipts/application/reading_strategy.dart';
-import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
-import 'package:cajui/src/features/receipts/application/shared_item.dart';
 import 'package:cajui/src/features/receipts/infrastructure/http_receipt_classifier.dart';
-import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
-import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:domain/domain.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_household_key.dart';
-import '../../support/fake_inbox.dart';
-import '../../support/fake_reader.dart';
 import '../../support/fake_server.dart';
-import '../../support/test_scope.dart';
 
 /// O cupom de supermercado como o celular o lê: valor ao lado do rótulo,
 /// data, e o nome do lugar dizendo o ramo.
@@ -61,30 +52,6 @@ final class _Identity implements DeviceKeyStore {
   Future<Uint8List> publicKey() async => Uint8List.fromList([9, 9]);
 }
 
-/// Um classificador que devolve sempre a mesma proposta: o que a IA teria
-/// lido da foto.
-final class _ReadsThePhoto implements ReceiptClassifier {
-  const new(this.amount);
-
-  final Money? amount;
-
-  @override
-  Future<EntryProposal> classify(ClassificationRequest request) async =>
-      EntryProposal(
-        documentKind: const ProposedField.resolved(
-          DocumentKind.purchase,
-          source: FieldSource.ai,
-        ),
-        amount: amount == null
-            ? const ProposedField.unread()
-            : ProposedField.resolved(amount!, source: FieldSource.ai),
-        occurredOn: const ProposedField.unread(),
-        category: const ProposedField.unread(),
-        paymentKind: const ProposedField.unread(),
-        description: 'Mercadinho do Zé',
-      );
-}
-
 void main() {
   group('ADR-022 · quando a regra do celular basta', () {
     test(
@@ -103,6 +70,26 @@ void main() {
       () async {
         final local = await const RuleBasedClassifier().classify(
           _request(_pixToPerson),
+        );
+
+        expect(ReadingStrategy.rulesSuffice(local), isFalse);
+      },
+    );
+
+    test('RN-111 · cupom de mercado pago no vale: a regra lê o vale, e o vale '
+        'não vira dinheiro', () async {
+      final local = await const RuleBasedClassifier().classify(
+        _request(_market.replaceFirst('DEBITO', 'Cartao Vale Alimentacao')),
+      );
+
+      expect(local.paymentKind.value, PaymentMethodKind.mealVoucher);
+    });
+
+    test(
+      'cupom de mercado sem a forma de pagamento: não basta, a IA ajuda',
+      () async {
+        final local = await const RuleBasedClassifier().classify(
+          _request(_market.replaceFirst('DEBITO', '')),
         );
 
         expect(ReadingStrategy.rulesSuffice(local), isFalse);
@@ -195,47 +182,52 @@ void main() {
       expect(sent.containsKey('text'), isFalse);
       expect(sent['images'], hasLength(1));
     });
-  });
 
-  group('ADR-022 · foto que o celular não conseguiu ler', () {
-    Future<CaptureState> arrive(ReceiptClassifier classifier) async {
-      final inbox = FakeInbox();
-      final container = ProviderContainer(
-        overrides: [
-          ...testOverrides(
-            inbox: inbox,
-            reader: FakeReader({
-              '/inbox/escura': ReadText('', images: [_photo]),
-            }),
-          ),
-          receiptClassifierProvider.overrideWithValue(classifier),
-        ],
-      );
-      addTearDown(container.dispose);
-      container.read(captureProvider);
-      inbox.share(const [
-        SharedFile(id: 'c1', path: '/inbox/escura', isPdf: false),
-      ]);
-      await pumpEventQueue();
-      final settled = container.read(captureProvider);
-      return settled;
-    }
+    test('sem texto e sem foto, nada sai: o servidor só recusaria', () async {
+      await classifier.classify(_request(''));
 
-    test('a IA leu o valor: a conferência abre, preenchida', () async {
-      final state = await arrive(const _ReadsThePhoto(Money.fromCents(2390)));
-
-      expect(state, isA<CaptureReady>());
-      final proposal = (state as CaptureReady).capture.proposal;
-      expect(proposal.amount.value, const Money.fromCents(2390));
-      expect(proposal.displayDescription, 'Mercadinho do Zé');
+      expect(server.paths, isEmpty);
     });
 
-    test('nem o celular nem a IA leram: a saída é a de sempre, outra foto ou '
-        'digitar', () async {
-      final state = await arrive(const _ReadsThePhoto(null));
+    test('servidor que ainda não conhece foto recusa: o texto vai de novo, '
+        'sozinho, e a IA continua ajudando', () async {
+      server.refuseOnceWith(ErrorCode.req04, status: 413);
 
-      expect(state, isA<CaptureFailed>());
-      expect((state as CaptureFailed).error.code, ErrorCode.capt01);
+      await classifier.classify(_request(_pixToPerson, images: [_photo]));
+
+      expect(server.requests, hasLength(2));
+      final retry = server.requests.last.body;
+      expect(retry.containsKey('images'), isFalse);
+      expect(retry['text'], contains('Maria Aparecida'));
+    });
+
+    test('foto sozinha recusada não tenta de novo: sem texto não há o que '
+        'mandar', () async {
+      server.refuseOnceWith(ErrorCode.req01, status: 400);
+
+      await classifier.classify(_request('', images: [_photo]));
+
+      expect(server.requests, hasLength(1));
+    });
+
+    test('RN-769 · com mais de 20 lojas aprendidas, vão as 20 mais recentes, e '
+        'o pedido não é recusado', () async {
+      final request = ClassificationRequest(
+        text: _pixToPerson,
+        categories: DefaultCatalog.emptyBook.categories,
+        today: LocalDate(2026, 9, 20),
+        learnedRules: {
+          for (var shop = 1; shop <= 25; shop++) 'loja $shop': 'groceries',
+          'x' * 81: 'groceries',
+        },
+      );
+
+      await classifier.classify(request);
+
+      final examples = server.requests.single.body['examples']! as List;
+      expect(examples, hasLength(HttpReceiptClassifier.maxExamples));
+      expect((examples.first as Map)['merchant'], 'loja 6');
+      expect((examples.last as Map)['merchant'], 'loja 25');
     });
   });
 }

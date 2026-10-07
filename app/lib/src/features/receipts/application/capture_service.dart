@@ -36,28 +36,51 @@ class CaptureService {
         return await _propose(
           PendingCapture(id: id, receivedOn: today, text: text),
         );
-      case SharedFile(:final id, :final path):
-        final read = await ref
-            .read(receiptReaderProvider)
-            .read(item, onPage: onPage);
-        return switch (read) {
-          ReadFailed(:final code) => CaptureRefused(code),
-          ReadText(:final text, :final images) => await _propose(
-            PendingCapture(
-              id: id,
-              receivedOn: today,
-              text: text,
-              filePath: path,
-              images: images,
-            ),
-          ),
-        };
+      case SharedFile():
+        return await _openFile(item, today, onPage);
     }
+  }
+
+  Future<CaptureOutcome> _openFile(
+    SharedFile file,
+    LocalDate today,
+    void Function(int page, int of)? onPage,
+  ) async {
+    final read = await ref
+        .read(receiptReaderProvider)
+        .read(file, onPage: onPage);
+    return switch (read) {
+      ReadFailed(:final code) => CaptureRefused(code),
+      ReadText(:final text, :final images) => await _propose(
+        PendingCapture(
+          id: file.id,
+          receivedOn: today,
+          text: text,
+          filePath: file.path,
+          isPdf: file.isPdf,
+          images: images,
+        ),
+      ),
+    };
   }
 
   /// Monta de novo a proposta de uma captura guardada, já com o que o app
   /// aprendeu desde então.
-  Future<Capture> reopen(PendingCapture pending) => _classify(pending);
+  ///
+  /// O arquivo fica no aparelho até ser descartado: lido de novo, devolve as
+  /// imagens, e a IA vê o mesmo que viu da primeira vez — o servidor responde
+  /// do cache, sem pagar de novo. Sem isso, a foto que só a IA conseguiu ler
+  /// voltava em branco.
+  Future<Capture> reopen(PendingCapture pending) async {
+    final path = pending.filePath;
+    if (path == null) return await _classify(pending);
+    final read = await ref
+        .read(receiptReaderProvider)
+        .read(SharedFile(id: pending.id, path: path, isPdf: pending.isPdf));
+    return await _classify(
+      pending.withImages(read is ReadText ? read.images : const []),
+    );
+  }
 
   Future<CaptureOutcome> _propose(PendingCapture raw) async {
     final clean = PendingCapture(
@@ -67,9 +90,10 @@ class CaptureService {
       // invisíveis fora antes de qualquer regra olhar para ele.
       text: ReceiptText.clean(raw.text),
       filePath: raw.filePath,
+      isPdf: raw.isPdf,
       images: raw.images,
     );
-    final unreadable = clean.text.trim().length < minReadableChars;
+    final unreadable = _unreadable(clean);
     if (unreadable && clean.images.isEmpty) {
       return const CaptureRefused(ErrorCode.capt01);
     }
@@ -82,8 +106,15 @@ class CaptureService {
     return CaptureProposed(capture);
   }
 
-  /// Menos que isso não é comprovante lido: é ruído de foto escura.
+  /// Menos que isso, lido de uma foto, não é comprovante: é ruído de foto
+  /// escura.
   static const minReadableChars = 8;
+
+  /// Texto compartilhado é outra coisa: "R$ 9,90" é curto, e é tudo.
+  static bool _unreadable(PendingCapture capture) {
+    final length = capture.text.trim().length;
+    return capture.filePath == null ? length == 0 : length < minReadableChars;
+  }
 
   Future<Capture> _classify(PendingCapture source) async {
     final book = await ref.read(ledgerProvider.future);

@@ -108,11 +108,11 @@ void main() {
     expect(find.text('Conferir comprovante'), findsOneWidget);
   });
 
-  testWidgets('aparelho sem câmera não mostra o botão', (tester) async {
+  testWidgets('aparelho sem câmera mostra só a galeria', (tester) async {
     await _openEntries(tester, hasCamera: false);
 
     expect(find.text('Fotografar'), findsNothing);
-    expect(find.text('Da galeria'), findsNothing);
+    expect(find.text('Da galeria'), findsOneWidget);
     expect(find.text('Lançar'), findsOneWidget);
   });
 }

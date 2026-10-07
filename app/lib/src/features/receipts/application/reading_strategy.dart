@@ -17,6 +17,9 @@ abstract final class ReadingStrategy {
       local.occurredOn.value != null &&
       local.documentKind.value == DocumentKind.purchase &&
       local.merchant != null &&
+      // Sem saber por onde pagou, a regra não basta: cupom de mercado pago
+      // no vale, lido como débito, soma moedas que nunca se somam (RN-111).
+      local.paymentKind.value != null &&
       (local.category.value != null || local.category.candidates.isNotEmpty);
 
   /// A proposta do servidor, com a categoria que só o celular sabe ler: o
