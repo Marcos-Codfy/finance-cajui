@@ -60,12 +60,15 @@ final class AiReceiptClassifier implements ReceiptClassifier {
 
   static const _rules = RuleBasedClassifier();
 
-  /// O teto da resposta só com texto: o objeto da proposta tem uns cem
-  /// tokens.
-  static const _maxTokens = 300;
+  /// O teto da resposta só com texto. O objeto de um comprovante tem uns
+  /// cem tokens, mas o texto também pode ser de um extrato, e resposta
+  /// cortada no meio não se lê: perde tudo, até o tipo. O teto não custa
+  /// nada — paga-se o que a IA escreve.
+  static const _maxTokens = 2000;
 
-  /// O teto com a foto: um extrato de trinta linhas passa de mil tokens.
-  static const _maxTokensWithImages = 2000;
+  /// O teto com a foto: trinta linhas de extrato chegam perto de 2.000
+  /// tokens, e o modelo às vezes passa das trinta.
+  static const _maxTokensWithImages = 4000;
 
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {

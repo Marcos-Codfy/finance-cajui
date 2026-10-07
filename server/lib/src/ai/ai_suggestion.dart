@@ -137,8 +137,10 @@ final class AiSuggestion {
       id is String && request.categoryById(id) != null ? id : null;
 
   static Money? _money(Object? cents) {
-    // Número quebrado é a IA respondendo em reais: 23.9 viraria R$ 0,24.
-    if (cents is! num || cents != cents.roundToDouble()) return null;
+    // Número quebrado é a IA respondendo em reais: 23.9 viraria R$ 0,24. E o
+    // infinito (1e400 no JSON) derrubaria a conta inteira.
+    if (cents is! num || !cents.isFinite) return null;
+    if (cents != cents.roundToDouble()) return null;
     final rounded = cents.round();
     return rounded > 0 && rounded <= maxCents ? Money.fromCents(rounded) : null;
   }
@@ -167,7 +169,7 @@ final class AiSuggestion {
   }
 
   static int? _installments(Object? raw) {
-    if (raw is! num) return null;
+    if (raw is! num || !raw.isFinite) return null;
     final count = raw.round();
     return count >= 2 && count <= 48 ? count : null;
   }

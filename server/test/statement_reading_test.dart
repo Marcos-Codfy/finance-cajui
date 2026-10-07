@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:domain/domain.dart';
 import 'package:server/src/ai/ai_receipt_classifier.dart';
 import 'package:server/src/ai/ai_statement_lines.dart';
+import 'package:server/src/ai/ai_suggestion.dart';
 import 'package:server/src/ai/chat_reply.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:test/test.dart';
@@ -107,31 +108,33 @@ void main() {
       expect(last.amount, const Money.fromCents(2500));
       expect(last.categoryId, isNull);
       expect(last.kind, StatementLineKind.expense);
+      expect(last.doubtful, isTrue);
     });
 
     test('descrição com contato não chega à tela: vira "Movimentação" '
         '(RN-775)', () async {
       final proposal = await _read([
         _line('03', -4590, description: 'Ligue 0800 para regularizar'),
+        _line('04', -1000),
       ]);
 
-      expect(proposal.lines.single.description, AiStatementLines.unnamed);
+      expect(proposal.lines.first.description, AiStatementLines.unnamed);
     });
 
     test(
       'RN-774 · sem a foto, valor que não está no texto é inventado',
       () async {
         final proposal = await _read(
-          [_line('03', -4590), _line('04', -9999)],
+          [_line('03', -4590), _line('04', -9999), _line('04', -1200)],
           request: _request(
             text:
                 '$_header\n03/09/2026 MERCADO R\$ 45,90\n'
-                '04/09/2026 PADARIA',
+                r'04/09/2026 PADARIA R$ 12,00',
             withPage: false,
           ),
         );
 
-        expect(proposal.lines.single.amount, const Money.fromCents(4590));
+        expect(proposal.lines.map((line) => line.amount.cents), [4590, 1200]);
       },
     );
 
@@ -152,5 +155,95 @@ void main() {
         expect(proposal.documentKind.value, isNot(DocumentKind.statement));
       },
     );
+
+    test('uma linha só não é extrato: é comprovante lido torto, ou foto '
+        'querendo esconder uma compra (INJ-07)', () async {
+      final proposal = await _read([
+        _line('03', -8640, kind: 'cardPayment', description: 'Fatura'),
+      ]);
+
+      expect(proposal.isStatement, isFalse);
+    });
+  });
+
+  group('RN-756 a RN-759 · o tipo de cada linha', () {
+    test('a palavra escrita na linha manda, diga a IA o que disser', () async {
+      final proposal = await _read([
+        _line('03', -150000, description: 'Pgto fatura Nubank'),
+        _line('05', 12000, description: 'Pix recebido Maria'),
+        _line('06', -10000, description: 'Saque 24h'),
+      ]);
+
+      expect(proposal.lines.map((line) => line.kind), [
+        StatementLineKind.cardPayment,
+        StatementLineKind.income,
+        StatementLineKind.ownTransfer,
+      ]);
+      expect(proposal.lines.any((line) => line.doubtful), isFalse);
+    });
+
+    test(
+      'fatura e transferência que só a IA viu ficam em dúvida (RN-757)',
+      () async {
+        final proposal = await _read([
+          _line(
+            '03',
+            -150000,
+            description: 'Nu Pagamentos',
+            kind: 'cardPayment',
+          ),
+          _line('04', -50000, description: 'Joao Silva', kind: 'ownTransfer'),
+          _line('05', -1500, description: 'Padaria Central'),
+        ]);
+
+        expect(proposal.lines.map((line) => line.doubtful), [
+          true,
+          true,
+          false,
+        ]);
+      },
+    );
+
+    test(
+      'linha sem tipo é despesa em dúvida: aparece, mas nunca vem marcada',
+      () async {
+        final proposal = await _read([
+          {
+            'occurredOn': '2026-09-03',
+            'amountCents': 12000,
+            'description': 'Movimento',
+          },
+          _line('04', -1500),
+        ]);
+
+        expect(proposal.lines.first.kind, StatementLineKind.expense);
+        expect(proposal.lines.first.doubtful, isTrue);
+      },
+    );
+
+    test('RN-111 · no extrato do vale, toda linha é vale', () async {
+      final proposal = await _read([
+        _line('03', -4590),
+        _line('01', 80000, kind: 'income'),
+      ], request: _request(text: 'ALELO ALIMENTACAO\nEXTRATO DO CARTAO'));
+
+      expect(
+        proposal.lines.map((line) => line.paymentKind),
+        everyElement(PaymentMethodKind.mealVoucher),
+      );
+    });
+
+    test('valor infinito não derruba a leitura', () {
+      final suggestion = AiSuggestion.parse(
+        '{"documentKind": "statement", "amountCents": 1e400, "installments": '
+        '1e400, "lines": [{"occurredOn": "2026-09-03", "amountCents": 1e400, '
+        '"description": "x", "kind": "expense"}]}',
+        _request(),
+      );
+
+      expect(suggestion, isNotNull);
+      expect(suggestion!.amount, isNull);
+      expect(suggestion.lines, isEmpty);
+    });
   });
 }
