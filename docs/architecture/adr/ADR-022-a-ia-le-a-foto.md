@@ -19,13 +19,16 @@ O preço foi conferido na fonte: a DeepSeek conta até 1.024 tokens por imagem, 
 3. **Quando não bastam, a foto vai junto do texto.** O celular reduz a imagem a 2.000 px no lado maior, em JPEG, de pé pela marcação EXIF (`AiImage`); de um PDF vão as três primeiras páginas. O servidor manda ao `deepseek-flash` uma mensagem com o texto lido e as imagens, e pede JSON.
 4. **Foto que o celular não leu também vai.** Antes ela parava em "não deu para ler"; agora a IA tenta, e só se ela também não achar valor a pessoa vê a saída de sempre (outra foto, ou digitar).
 5. **A junção é campo a campo** (`ProposalMerge`):
-   - valor: o rótulo das regras manda; se a IA diverge, a tela mostra os dois, o da regra primeiro. A IA desempata quando as regras ficaram entre vários números, e lê sozinha quando o texto não trouxe nenhum;
+   - valor: o rótulo das regras manda. Se a IA aponta **outro número do texto**, a tela mostra os dois, o da regra primeiro; número que ela leu só da imagem não tira o rótulo do lugar — pode ser a foto lida torta. A IA desempata quando as regras ficaram entre vários números, e lê sozinha quando o texto não trouxe nenhum. Valor quebrado (23.9) é a IA respondendo em reais, e não vale;
    - data e forma de pagamento: as do texto, quando as regras acharam; as da IA, quando não;
    - categoria: o que a pessoa ensinou manda (RN-765); depois o palpite da IA, com o ramo do lugar lido no celular ao lado;
-   - tipo do documento: "compra" é o que as regras dizem quando nenhuma palavra apareceu, e aí vale a IA (é o que reconhece um Pix recebido); quando as regras acharam "pagamento de fatura", divergir vira pergunta (RN-757);
+   - tipo do documento: "compra" é o que as regras dizem quando nenhuma palavra apareceu, e aí vale a IA (é o que reconhece um Pix recebido) — **menos pagamento de fatura**, que só pela IA vira pergunta (RN-757): dar como certo faria uma despesa sumir, e a foto pode trazer o texto de quem quer isso (INJ-07); quando as regras acharam um tipo, divergir também vira pergunta;
    - descrição: a da IA, que lê o nome do lugar como gente.
 6. **Sem foto, nada muda**: valor e data da IA continuam valendo só se estão no texto (RN-774). Com foto, valem se não estiverem no futuro, não forem velhos demais e couberem em R$ 1 milhão.
 7. A conferência continua: a pessoa bate o olho e confirma com um toque.
+8. **A regra só basta sabendo a forma de pagamento.** Cupom de mercado pago no vale, lido como débito, somaria duas moedas que nunca se somam (RN-111). O leitor passou a reconhecer as palavras do vale (vale alimentação/refeição, Alelo, Pluxee/Sodexo, Ticket, VR) antes de "crédito" e "débito"; sem forma nenhuma, a foto vai para a IA.
+9. **Falha não é queda.** O servidor que ainda não conhece foto recusa o pedido; o app tenta de novo só com o texto, e a IA continua ajudando. Do lado do servidor, a IA que **recusa** a imagem (4xx) não conta para o disjuntor — o mesmo do assistente — e o pedido segue só com o texto; prazo vencido lendo foto também não conta. O registro do serviço diz o código HTTP do provedor, e só ele.
+10. **Reabrir lê o arquivo de novo.** O arquivo fica no aparelho até ser descartado; a captura adiada guarda se é PDF, e ao reabrir a foto volta para a IA — o servidor responde do cache, sem pagar de novo.
 
 ## Alternativas consideradas
 
@@ -40,11 +43,12 @@ O preço foi conferido na fonte: a DeepSeek conta até 1.024 tokens por imagem, 
 
 - **Bom:** o comprovante que antes vinha com campo em branco vem preenchido; a foto escura deixa de ser beco sem saída.
 - **Custo:** a imagem sai do aparelho como está, com CPF, nome e chave Pix, para a DeepSeek. Risco aceito pelo dono.
-- **Custo:** a leitura com foto espera a IA, até 15 segundos; o cupom de mercado continua instantâneo.
-- **Custo:** a rota de classificação aceita até 12 MB por pedido — três imagens de até 4 MB, conferidas pelos primeiros bytes.
+- **Custo:** a leitura com foto espera a IA, até 15 segundos no servidor; o app espera até 50 para cobrir o envio pela rede do celular. O cupom de mercado continua instantâneo.
+- **Custo:** a rota de classificação aceita até 9 MB por pedido — três imagens de até 2 MB, conferidas pelo tamanho antes de decodificar e pelos primeiros bytes depois. O corpo é lido em bloco de bytes, e não em lista de inteiros, que ocupava oito vezes mais e levava três pedidos ao teto de memória do serviço.
 
 ## Como se confere
 
-- Testes do servidor: a foto vai na mesma mensagem que o texto, e a resposta é pedida em JSON; o valor que o celular não leu vem da IA; a IA desempata entre os números lidos; o rótulo TOTAL manda e a divergência mostra os dois; sem foto, valor fora do texto é descartado; só a imagem basta para a IA ler tudo; Pix recebido vira entrada; data futura ou velha não vale; a mesma foto não paga duas vezes; a rota aceita foto acima de 64 KB e recusa o que não é imagem.
-- Testes do app: cupom de mercado lido inteiro não sai do celular; Pix para uma pessoa leva a foto em base64; foto não lida vai sozinha; a IA leu o valor e a conferência abre; ninguém leu e a saída é a de sempre.
+- Testes do servidor: a foto vai na mesma mensagem que o texto, e a resposta é pedida em JSON; o valor que o celular não leu vem da IA; a IA desempata entre os números lidos; o rótulo TOTAL manda contra número lido só da imagem, e divide o lugar com outro número do texto; valor quebrado não vale; fatura só pela IA vira pergunta; sem foto, valor fora do texto é descartado; só a imagem basta para a IA ler tudo; Pix recebido vira entrada; data futura ou velha não vale; a mesma foto não paga duas vezes; a rota aceita foto acima de 64 KB, recusa o que não é imagem, aceita mais de 20 exemplos e recusa corpo e imagem acima do teto; a IA que recusa a imagem leva o pedido de volta só com texto, sem abrir o disjuntor; prazo vencido lendo foto também não abre.
+- Testes do app: cupom de mercado lido inteiro não sai do celular; sem forma de pagamento, sai; o vale é lido como vale; Pix para uma pessoa leva a foto em base64; foto não lida vai sozinha; sem texto e sem foto nada sai; o servidor antigo recusa e o texto vai de novo; vão os 20 exemplos mais recentes; a IA leu o valor e a conferência abre; adiar e reabrir devolve a foto à IA; texto curto compartilhado abre a conferência; ninguém leu e a saída é a de sempre.
+- Revisão adversarial com três revisores independentes (junção, servidor, Android): os achados confirmados entraram aqui; o que ficou está no `BACKLOG.md` (BL-073 a BL-075). O tipo do documento ainda não muda a tela — Pix recebido abre a conferência de despesa —; isso entra no passo seguinte, o dos extratos e das entradas.
 - Em produção: depende do servidor novo na VM, que a rede da faculdade não deixa subir (porta 22).
