@@ -2,6 +2,7 @@ import 'package:cajui/src/features/assistant/presentation/assistant_composer.dar
 import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_view_model.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -81,6 +82,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             reply: reply,
             onRetry: assistant.retry,
             onUndo: assistant.undo,
+            canUndo: ref.read(ledgerUplinkProvider).isPaired,
           ),
         ],
         if (pending != null) ...[

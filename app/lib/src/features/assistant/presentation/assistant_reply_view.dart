@@ -16,8 +16,13 @@ class AssistantReplyView extends StatefulWidget {
     required this.reply,
     required this.onRetry,
     required this.onUndo,
+    this.canUndo = true,
     super.key,
   });
+
+  /// Se este aparelho pode desfazer: só o celular grava. Na consulta pela
+  /// web o botão não aparece — lá, gravar estoura por construção (T-12).
+  final bool canUndo;
 
   /// O que voltou.
   final AssistantReply reply;
@@ -77,7 +82,7 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
       children: [
         CajuiChatBubble(text),
         for (final action in actions)
-          if (action.isUndoable) _undoRow(context, action),
+          if (widget.canUndo && action.isUndoable) _undoRow(context, action),
       ],
     ),
     AssistantFailed(:final code, :final retryAfterSeconds) => Padding(
