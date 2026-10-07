@@ -71,8 +71,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  /// A câmera e o plano, no alto: fotografar um comprovante é o caminho
-  /// mais comum de um lançamento, e começa na primeira tela.
+  /// A câmera, a galeria e o plano, no alto: fotografar ou escolher um
+  /// comprovante é o caminho mais comum de um lançamento, e começa na
+  /// primeira tela.
   Widget _tools(BuildContext context, WidgetRef ref) {
     final capture = ref.watch(captureServiceProvider);
     return Row(
@@ -83,6 +84,12 @@ class DashboardPage extends ConsumerWidget {
             icon: CajuiIconData.camera,
             semanticLabel: 'Fotografar comprovante',
             onPressed: () => _photograph(context, capture.photograph),
+          ),
+        if (capture.canPickFiles)
+          CajuiIconButton(
+            icon: CajuiIconData.image,
+            semanticLabel: 'Escolher da galeria ou dos arquivos',
+            onPressed: () => _photograph(context, capture.pickFromDevice),
           ),
         CajuiIconButton(
           icon: CajuiIconData.sliders,

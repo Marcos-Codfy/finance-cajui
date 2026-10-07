@@ -64,7 +64,7 @@ void main() {
       SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
     ];
 
-    await _tap(tester, find.text('Fotografar comprovante'));
+    await _tap(tester, find.text('Fotografar'));
 
     expect(inbox.photoRequests, 1);
     expect(find.text('Conferir comprovante'), findsOneWidget);
@@ -78,10 +78,41 @@ void main() {
     expect(find.widgetWithText(CajuiChip, 'Mercado'), findsNothing);
   });
 
+  testWidgets('escolher da galeria: o print escolhido abre a conferência já '
+      'lida, pelo mesmo caminho da foto', (tester) async {
+    final inbox = await _openEntries(tester);
+    inbox.picked = const [
+      SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
+    ];
+
+    await _tap(tester, find.text('Da galeria'));
+
+    expect(inbox.pickRequests, 1);
+    expect(find.text('Conferir comprovante'), findsOneWidget);
+    expect(find.text('653,58'), findsOneWidget);
+  });
+
+  testWidgets('o painel também tem a galeria, no alto', (tester) async {
+    final inbox = await _openEntries(tester);
+    inbox.picked = const [
+      SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
+    ];
+    await _tap(tester, find.bySemanticsLabel('Painel'));
+
+    await _tap(
+      tester,
+      find.bySemanticsLabel('Escolher da galeria ou dos arquivos'),
+    );
+
+    expect(inbox.pickRequests, 1);
+    expect(find.text('Conferir comprovante'), findsOneWidget);
+  });
+
   testWidgets('aparelho sem câmera não mostra o botão', (tester) async {
     await _openEntries(tester, hasCamera: false);
 
-    expect(find.text('Fotografar comprovante'), findsNothing);
+    expect(find.text('Fotografar'), findsNothing);
+    expect(find.text('Da galeria'), findsNothing);
     expect(find.text('Lançar'), findsOneWidget);
   });
 }

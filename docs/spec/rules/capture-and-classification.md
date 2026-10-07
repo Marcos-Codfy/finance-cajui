@@ -2,6 +2,8 @@
 
 Formato e convenções em [README.md](README.md). Termos em [glossary.md](../glossary.md). O passo a passo, as telas e os textos estão em [sharing-flow.md](../sharing-flow.md).
 
+> **Escolher do aparelho (07/10/2026).** Além de receber compartilhamento (RN-701) e fotografar (ADR-017), o app abre o seletor do Android para escolher fotos, prints e PDFs, vários de uma vez. O que vem de lá passa pelas RN-702 a RN-705 como um compartilhamento, sem permissão de leitura da galeria.
+>
 > **Revisão de 07/10/2026 (ADR-020 e ADR-021).** A conferência do comprovante continua — o dono pediu para mantê-la —, mas vem pronta para um toque: RN-744 e RN-782 — o **candidato mais provável já entra no campo** de categoria, e os outros aparecem ao lado como "Pode ser também"; RN-748 — data que não se leu vale o **dia em que o comprovante chegou**, marcado na tela; o aviso "Li o comprovante aqui no aparelho" e a segunda pergunta ao descartar deixaram de existir; RN-752 — sem a chave da casa valem as regras locais.
 
 Três princípios atravessam a área:

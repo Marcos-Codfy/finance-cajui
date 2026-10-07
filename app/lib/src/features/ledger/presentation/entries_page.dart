@@ -9,6 +9,7 @@ import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_row.dart';
 import 'package:cajui/src/features/ledger/presentation/month_spending_card.dart';
+import 'package:cajui/src/features/receipts/application/capture_service.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/pending_captures_card.dart';
 import 'package:design_system/design_system.dart';
@@ -37,9 +38,10 @@ class EntriesPage extends ConsumerWidget {
     );
   }
 
-  /// As duas portas de entrada de uma despesa: fotografar o comprovante de
-  /// papel e lançar à mão. Fotografar vem primeiro porque é o caminho do
-  /// cupom de mercado, que não dá para compartilhar (ADR-017).
+  /// As portas de entrada de uma despesa: fotografar o comprovante de papel,
+  /// escolher do aparelho um print, uma foto ou o PDF de um extrato, e
+  /// lançar à mão. As duas primeiras vêm lado a lado, em cima: são os
+  /// caminhos de quem tem o comprovante na mão (ADR-017).
   ///
   /// Na web não há rodapé nenhum: lá o livro **desce** do servidor e não há
   /// onde gravar — tocar em "Lançar" levava ao formulário e só estourava na
@@ -51,18 +53,13 @@ class EntriesPage extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     final ready = state is EntriesReady;
+    final capture = ref.watch(captureServiceProvider);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (ref.watch(captureServiceProvider).canPhotograph) ...[
-          CajuiButton(
-            label: 'Fotografar comprovante',
-            variant: CajuiButtonVariant.secondary,
-            icon: CajuiIconData.camera,
-            expand: true,
-            onPressed: ready ? () => _photograph(context, ref) : null,
-          ),
+        if (capture.canPhotograph || capture.canPickFiles) ...[
+          _captureRow(context, capture, ready: ready),
           const SizedBox(height: CajuiSpacing.sm),
         ],
         CajuiButton(
@@ -75,12 +72,63 @@ class EntriesPage extends ConsumerWidget {
     );
   }
 
-  /// A foto não volta por aqui: ela entra na fila da captura, e a conferência
-  /// abre por cima do app, igual à do compartilhamento.
-  static Future<void> _photograph(BuildContext context, WidgetRef ref) async {
+  /// Fotografar e escolher do aparelho, lado a lado.
+  Widget _captureRow(
+    BuildContext context,
+    CaptureService capture, {
+    required bool ready,
+  }) {
+    final camera = capture.canPhotograph
+        ? _captureButton(
+            context,
+            label: 'Fotografar',
+            icon: CajuiIconData.camera,
+            open: ready ? capture.photograph : null,
+          )
+        : null;
+    final gallery = capture.canPickFiles
+        ? _captureButton(
+            context,
+            label: 'Da galeria',
+            icon: CajuiIconData.image,
+            open: ready ? capture.pickFromDevice : null,
+          )
+        : null;
+    return Row(
+      children: [
+        ?camera,
+        if (camera != null && gallery != null)
+          const SizedBox(width: CajuiSpacing.sm),
+        ?gallery,
+      ],
+    );
+  }
+
+  /// Um dos dois botões de captura, com metade da largura.
+  static Widget _captureButton(
+    BuildContext context, {
+    required String label,
+    required CajuiIconData icon,
+    required Future<bool> Function()? open,
+  }) => Expanded(
+    child: CajuiButton(
+      label: label,
+      variant: CajuiButtonVariant.secondary,
+      icon: icon,
+      expand: true,
+      onPressed: open == null ? null : () => _open(context, open),
+    ),
+  );
+
+  /// A foto e o arquivo escolhido não voltam por aqui: entram na fila da
+  /// captura, e a conferência abre por cima do app, igual à do
+  /// compartilhamento.
+  static Future<void> _open(
+    BuildContext context,
+    Future<bool> Function() open,
+  ) async {
     final feedback = CajuiFeedbackScope.of(context);
-    final opened = await ref.read(captureServiceProvider).photograph();
-    if (!opened) feedback.notice();
+    if (!await open()) feedback.notice();
   }
 
   /// Carregando tem a forma do que vem: três linhas de lançamento.
@@ -122,8 +170,8 @@ class EntriesPage extends ConsumerWidget {
         const CajuiEmptyState(
           title: 'Nada lançado ainda',
           message:
-              'Fotografe o comprovante do mercado, compartilhe um Pix de '
-              'qualquer app, ou lance o primeiro à mão.',
+              'Fotografe o comprovante, escolha um print ou o PDF de um '
+              'extrato da galeria, ou lance o primeiro à mão.',
         ),
       for (final (index, entry) in state.entries.indexed)
         CajuiEntrance(

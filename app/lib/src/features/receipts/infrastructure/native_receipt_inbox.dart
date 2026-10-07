@@ -66,6 +66,13 @@ final class NativeReceiptInbox implements ReceiptInbox {
       await _methods.invokeMethod<bool>('takePhoto') ?? false;
 
   @override
+  bool get canPickFiles => true;
+
+  @override
+  Future<bool> pickFiles() async =>
+      await _methods.invokeMethod<bool>('pickFiles') ?? false;
+
+  @override
   Future<void> discard(SharedFile file) =>
       _methods.invokeMethod<bool>('discard', {'path': file.path});
 }

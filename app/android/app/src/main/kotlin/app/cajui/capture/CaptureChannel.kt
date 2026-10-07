@@ -21,6 +21,7 @@ class CaptureChannel(
     context: Context,
     messenger: BinaryMessenger,
     private val photos: PhotoIntake? = null,
+    private val files: FileIntake? = null,
 ) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
     private val intake = ShareIntake(context)
@@ -58,6 +59,7 @@ class CaptureChannel(
         when (call.method) {
             "takePending" -> result.success(pending.toList()).also { pending.clear() }
             "takePhoto" -> result.success(photos?.start() ?: false)
+            "pickFiles" -> result.success(files?.start() ?: false)
             "readText" -> readText(call, result)
             "discard" -> result.success(intake.discard(call.argument<String>("path").orEmpty()))
             else -> result.notImplemented()
@@ -72,6 +74,30 @@ class CaptureChannel(
         val item = photos?.finish(requestCode, resultCode) ?: return
         pending.add(item)
         events?.success(mapOf("type" to "arrived"))
+    }
+
+    /**
+     * O que a pessoa escolheu no seletor entra na fila como um
+     * compartilhamento. A cópia sai da thread principal: um PDF escolhido no
+     * Drive é baixado nessa hora, e baixar na thread da tela a congelaria.
+     */
+    fun onPicked(requestCode: Int, resultCode: Int, data: Intent?) {
+        val uris = files?.finish(requestCode, resultCode, data) ?: return
+        if (uris.isEmpty()) return
+        worker.execute {
+            val received = try {
+                intake.receiveUris(uris)
+            } catch (falha: Exception) {
+                android.util.Log.w("cajui-capture", "escolha recusada", falha)
+                emptyList()
+            }
+            main.post {
+                if (received.isNotEmpty()) {
+                    pending.addAll(received)
+                    events?.success(mapOf("type" to "arrived"))
+                }
+            }
+        }
     }
 
     /** A leitura sai da thread principal; a resposta e o progresso voltam por ela. */
