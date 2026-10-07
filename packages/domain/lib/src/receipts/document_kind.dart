@@ -13,4 +13,8 @@ enum DocumentKind {
 
   /// Saque ou transferência entre contas próprias: não vira nada (RN-759).
   ownTransfer,
+
+  /// Um extrato, com várias movimentações: vira uma lista, uma linha por
+  /// movimentação, para a pessoa marcar o que lançar (RN-707).
+  statement,
 }

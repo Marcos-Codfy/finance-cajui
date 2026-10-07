@@ -4,6 +4,7 @@ import 'package:domain/src/money/money.dart';
 import 'package:domain/src/receipts/document_kind.dart';
 import 'package:domain/src/receipts/merchant_name.dart';
 import 'package:domain/src/receipts/proposed_field.dart';
+import 'package:domain/src/receipts/statement_line.dart';
 import 'package:meta/meta.dart';
 
 /// A proposta de lançamento lida de um comprovante (RN-740).
@@ -23,6 +24,7 @@ final class EntryProposal {
     this.description,
     this.installments,
     this.warnings = const [],
+    this.lines = const [],
   });
 
   /// O que o comprovante é. Só `purchase` segue para a confirmação de
@@ -61,6 +63,14 @@ final class EntryProposal {
   /// Em quantas vezes, quando o texto fala em parcelas.
   final int? installments;
 
+  /// As movimentações, quando o documento é um extrato (RN-707). Vazio em
+  /// qualquer outro.
+  final List<StatementLine> lines;
+
+  /// Se é um extrato com movimentações para escolher.
+  bool get isStatement =>
+      documentKind.value == DocumentKind.statement && lines.isNotEmpty;
+
   /// Códigos do catálogo que explicam por que a IA não participou:
   /// `E-AI-01`, `E-AI-03`, `E-AI-04`. A proposta continua válida.
   final List<String> warnings;
@@ -76,6 +86,7 @@ final class EntryProposal {
     String? merchant,
     int? installments,
     List<String>? warnings,
+    List<StatementLine>? lines,
   }) => EntryProposal(
     description: description ?? this.description,
     documentKind: documentKind ?? this.documentKind,
@@ -86,5 +97,6 @@ final class EntryProposal {
     merchant: merchant ?? this.merchant,
     installments: installments ?? this.installments,
     warnings: warnings ?? this.warnings,
+    lines: lines ?? this.lines,
   );
 }
