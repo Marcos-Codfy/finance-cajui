@@ -57,8 +57,8 @@ class ReceiptOcr(private val context: Context) {
         val pages = if (kind == "pdf") {
             readPdf(file, if (withImages) images else null, onPage)
         } else {
-            if (withImages) images.add(AiImage.fromFile(file))
-            listOf(readImage(file))
+            if (withImages) forAi { AiImage.fromFile(file) }?.let(images::add)
+            listOf(orForAi(images) { readImage(file) })
         }
         val text = pages.joinToString("\n").trim()
         if (text.length < MIN_READABLE_CHARS && images.isEmpty()) {
@@ -90,8 +90,15 @@ class ReceiptOcr(private val context: Context) {
                 onPage(index + 1, total)
                 pdf.openPage(index).use { page ->
                     val bitmap = render(page)
-                    if (images != null && index < MAX_AI_PAGES) images.add(AiImage.fromBitmap(bitmap))
-                    recognize(InputImage.fromBitmap(bitmap, 0))
+                    if (images != null && index < MAX_AI_PAGES) {
+                        forAi { AiImage.fromBitmap(bitmap) }?.let(images::add)
+                    }
+                    try {
+                        orForAi(images.orEmpty()) { recognize(InputImage.fromBitmap(bitmap, 0)) }
+                    } finally {
+                        // Uma página desenhada tem dezenas de MB: não espera o coletor.
+                        bitmap.recycle()
+                    }
                 }
             }
         }
@@ -108,7 +115,31 @@ class ReceiptOcr(private val context: Context) {
         // Fundo branco: PDF sem fundo próprio sairia transparente, e o OCR leria preto no preto.
         bitmap.eraseColor(Color.WHITE)
         page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        // Já é opaca: sem isto, a imagem da IA copiaria a página de novo só
+        // para pôr fundo branco.
+        bitmap.setHasAlpha(false)
         return bitmap
+    }
+
+    /**
+     * A imagem para a IA é um extra: se ela não sai — decodificador recusou,
+     * faltou memória —, a leitura segue só com o texto, em vez de falhar.
+     */
+    private fun forAi(make: () -> ByteArray): ByteArray? = try {
+        make()
+    } catch (failure: Throwable) {
+        null
+    }
+
+    /**
+     * O OCR do aparelho demorou demais (E-CAPT-07). Com a imagem na mão, a IA
+     * ainda pode ler: o texto fica vazio, e a leitura segue. Sem ela, falha.
+     */
+    private fun orForAi(images: List<ByteArray>, read: () -> String): String = try {
+        read()
+    } catch (slow: ReadFailure) {
+        if (slow.code != "E-CAPT-07" || images.isEmpty()) throw slow
+        ""
     }
 
     private fun recognize(image: InputImage): String = try {

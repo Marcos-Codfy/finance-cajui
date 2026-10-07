@@ -113,8 +113,10 @@ class CaptureChannel(
                 main.post { result.success(read) }
             } catch (failure: ReadFailure) {
                 main.post { result.error(failure.code, null, null) }
-            } catch (unexpected: Exception) {
-                // Arquivo corrompido, imagem que o decodificador recusa: para a pessoa, não deu para ler.
+            } catch (unexpected: Throwable) {
+                // Arquivo corrompido, imagem que o decodificador recusa, memória que faltou: para a
+                // pessoa, não deu para ler. Throwable, e não Exception: um OutOfMemoryError solto na
+                // thread de trabalho derrubava o app, e o Flutter ficava esperando uma resposta.
                 main.post { result.error("E-CAPT-01", null, null) }
             }
         }
