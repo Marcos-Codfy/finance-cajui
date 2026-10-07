@@ -20,6 +20,7 @@ final class StatementLine {
     this.kind = StatementLineKind.expense,
     this.categoryId,
     this.paymentKind,
+    this.doubtful = false,
   });
 
   /// O dia da movimentação.
@@ -39,4 +40,22 @@ final class StatementLine {
 
   /// Por onde saiu, quando o extrato diz: Pix, débito, boleto.
   final PaymentMethodKind? paymentKind;
+
+  /// Se o tipo é só um palpite: a IA disse sem que nenhuma palavra da linha
+  /// confirmasse, ou não disse. A linha aparece, dá para marcar, mas nunca
+  /// vem marcada — e pagamento de fatura em dúvida pode virar despesa, se a
+  /// pessoa marcar (RN-757).
+  final bool doubtful;
+
+  /// A mesma linha, paga por [kind]: o extrato do vale não repete "vale" em
+  /// cada linha, e a linha sem forma cairia no dinheiro (RN-111).
+  StatementLine paidBy(PaymentMethodKind kind) => StatementLine(
+    occurredOn: occurredOn,
+    description: description,
+    amount: amount,
+    kind: this.kind,
+    categoryId: categoryId,
+    paymentKind: kind,
+    doubtful: doubtful,
+  );
 }

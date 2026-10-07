@@ -1,4 +1,5 @@
 import 'package:domain/src/calendar/local_date.dart';
+import 'package:domain/src/income/income_receipt.dart';
 import 'package:domain/src/ledger/entry.dart';
 import 'package:domain/src/money/money.dart';
 
@@ -69,6 +70,41 @@ abstract final class PossibleDuplicate {
       )) {
         return entry;
       }
+    }
+    return null;
+  }
+
+  /// O lançamento de [entries] com o mesmo valor e a data a até [days] dias
+  /// de [occurredOn]; `null` quando nenhum.
+  ///
+  /// É a conferência do extrato (RN-707): o banco escreve o nome do lugar do
+  /// jeito dele — "PIX ENVIADO PADARIA CENT" —, e a data às vezes é a do
+  /// processamento. Valor igual com a data perto basta para **avisar**; a
+  /// pessoa decide.
+  static Entry? near(
+    Iterable<Entry> entries, {
+    required Money amount,
+    required LocalDate occurredOn,
+    int days = 2,
+  }) {
+    for (final entry in entries) {
+      final apart = occurredOn.daysUntil(entry.occurredOn).abs();
+      if (entry.amount == amount && apart <= days) return entry;
+    }
+    return null;
+  }
+
+  /// O recebimento de [receipts] com o mesmo valor e a data a até [days]
+  /// dias de [receivedOn]: a entrada do extrato que já foi registrada.
+  static IncomeReceipt? receivedNear(
+    Iterable<IncomeReceipt> receipts, {
+    required Money amount,
+    required LocalDate receivedOn,
+    int days = 2,
+  }) {
+    for (final receipt in receipts) {
+      final apart = receivedOn.daysUntil(receipt.receivedOn).abs();
+      if (receipt.amount == amount && apart <= days) return receipt;
     }
     return null;
   }
