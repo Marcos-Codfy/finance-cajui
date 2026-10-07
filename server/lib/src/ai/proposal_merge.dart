@@ -28,7 +28,28 @@ abstract final class ProposalMerge {
     AiSuggestion ai, {
     required bool sawImage,
     Map<String, double> categoryAccuracy = const {},
-  }) => local.copyWith(
+  }) {
+    // Um extrato não é um comprovante com um valor: são as linhas, e é
+    // dentro delas que mora a proteção do pagamento de fatura (RN-756).
+    if (ai.documentKind == DocumentKind.statement && ai.lines.isNotEmpty) {
+      return local.copyWith(
+        documentKind: const ProposedField.resolved(
+          DocumentKind.statement,
+          source: FieldSource.ai,
+        ),
+        lines: ai.lines,
+        description: ai.description,
+      );
+    }
+    return _single(local, ai, sawImage, categoryAccuracy);
+  }
+
+  static EntryProposal _single(
+    EntryProposal local,
+    AiSuggestion ai,
+    bool sawImage,
+    Map<String, double> categoryAccuracy,
+  ) => local.copyWith(
     documentKind: _kind(local.documentKind, ai.documentKind),
     amount: _amount(local.amount, ai, sawImage: sawImage),
     occurredOn: _filled(local.occurredOn, ai.occurredOn),
@@ -44,7 +65,9 @@ abstract final class ProposalMerge {
     DocumentKind? fromAi,
   ) {
     final read = local.value;
-    if (fromAi == null || read == null || fromAi == read) return local;
+    // "Extrato" sem linhas não é nada que a tela saiba mostrar.
+    if (fromAi == null || fromAi == DocumentKind.statement) return local;
+    if (read == null || fromAi == read) return local;
     // Pagamento de fatura só pela IA pergunta (RN-757): dar como certo faria
     // uma despesa sumir — e a foto, que agora vai junto, pode trazer o texto
     // de quem quer isso (INJ-07).

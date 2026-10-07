@@ -29,7 +29,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     required this.budget,
     required this.breaker,
     this.timeout = const Duration(seconds: 8),
-    this.imageTimeout = const Duration(seconds: 15),
+    this.imageTimeout = const Duration(seconds: 35),
     this.categoryAccuracy = const {},
     SuggestionCache? cache,
   }) : cache = cache ?? SuggestionCache();
@@ -60,8 +60,12 @@ final class AiReceiptClassifier implements ReceiptClassifier {
 
   static const _rules = RuleBasedClassifier();
 
-  /// O teto da resposta: o objeto da proposta tem uns cem tokens.
+  /// O teto da resposta só com texto: o objeto da proposta tem uns cem
+  /// tokens.
   static const _maxTokens = 300;
+
+  /// O teto com a foto: um extrato de trinta linhas passa de mil tokens.
+  static const _maxTokensWithImages = 2000;
 
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {
@@ -153,7 +157,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     return client
         .converse(
           messages: _withImages(user, request),
-          maxTokens: _maxTokens,
+          maxTokens: _maxTokensWithImages,
           json: true,
         )
         .timeout(imageTimeout);
