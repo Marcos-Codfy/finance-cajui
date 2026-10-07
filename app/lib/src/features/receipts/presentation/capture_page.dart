@@ -2,10 +2,14 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/features/receipts/application/capture_route.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_confirm_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
+import 'package:cajui/src/features/receipts/presentation/income_capture_page.dart';
+import 'package:cajui/src/features/receipts/presentation/not_an_expense_page.dart';
+import 'package:cajui/src/features/receipts/presentation/statement_review_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,13 +26,28 @@ class CapturePage extends ConsumerWidget {
     return switch (state) {
       CaptureIdle() => const SizedBox.shrink(),
       CaptureReading() => _reading(context, state),
-      CaptureReady(:final capture) => CaptureConfirmPage(
-        // A chave faz o formulário renascer a cada comprovante da fila.
-        key: ValueKey(capture.source.id),
+      CaptureReady() => _ready(state),
+      CaptureFailed(:final error) => _failed(context, ref, error),
+    };
+  }
+
+  /// A tela que sabe tratar o que o documento é. A chave faz cada tela
+  /// renascer a cada comprovante da fila.
+  static Widget _ready(CaptureReady state) {
+    final capture = state.capture;
+    final key = ValueKey((capture.source.id, state.asExpense));
+    final route = state.asExpense
+        ? CaptureRoute.expense
+        : CaptureRoute.of(capture.proposal);
+    return switch (route) {
+      CaptureRoute.statement => StatementReviewPage(key: key, capture: capture),
+      CaptureRoute.income => IncomeCapturePage(key: key, capture: capture),
+      CaptureRoute.notAnExpense => NotAnExpensePage(key: key, capture: capture),
+      CaptureRoute.expense => CaptureConfirmPage(
+        key: key,
         capture: capture,
         waiting: state.waiting,
       ),
-      CaptureFailed(:final error) => _failed(context, ref, error),
     };
   }
 

@@ -34,10 +34,14 @@ final class CaptureReading extends CaptureState {
 /// Há uma proposta para conferir.
 final class CaptureReady extends CaptureState {
   /// Cria o estado de conferência de [capture].
-  const new(this.capture, {super.waiting});
+  const new(this.capture, {super.waiting, this.asExpense = false});
 
   /// A captura lida e classificada.
   final Capture capture;
+
+  /// Se a pessoa disse "é uma despesa": a leitura achou que era outra
+  /// coisa — entrada, pagamento de fatura —, e a pessoa corrigiu.
+  final bool asExpense;
 }
 
 /// Não deu para ler ou receber, pelo motivo em [error].

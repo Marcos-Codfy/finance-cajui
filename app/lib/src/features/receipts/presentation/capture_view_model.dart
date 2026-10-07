@@ -84,6 +84,25 @@ class CaptureViewModel extends Notifier<CaptureState> {
     await _next();
   }
 
+  /// "É uma despesa": a mesma captura, na conferência de lançamento.
+  void treatAsExpense() {
+    final current = state;
+    if (current is! CaptureReady) return;
+    state = CaptureReady(
+      current.capture,
+      waiting: current.waiting,
+      asExpense: true,
+    );
+  }
+
+  /// A captura virou outra coisa que não um lançamento só — entrada,
+  /// pagamento de fatura, as linhas de um extrato —, ou não virou nada:
+  /// fecha, sem aprender, e segue para a próxima da fila.
+  Future<void> closed(Capture capture) async {
+    await ref.read(captureServiceProvider).close(capture);
+    await _next();
+  }
+
   /// "Conferir depois".
   Future<void> defer(Capture capture) async {
     await ref.read(captureServiceProvider).defer(capture);
