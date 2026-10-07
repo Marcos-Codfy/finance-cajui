@@ -3,7 +3,7 @@ import 'package:server/src/ai/chat_reply.dart';
 
 /// Um modelo de mentira, que responde o que o teste mandar — inclusive o que
 /// um modelo enganado por um comprovante malicioso responderia.
-final class ScriptedChatClient implements ChatClient {
+final class ScriptedChatClient extends ChatClient {
   /// Cria o cliente que responde [content], ou lança [failure] se houver.
   new({this.content = '{}', this.failure, this.delay = Duration.zero});
 

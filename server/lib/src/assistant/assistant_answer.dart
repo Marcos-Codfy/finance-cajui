@@ -1,123 +1,76 @@
-import 'dart:convert';
-
-import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
-import 'package:server/src/assistant/assistant_context.dart';
-import 'package:server/src/assistant/context_number.dart';
+import 'package:server/src/assistant/assistant_action.dart';
 
-/// A resposta do assistente, **depois** de validada (RN-942 a RN-944).
+/// A resposta do assistente, como vai para o app: o texto, e o que ele fez
+/// no livro enquanto respondia.
 ///
-/// A saída da IA é entrada não confiável como qualquer outra. Só vira
-/// resposta o que passa, nesta ordem, por: esquema fechado; texto puro e
-/// dentro do tamanho; todo valor em reais existir no contexto ou na pergunta;
-/// nenhum termo que o guia de voz reprova.
+/// O texto é da IA, e é texto: a tela o mostra puro, sem link e sem
+/// formatação (RN-948). O que não cabe — vazio, longo demais — vira a
+/// resposta de formato fixo, para a conversa nunca ficar muda.
 @immutable
 final class AssistantAnswer {
-  /// Cria a resposta já validada.
+  /// Cria a resposta.
   const new({
     required this.text,
-    required this.sources,
-    this.outOfScope = false,
+    this.actions = const [],
     this.isFallback = false,
   });
 
-  /// A resposta de formato fixo, para quando a IA reprovou duas vezes: os
-  /// números que o servidor encontrou, sem uma palavra da IA (RN-945).
-  factory fallback(AssistantContext context) {
-    final found = context.numbers
-        .take(_fallbackNumbers)
-        .map((n) => '${n.label}: ${MoneyFormat.brl(n.amount)}')
-        .join(' · ');
-    return AssistantAnswer(
-      isFallback: true,
-      sources: context.numbers.take(_fallbackNumbers).toList(),
-      text: found.isEmpty
-          ? 'Não consegui redigir uma resposta confiável, e ainda não há '
-                'lançamentos neste mês para eu mostrar.'
-          : 'Não consegui redigir uma resposta confiável. Os números que '
-                'encontrei: $found.',
-    );
-  }
+  /// A resposta de formato fixo, para quando a IA não conseguiu responder
+  /// — o que ela já tiver feito no livro continua feito, e é dito.
+  factory fallback({List<AssistantAction> actions = const []}) =>
+      AssistantAnswer(
+        isFallback: true,
+        actions: actions,
+        text: actions.isEmpty
+            ? 'Não consegui responder agora. Tente de novo em instantes.'
+            : 'Fiz o que você pediu, mas não consegui redigir a resposta. '
+                  'Confira em Lançamentos.',
+      );
 
-  /// Quantos números a resposta de formato fixo traz.
-  static const _fallbackNumbers = 4;
+  /// O teto do texto. Resposta de conversa é curta; o que passa disto é
+  /// cortado, e não recusado.
+  static const maxLength = 1200;
 
-  /// O texto para a tela. É exibido como texto puro: nenhum endereço vindo
-  /// da IA vira link (RN-948).
+  /// O texto para a tela.
   final String text;
 
-  /// Os números citados — é daqui, e não do texto da IA, que a tela monta
-  /// "De onde vieram os números" (RN-947).
-  final List<ContextNumber> sources;
+  /// O que o assistente fez no livro nesta resposta.
+  final List<AssistantAction> actions;
 
-  /// Se a pergunta ficou fora do que o assistente faz (RN-902).
-  final bool outOfScope;
-
-  /// Se é a resposta de formato fixo, montada sem texto da IA (RN-945).
+  /// Se é a resposta de formato fixo.
   final bool isFallback;
 
-  /// O teto do texto.
-  static const maxLength = 600;
-
-  static const _fields = {'text', 'sources', 'outOfScope'};
-  static final _amount = RegExp(r'\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}');
-
-  /// A resposta contida em [content], a saída crua da IA, ou `null` se ela
-  /// reprova em qualquer validação. [question] é a pergunta de quem usa: os
-  /// valores que ela traz também podem ser citados.
-  static AssistantAnswer? parse(
+  /// A resposta a partir de [content], o texto cru da IA, ou `null` quando
+  /// não há texto nenhum.
+  static AssistantAnswer? fromText(
     String content, {
-    required AssistantContext context,
-    required String question,
+    List<AssistantAction> actions = const [],
   }) {
-    final Object? json;
-    try {
-      json = jsonDecode(content);
-    } on FormatException {
-      return null;
-    }
-    if (json is! Map<String, Object?>) return null;
-    if (json.keys.any((key) => !_fields.contains(key))) return null;
-    final (text, cited) = (json['text'], json['sources'] ?? const <Object?>[]);
-    final scope = json['outOfScope'] ?? false;
-    if (text is! String || cited is! List<Object?> || scope is! bool) {
-      return null;
-    }
-    if (!_isAcceptable(text.trim(), context, question)) return null;
+    final text = plain(content);
+    if (text.isEmpty) return null;
     return AssistantAnswer(
-      text: text.trim(),
-      outOfScope: scope,
-      sources: [
-        for (final id in cited.whereType<String>()) ?context.numberById(id),
-      ],
+      text: text.length > maxLength ? text.substring(0, maxLength) : text,
+      actions: actions,
     );
   }
 
-  static bool _isAcceptable(
-    String text,
-    AssistantContext context,
-    String question,
-  ) {
-    if (text.isEmpty || text.length > maxLength) return false;
-    if (VoiceGuide.violations(text).isNotEmpty || text.contains('!')) {
-      return false;
-    }
-    // Número que só existe no texto da IA não tem origem: reprova (RN-943).
-    final allowed = {
-      for (final number in context.numbers) number.amount,
-      ...ReceiptFieldReader.amountsIn(question),
-    };
-    return _amount
-        .allMatches(text)
-        .map((match) => ReceiptFieldReader.amountsIn(match.group(0)!).single)
-        .every(allowed.contains);
-  }
+  /// O texto sem as marcas de formatação que o modelo às vezes põe:
+  /// negrito, título, código. A tela não as interpreta, e exibi-las seria
+  /// mostrar asteriscos.
+  static String plain(String content) => content
+      .replaceAll(RegExp(r'\*{1,3}'), '')
+      .replaceAll(RegExp('`{1,3}'), '')
+      .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
+      .trim();
 
-  /// A resposta como vai para o app.
+  /// A resposta como vai para o app. `sources` e `outOfScope` continuam
+  /// no contrato, vazios: o app de ontem os lê sem tropeçar.
   Map<String, Object?> toJson() => {
     'text': text,
-    'outOfScope': outOfScope,
+    'outOfScope': false,
     'fallback': isFallback,
-    'sources': [for (final number in sources) number.toJson()],
+    'sources': const <Object?>[],
+    'actions': [for (final action in actions) action.toJson()],
   };
 }

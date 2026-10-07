@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/token_budget.dart';
 import 'package:server/src/assistant/assistant_service.dart';
@@ -37,8 +35,8 @@ Future<void> _ask(TestApp server, String token, String message) => server.call(
   token: token,
 );
 
-String _reply(String text) =>
-    jsonEncode({'text': text, 'sources': <String>[], 'outOfScope': false});
+/// A resposta do modelo é texto puro (ADR-021).
+String _reply(String text) => text;
 
 void main() {
   group('BL-049 · o plano do mês no contexto do assistente', () {
@@ -49,7 +47,7 @@ void main() {
       await server.call('POST', '/v1/plan', body: planBody(), token: token);
 
       await _ask(server, token, 'Quanto ainda posso gastar?');
-      final sent = client.calls.single.user;
+      final sent = client.calls.single.system;
 
       expect(sent, contains('"kind":"plan"'));
       expect(sent, contains('Renda planejada, em dinheiro'));
@@ -86,7 +84,7 @@ void main() {
       );
 
       await _ask(server, token, 'Quanto ainda posso gastar?');
-      final sent = client.calls.single.user;
+      final sent = client.calls.single.system;
 
       expect('"kind":"plan"'.allMatches(sent), hasLength(4));
       expect(sent, isNot(contains('Conta 7')));
@@ -114,7 +112,7 @@ void main() {
         );
 
         await _ask(server, token, 'Quanto ainda tenho de vale?');
-        final sent = client.calls.single.user;
+        final sent = client.calls.single.system;
 
         // R$ 500,00 de crédito menos os R$ 30,00 que o mercado pagou no vale.
         expect(sent, contains('Saldo do vale hoje'));
@@ -143,7 +141,7 @@ void main() {
       );
 
       await _ask(server, token, 'Quanto gastei?');
-      final sent = client.calls.single.user;
+      final sent = client.calls.single.system;
 
       expect(sent, isNot(contains('"cents":5600')));
       expect(
@@ -160,7 +158,7 @@ void main() {
 
       await _ask(server, token, 'Quanto gastei?');
 
-      expect(client.calls.single.user, isNot(contains('"kind":"plan"')));
+      expect(client.calls.single.system, isNot(contains('"kind":"plan"')));
     });
   });
 }

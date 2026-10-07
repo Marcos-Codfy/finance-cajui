@@ -31,7 +31,8 @@ abstract final class Cors {
     headers: {
       ..._shared(origin),
       'access-control-allow-methods': 'GET, POST, PUT, DELETE',
-      'access-control-allow-headers': 'authorization, content-type',
+      'access-control-allow-headers':
+          'authorization, content-type, x-cajui-device',
       'access-control-max-age': '600',
     },
   );

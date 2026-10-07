@@ -11,6 +11,7 @@ import 'package:server/src/auth/challenge_book.dart';
 import 'package:server/src/auth/device_registry.dart';
 import 'package:server/src/auth/device_routes.dart';
 import 'package:server/src/auth/enrollment_codes.dart';
+import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/web_codes.dart';
 import 'package:server/src/http/cors.dart';
@@ -42,6 +43,7 @@ final class App {
     RateLimiter? rateLimiter,
     ReceiptClassifier classifier = const RuleBasedClassifier(),
     AssistantService? assistant,
+    HouseholdKey? householdKey,
     String webOrigin = defaultWebOrigin,
   }) : this._shared(
          store: store,
@@ -53,6 +55,7 @@ final class App {
          rateLimiter: rateLimiter,
          classifier: classifier,
          assistant: assistant,
+         householdKey: householdKey,
          webCodes: WebCodes(),
          webOrigin: webOrigin,
        );
@@ -67,6 +70,7 @@ final class App {
     required RateLimiter? rateLimiter,
     required this.classifier,
     required this.assistant,
+    required this.householdKey,
     required WebCodes webCodes,
     required this.webOrigin,
   }) : _clock = clock,
@@ -105,6 +109,10 @@ final class App {
   /// credencial da IA, que responde `E-AI-01` às perguntas.
   final AssistantService? assistant;
 
+  /// A chave da casa (ADR-020). `null` num servidor que ainda só conhece
+  /// a autenticação por aparelho cadastrado.
+  final HouseholdKey? householdKey;
+
   /// A única origem de navegador que pode ler as respostas: a web de
   /// consulta. Vem da composição para o teste e um ambiente de ensaio
   /// poderem apontar para outra.
@@ -138,6 +146,7 @@ final class App {
 
   late final AssistantRoutes _assistant = AssistantRoutes(
     state: _ledger.state,
+    store: _ledger.store,
     clock: _clock,
     service: assistant,
   );
@@ -178,7 +187,7 @@ final class App {
         .addMiddleware(Cors.allow(webOrigin))
         .addMiddleware(Middlewares.errorBoundary(_log))
         .addMiddleware(Middlewares.rateLimit(_limiter))
-        .addMiddleware(Authenticate.middleware(sessions))
+        .addMiddleware(Authenticate.middleware(sessions, key: householdKey))
         .addHandler(routes.call);
   }
 }
