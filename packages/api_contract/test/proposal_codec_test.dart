@@ -113,4 +113,68 @@ void main() {
       expect(volta.amount.value, const Money.fromCents(100));
     });
   });
+
+  group('RN-707 · as linhas do extrato', () {
+    test('vão e voltam inteiras', () {
+      final extrato = EntryProposal(
+        documentKind: const ProposedField.resolved(
+          DocumentKind.statement,
+          source: FieldSource.ai,
+        ),
+        amount: const ProposedField.unread(),
+        occurredOn: const ProposedField.unread(),
+        category: const ProposedField.unread(),
+        paymentKind: const ProposedField.unread(),
+        lines: [
+          StatementLine(
+            occurredOn: LocalDate(2026, 9, 3),
+            description: 'Mercado Boa Compra',
+            amount: const Money.fromCents(4590),
+            categoryId: 'groceries',
+            paymentKind: PaymentMethodKind.debit,
+          ),
+          StatementLine(
+            occurredOn: LocalDate(2026, 9, 10),
+            description: 'Fatura',
+            amount: const Money.fromCents(150000),
+            kind: StatementLineKind.cardPayment,
+          ),
+        ],
+      );
+
+      final volta = ProposalCodec.decode(
+        ProposalCodec.encode(extrato),
+        knowsCategory: _knows,
+      );
+
+      expect(volta.isStatement, isTrue);
+      expect(volta.lines.first.categoryId, 'groceries');
+      expect(volta.lines.first.paymentKind, PaymentMethodKind.debit);
+      expect(volta.lines.last.kind, StatementLineKind.cardPayment);
+      expect(volta.lines.last.amount, const Money.fromCents(150000));
+    });
+
+    test('linha fora do formato cai sozinha; categoria desconhecida some '
+        'da linha, que fica', () {
+      Map<String, Object?> line(Object? cents, {String? categoryId}) => {
+        'occurredOn': '2026-09-03',
+        'description': 'Padaria',
+        'amountCents': cents,
+        'kind': 'expense',
+        'categoryId': categoryId,
+      };
+
+      final volta = ProposalCodec.decode({
+        'lines': [
+          line(850, categoryId: 'inventada'),
+          line(-100),
+          line('muito'),
+          'texto',
+        ],
+      }, knowsCategory: _knows);
+
+      expect(volta.lines.single.amount, const Money.fromCents(850));
+      expect(volta.lines.single.categoryId, isNull);
+    });
+  });
 }

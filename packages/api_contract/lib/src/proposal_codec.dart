@@ -20,7 +20,54 @@ abstract final class ProposalCodec {
     'description': proposal.description,
     'installments': proposal.installments,
     'warnings': proposal.warnings,
+    if (proposal.lines.isNotEmpty)
+      'lines': [for (final line in proposal.lines) _encodeLine(line)],
   };
+
+  static Map<String, Object?> _encodeLine(StatementLine line) => {
+    'occurredOn': '${line.occurredOn}',
+    'description': line.description,
+    'amountCents': line.amount.cents,
+    'kind': line.kind.name,
+    'categoryId': line.categoryId,
+    'paymentKind': line.paymentKind?.name,
+  };
+
+  /// As linhas de um extrato. Linha que não se lê — data impossível, valor
+  /// que não é positivo, categoria que este aparelho não tem — cai fora
+  /// sozinha, e não leva as outras junto.
+  static List<StatementLine> _lines(
+    Object? raw,
+    bool Function(String id) knowsCategory,
+  ) => [
+    for (final item in raw is List ? raw : const [])
+      if (item is Map)
+        ?_tried(
+          item,
+          (line) =>
+              _line((line! as Map).cast<String, Object?>(), knowsCategory),
+        ),
+  ];
+
+  static StatementLine _line(
+    Map<String, Object?> raw,
+    bool Function(String id) knows,
+  ) {
+    final cents = raw['amountCents']! as int;
+    if (cents <= 0) throw const FormatException('valor');
+    final category = raw['categoryId'] as String?;
+    final payment = raw['paymentKind'] as String?;
+    return StatementLine(
+      occurredOn: EntryCodec.parseDate(raw['occurredOn']! as String),
+      description: raw['description']! as String,
+      amount: Money.fromCents(cents),
+      kind: EntryCodec.named(StatementLineKind.values, raw['kind']! as String),
+      categoryId: category != null && knows(category) ? category : null,
+      paymentKind: payment == null
+          ? null
+          : EntryCodec.named(PaymentMethodKind.values, payment),
+    );
+  }
 
   /// A proposta que o servidor devolveu.
   ///
@@ -52,6 +99,7 @@ abstract final class ProposalCodec {
       for (final warning in json['warnings'] as List<Object?>? ?? const [])
         '$warning',
     ],
+    lines: _lines(json['lines'], knowsCategory),
   );
 
   /// Categoria que este aparelho não conhece cai fora: a lista é fechada
