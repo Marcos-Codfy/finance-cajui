@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/application/capture_outcome.dart';
 import 'package:cajui/src/features/receipts/application/capture_service.dart';
@@ -88,6 +89,14 @@ class CaptureViewModel extends Notifier<CaptureState> {
     state = const CaptureReading();
     final capture = await ref.read(captureServiceProvider).reopen(pending);
     state = CaptureReady(capture, waiting: _queue.length);
+  }
+
+  /// Abre a conferência para uma frase ditada (RN-1091, BL-050): sem a IA,
+  /// a fala é lida como um comprovante, pelo leitor do aparelho, e entra na
+  /// mesma fila do que foi compartilhado.
+  Future<void> startText(String text) async {
+    _queue.add(SharedText(id: ref.read(newIdProvider)(), text: text));
+    if (state is CaptureIdle) await _next();
   }
 
   /// Tenta ler de novo o item em que a leitura falhou (`E-CAPT-07`).
