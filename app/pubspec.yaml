@@ -14,6 +14,7 @@ dependencies:
     path: ../packages/api_contract
   # O mesmo SHA-256 do registro de eventos: o identificador do aparelho é
   # derivado da chave pública, e não sorteado (ADR-008).
+  archive: ^4.5.1
   cryptography: ^2.7.0
   design_system:
     path: ../packages/design_system

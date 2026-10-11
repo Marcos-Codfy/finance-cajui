@@ -16,6 +16,10 @@ import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
 import 'package:cajui/src/features/auth/infrastructure/http_code_exchange.dart';
 import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
+import 'package:cajui/src/features/export/application/month_exporter.dart';
+import 'package:cajui/src/features/export/infrastructure/browser_download.dart';
+import 'package:cajui/src/features/export/infrastructure/native_file_hand_off.dart';
+import 'package:cajui/src/features/export/infrastructure/xlsx_month_exporter.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
 import 'package:cajui/src/features/home_widget/infrastructure/native_home_screen.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
@@ -80,8 +84,18 @@ abstract final class Composition {
       ..._server(api, local: nativeCapture),
       ..._capture(inbox, api),
       ..._device(store, native: nativeCapture),
+      _exporter(native: nativeCapture),
     ];
   }
+
+  /// O mês em planilha: pela tela de compartilhar no celular, por download
+  /// na web (RN-1090).
+  static Override _exporter({required bool native}) =>
+      monthExporterProvider.overrideWithValue(
+        XlsxMonthExporter(
+          native ? const NativeFileHandOff() : const BrowserDownload(),
+        ),
+      );
 
   /// As notificações do banco, o widget da tela inicial e a revisão da
   /// semana (ADR-025). Um canal só atende as três portas das notificações:
