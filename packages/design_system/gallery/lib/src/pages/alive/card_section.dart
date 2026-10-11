@@ -16,9 +16,27 @@ class CardSection extends StatelessWidget {
   /// Cartões fictícios, com nomes de árvore do Cerrado: limite de
   /// R$ 2.000,00 a R$ 3.500,00, em cada degrau do medidor.
   static const _cards = [
-    ('Abaixo da metade', 'Cartão Pequi', '3306', 41290, 250000),
-    ('Acima da metade', 'Cartão Ipê', '4821', 124000, 200000),
-    ('Acima de 80%', 'Cartão Buriti', '0937', 301050, 350000),
+    (
+      'Abaixo da metade',
+      'Cartão Pequi',
+      'fecha dia 3 · vence dia 10',
+      41290,
+      250000,
+    ),
+    (
+      'Acima da metade',
+      'Cartão Ipê',
+      'fecha dia 25 · vence dia 5',
+      124000,
+      200000,
+    ),
+    (
+      'Acima de 80%',
+      'Cartão Buriti',
+      'fecha dia 12 · vence dia 20',
+      301050,
+      350000,
+    ),
   ];
 
   @override
@@ -43,13 +61,13 @@ class CardSection extends StatelessWidget {
   }
 
   Widget _card((String, String, String, int, int) card) {
-    final (state, name, digits, used, limit) = card;
+    final (state, name, detail, used, limit) = card;
     return GallerySpecimen(
       state: state,
       width: 320,
       child: CajuiCreditCard3D(
         name: name,
-        lastDigits: digits,
+        detail: detail,
         usedCents: used,
         limitCents: limit,
         tilt: tilt,

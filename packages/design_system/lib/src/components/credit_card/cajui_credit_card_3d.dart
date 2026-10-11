@@ -27,11 +27,11 @@ import 'package:flutter/widgets.dart';
 /// No movimento reduzido o cartão fica reto, o brilho parado, e virar é uma
 /// fusão curta entre os dois lados.
 class CajuiCreditCard3D extends StatefulWidget {
-  /// Cria o cartão [name], final [lastDigits], com [usedCents] em uso de um
+  /// Cria o cartão [name], com [detail] na frente e [usedCents] em uso de um
   /// limite de [limitCents].
   const new({
     required this.name,
-    required this.lastDigits,
+    required this.detail,
     required this.usedCents,
     required this.limitCents,
     this.tilt,
@@ -42,8 +42,9 @@ class CajuiCreditCard3D extends StatefulWidget {
   /// O nome do cartão, como a pessoa o chama: "Cartão Ipê".
   final String name;
 
-  /// Os quatro últimos números.
-  final String lastDigits;
+  /// A linha da frente: "fecha dia 25 · vence dia 5". Nunca o número do
+  /// cartão — o Cajui não o guarda.
+  final String detail;
 
   /// O que está em uso do limite, em centavos.
   final int usedCents;
@@ -156,7 +157,7 @@ class _CajuiCreditCard3DState extends State<CajuiCreditCard3D>
     );
     final spoken = _back
         ? 'Limite do ${widget.name}: ${usage.spoken}. Toque para voltar.'
-        : '${widget.name}, final ${widget.lastDigits}. '
+        : '${widget.name}, ${widget.detail}. '
               'Toque para ver o limite.';
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: _maxWidth),
@@ -209,11 +210,8 @@ class _CajuiCreditCard3DState extends State<CajuiCreditCard3D>
     ),
   );
 
-  Widget _front(Alignment light) => CreditCardFront(
-    name: widget.name,
-    lastDigits: widget.lastDigits,
-    light: light,
-  );
+  Widget _front(Alignment light) =>
+      CreditCardFront(name: widget.name, detail: widget.detail, light: light);
 
   Widget _backFace(CardLimitUsage usage, Alignment light) =>
       CreditCardBack(name: widget.name, usage: usage, light: light);

@@ -1,7 +1,9 @@
-import 'package:design_system/src/components/amount/cajui_amount_text.dart';
 import 'package:design_system/src/components/amount/cajui_amount_tone.dart';
+import 'package:design_system/src/components/amount/cajui_rolling_amount.dart';
 import 'package:design_system/src/components/card/cajui_card.dart';
+import 'package:design_system/src/components/glow/cajui_glow.dart';
 import 'package:design_system/src/components/meter/cajui_meter.dart';
+import 'package:design_system/src/motion/cajui_hero_number.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
@@ -23,6 +25,9 @@ class CajuiStatCard extends StatelessWidget {
     this.caption,
     this.meter,
     this.sunken = false,
+    this.heroTag,
+    this.glowing = false,
+    this.celebrate = false,
     super.key,
   });
 
@@ -49,6 +54,19 @@ class CajuiStatCard extends StatelessWidget {
   /// Rebaixado: para a moeda que fica ao lado, o vale.
   final bool sunken;
 
+  /// Com isto, o valor voa para a tela que mostrar o mesmo número com a
+  /// mesma etiqueta (`CajuiHeroNumber`): o "Sobra" do Início vira o título
+  /// do Meu mês sem o olho perdê-lo.
+  final Object? heroTag;
+
+  /// A notícia é boa — o mês fechou no verde —, e o cartão ganha o brilho
+  /// calmo de `CajuiGlow`. Falta nunca brilha.
+  final bool glowing;
+
+  /// Faz a festa do brilho já ao aparecer. O app liga isto só quando a boa
+  /// notícia é nova, senão a festa se repete a cada abertura.
+  final bool celebrate;
+
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
@@ -56,21 +74,29 @@ class CajuiStatCard extends StatelessWidget {
     final used = meter;
     return Padding(
       padding: const EdgeInsets.only(bottom: CajuiSpacing.lg),
-      child: CajuiCard(
-        sunken: sunken,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: _muted(theme, theme.typography.label)),
-            const SizedBox(height: CajuiSpacing.xs),
-            _amount(theme),
-            if (used != null) _meter(used),
-            if (support != null) ...[
-              const SizedBox(height: CajuiSpacing.sm),
-              Text(support, style: _muted(theme, theme.typography.caption)),
-            ],
+      child: CajuiGlow(
+        active: glowing,
+        celebrateOnAppear: celebrate,
+        child: _card(theme, support, used),
+      ),
+    );
+  }
+
+  Widget _card(CajuiThemeData theme, String? support, double? used) {
+    return CajuiCard(
+      sunken: sunken,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: _muted(theme, theme.typography.label)),
+          const SizedBox(height: CajuiSpacing.xs),
+          _amount(theme),
+          if (used != null) _meter(used),
+          if (support != null) ...[
+            const SizedBox(height: CajuiSpacing.sm),
+            Text(support, style: _muted(theme, theme.typography.caption)),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -92,7 +118,10 @@ class CajuiStatCard extends StatelessWidget {
   Widget _amount(CajuiThemeData theme) {
     final value = cents;
     if (value != null) {
-      return CajuiAmountText(value, tone: tone, large: large);
+      // O valor rola até o novo quando muda, e nasce pronto na primeira vez.
+      final amount = CajuiRollingAmount(value, tone: tone, large: large);
+      final tag = heroTag;
+      return tag == null ? amount : CajuiHeroNumber(tag: tag, child: amount);
     }
     return Semantics(
       label: 'Ainda sem valor',

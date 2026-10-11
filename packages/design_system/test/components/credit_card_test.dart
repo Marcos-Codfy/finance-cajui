@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/host.dart';
 
 const _rs = 'R\$${BrlFormatter.nbsp}';
-const _front = 'Cartão Ipê, final 4821. Toque para ver o limite.';
+const _front =
+    'Cartão Ipê, fecha dia 25 · vence dia 5. Toque para ver o limite.';
 
 Widget _card({
   int used = 124000,
@@ -21,7 +22,7 @@ Widget _card({
       width: 328,
       child: CajuiCreditCard3D(
         name: 'Cartão Ipê',
-        lastDigits: '4821',
+        detail: 'fecha dia 25 · vence dia 5',
         usedCents: used,
         limitCents: 200000,
         onFlip: onFlip,

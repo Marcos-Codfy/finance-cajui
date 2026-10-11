@@ -8,15 +8,15 @@ import 'package:design_system/src/tokens/primitives/cajui_shadows.dart';
 import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
 import 'package:flutter/widgets.dart';
 
-/// A frente do cartão: nome, chip e os quatro últimos números.
+/// A frente do cartão: nome, chip e os dias de fechamento e vencimento.
 ///
 /// O fundo é o gradiente de ação, e o texto, o de cima de ação: um par que o
 /// teste de contraste já mede, inclusive com o brilho por baixo.
 class CreditCardFront extends StatelessWidget {
-  /// Cria a frente do cartão [name], final [lastDigits].
+  /// Cria a frente do cartão [name], com a linha [detail].
   const new({
     required this.name,
-    required this.lastDigits,
+    required this.detail,
     required this.light,
     super.key,
   });
@@ -24,8 +24,8 @@ class CreditCardFront extends StatelessWidget {
   /// O nome do cartão.
   final String name;
 
-  /// Os quatro últimos números.
-  final String lastDigits;
+  /// A linha da frente, no lugar do número que o Cajui não guarda.
+  final String detail;
 
   /// Onde a luz bate.
   final Alignment light;
@@ -100,17 +100,14 @@ class CreditCardFront extends StatelessWidget {
     );
   }
 
-  /// Os quatro últimos números e o convite para virar: a frente diz que o
-  /// verso existe, senão ninguém descobre que o cartão vira.
+  /// Os dias do cartão e o convite para virar: a frente diz que o verso
+  /// existe, senão ninguém descobre que o cartão vira.
   Widget _number(CajuiThemeData theme, Color ink) {
     return Wrap(
       spacing: CajuiSpacing.md,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text(
-          '•••• $lastDigits',
-          style: theme.typography.amount.copyWith(color: ink),
-        ),
+        Text(detail, style: theme.typography.body.copyWith(color: ink)),
         Text(
           'Toque para ver o limite',
           style: theme.typography.caption.copyWith(color: ink),
