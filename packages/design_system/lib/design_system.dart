@@ -77,6 +77,7 @@ export 'src/tokens/primitives/cajui_durations.dart';
 export 'src/tokens/primitives/cajui_radius.dart';
 export 'src/tokens/primitives/cajui_shadows.dart';
 export 'src/tokens/primitives/cajui_spacing.dart';
+export 'src/tokens/primitives/cajui_springs.dart';
 export 'src/tokens/semantic/action_colors.dart';
 export 'src/tokens/semantic/border_colors.dart';
 export 'src/tokens/semantic/brand_colors.dart';

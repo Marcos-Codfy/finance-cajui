@@ -21,4 +21,14 @@ abstract final class CajuiDurations {
 
   /// No nível `reduced`, toda transição vira uma fusão curta deste tamanho.
   static const reducedFade = Duration(milliseconds: 120);
+
+  /// 45 ms — o passo entre uma palavra e a seguinte numa resposta que vai
+  /// aparecendo. Umas 22 palavras por segundo: mais rápido que a leitura,
+  /// para ninguém esperar o texto, e devagar o bastante para se ver chegar.
+  static const wordStep = Duration(milliseconds: 45);
+
+  /// 4 s — o máximo que uma resposta leva para aparecer inteira, qualquer
+  /// que seja o tamanho. Abaixo dos 5 s em que a WCAG 2.2.2 pede um jeito de
+  /// pausar o que se move sozinho — e, mesmo assim, um toque já mostra tudo.
+  static const streamCap = Duration(seconds: 4);
 }
