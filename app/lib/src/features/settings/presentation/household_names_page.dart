@@ -108,9 +108,7 @@ class _HouseholdNamesPageState extends ConsumerState<HouseholdNamesPage> {
     label: 'Nome completo',
     controller: _name,
     hint: 'Como aparece no banco',
-    helper: names.names.length < HouseholdNames.maxNames
-        ? 'Nome e sobrenome. O banco abrevia e corta, e o Cajui entende.'
-        : 'Cabem ${HouseholdNames.maxNames} nomes. Tire um para incluir outro.',
+    helper: _helper(names),
     maxLength: HouseholdNames.maxLength,
     textInputAction: TextInputAction.done,
     onChanged: (_) => setState(() {}),
@@ -118,6 +116,21 @@ class _HouseholdNamesPageState extends ConsumerState<HouseholdNamesPage> {
       if (names.canAdd(_name.text)) await _add();
     },
   );
+
+  /// O apoio do campo diz por que "Incluir" está apagado, quando está: a
+  /// lista cheia, ou o nome que já está nela com outra grafia.
+  String _helper(HouseholdNames names) {
+    if (names.names.length >= HouseholdNames.maxNames) {
+      return 'Cabem ${HouseholdNames.maxNames} nomes. Tire um para incluir '
+          'outro.';
+    }
+    final known = HouseholdNames.accepts(_name.text)
+        ? names.whoIs(_name.text)
+        : null;
+    return known == null
+        ? 'Nome e sobrenome. O banco abrevia e corta, e o Cajui entende.'
+        : 'Já está na lista, como $known.';
+  }
 
   Widget _suggestions(BuildContext context, List<String> names) {
     final theme = CajuiTheme.of(context);

@@ -65,6 +65,15 @@ void main() {
     final named = (await journal.readAll()).whereType<HouseholdNamed>();
     expect(named.single.names.names, [testHouseholdName]);
 
+    // A mesma pessoa, abreviada como o banco escreve, já está na lista.
+    await tester.enterText(find.byType(EditableText), 'MARCOS V M ARRUDA');
+    await tester.pump();
+    expect(_canInclude(tester), isFalse);
+    expect(
+      find.text('Já está na lista, como $testHouseholdName.'),
+      findsOneWidget,
+    );
+
     await tester.tap(find.text('Tirar'));
     await settleAfterTap(tester);
 
