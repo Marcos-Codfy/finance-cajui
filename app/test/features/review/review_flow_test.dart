@@ -68,6 +68,13 @@ void main() {
     expect(find.textContaining('lançado pela notificação'), findsOneWidget);
   });
 
+  testWidgets('RN-1003 · a revisão também oferece Assinaturas: a assinatura '
+      'que entrou pela notificação sai do dia a dia', (tester) async {
+    await _open(tester);
+
+    expect(find.text('Assinaturas'), findsWidgets);
+  });
+
   testWidgets('RN-871 · um toque na categoria certa corrige o gasto e o tira '
       'da lista', (tester) async {
     await _open(tester);

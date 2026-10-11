@@ -14,10 +14,11 @@ abstract final class SheetNumbers {
   /// gasto do mês já vai por categoria, no resto do contexto.
   static List<ContextNumber> of(Finances finances, LocalDate today) {
     final owed = finances.owedOn(today);
+    final budget = finances.budgetFor(today.budgetMonth);
     return [
+      if (!finances.plan.isEmpty) ..._month(budget),
       if (!finances.plan.isEmpty)
-        ..._month(finances.budgetFor(today.budgetMonth)),
-      if (!finances.plan.isEmpty) ..._week(finances.weekOf(today)),
+        ..._week(finances.weekOf(today), budget.weeklyVoucher),
       if (owed.isPositive)
         _number('Quanto ainda devo, com as parcelas de cartão', owed, '$today'),
     ];
@@ -52,14 +53,28 @@ abstract final class SheetNumbers {
           );
   }
 
-  static Iterable<ContextNumber> _week(WeekAllowance week) sync* {
+  /// A semana nas duas moedas juntas, como o pote — e à parte quanto disso
+  /// é vale (RN-1015): sem esse número, "quanto ainda posso gastar de Uber"
+  /// saía com uma parte que só compra comida.
+  static Iterable<ContextNumber> _week(
+    WeekAllowance week,
+    Money voucher,
+  ) sync* {
     final period = 'semana de ${week.from} a ${week.until}';
     yield _number(
-      'Pode gastar por semana',
+      'Pode gastar por semana (dinheiro e vale juntos)',
       week.limit,
       period,
       kind: ContextNumberKind.plan,
     );
+    if (voucher.isPositive) {
+      yield _number(
+        'Parte do limite da semana que é vale (só compra comida)',
+        voucher,
+        period,
+        kind: ContextNumberKind.plan,
+      );
+    }
     yield _number('Já gasto nesta semana', week.spent, period);
     yield _number(
       'Ainda dá para gastar nesta semana',

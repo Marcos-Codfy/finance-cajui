@@ -161,6 +161,7 @@ final class Finances {
     today: today,
     entries: entries,
     categories: categories,
+    reversals: reversals,
     excluded: excluded,
   );
 
@@ -219,5 +220,6 @@ final class Finances {
     entries: entries,
     categories: categories,
     today: today,
+    reversals: reversals,
   );
 }

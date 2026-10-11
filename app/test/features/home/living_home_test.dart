@@ -1,4 +1,6 @@
 import 'package:cajui/src/app/cajui_app.dart';
+import 'package:cajui/src/core/motion/tilt_providers.dart';
+import 'package:cajui/src/core/motion/tilt_source.dart';
 import 'package:cajui/src/core/settings/event_store_preferences.dart';
 import 'package:cajui/src/core/storage/memory_event_store.dart';
 import 'package:cajui/src/features/home/presentation/month_celebration.dart';
@@ -87,6 +89,32 @@ void main() {
     });
   });
 
+  testWidgets('a conversa à vista não liga o sensor nem gasta a festa do mês '
+      'no Início escondido; tocar em Início liga os dois', (tester) async {
+    tester.view.physicalSize = const Size(400, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final tilt = _CountingTilt();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...testOverrides(journal: MemoryLedgerJournal([_plan(300000)])),
+          tiltSourceProvider.overrideWithValue(tilt),
+        ],
+        child: const CajuiApp(),
+      ),
+    );
+    await tester.pump();
+
+    expect(tilt.opened, 0);
+
+    await tester.tap(find.bySemanticsLabel('Início'));
+    await settleAfterTap(tester);
+
+    expect(tilt.opened, 1);
+    expect(_glow(tester).celebrateOnAppear, isTrue);
+  });
+
   testWidgets('escolha 1 · o pode gastar da semana é o pote de água', (
     tester,
   ) async {
@@ -110,4 +138,15 @@ void main() {
     expect(find.textContaining('Faltam para fechar'), findsOneWidget);
     expect(_glow(tester).active, isFalse);
   });
+}
+
+/// Uma fonte de inclinação que só conta quantas vezes foi aberta.
+final class _CountingTilt implements TiltSource {
+  int opened = 0;
+
+  @override
+  TiltReading? open() {
+    opened++;
+    return null;
+  }
 }

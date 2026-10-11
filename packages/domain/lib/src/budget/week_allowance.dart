@@ -3,6 +3,7 @@ import 'package:domain/src/indicators/percent.dart';
 import 'package:domain/src/ledger/block.dart';
 import 'package:domain/src/ledger/category.dart';
 import 'package:domain/src/ledger/entry.dart';
+import 'package:domain/src/ledger/reversal.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:meta/meta.dart';
 
@@ -23,19 +24,44 @@ final class WeekAllowance {
     required LocalDate today,
     required Iterable<Entry> entries,
     required Map<String, Category> categories,
+    Iterable<Reversal> reversals = const [],
     Set<String> excluded = const {},
   }) {
     final from = startOf(today);
+    bool counts(Entry entry) =>
+        !excluded.contains(entry.id) &&
+        _isDayToDay(categories[entry.categoryId]);
     var spent = Money.zero;
     for (final entry in entries) {
       final on = entry.occurredOn;
-      if (on.isBefore(from) || on.isAfter(today)) continue;
-      if (excluded.contains(entry.id)) continue;
-      if (!_isDayToDay(categories[entry.categoryId])) continue;
+      if (on.isBefore(from) || on.isAfter(today) || !counts(entry)) continue;
       final amounts = entry.spentIn(on.budgetMonth);
       spent += amounts.cash + amounts.mealVoucher;
     }
-    return WeekAllowance(limit: limit, spent: spent, from: from);
+    final back = _returned(from, today, entries, reversals, counts);
+    return WeekAllowance(limit: limit, spent: spent - back, from: from);
+  }
+
+  /// O dinheiro que voltou na semana, das compras do dia a dia: a compra
+  /// devolvida deixa de comer o limite, como já deixa de contar no mês
+  /// (RN-209).
+  static Money _returned(
+    LocalDate from,
+    LocalDate today,
+    Iterable<Entry> entries,
+    Iterable<Reversal> reversals,
+    bool Function(Entry) counts,
+  ) {
+    final byId = {for (final entry in entries) entry.id: entry};
+    var back = Money.zero;
+    for (final reversal in reversals) {
+      final on = reversal.occurredOn;
+      final entry = byId[reversal.entryId];
+      if (on.isBefore(from) || on.isAfter(today)) continue;
+      if (entry == null || !counts(entry)) continue;
+      back += reversal.line.amount;
+    }
+    return back;
   }
 
   /// O primeiro dia da semana de [today]: segunda-feira, ou o dia 1.
