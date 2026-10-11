@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:cajui/src/features/home_widget/application/home_snapshot_provider.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
 import 'package:cajui/src/features/notifications/application/notification_providers.dart';
+import 'package:cajui/src/features/reminders/application/due_reminders_provider.dart';
+import 'package:cajui/src/features/reminders/application/reminders_providers.dart';
+import 'package:cajui/src/features/reminders/presentation/reminder_pages.dart';
 import 'package:cajui/src/features/review/presentation/review_page.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,8 +52,18 @@ class _NotificationsHostState extends ConsumerState<NotificationsHost> {
           unawaited(ref.read(homeSnapshotPublisherProvider).publish(snapshot)),
       fireImmediately: true,
     );
+    _publishReminders();
     unawaited(_start());
   }
+
+  /// Os lembretes de vencimento vão para o aparelho a cada mudança do livro,
+  /// do dia ou da chave em Ajustes (RN-1081, RN-1088).
+  void _publishReminders() => ref.listenManual(
+    dueRemindersProvider,
+    (_, reminders) =>
+        unawaited(ref.read(remindersPublisherProvider).publish(reminders)),
+    fireImmediately: true,
+  );
 
   /// O que chegou com o app fechado — inclusive o que a leitura em segundo
   /// plano deixou pela metade — e a tela que o aviso tocado pediu.
@@ -63,7 +76,8 @@ class _NotificationsHostState extends ConsumerState<NotificationsHost> {
   Future<void> _drain() => ref.read(bankNoticeServiceProvider).drain();
 
   void _open(String route) {
-    if (!mounted || route != NotificationsHost.reviewRoute) return;
+    if (!mounted || ReminderPages.open(context, route)) return;
+    if (route != NotificationsHost.reviewRoute) return;
     unawaited(ReviewPage.open(context));
   }
 

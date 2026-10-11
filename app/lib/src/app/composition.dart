@@ -38,6 +38,8 @@ import 'package:cajui/src/features/receipts/infrastructure/native_receipt_inbox.
 import 'package:cajui/src/features/receipts/infrastructure/native_receipt_reader.dart';
 import 'package:cajui/src/features/receipts/infrastructure/no_receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/infrastructure/no_receipt_reader.dart';
+import 'package:cajui/src/features/reminders/application/reminders_providers.dart';
+import 'package:cajui/src/features/reminders/infrastructure/native_reminder_schedule.dart';
 import 'package:cajui/src/features/review/application/review_providers.dart';
 import 'package:cajui/src/features/review/infrastructure/event_store_review_log.dart';
 import 'package:domain/domain.dart';
@@ -99,6 +101,10 @@ abstract final class Composition {
       notificationAccessProvider.overrideWithValue(channel),
       launchRequestsProvider.overrideWithValue(channel),
       homeScreenProvider.overrideWithValue(const NativeHomeScreen()),
+      // Os lembretes de vencimento, nos alarmes do aparelho (RN-1081).
+      reminderScheduleProvider.overrideWithValue(
+        const NativeReminderSchedule(),
+      ),
       // O pote de água e os cartões balançam com o celular (ADR-026).
       tiltSourceProvider.overrideWithValue(const AccelerometerTiltSource()),
     ];
