@@ -9,7 +9,7 @@ class PaymentSection extends StatelessWidget {
   /// Cria a seção para [draft].
   const new({
     required this.draft,
-    required this.voucherBalance,
+    required this.voucherOfMonth,
     required this.revision,
     required this.onPickMethod,
     required this.onToggleSplit,
@@ -24,7 +24,7 @@ class PaymentSection extends StatelessWidget {
   final EntryDraft draft;
 
   /// O saldo do vale, mostrado quando o vale é uma das formas.
-  final Money voucherBalance;
+  final Money voucherOfMonth;
 
   /// Muda quando os valores das linhas foram trocados **pelo app** — a
   /// proposta de divisão, "colocar o resto". O campo de valor guarda o que
@@ -52,7 +52,7 @@ class PaymentSection extends StatelessWidget {
   String? _helperFor(PaymentMethod? method) {
     if (method == null) return 'Sem escolher, vai como Pix';
     if (method.tender != Tender.mealVoucher) return null;
-    return 'Saldo do vale: ${BrlFormatter.format(voucherBalance.cents)}';
+    return 'Vale do mês: ${BrlFormatter.format(voucherOfMonth.cents)}';
   }
 
   bool get _canBeParceled =>

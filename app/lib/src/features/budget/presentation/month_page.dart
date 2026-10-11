@@ -97,12 +97,16 @@ class MonthPage extends ConsumerWidget {
     return [
       _row(title, budget.totalOf(block)),
       for (final item in budget.itemsOf(block))
-        CajuiListRow(
-          // Recuada: a categoria é parte do grupo de cima.
-          leading: const SizedBox(width: CajuiSpacing.md),
-          title: categories[item.categoryId]?.name ?? 'Outra',
-          subtitle: 'previsto ${brl(item.planned)} · gasto ${brl(item.spent)}',
-          trailing: CajuiAmountText(item.counted.cents),
+        Padding(
+          // Recuada, e sem caixa à esquerda: a categoria é parte do grupo de
+          // cima, e não um item com ícone próprio.
+          padding: const EdgeInsets.only(left: CajuiSpacing.lg),
+          child: CajuiListRow(
+            title: categories[item.categoryId]?.name ?? 'Outra',
+            subtitle:
+                'previsto ${brl(item.planned)} · gasto ${brl(item.spent)}',
+            trailing: CajuiAmountText(item.counted.cents),
+          ),
         ),
     ];
   }

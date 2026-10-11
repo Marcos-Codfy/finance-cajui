@@ -170,7 +170,7 @@ class EntriesPage extends ConsumerWidget {
   List<Widget> _ready(EntriesReady state) {
     return [
       const PendingCapturesCard(),
-      MonthSpendingCard(spent: state.spent, voucher: state.book.voucher),
+      MonthSpendingCard(spent: state.spent, voucher: state.voucher),
       const SizedBox(height: CajuiSpacing.xl),
       if (state.entries.isEmpty)
         const CajuiEmptyState(

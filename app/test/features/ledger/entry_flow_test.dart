@@ -139,6 +139,6 @@ void main() {
     expect(find.text('Gasto em dinheiro'), findsOneWidget);
     expect(find.text('Gasto no vale'), findsOneWidget);
     expect(find.textContaining('Total'), findsNothing);
-    expect(find.text('Saldo do vale'), findsOneWidget);
+    expect(find.text('Vale do mês'), findsOneWidget);
   });
 }
