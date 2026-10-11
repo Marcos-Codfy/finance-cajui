@@ -38,3 +38,20 @@ Depois de um mês de uso, o dono achou o app difícil: faixas de mínimo e máxi
 ## Como se confere
 
 - Testes do domínio com uma casa inventada na estrutura da planilha: o mês inteiro (RN-1010 a RN-1017), a identidade "limite × 4 = sobra + dia a dia", o mês que falta, o dízimo zero, o vale que cobre só a comida, o maior entre previsto e gasto, juros como dia a dia, pagamento ligado à dívida que não conta duas vezes, salário recebido e entrada avulsa, vale creditado, a semana, os avisos do cartão por centavos, a dívida pelo calendário nos dois jeitos, os tipos, a ordem, quanto ainda devo, o mês a mês com o plano de cada mês, a sugestão depois de 30 dias e a leitura do plano antigo.
+
+## Revisão de 11/10/2026: o "pode gastar por semana" saiu
+
+No mesmo dia, depois de usar, o dono pediu: "aquele item de quanto eu posso gastar na semana retire, na prática eu não uso e nem é útil pra mim".
+
+Saiu tudo:
+- do Início, o pote, que mostrava esse número;
+- do alto da Juju;
+- do widget, que passou a mostrar a sobra do mês (RN-872 revista);
+- do Meu mês, a linha da semana;
+- do formulário de lançamento, a linha "resta na semana";
+- do contexto da Juju (prompt v7);
+- do domínio: `WeekAllowance`, `MonthBudget.weeklyLimit`, `weeklyVoucher` e `Finances.weekOf`.
+
+Com ele saíram os indicadores semanais antigos, que já não tinham tela (`WeeklyLimit`, `BudgetWeek`), e os resumos do dia e da semana. A identidade "limite × 4 = sobra + dia a dia" deixa de existir. A RN-1015 e a RN-1018 ficam revogadas, e a pergunta do BL-086 (÷4 em mês de 5 semanas) perde o objeto.
+
+O número principal passa a ser o do mês: a sobra, ou quanto falta para fechar.
