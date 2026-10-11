@@ -17,4 +17,8 @@ enum DebtKind {
 
   /// Dinheiro devido a uma pessoa.
   informal,
+
+  /// Conta atrasada: o que ficou para trás e ainda não foi negociado. Tem
+  /// saldo, e às vezes nenhuma parcela.
+  overdueBill,
 }
