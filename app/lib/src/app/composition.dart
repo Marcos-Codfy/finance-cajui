@@ -99,7 +99,7 @@ abstract final class Composition {
       notificationAccessProvider.overrideWithValue(channel),
       launchRequestsProvider.overrideWithValue(channel),
       homeScreenProvider.overrideWithValue(const NativeHomeScreen()),
-      // O pote de água e os cartões balançam com o celular (ADR-026).
+      // Os cartões balançam com o celular (ADR-026).
       tiltSourceProvider.overrideWithValue(const AccelerometerTiltSource()),
     ];
   }
