@@ -86,7 +86,9 @@ ${links.join('\n')}
   }
 
   /// Os estilos. A ordem de `cellXfs` é a das constantes acima: o formato
-  /// 164 é o real, com o sinal antes do "R$"; o 165, a data brasileira.
+  /// 164 é o real, com o sinal antes do "R$"; o 165, a data brasileira. O
+  /// estilo "Normal" no fim é o que todo leitor espera achar; sem ele, há
+  /// leitor que avisa e aplica um padrão próprio.
   static const String styles =
       '''
 $declaration
@@ -114,6 +116,7 @@ $declaration
 <xf numFmtId="1" applyNumberFormat="1"/>
 <xf numFmtId="9" applyNumberFormat="1"/>
 </cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>''';
 
   /// O espaço de nomes das planilhas.

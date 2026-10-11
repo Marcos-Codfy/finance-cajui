@@ -51,6 +51,11 @@ void main() {
       );
       expect(parts['xl/workbook.xml'], contains('name="Lançamentos"'));
       expect(parts['xl/workbook.xml'], contains('name="Resumo"'));
+      expect(
+        parts['xl/styles.xml'],
+        contains('<cellStyle name="Normal" xfId="0" builtinId="0"/>'),
+        reason: 'sem o estilo padrão, há leitor que avisa e troca o estilo',
+      );
     });
 
     test('dinheiro é número exato com o formato de real; data é número de '
