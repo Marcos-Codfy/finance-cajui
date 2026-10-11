@@ -80,6 +80,11 @@ class _CajuiDepthScrollState extends State<CajuiDepthScroll> {
     return false;
   }
 
+  int? _indexOf(Key key) {
+    final index = widget.children.indexWhere((child) => child.key == key);
+    return index < 0 ? null : index;
+  }
+
   @override
   Widget build(BuildContext context) {
     final backdrop = widget.backdrop;
@@ -90,7 +95,12 @@ class _CajuiDepthScrollState extends State<CajuiDepthScroll> {
         padding: widget.padding,
         physics: widget.physics ?? CajuiDepthScroll.bouncing,
         itemCount: widget.children.length,
+        // O item leva a chave do filho, e a lista o reencontra por ela
+        // quando outro entra antes: o estado dele — a página do carrossel,
+        // o que foi digitado — não se perde.
+        findChildIndexCallback: _indexOf,
         itemBuilder: (context, index) => DepthItem(
+          key: widget.children[index].key,
           geometry: _geometry,
           child: RepaintBoundary(child: widget.children[index]),
         ),

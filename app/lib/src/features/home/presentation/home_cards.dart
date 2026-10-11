@@ -18,7 +18,9 @@ import 'package:flutter/widgets.dart';
 abstract final class HomeCards {
   /// O carrossel de [view]. O mês no verde brilha — com festa quando
   /// [party] (escolha 5 do dono).
+  /// A chave guarda a página escolhida quando um aviso aparece acima.
   static Widget of(HomeView view, {bool party = false}) => CajuiCoverFlow(
+    key: const ValueKey('numeros-do-mes'),
     semanticLabel: 'Números do mês',
     children: [
       if (view.hasPlan) ..._sheet(view, party: party) else _spent(view),

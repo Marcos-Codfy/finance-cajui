@@ -105,5 +105,34 @@ void main() {
       await tester.pump(CajuiDurations.reducedFade);
       expect(find.text('conversa 0'), findsNothing);
     });
+
+    testWidgets('a aba que sai perde o foco: o teclado não escreve nela', (
+      tester,
+    ) async {
+      final field = FocusNode();
+      addTearDown(field.dispose);
+      Widget tabs(int index) => host(
+        SizedBox(
+          width: 400,
+          height: 600,
+          child: CajuiOrbitStack(
+            index: index,
+            children: [
+              Focus(focusNode: field, child: const SizedBox.expand()),
+              const _Counter('inicio'),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpWidget(tabs(0));
+      field.requestFocus();
+      await tester.pump();
+      expect(field.hasFocus, isTrue);
+
+      await tester.pumpWidget(tabs(1));
+      await tester.pumpAndSettle();
+
+      expect(field.hasFocus, isFalse);
+    });
   });
 }

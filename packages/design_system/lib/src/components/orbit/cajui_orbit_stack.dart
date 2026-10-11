@@ -84,13 +84,19 @@ class _CajuiOrbitStackState extends State<CajuiOrbitStack>
   Widget _face(int index, Widget child, double width, MotionLevel level) {
     final front = index == widget.index;
     final leaving = index == _leaving;
+    // Fora de cena, a aba também fica fora do foco, como no IndexedStack:
+    // sem isso, o campo da conversa escondida continuava recebendo teclado,
+    // e um "enviar" ia parar na aba que ninguém via.
     return KeyedSubtree(
       key: ValueKey(index),
       child: Offstage(
         offstage: !front && !leaving,
-        child: IgnorePointer(
-          ignoring: !front,
-          child: CajuiPosed(pose: _pose(front, width, level), child: child),
+        child: ExcludeFocus(
+          excluding: !front,
+          child: IgnorePointer(
+            ignoring: !front,
+            child: CajuiPosed(pose: _pose(front, width, level), child: child),
+          ),
         ),
       ),
     );
