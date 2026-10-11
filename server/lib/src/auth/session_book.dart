@@ -33,6 +33,10 @@ final class SessionBook {
   /// O tipo do evento que guarda a sessão aberta pelo código.
   static const openedType = 'auth.session-opened';
 
+  /// O campo do evento com a impressão do segredo do autenticador que abriu
+  /// a sessão (`Totp.fingerprint`).
+  static const secretField = 'secret';
+
   final DateTime Function() _now;
   final Map<String, Session> _byTokenHash = {};
 
@@ -68,11 +72,15 @@ final class SessionBook {
     };
   }
 
-  /// Reabre as sessões gravadas em [events] que ainda não venceram.
-  void restore(Iterable<StoredEvent> events) {
+  /// Reabre as sessões gravadas em [events] que ainda não venceram e que
+  /// foram abertas pelo segredo de impressão [secret]. Sessão de outro
+  /// segredo — ou com o servidor sem segredo, `null` — não volta: é assim
+  /// que trocar o segredo encerra todas as sessões da web de uma vez.
+  void restore(Iterable<StoredEvent> events, {required String? secret}) {
     for (final event in events) {
       if (event.type != openedType) continue;
       final payload = event.payload;
+      if (secret == null || payload[secretField] != secret) continue;
       final expiresAt = DateTime.tryParse('${payload['expiresAt']}');
       if (expiresAt == null || _now().isAfter(expiresAt)) continue;
       _byTokenHash['${payload['hash']}'] = Session(

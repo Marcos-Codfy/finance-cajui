@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:server/src/app.dart';
@@ -112,26 +113,69 @@ void main() {
       final (_, body) = await _enter(server, Totp(_rfcSecret).codeAt(_step));
       final token = body['token']! as String;
 
-      final restarted = App(
-        store: server.store,
-        clock: const FixedClock(),
-        log: (_) {},
-        sessions: SessionBook(now: const FixedClock().now),
-        householdKey: HouseholdKey(TestApp.key),
-      );
-      final response = await restarted.handler(
-        Request(
-          'GET',
-          Uri.parse('http://localhost/v1/entries'),
-          headers: {'authorization': 'Bearer $token'},
-        ),
-      );
+      final status = await _afterRestart(server, Totp(_rfcSecret), token);
 
-      expect(response.statusCode, 200);
+      expect(status, 200);
       final saved = server.store.events.where(
         (event) => event.type == SessionBook.openedType,
       );
       expect(jsonEncode(saved.single.payload), isNot(contains(token)));
     });
+
+    test('trocar o segredo, ou tirá-lo, derruba as sessões do código no '
+        'reinício', () async {
+      final server = await TestApp.start(totp: Totp(_rfcSecret));
+      final (_, body) = await _enter(server, Totp(_rfcSecret).codeAt(_step));
+      final token = body['token']! as String;
+      final other = Totp(Uint8List.fromList(List.filled(20, 7)));
+
+      expect(await _afterRestart(server, other, token), 401);
+      expect(await _afterRestart(server, null, token), 401);
+    });
+
+    test('pedidos simultâneos não furam a trava: o certo, depois de cinco '
+        'errados, volta recusado', () async {
+      final server = await TestApp.start(totp: Totp(_rfcSecret));
+
+      final answers = await Future.wait([
+        for (var i = 0; i < CodeRoutes.maxFailures + 1; i++)
+          _enter(server, '000000'),
+        _enter(server, Totp(_rfcSecret).codeAt(_step)),
+      ]);
+
+      expect([for (final (status, _) in answers) status], everyElement(401));
+    });
+
+    test('segredo ilegível no arquivo é "sem segredo", e o servidor sobe', () {
+      final folder = Directory.systemTemp.createTempSync('cajui-totp-');
+      addTearDown(() => folder.deleteSync(recursive: true));
+      final file = File('${folder.path}/cajui-totp')
+        // Um BOM pela metade: o byte 0xEF sozinho não é UTF-8.
+        ..writeAsBytesSync([0xef, ...ascii.encode('GEZDGNBVGY3TQOJQ')]);
+
+      expect(Totp.load(environment: const {}, file: file.path), isNull);
+    });
   });
+}
+
+/// Sobe outro servidor sobre o registro de [server], como num reinício, com
+/// o verificador [totp], e devolve o que ele responde a uma leitura com
+/// [token].
+Future<int> _afterRestart(TestApp server, Totp? totp, String token) async {
+  final restarted = App(
+    store: server.store,
+    clock: const FixedClock(),
+    log: (_) {},
+    sessions: SessionBook(now: const FixedClock().now),
+    householdKey: HouseholdKey(TestApp.key),
+    totp: totp,
+  );
+  final response = await restarted.handler(
+    Request(
+      'GET',
+      Uri.parse('http://localhost/v1/entries'),
+      headers: {'authorization': 'Bearer $token'},
+    ),
+  );
+  return response.statusCode;
 }

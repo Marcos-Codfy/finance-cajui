@@ -9,6 +9,7 @@ import 'package:server/src/assistant/payment_choice.dart';
 import 'package:server/src/assistant/server_finances.dart';
 import 'package:server/src/assistant/sheet_numbers.dart';
 import 'package:server/src/auth/authenticate.dart';
+import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
 import 'package:server/src/ledger/ledger_state.dart';
@@ -81,6 +82,15 @@ final class AssistantRoutes {
     'formas_de_pagamento': PaymentChoice.options,
   };
 
+  /// O aviso que vai no cadastro quando a conversa vem da consulta pela web
+  /// (RN-906). As instruções fixas não mudam — são o começo que a IA guarda
+  /// em cache (RN-916) —, e sem o aviso a Juju diria que lançou o que não
+  /// pôde lançar.
+  static const _consultOnly =
+      'esta conversa vem da consulta pela web, que só lê. Você não lança, '
+      'não cancela, não registra renda e não muda categoria daqui; se a '
+      'pessoa pedir, diga numa frase que isso se faz no celular.';
+
   /// O roteador, montado em `/v1/assistant`.
   Router get router => Router()..post('/ask', _ask);
 
@@ -95,12 +105,14 @@ final class AssistantRoutes {
     );
     final assistant = service;
     if (assistant == null) return Responses.error(request, ErrorCode.ai01);
+    final session = Authenticate.sessionOf(request);
+    final readOnly = session.scope == SessionScope.webReadOnly;
     final outcome = await assistant.ask(
-      sessionId: Authenticate.sessionOf(request).deviceId,
+      sessionId: session.deviceId,
       message: message,
       context: _context,
-      catalog: _catalog,
-      tools: AssistantTools(state: state, store: store, clock: clock),
+      catalog: {..._catalog, if (readOnly) 'acesso': _consultOnly},
+      tools: _tools(readOnly: readOnly),
     );
     final (answer, error) = (outcome.answer, outcome.error);
     if (answer == null || error != null) {
@@ -112,4 +124,11 @@ final class AssistantRoutes {
     }
     return Responses.json(answer.toJson());
   }
+
+  AssistantTools _tools({required bool readOnly}) => AssistantTools(
+    state: state,
+    store: store,
+    clock: clock,
+    readOnly: readOnly,
+  );
 }

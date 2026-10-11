@@ -13,7 +13,6 @@ import 'package:server/src/assistant/assistant_action.dart';
 import 'package:server/src/assistant/assistant_answer.dart';
 import 'package:server/src/assistant/assistant_context.dart';
 import 'package:server/src/assistant/assistant_prompt.dart';
-import 'package:server/src/assistant/assistant_tool_catalog.dart';
 import 'package:server/src/assistant/assistant_tools.dart';
 import 'package:server/src/assistant/conversation_window.dart';
 
@@ -114,7 +113,7 @@ final class AssistantService {
     final actions = <AssistantAction>[];
     for (var round = 0; round <= maxToolRounds; round++) {
       final offered = round < maxToolRounds
-          ? AssistantToolCatalog.tools
+          ? tools.offered
           : const <ChatTool>[];
       final reply = await _call(messages, offered, context);
       if (!reply.wantsTools) {

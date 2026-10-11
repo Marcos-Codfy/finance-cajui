@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
-import 'package:pointycastle/export.dart';
+import 'package:pointycastle/export.dart' hide SecureRandom;
+import 'package:server/src/auth/secure_random.dart';
 
 /// O código de seis dígitos do autenticador (RFC 6238, ADR-027): o mesmo
 /// que o Google Authenticator mostra, e que o script do PC também calcula.
@@ -30,6 +32,12 @@ final class Totp {
   final Uint8List _secret;
   int? _lastStep;
 
+  /// Uma impressão curta do segredo, que vai junto de cada sessão gravada:
+  /// a sessão aberta por um segredo que já foi trocado não volta depois de
+  /// um reinício. É um hash de 160 bits aleatórios — não ajuda a achá-lo.
+  late final String fingerprint = SecureRandom.hash(base64Encode(_secret))
+      .substring(0, 16);
+
   /// O verificador lido da credencial do systemd, ou do arquivo [file] —
   /// para rodar fora de um serviço. `null` sem segredo: aí ninguém entra
   /// por código, e a chave da casa continua valendo.
@@ -38,8 +46,19 @@ final class Totp {
     final path =
         file ?? (directory == null ? null : p.join(directory, credentialName));
     if (path == null || !File(path).existsSync()) return null;
-    final secret = base32(File(path).readAsStringSync());
+    final secret = base32(_read(path));
     return secret == null || secret.length < minBytes ? null : Totp(secret);
+  }
+
+  /// O texto do arquivo, ou vazio quando ele não se lê como UTF-8 — um BOM
+  /// mal tirado, por exemplo. Segredo ilegível é só "sem segredo": o
+  /// servidor sobe, e a web entra pela chave da casa.
+  static String _read(String path) {
+    try {
+      return File(path).readAsStringSync();
+    } on FileSystemException {
+      return '';
+    }
   }
 
   /// Se [code] vale em [now]. O que já foi aceito não vale de novo.

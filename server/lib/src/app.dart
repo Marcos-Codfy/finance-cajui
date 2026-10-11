@@ -49,7 +49,7 @@ final class App {
          state: LedgerState(store.events),
          clock: clock,
        ) {
-    sessions.restore(store.events);
+    sessions.restore(store.events, secret: totp?.fingerprint);
   }
 
   /// As sessões abertas: as da web que entrou com o código (ADR-027).

@@ -51,18 +51,29 @@ final class CodeRoutes {
   Router get router => Router()..post('/code', _code);
 
   Future<Response> _code(Request request) async {
-    final now = clock.now();
-    final verifier = totp;
-    if (verifier == null || _locked(now)) return _refused(request);
     final body = JsonReader(
       await JsonBody.read(request),
       allowed: const {'code'},
     );
-    if (!verifier.accepts(body.string('code', maxLength: 8), now)) {
+    final code = body.string('code', maxLength: 8);
+    // Daqui até contar o erro não há `await`: com um isolate só, conferir a
+    // porta, testar o código e contar a falha acontecem juntos. Com a porta
+    // conferida antes de ler o corpo, cem pedidos simultâneos passavam todos
+    // por ela e furavam a trava.
+    final now = clock.now();
+    final verifier = totp;
+    if (verifier == null || _locked(now)) return _refused(request);
+    if (!verifier.accepts(code, now)) {
       _fail(now);
       return _refused(request);
     }
     _failures = 0;
+    return await _opened(verifier);
+  }
+
+  /// Abre a sessão longa e a grava com a impressão do segredo que a abriu:
+  /// trocar o segredo derruba todas no próximo reinício (ADR-027).
+  Future<Response> _opened(Totp verifier) async {
     final token = sessions.open(
       'web',
       scope: SessionScope.webReadOnly,
@@ -71,7 +82,10 @@ final class CodeRoutes {
     await store.append(
       id: 'auth-session-${SecureRandom.hash(token).substring(0, 16)}',
       type: SessionBook.openedType,
-      payload: sessions.recordOf(token),
+      payload: {
+        ...sessions.recordOf(token),
+        SessionBook.secretField: verifier.fingerprint,
+      },
     );
     return Responses.json({'token': token});
   }
