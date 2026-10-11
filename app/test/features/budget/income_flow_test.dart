@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
@@ -44,12 +45,12 @@ void main() {
     );
     await _settle(tester);
 
-    await _tap(tester, find.bySemanticsLabel('Plano do mês'));
-    await _tap(tester, find.text('Registrar recebimento'));
+    await openFromHome(tester, 'Minhas contas');
+    await _tap(tester, find.text('Registrar dinheiro extra deste mês'));
     await _tap(tester, find.text('No vale alimentação'));
 
-    // No vale não existe "renda do mês × avulsa": é só crédito no saldo.
-    expect(find.text('É a renda do mês'), findsNothing);
+    // No vale não existe "salário × extra": é só o crédito do mês.
+    expect(find.textContaining('Salário ·'), findsNothing);
 
     await tester.enterText(_field('Quanto entrou'), '60000');
     // O botão só habilita com valor: a tela precisa de um quadro para isso.
@@ -57,9 +58,10 @@ void main() {
     await _tap(tester, find.text('Registrar'));
     await _tap(tester, find.bySemanticsLabel('Voltar'));
 
-    // 650,00 de saldo + 600,00 de crédito.
-    expect(find.text('R\$${_nbsp}1.250,00'), findsOneWidget);
-    await _tap(tester, find.bySemanticsLabel('Lançamentos'));
+    // O crédito do mês vale no lugar do vale previsto (RN-1006).
+    expect(find.text('Vale do mês'), findsOneWidget);
+    expect(find.text('R\$${_nbsp}600,00'), findsWidgets);
+    await openFromHome(tester, 'Lançamentos');
     expect(find.text('Nada lançado ainda'), findsOneWidget);
   });
 }

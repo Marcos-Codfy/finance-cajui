@@ -1,12 +1,10 @@
 import 'package:cajui/src/app/home_tab.dart';
 import 'package:cajui/src/app/home_tab_controller.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_page.dart';
-import 'package:cajui/src/features/dashboard/presentation/dashboard_page.dart';
-import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
+import 'package:cajui/src/features/home/presentation/home_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
-import 'package:cajui/src/features/settings/presentation/settings_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,11 +17,20 @@ class HomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(captureProvider, (before, now) {
+      // A conferência mora na casca, e as telas abertas pelo Início ficam
+      // empilhadas por cima dela: sem fechá-las, a foto tirada em
+      // "Lançamentos" abriria a conferência escondida atrás da tela.
+      if (now is CaptureIdle || (before != null && before is! CaptureIdle)) {
+        return;
+      }
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    });
     final capturing = ref.watch(captureProvider) is! CaptureIdle;
     return Stack(
       children: [
-        // A casca continua montada por baixo: quem estava no meio de algo
-        // volta para onde estava depois de conferir o comprovante.
+        // A casca continua montada por baixo: as abas guardam a conversa e
+        // a rolagem de quando o comprovante chegou.
         ExcludeSemantics(excluding: capturing, child: _areas(context, ref)),
         if (capturing)
           Positioned.fill(
@@ -38,9 +45,8 @@ class HomeShell extends ConsumerWidget {
 
   Widget _areas(BuildContext context, WidgetRef ref) {
     final current = ref.watch(homeTabProvider);
-    // Com o teclado aberto, a barra sai: são quatro destinos ocupando a
-    // altura que falta para ver o que se está escrevendo. Quem digita já
-    // escolheu onde está.
+    // Com o teclado aberto, a barra sai: ela ocuparia a altura que falta
+    // para ver o que se está escrevendo. Quem digita já escolheu onde está.
     final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Column(
       children: [
@@ -65,9 +71,7 @@ class HomeShell extends ConsumerWidget {
   }
 
   Widget _page(HomeTab tab) => switch (tab) {
-    HomeTab.dashboard => const DashboardPage(),
-    HomeTab.entries => const EntriesPage(),
-    HomeTab.assistant => const AssistantPage(),
-    HomeTab.settings => const SettingsPage(),
+    HomeTab.conversar => const AssistantPage(),
+    HomeTab.inicio => const HomePage(),
   };
 }

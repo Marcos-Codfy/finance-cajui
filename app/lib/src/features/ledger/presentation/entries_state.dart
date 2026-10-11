@@ -1,5 +1,6 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/open_failure.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -38,6 +39,7 @@ final class EntriesReady extends EntriesState {
     required this.book,
     required this.entries,
     required this.spent,
+    required this.voucher,
   });
 
   /// O mês à vista.
@@ -54,6 +56,9 @@ final class EntriesReady extends EntriesState {
 
   /// O gasto do mês, por moeda — nunca somado (RN-111).
   final TenderAmounts spent;
+
+  /// O vale do mês: o do plano, ou o crédito que entrou (RN-1006).
+  final Money voucher;
 }
 
 /// O estado da tela de lançamentos, derivado do livro e do dia de hoje. É o
@@ -67,6 +72,7 @@ final entriesStateProvider = Provider<EntriesState>((ref) {
       book: book,
       entries: book.entriesIn(today.budgetMonth),
       spent: book.spentIn(today.budgetMonth),
+      voucher: BookFinances.of(book).voucherIn(today.budgetMonth),
     ),
     // `hasError`, e **não** `AsyncError()`: quando o livro não abre, o
     // Riverpod deixa o estado em `AsyncLoading` carregando o erro junto, e

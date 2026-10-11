@@ -9,10 +9,12 @@ import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Cadastrar uma dívida (RN-501).
+/// Cadastrar uma dívida (RN-501, RN-1002).
 ///
-/// A ordem das perguntas é a da conversa: a quem se deve, de que tipo, quanto
-/// é a parcela, quantas são, quantas já foram e quando vence.
+/// A ordem das perguntas é a da conversa: a quem se deve e de que tipo. A
+/// parcelada pergunta a parcela, quantas são, quantas já foram e quando
+/// vence; a conta atrasada e o rotativo perguntam quanto ainda se deve e
+/// quanto se paga por mês — que pode ser nada, ainda.
 class DebtFormPage extends ConsumerStatefulWidget {
   /// Cria a tela de cadastro.
   const new({super.key});
@@ -29,8 +31,10 @@ class DebtFormPage extends ConsumerStatefulWidget {
 
 class _DebtFormPageState extends ConsumerState<DebtFormPage> {
   final _creditor = TextEditingController();
+  final _note = TextEditingController();
   DebtKind _kind = DebtKind.loan;
   int _cents = 0;
+  int _balance = 0;
   int _total = 12;
   int _paid = 0;
   int _dueDay = 10;
@@ -41,10 +45,16 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
   @override
   void dispose() {
     _creditor.dispose();
+    _note.dispose();
     super.dispose();
   }
 
-  bool get _isComplete => _creditor.text.trim().isNotEmpty && _cents > 0;
+  /// A dívida que se mede pelo saldo, e não em parcelas.
+  bool get _byBalance => DebtType.of(_kind) != DebtType.installments;
+
+  bool get _isComplete =>
+      _creditor.text.trim().isNotEmpty &&
+      (_byBalance ? _balance > 0 : _cents > 0);
 
   /// O mês da primeira parcela, contando para trás a partir da próxima: é o
   /// que o domínio precisa para projetar a quitação (RN-531).
@@ -54,21 +64,34 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
     return next.addMonths(-_paid);
   }
 
+  Future<Result<Debt>> _define() {
+    final service = ref.read(debtsServiceProvider);
+    if (_byBalance) {
+      return service.defineByBalance(
+        creditor: _creditor.text,
+        kind: _kind,
+        balance: Money.fromCents(_balance),
+        monthlyPayment: Money.fromCents(_cents),
+        dueDay: _dueDay,
+        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+      );
+    }
+    return service.define(
+      creditor: _creditor.text,
+      kind: _kind,
+      installmentAmount: Money.fromCents(_cents),
+      totalInstallments: _total,
+      paidInstallments: _paid,
+      dueDay: _dueDay,
+      firstMonth: _firstMonth,
+    );
+  }
+
   Future<void> _save() async {
     setState(() => _saving = true);
     final navigator = Navigator.of(context);
     final feedback = CajuiFeedbackScope.of(context);
-    final result = await ref
-        .read(debtsServiceProvider)
-        .define(
-          creditor: _creditor.text,
-          kind: _kind,
-          installmentAmount: Money.fromCents(_cents),
-          totalInstallments: _total,
-          paidInstallments: _paid,
-          dueDay: _dueDay,
-          firstMonth: _firstMonth,
-        );
+    final result = await _define();
     if (!mounted) return;
     if (result.failureOrNull case final failure?) {
       setState(() {
@@ -115,15 +138,47 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
         _gap,
         ..._whichKind(),
         _gap,
-        CajuiAmountField(
-          label: 'Valor da parcela',
-          onChanged: (cents) => setState(() => _cents = cents),
-        ),
+        if (_byBalance) ..._balanceFields() else ..._installmentFields(),
         _gap,
-        ..._counts(),
+        CajuiTextField(
+          label: 'Observação',
+          controller: _note,
+          hint: 'Negociar à vista com desconto',
+        ),
       ],
     );
   }
+
+  List<Widget> _installmentFields() => [
+    CajuiAmountField(
+      label: 'Valor da parcela',
+      onChanged: (cents) => setState(() => _cents = cents),
+    ),
+    _gap,
+    ..._counts(),
+  ];
+
+  /// Conta atrasada e rotativo: o saldo, e o que se paga por mês.
+  List<Widget> _balanceFields() => [
+    CajuiAmountField(
+      label: 'Quanto ainda devo',
+      onChanged: (cents) => setState(() => _balance = cents),
+    ),
+    _gap,
+    CajuiAmountField(
+      label: 'Quanto pago por mês',
+      helper: 'Zero se ainda não paga nada. O saldo cai sozinho a cada mês.',
+      onChanged: (cents) => setState(() => _cents = cents),
+    ),
+    _gap,
+    _number(
+      label: 'Dia do vencimento',
+      value: 'dia $_dueDay',
+      options: _counted(1, 28),
+      selected: _dueDay,
+      onPicked: (value) => _dueDay = value,
+    ),
+  ];
 
   List<Widget> _whichKind() => [
     const CajuiFieldLabel('Que tipo de dívida'),

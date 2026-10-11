@@ -13,10 +13,13 @@ abstract final class StatementLineLabels {
   static String what(StatementLine line, LedgerBook book) =>
       switch (line.kind) {
         StatementLineKind.expense => _expense(line, book),
-        StatementLineKind.income =>
-          StatementImport.isPlanIncome(line, book)
-              ? 'Entrada · renda do mês'
-              : 'Entrada',
+        StatementLineKind.income => switch (StatementImport.salaryOf(
+          line,
+          book,
+        )) {
+          final salary? => 'Entrada · salário · ${salary.name}',
+          null => 'Entrada',
+        },
         StatementLineKind.cardPayment =>
           line.doubtful
               ? 'Parece pagamento de fatura'

@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:cajui/src/core/storage/event_store_opener_file.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
-import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -23,7 +23,7 @@ void main() {
   LedgerController ledger() => container.read(ledgerProvider.notifier);
   IncomeService income() => container.read(incomeServiceProvider);
   Future<LedgerBook> book() => container.read(ledgerProvider.future);
-  MonthOverview overview() => container.read(monthOverviewProvider)!;
+  Finances finances() => container.read(financesProvider)!;
 
   setUp(() async {
     container = ProviderContainer(
@@ -61,19 +61,17 @@ void main() {
 
   test('RN-131 · o valor recebido vale no lugar do esperado, no mês em que '
       'foi recebido', () async {
-    expect(overview().plan.cashIncome.cents, 320000);
+    expect(finances().cashIncomeIn(testToday.budgetMonth).cents, 320000);
 
     await income().receiveIncome(
       tender: Tender.cash,
       amount: const Money.fromCents(231000),
       receivedOn: testToday,
+      salaryId: BudgetPlan.firstSalaryId,
     );
 
-    expect(overview().plan.cashIncome.cents, 231000);
-    expect(
-      (await book()).cashIncomeIn(const BudgetMonth(2026, 10)).cents,
-      320000,
-    );
+    expect(finances().cashIncomeIn(testToday.budgetMonth).cents, 231000);
+    expect(finances().cashIncomeIn(const BudgetMonth(2026, 10)).cents, 320000);
   });
 
   test('RN-133 · entrada avulsa soma no mês em que entrou, e não aparece no '
@@ -82,12 +80,10 @@ void main() {
       tender: Tender.cash,
       amount: const Money.fromCents(15000),
       receivedOn: testToday,
-      fromPlan: false,
     );
-    final current = await book();
 
-    expect(current.cashIncomeIn(testToday.budgetMonth).cents, 335000);
-    expect(current.cashIncomeIn(const BudgetMonth(2026, 10)).cents, 320000);
+    expect(finances().cashIncomeIn(testToday.budgetMonth).cents, 335000);
+    expect(finances().cashIncomeIn(const BudgetMonth(2026, 10)).cents, 320000);
   });
 
   test('RN-132 e RN-111 · recebimento não é lançamento, e o vale não entra '
@@ -101,7 +97,7 @@ void main() {
 
     expect(current.entries, isEmpty);
     expect(current.spentIn(testToday.budgetMonth), TenderAmounts.zero);
-    expect(current.cashIncomeIn(testToday.budgetMonth).cents, 320000);
+    expect(finances().cashIncomeIn(testToday.budgetMonth).cents, 320000);
   });
 
   test('valor zero não gera fato', () async {

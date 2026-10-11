@@ -14,6 +14,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/test_scope.dart';
 
@@ -52,7 +53,7 @@ Future<MemoryLedgerJournal> _openCinema(WidgetTester tester) async {
     ),
   );
   await tester.pump();
-  await _tap(tester, find.bySemanticsLabel('Lançamentos'));
+  await openFromHome(tester, 'Lançamentos');
   await _tap(tester, find.text('Cinema'));
   return journal;
 }

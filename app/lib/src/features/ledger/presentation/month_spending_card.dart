@@ -1,21 +1,22 @@
-import 'package:cajui/src/features/ledger/presentation/voucher_balance_page.dart';
+import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// O gasto do mês, **uma linha por moeda**, e o saldo do vale.
+/// O gasto do mês, **uma linha por moeda**, e o vale do mês.
 ///
 /// Não há linha de total: dinheiro e vale não se somam em lugar nenhum do
-/// Cajui (RN-111). Quem vê "R$ 640" quer saber de qual bolso saiu.
+/// Cajui (RN-111). Quem vê "R$ 640" quer saber de qual bolso saiu. O vale é
+/// o da planilha, que se muda em Minhas contas — o mesmo número do Início.
 class MonthSpendingCard extends StatelessWidget {
-  /// Cria o cartão com o gasto [spent] e a conta do vale [voucher].
+  /// Cria o cartão com o gasto [spent] e o vale do mês [voucher].
   const new({required this.spent, required this.voucher, super.key});
 
   /// O gasto do mês, por moeda.
   final TenderAmounts spent;
 
-  /// A conta do vale.
-  final VoucherAccount voucher;
+  /// O vale do mês (RN-1006).
+  final Money voucher;
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +30,14 @@ class MonthSpendingCard extends StatelessWidget {
           _line(context, 'Gasto no vale', spent.mealVoucher),
           const SizedBox(height: CajuiSpacing.lg),
           CajuiListRow(
-            title: 'Saldo do vale',
-            subtitle: 'Toque para corrigir pelo saldo da operadora',
+            title: 'Vale do mês',
+            subtitle: 'Só compra comida · muda em Minhas contas',
             trailing: CajuiAmountText(
-              voucher.balance.cents,
+              voucher.cents,
               tone: CajuiAmountTone.accent,
             ),
-            semanticLabel: 'Saldo do vale, corrigir',
-            onPressed: () => VoucherBalancePage.open(context),
+            semanticLabel: 'Vale do mês, mudar em Minhas contas',
+            onPressed: () => MyBillsPage.open(context),
           ),
         ],
       ),

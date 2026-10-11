@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/receipts/application/read_outcome.dart';
@@ -67,13 +68,13 @@ void main() {
         _line('Padaria Central', 1500),
       ]);
 
-      expect(find.textContaining('renda do mês'), findsOneWidget);
+      expect(find.textContaining('Entrada · salário'), findsOneWidget);
       await tapAndSettle(tester, find.text('Salário'));
       await tapAndSettle(tester, find.text('Lançar 2 movimentações'));
 
-      expect(book().receipts.last.sourceId, LedgerBook.cashIncomeSourceId);
+      expect(book().receipts.last.sourceId, BudgetPlan.firstSalaryId);
       expect(
-        book().cashIncomeIn(const BudgetMonth(2026, 9)),
+        BookFinances.of(book()).cashIncomeIn(const BudgetMonth(2026, 9)),
         const Money.fromCents(320000),
       );
     });
@@ -133,7 +134,7 @@ void main() {
 
       await tapAndSettle(tester, find.text('Registrar entrada'));
 
-      expect(book().receipts.last.sourceId, LedgerBook.cashIncomeSourceId);
+      expect(book().receipts.last.sourceId, BudgetPlan.firstSalaryId);
     });
   });
 

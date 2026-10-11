@@ -1,31 +1,24 @@
 import 'package:design_system/design_system.dart';
 
-/// As áreas do app, na ordem em que aparecem na barra de navegação.
-///
-/// A ordem é a da frequência de uso: o painel responde "como estou?", os
-/// lançamentos respondem "o que gastei?", e o resto vem depois.
+/// As duas áreas do app (sugestão 5 do dono, 11/10/2026): a conversa com a
+/// Juju, que é a tela principal, e o Início, com o mês e as portas para o
+/// resto. Lançamentos, cartões, dívidas e ajustes abrem a partir do Início.
 enum HomeTab {
-  /// O mês de relance: sobra, limites e o que vence.
-  dashboard(CajuiIconData.chart, 'Painel'),
+  /// A conversa: lançar, perguntar, mandar foto ou extrato.
+  conversar(CajuiIconData.chat, 'Conversar'),
 
-  /// O que foi lançado, e a porta para lançar à mão.
-  entries(CajuiIconData.receipt, 'Lançamentos'),
-
-  /// A conversa com o assistente.
-  assistant(CajuiIconData.chat, 'Assistente'),
-
-  /// Som, vibração e o que mais se regula.
-  settings(CajuiIconData.sliders, 'Ajustes');
+  /// O mês da planilha e as portas para o resto.
+  inicio(CajuiIconData.wallet, 'Início');
 
   new(this.icon, this.label);
 
-  /// O desenho da aba.
+  /// O ícone na barra.
   final CajuiIconData icon;
 
-  /// O nome da aba, sempre à vista.
+  /// O nome na barra.
   final String label;
 
-  /// A aba como destino da barra de navegação.
+  /// O destino da barra de navegação.
   CajuiNavDestination get destination =>
       CajuiNavDestination(icon: icon, label: label);
 }

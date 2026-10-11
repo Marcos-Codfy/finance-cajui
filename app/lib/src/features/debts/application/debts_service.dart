@@ -52,6 +52,54 @@ class DebtsService {
     return result;
   }
 
+  /// Cadastra a dívida que se mede pelo saldo — conta atrasada, rotativo
+  /// (RN-1002). A parcela por mês pode ser zero; o saldo cai sozinho a cada
+  /// vencimento (RN-1030).
+  Future<Result<Debt>> defineByBalance({
+    required String creditor,
+    required DebtKind kind,
+    required Money balance,
+    required Money monthlyPayment,
+    required int dueDay,
+    String? note,
+  }) async {
+    final result = Debt.withBalance(
+      id: 'debt-${ref.read(newIdProvider)()}',
+      creditor: creditor.trim(),
+      kind: kind,
+      balance: balance,
+      monthlyPayment: monthlyPayment,
+      dueDay: dueDay,
+      informedOn: ref.read(clockProvider).today(),
+      note: note,
+    );
+    if (result.valueOrNull case final debt?) {
+      await _append(
+        DebtDefined(id: 'debt-fact-${ref.read(newIdProvider)()}', debt: debt),
+      );
+    }
+    return result;
+  }
+
+  /// Atualiza o saldo de [debt] para [balance], informado hoje: depois de
+  /// negociar, ou para dizer que quitou (saldo zero).
+  Future<void> updateBalance(Debt debt, Money balance) async {
+    final updated = Debt.withBalance(
+      id: debt.id,
+      creditor: debt.creditor,
+      kind: debt.kind,
+      balance: balance,
+      monthlyPayment: debt.installmentAmount,
+      dueDay: debt.dueDay,
+      informedOn: ref.read(clockProvider).today(),
+      note: debt.note,
+    ).valueOrNull;
+    if (updated == null) return;
+    await _append(
+      DebtDefined(id: 'debt-fact-${ref.read(newIdProvider)()}', debt: updated),
+    );
+  }
+
   /// Guarda o valor para quitar hoje que o credor informou (RN-511). O app
   /// não calcula tabela de juros por conta própria: mostra o que foi dito,
   /// com a data, e avisa quando envelhece (RN-512).

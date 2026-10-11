@@ -4,7 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
+import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
 
 /// Abre o app como **a web**: sem identidade de aparelho, que é o que a
@@ -16,14 +18,15 @@ Future<void> _openAsWeb(WidgetTester tester, {required bool web}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: testOverrides(
-        journal: MemoryLedgerJournal(),
+        // Com o plano já feito no celular: a web vazia nem mostra as portas.
+        journal: MemoryLedgerJournal(samplePlanEvents),
         uplink: web ? const NoLedgerUplink() : null,
       ),
       child: const CajuiApp(),
     ),
   );
   await tester.pump();
-  await tester.tap(find.bySemanticsLabel('Lançamentos'));
+  await openFromHome(tester, 'Lançamentos');
   await tester.pump();
 }
 

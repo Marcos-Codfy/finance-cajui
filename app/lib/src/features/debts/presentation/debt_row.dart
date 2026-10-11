@@ -2,54 +2,61 @@ import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// Uma dívida na lista.
+/// Uma dívida na lista, como na planilha: para quem, quanto ainda devo,
+/// quanto pago por mês, de que tipo — e a posição na fila de quitação.
 ///
-/// O número vem primeiro e é **o que falta** — "faltam 7 parcelas de
-/// R$ 212,00" —, com o já pago ao lado; o medidor é secundário e conta desde
-/// o começo (RN-541). Nenhum texto aqui atribui falha a quem deve (RN-542).
+/// O número que vem primeiro é o que falta, nunca bronca (RN-541, RN-542).
 class DebtRow extends StatelessWidget {
-  /// Cria a linha de [debt].
-  const new({required this.debt, required this.onPressed, super.key});
+  /// Cria a linha de [debt], que ainda deve [owed].
+  const new({
+    required this.debt,
+    required this.owed,
+    required this.onPressed,
+    this.position,
+    super.key,
+  });
 
   /// A dívida.
   final Debt debt;
 
+  /// Quanto ainda se deve hoje, pelo calendário (RN-1030).
+  final Money owed;
+
+  /// A posição na ordem de quitação; nula para a quitada.
+  final int? position;
+
   /// O que fazer ao tocar: abrir a dívida.
   final VoidCallback onPressed;
 
-  String get _headline {
-    if (debt.isPaidOff) return 'Quitada';
-    final amount = BrlFormatter.format(debt.installmentAmount.cents);
-    final parcels = debt.remainingInstallments == 1
-        ? 'Falta 1 parcela'
-        : 'Faltam ${debt.remainingInstallments} parcelas';
-    return '$parcels de $amount';
-  }
+  static String _brl(Money amount) => BrlFormatter.format(amount.cents);
 
-  String get _progress =>
-      '${debt.paidInstallments} de ${debt.totalInstallments} pagas';
+  String get _type => switch (debt.type) {
+    DebtType.installments => 'Parcelado',
+    DebtType.overdue => 'Atrasado',
+    DebtType.revolving => 'Rotativo',
+  };
+
+  String get _headline {
+    if (owed.isZero) return 'Quitada';
+    final perMonth = debt.installmentAmount.isPositive
+        ? '${_brl(debt.installmentAmount)} por mês'
+        : 'sem parcela ainda';
+    return 'Devo ${_brl(owed)} · $perMonth';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final place = position == null ? '' : '$positionº · ';
+    final note = debt.note == null ? '' : ' · ${debt.note}';
+    final subtitle = '$place$_type · $_headline$note';
     return Padding(
       padding: const EdgeInsets.only(bottom: CajuiSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CajuiListRow(
-            title: debt.creditor,
-            subtitle: '$_headline · $_progress',
-            trailing: const CajuiIcon(CajuiIconData.chevronRight),
-            semanticLabel: '${debt.creditor}, $_headline, $_progress, abrir',
-            onPressed: onPressed,
-          ),
-          if (!debt.isPaidOff)
-            CajuiMeter(
-              value: debt.paidInstallments / debt.totalInstallments,
-              semanticLabel: 'Parcelas pagas de ${debt.creditor}',
-              semanticValue: _progress,
-            ),
-        ],
+      child: CajuiListRow(
+        title: debt.creditor,
+        subtitle: subtitle,
+        trailing: const CajuiIcon(CajuiIconData.chevronRight),
+        semanticLabel: '${debt.creditor}, $subtitle, abrir',
+        onPressed: onPressed,
       ),
     );
   }

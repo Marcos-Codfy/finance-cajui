@@ -1,16 +1,18 @@
 import 'package:cajui/src/app/cajui_app.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/home_navigation.dart';
 import 'support/mute_player.dart';
 import 'support/test_scope.dart';
 
 Future<MutePlayer> _open(WidgetTester tester) async {
-  // Alto o bastante para a lista de ajustes inteira caber: ela é preguiçosa
-  // e não constrói o que está fora da tela.
-  tester.view.physicalSize = const Size(400, 1400);
+  // Alto o bastante para o Início e os ajustes caberem inteiros: a lista é
+  // preguiçosa e não constrói o que está fora da tela.
+  tester.view.physicalSize = const Size(400, 2000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final player = MutePlayer();
@@ -24,37 +26,44 @@ Future<MutePlayer> _open(WidgetTester tester) async {
   return player;
 }
 
-/// O título da tela à vista: as telas das outras abas ficam montadas, mas
-/// fora de cena, e o `find` comum não as enxerga.
+/// O título da tela à vista: a outra aba fica montada, mas fora de cena, e
+/// o `find` comum não a enxerga.
 Finder _screen(String title) =>
     find.descendant(of: find.byType(CajuiScreen), matching: find.text(title));
 
+Finder _bar(String label) =>
+    find.descendant(of: find.byType(CajuiNavBar), matching: find.text(label));
+
 void main() {
-  testWidgets('abre no painel, com as quatro áreas na barra', (tester) async {
+  testWidgets('abre na conversa, com as duas áreas na barra (sugestões 3 e '
+      '5 do dono)', (tester) async {
     await _open(tester);
 
-    // O painel já nasce com o mês no título: não há mais tela de "comece".
-    expect(_screen('Setembro'), findsOneWidget);
-    for (final label in ['Painel', 'Lançamentos', 'Assistente', 'Ajustes']) {
-      expect(
-        find.descendant(
-          of: find.byType(CajuiNavBar),
-          matching: find.text(label),
-        ),
-        findsOneWidget,
-        reason: label,
-      );
+    expect(find.textContaining(AssistantIdentity.name), findsWidgets);
+    for (final label in ['Conversar', 'Início']) {
+      expect(_bar(label), findsOneWidget, reason: label);
     }
+    expect(_bar('Lançamentos'), findsNothing);
+    expect(_bar('Ajustes'), findsNothing);
   });
 
-  testWidgets('tocar numa área da barra leva até ela', (tester) async {
+  testWidgets('o Início tem o mês e as portas para o resto', (tester) async {
     await _open(tester);
 
-    await tester.tap(find.bySemanticsLabel('Ajustes'));
-    await tester.pump();
+    await tester.tap(find.bySemanticsLabel('Início'));
+    await settleAfterTap(tester);
 
-    expect(_screen('Ajustes'), findsOneWidget);
-    expect(_screen('Setembro'), findsNothing);
+    expect(_screen('Setembro'), findsOneWidget);
+    for (final door in [
+      'Meu mês',
+      'Lançamentos',
+      'Minhas contas',
+      'Cartões',
+      'Dívidas',
+      'Mês a mês',
+    ]) {
+      expect(find.text(door), findsOneWidget, reason: door);
+    }
   });
 
   testWidgets('lançamentos vazios dizem o que fazer, e não "sem dados"', (
@@ -62,8 +71,7 @@ void main() {
   ) async {
     await _open(tester);
 
-    await tester.tap(find.bySemanticsLabel('Lançamentos'));
-    await tester.pump();
+    await openFromHome(tester, 'Lançamentos');
 
     expect(_screen('Lançamentos'), findsOneWidget);
     expect(find.text('Nada lançado ainda'), findsOneWidget);
@@ -73,8 +81,7 @@ void main() {
     tester,
   ) async {
     final player = await _open(tester);
-    await tester.tap(find.bySemanticsLabel('Ajustes'));
-    await tester.pump();
+    await openFromHome(tester, 'Ajustes');
 
     expect(player.preloads, 0);
     expect(player.played, isEmpty);
@@ -84,11 +91,8 @@ void main() {
 
     expect(player.preloads, 1);
     // A própria chave que liga os sons já soa ao ligar: o retorno sensorial
-    // sai **depois** da ação, obedecendo à escolha nova. Antes ficava muda
-    // ao ligar e só soava ao desligar.
+    // sai **depois** da ação, obedecendo à escolha nova.
     expect(player.played, [CajuiSound.toggleOn]);
-    await tester.tap(find.bySemanticsLabel('Painel'));
-    expect(player.played.length, greaterThan(1));
   });
 
   testWidgets('abre no claro mesmo com o aparelho no escuro: o tema é '

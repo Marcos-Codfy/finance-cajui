@@ -177,7 +177,37 @@ final class DebtInstallmentPaid extends LedgerEvent {
   final String entryId;
 }
 
+/// O plano da planilha foi definido (ADR-023): salários, vale, dízimo e
+/// "Minhas contas".
+///
+/// Cada definição é um fato próprio, com o identificador tirado do carimbo:
+/// o mesmo plano descendo duas vezes entra uma, e o histórico usa o plano
+/// que valia em cada mês.
+final class BudgetDefined extends LedgerEvent {
+  /// Registra o plano [plan], que precisa ter `definedAt`.
+  new(this.plan)
+    : super(id: 'budget-${plan.definedAt!.toUtc().toIso8601String()}');
+
+  /// O plano.
+  final BudgetPlan plan;
+}
+
+/// A ordem de quitação das dívidas foi decidida (RN-1031). Vale a lista
+/// mais nova inteira.
+final class DebtOrdered extends LedgerEvent {
+  /// Registra a ordem [ids], decidida em [definedAt].
+  new({required this.ids, required this.definedAt})
+    : super(id: 'debt-order-${definedAt.toUtc().toIso8601String()}');
+
+  /// As dívidas, na ordem.
+  final List<String> ids;
+
+  /// Quando a ordem foi decidida.
+  final DateTime definedAt;
+}
+
 /// Um mês foi fechado, ou teve o fechamento revisado (RN-440 e RN-441).
+/// Só é lido: o mês a mês agora é calculado (ADR-023).
 ///
 /// Cada revisão é um fato próprio: a anterior continua no registro, e a
 /// diferença entre as duas é o que a tela mostra depois de um lançamento

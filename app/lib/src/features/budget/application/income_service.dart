@@ -1,4 +1,3 @@
-import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -20,15 +19,15 @@ class IncomeService {
 
   LedgerController get _ledger => ref.read(ledgerProvider.notifier);
 
-  /// Registra uma renda recebida. Em dinheiro, [fromPlan] diz se é a renda do
-  /// plano — que passa a valer no lugar da esperada no mês (RN-131) — ou uma
-  /// entrada avulsa, contada só no mês em que entrou (RN-133). No vale, é o
-  /// crédito que entra no saldo (RN-120). Valor zero não gera fato.
+  /// Registra uma renda recebida. Em dinheiro, [salaryId] diz de quem é o
+  /// salário — que passa a valer no lugar do esperado no mês (RN-131) —, e
+  /// sem ele é entrada avulsa, contada só no mês em que entrou (RN-133). No
+  /// vale, é o crédito do mês (RN-1006). Valor zero não gera fato.
   Future<void> receiveIncome({
     required Tender tender,
     required Money amount,
     required LocalDate receivedOn,
-    bool fromPlan = true,
+    String? salaryId,
     String? id,
   }) async {
     if (!amount.isPositive) return;
@@ -38,12 +37,11 @@ class IncomeService {
       final book = await ref.read(ledgerProvider.future);
       if (book.receipts.any((receipt) => receipt.id == id)) return;
     }
-    final ofPlan = fromPlan && tender == Tender.cash;
     await _ledger.append(
       IncomeReceived(
         IncomeReceipt(
           id: id ?? ref.read(newIdProvider)(),
-          sourceId: ofPlan ? LedgerBook.cashIncomeSourceId : null,
+          sourceId: tender == Tender.cash ? salaryId : null,
           tender: tender,
           amount: amount,
           receivedOn: receivedOn,

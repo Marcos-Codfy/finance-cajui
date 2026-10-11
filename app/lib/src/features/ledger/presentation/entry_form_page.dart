@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/presentation/week_effect_line.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -245,7 +246,11 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
   Widget _howItWasPaid(LedgerBook book, EntryDraft draft, String? fieldError) {
     return PaymentSection(
       draft: draft,
-      voucherBalance: book.voucher.balance,
+      voucherOfMonth:
+          ref
+              .watch(financesProvider)
+              ?.voucherIn(ref.watch(clockProvider).today().budgetMonth) ??
+          Money.zero,
       revision: _revision,
       lineError: draft.amountCents > 0 ? fieldError : null,
       onInstallmentAmount: (cents) =>

@@ -112,6 +112,61 @@ final class BudgetPlan {
   Money titheOf(Money cashIncome) =>
       Money.ratio(cashIncome.orZeroIfNegative, titheBasisPoints, 10000);
 
+  /// O mesmo plano com as partes dadas trocadas.
+  BudgetPlan copyWith({
+    List<IncomeSource>? salaries,
+    Money? voucher,
+    int? titheBasisPoints,
+    List<BudgetLine>? lines,
+  }) => BudgetPlan(
+    salaries: salaries ?? this.salaries,
+    voucher: voucher ?? this.voucher,
+    titheBasisPoints: titheBasisPoints ?? this.titheBasisPoints,
+    lines: lines ?? this.lines,
+    legacyDebtInstallments: legacyDebtInstallments,
+    definedAt: definedAt,
+  );
+
+  /// Com [line] no lugar da linha de mesmo identificador, ou no fim.
+  BudgetPlan withLine(BudgetLine line) =>
+      copyWith(lines: _replaced(lines, line, (item) => item.id));
+
+  /// Sem a linha [id].
+  BudgetPlan withoutLine(String id) => copyWith(
+    lines: [
+      for (final line in lines)
+        if (line.id != id) line,
+    ],
+  );
+
+  /// Com [salary] no lugar do salário de mesmo identificador, ou no fim.
+  BudgetPlan withSalary(IncomeSource salary) =>
+      copyWith(salaries: _replaced(salaries, salary, (item) => item.id));
+
+  /// Sem o salário [id].
+  BudgetPlan withoutSalary(String id) => copyWith(
+    salaries: [
+      for (final salary in salaries)
+        if (salary.id != id) salary,
+    ],
+  );
+
+  static List<T> _replaced<T>(List<T> items, T item, String Function(T) idOf) {
+    final index = items.indexWhere((other) => idOf(other) == idOf(item));
+    if (index < 0) return [...items, item];
+    return [...items]..[index] = item;
+  }
+
+  /// O plano salvo pela pessoa em [at]. Plano salvo agora nunca leva as
+  /// parcelas soltas do plano antigo: parcela vem da dívida (RN-1003).
+  BudgetPlan savedAt(DateTime at) => BudgetPlan(
+    salaries: salaries,
+    voucher: voucher,
+    titheBasisPoints: titheBasisPoints,
+    lines: lines,
+    definedAt: at.toUtc(),
+  );
+
   /// Se este plano é mais novo que [other].
   bool isNewerThan(BudgetPlan other) =>
       EditStamp.isNewer(definedAt, other.definedAt);

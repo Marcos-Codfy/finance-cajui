@@ -51,6 +51,9 @@ LedgerBook _book(List<Entry> entries) {
   );
 }
 
+Money _dueIn(LedgerBook book, BudgetMonth month) =>
+    DebtSchedule.dueIn(month, debts: book.debts, entries: book.entries);
+
 void main() {
   group('RN-311 · a compra parcelada não conta no mês da compra', () {
     test('setembro não muda por causa do fogão de 6×', () {
@@ -67,8 +70,8 @@ void main() {
       // RN-312: a parcela conta, uma por mês, e a primeira é a de outubro.
       final book = _book([_stove()]);
 
-      expect(book.installmentsDueIn(_september), Money.zero);
-      expect(book.installmentsDueIn(_october), const Money.fromCents(16000));
+      expect(_dueIn(book, _september), Money.zero);
+      expect(_dueIn(book, _october), const Money.fromCents(16000));
     });
 
     test('compra à vista no cartão continua contando no mês da compra', () {

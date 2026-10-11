@@ -42,22 +42,25 @@ abstract final class LedgerProjection {
       DebtDefined(:final debt) => book.copyWith(
         debts: [...book.debts.where((known) => known.id != debt.id), debt],
       ),
-      MonthClosed(:final close) => _closed(book, close),
+      MonthClosed() ||
+      BudgetDefined() ||
+      DebtOrdered() => _planned(book, event),
     };
   }
 
-  /// A revisão mais velha, chegando depois — de outro aparelho —, não passa
-  /// por cima da mais nova.
-  static LedgerBook _closed(LedgerBook book, MonthClose close) {
-    final known = book.closeOf(close.month);
-    if (known != null && known.revision > close.revision) return book;
-    return book.copyWith(
-      closes: [
-        ...book.closes.where((other) => other.month != close.month),
-        close,
-      ],
-    );
-  }
+  /// O plano da planilha e a ordem das dívidas (ADR-023). O fechamento
+  /// antigo continua sendo lido e guardado para subir, mas não muda nenhum
+  /// número: o mês a mês agora é calculado.
+  static LedgerBook _planned(LedgerBook book, LedgerEvent event) =>
+      switch (event) {
+        BudgetDefined(:final plan) => book.copyWith(
+          budget: book.budget.defined(plan),
+        ),
+        DebtOrdered(:final ids, :final definedAt) => book.copyWith(
+          budget: book.budget.ordered(ids, definedAt),
+        ),
+        _ => book,
+      };
 
   /// O fato já foi aceito quando aconteceu — aqui ou em outro aparelho — e
   /// não se recusa depois. Se os pagamentos passam do saldo, a conta mostra

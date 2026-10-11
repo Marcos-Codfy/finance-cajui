@@ -1,4 +1,3 @@
-import 'package:cajui/src/features/budget/application/close_revision.dart';
 import 'package:cajui/src/features/ledger/application/correction_guard.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/draft_defaults.dart';
@@ -257,21 +256,9 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     // antes de gravar: entre uma coisa e outra pode ter descido um fato de
     // outro aparelho, e aplicar sobre o livro velho o apagaria da tela até
     // o app reabrir.
-    final before = state.value ?? book;
-    var next = before.apply(event);
+    // O mês a mês é calculado (ADR-023): nenhum fechamento é gravado aqui.
+    final next = (state.value ?? book).apply(event);
     state = AsyncData(next);
-    // Fato com data em mês já fechado é lançamento tardio: o fechamento não
-    // é reescrito, ganha uma revisão (RN-441).
-    for (final revision in CloseRevision.after(
-      before: before,
-      after: next,
-      event: event,
-      today: ref.read(clockProvider).today(),
-    )) {
-      await ref.read(ledgerJournalProvider).append(revision);
-      next = next.apply(revision);
-      state = AsyncData(next);
-    }
     if (!quietly) quietSync.schedule(next);
   }
 

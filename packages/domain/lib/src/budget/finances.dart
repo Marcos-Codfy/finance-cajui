@@ -13,6 +13,7 @@ import 'package:domain/src/debts/debt_calendar.dart';
 import 'package:domain/src/debts/debt_order.dart';
 import 'package:domain/src/debts/debt_schedule.dart';
 import 'package:domain/src/income/income_receipt.dart';
+import 'package:domain/src/income/income_source.dart';
 import 'package:domain/src/income/month_income.dart';
 import 'package:domain/src/ledger/category.dart';
 import 'package:domain/src/ledger/entry.dart';
@@ -96,6 +97,21 @@ final class Finances {
     sources: planFor(month).salaries,
     receipts: receipts,
   ).amounts.cash;
+
+  /// O salário que um recebimento de [amount] em [on] parece ser (RN-758):
+  /// valor até 10% do esperado, dia até 5 dias, e ainda não registrado
+  /// naquele mês. Nulo quando nenhum parece — é entrada avulsa.
+  IncomeSource? salaryLike(Money amount, LocalDate on) {
+    final month = on.budgetMonth;
+    for (final salary in planFor(month).salaries) {
+      if (!salary.looksLike(amount, on)) continue;
+      final received = receipts.any(
+        (r) => r.sourceId == salary.id && month.contains(r.receivedOn),
+      );
+      if (!received) return salary;
+    }
+    return null;
+  }
 
   /// O vale de [month]: o que entrou de vale, se já foi registrado; senão o
   /// do plano.

@@ -17,7 +17,7 @@ abstract final class DebtKindLabel {
 
   /// O nome de [kind].
   static String of(DebtKind kind) => switch (kind) {
-    DebtKind.loan => 'Empréstimo',
+    DebtKind.loan => 'Empréstimo ou carnê',
     DebtKind.financing => 'Financiamento',
     DebtKind.cardInstallment => 'Compra parcelada no cartão',
     DebtKind.cardRevolving => 'Fatura parcelada ou rotativo',

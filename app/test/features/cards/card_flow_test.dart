@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
@@ -47,8 +48,7 @@ void main() {
     await _settle(tester);
 
     // Cadastro: nome e dias. Não existe campo de número de cartão.
-    await _tap(tester, find.bySemanticsLabel('Ajustes'));
-    await _tap(tester, find.text('Cartões de crédito'));
+    await openFromHome(tester, 'Cartões');
     await _tap(tester, find.text('Cadastrar cartão'));
     expect(find.textContaining('úmero do cartão'), findsNothing);
     await tester.enterText(_field('Nome do cartão'), 'Cartão da casa');
@@ -61,7 +61,7 @@ void main() {
 
     // Compra em 3×, paga no cartão.
     await _tap(tester, find.bySemanticsLabel('Voltar'));
-    await _tap(tester, find.bySemanticsLabel('Lançamentos'));
+    await openFromHome(tester, 'Lançamentos');
     await _tap(tester, find.text('Lançar'));
     await tester.enterText(_field('Valor'), '96000');
     await tester.enterText(_field('O que foi'), 'Fogão');
@@ -84,8 +84,7 @@ void main() {
     expect(find.text('Casa · Cartão da casa · hoje'), findsOneWidget);
 
     // A fatura é calculada: primeira parcela, vencendo em outubro.
-    await _tap(tester, find.bySemanticsLabel('Ajustes'));
-    await _tap(tester, find.text('Cartões de crédito'));
+    await openFromHome(tester, 'Cartões');
     await _tap(tester, find.text('Cartão da casa'));
     expect(find.textContaining('vence em 5 de outubro'), findsOneWidget);
     expect(

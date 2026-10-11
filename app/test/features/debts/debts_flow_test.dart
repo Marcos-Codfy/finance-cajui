@@ -5,9 +5,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
+
+/// O espaço que o formatador põe entre `R$` e o número.
+const String _nbsp = BrlFormatter.nbsp;
 
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
@@ -40,61 +44,73 @@ Future<MemoryLedgerJournal> _openDebts(WidgetTester tester) async {
     ),
   );
   await tester.pump();
-  await _tap(tester, find.bySemanticsLabel('Ajustes'));
-  await _tap(tester, find.text('Dívidas'));
+  await openFromHome(tester, 'Dívidas');
   return journal;
 }
 
+/// Cadastra um empréstimo de [creditor] em 12 parcelas de R$ 212,00, com
+/// [paid] já pagas.
+Future<void> _loan(WidgetTester tester, String creditor, {int paid = 0}) async {
+  await _tap(tester, find.text('Cadastrar dívida'));
+  await tester.enterText(_field('A quem você deve'), creditor);
+  await _settle(tester);
+  await tester.enterText(_field('Valor da parcela'), '21200');
+  await _settle(tester);
+  if (paid > 0) {
+    await _tap(tester, find.text('Quantas já foram pagas'));
+    await _tap(tester, find.text('$paid'));
+  }
+  await _tap(tester, find.text('Cadastrar'));
+}
+
 void main() {
-  testWidgets('RN-541 · cadastrar uma dívida: a lista fala primeiro do que '
-      'falta, com o já pago ao lado', (tester) async {
+  testWidgets('RN-541 RN-1002 · cadastrar uma dívida: a lista diz quanto '
+      'ainda devo e quanto pago por mês, como na planilha', (tester) async {
     final journal = await _openDebts(tester);
     expect(find.text('Nenhuma dívida cadastrada'), findsOneWidget);
 
-    await _tap(tester, find.text('Cadastrar dívida'));
-    await tester.enterText(_field('A quem você deve'), 'Empréstimo Banco X');
-    await _settle(tester);
-    await tester.enterText(_field('Valor da parcela'), '21200');
-    await _settle(tester);
-    await _tap(tester, find.text('Quantas já foram pagas'));
-    await _tap(tester, find.text('5'));
-    await _tap(tester, find.text('Cadastrar'));
+    await _loan(tester, 'Empréstimo Banco X', paid: 5);
 
     expect(find.text('Empréstimo Banco X'), findsOneWidget);
-    expect(find.textContaining(r'Faltam 7 parcelas de R$'), findsOneWidget);
-    expect(find.textContaining('5 de 12 pagas'), findsOneWidget);
+    // Cinco pagas no cadastro e a sexta venceu no dia 10: hoje, 20/09,
+    // faltam seis de R$ 212,00 (RN-1030).
+    expect(
+      find.text(
+        '1º · Parcelado · Devo R\$${_nbsp}1.272,00 · '
+        'R\$${_nbsp}212,00 por mês',
+      ),
+      findsOneWidget,
+    );
     expect((await journal.readAll()).whereType<DebtDefined>(), hasLength(1));
   });
 
-  testWidgets('RN-520 · pagar a parcela vira lançamento e a dívida anda', (
+  testWidgets('RN-1030 · depois de negociar, "Atualizar quanto devo" troca o '
+      'saldo, e o fato novo fica no registro', (tester) async {
+    final journal = await _openDebts(tester);
+    await _loan(tester, 'Empréstimo Banco X');
+
+    await _tap(tester, find.text('Empréstimo Banco X'));
+    await _tap(tester, find.text('Atualizar quanto devo'));
+    await tester.enterText(_field('Quanto ainda devo'), '100000');
+    await _settle(tester);
+    await _tap(tester, find.text('Guardar'));
+
+    expect(find.text('R\$${_nbsp}1.000,00'), findsWidgets);
+    expect((await journal.readAll()).whereType<DebtDefined>(), hasLength(2));
+  });
+
+  testWidgets('RN-1031 · "Quitar esta primeiro" põe a dívida no alto da fila', (
     tester,
   ) async {
     final journal = await _openDebts(tester);
-    await _tap(tester, find.text('Cadastrar dívida'));
-    await tester.enterText(_field('A quem você deve'), 'Empréstimo Banco X');
-    await _settle(tester);
-    await tester.enterText(_field('Valor da parcela'), '21200');
-    await _settle(tester);
-    await _tap(tester, find.text('Cadastrar'));
+    await _loan(tester, 'Carnê da loja');
+    await _loan(tester, 'Empréstimo Banco X');
 
     await _tap(tester, find.text('Empréstimo Banco X'));
-    await _tap(tester, find.text('Paguei a parcela deste mês'));
-    await _tap(tester, find.text('Por onde foi pago'));
-    await _tap(tester, find.text('Pix'));
-    await _tap(tester, find.text('Registrar pagamento'));
+    await _tap(tester, find.text('Quitar esta primeiro'));
 
-    // De volta na dívida: uma parcela a menos por pagar.
-    expect(find.textContaining('1 de 12 parcelas'), findsOneWidget);
-    final paid = (await journal.readAll()).whereType<DebtInstallmentPaid>();
-    expect(paid, hasLength(1));
-    expect(
-      (await journal.readAll())
-          .whereType<EntryRecorded>()
-          .single
-          .entry
-          .amount
-          .cents,
-      21200,
-    );
+    final ordered = (await journal.readAll()).whereType<DebtOrdered>();
+    expect(ordered, hasLength(1));
+    expect(find.text('Quitar esta primeiro'), findsNothing);
   });
 }

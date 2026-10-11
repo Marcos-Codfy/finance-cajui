@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/ledger/application/budget_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_projection.dart';
 import 'package:cajui/src/features/ledger/application/sync_trail.dart';
@@ -23,8 +24,8 @@ final class LedgerBook {
     this.reversals = const [],
     this.debts = const [],
     this.debtPayments = const {},
-    this.closes = const [],
     this.setup = MonthSetup.empty,
+    this.budget = const BudgetFacts(),
     this.trail = const SyncTrail(),
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
@@ -62,11 +63,17 @@ final class LedgerBook {
   /// Qual dívida cada lançamento de parcela pagou: lançamento → dívida.
   final Map<String, String> debtPayments;
 
-  /// Os meses já fechados, cada um na revisão mais recente (RN-440).
-  final List<MonthClose> closes;
-
-  /// O plano do mês em vigor.
+  /// O plano do mês no formato antigo, de antes da planilha (ADR-023).
   final MonthSetup setup;
+
+  /// Os planos da planilha e a ordem de quitação das dívidas (ADR-023).
+  final BudgetFacts budget;
+
+  /// Os planos da planilha já definidos, na ordem em que chegaram.
+  List<BudgetPlan> get budgetPlans => budget.plans;
+
+  /// A ordem de quitação das dívidas, a mais nova.
+  List<String> get debtOrder => budget.debtOrder;
 
   /// O que a sincronização precisa saber além do estado: o que foi
   /// cancelado aqui e os fatos que sobem como estão.
@@ -110,9 +117,9 @@ final class LedgerBook {
     List<Reversal>? reversals,
     List<Debt>? debts,
     Map<String, String>? debtPayments,
-    List<MonthClose>? closes,
     VoucherAccount? voucher,
     MonthSetup? setup,
+    BudgetFacts? budget,
     SyncTrail? trail,
   }) => LedgerBook(
     categories: categories,
@@ -125,8 +132,8 @@ final class LedgerBook {
     reversals: reversals ?? this.reversals,
     debts: debts ?? this.debts,
     debtPayments: debtPayments ?? this.debtPayments,
-    closes: closes ?? this.closes,
     setup: setup ?? this.setup,
+    budget: budget ?? this.budget,
     trail: trail ?? this.trail,
     voucher: voucher ?? this.voucher,
   );
@@ -185,73 +192,8 @@ final class LedgerBook {
   Entry? entryOf(String id) =>
       entries.where((entry) => entry.id == id).firstOrNull;
 
-  /// O identificador da fonte de renda em dinheiro do plano. O plano tem uma
-  /// renda só; recebimento ligado a ela **substitui** o esperado no mês.
-  static const cashIncomeSourceId = 'cash-income';
-
-  IncomeSource get _cashSource => IncomeSource(
-    id: cashIncomeSourceId,
-    name: 'Renda em dinheiro',
-    tender: Tender.cash,
-    expectedAmount: setup.cashIncome,
-    expectedDay: 5,
-  );
-
-  /// Se um recebimento em dinheiro de [amount] em [on] parece ser a renda do
-  /// plano (RN-758) — e ela ainda não foi registrada naquele mês. Sem isso, o
-  /// salário que chega pelo extrato ou pelo Pix entrava como avulso, por
-  /// cima do esperado, e a renda do mês contava duas vezes.
-  bool looksLikePlanIncome(Money amount, LocalDate on) =>
-      _cashSource.looksLike(amount, on) &&
-      !receipts.any(
-        (receipt) =>
-            receipt.sourceId == cashIncomeSourceId &&
-            on.budgetMonth.contains(receipt.receivedOn),
-      );
-
-  /// A renda em dinheiro que vale em [month]: a recebida, se já houve
-  /// recebimento da fonte do plano, senão a esperada — mais as entradas
-  /// avulsas do mês (RN-131, RN-133). A conta é do domínio.
-  Money cashIncomeIn(BudgetMonth month) => MonthIncome.of(
-    month,
-    sources: [_cashSource],
-    receipts: receipts,
-  ).amounts.cash;
-
-  /// As parcelas que vencem em [month]: as das dívidas cadastradas (RN-504)
-  /// e as das compras parceladas no cartão, que entram no mês como
-  /// compromisso do bloco de dívidas, e não como gasto variável (RN-311 e
-  /// RN-312). A conta é do domínio, que nunca conta a mesma parcela duas
-  /// vezes.
-  Money installmentsDueIn(BudgetMonth month) =>
-      DebtSchedule.dueIn(month, debts: debts, entries: entries);
-
   /// A dívida de identificador [id], ou `null`.
   Debt? debtOf(String id) => debts.where((debt) => debt.id == id).firstOrNull;
-
-  /// O fechamento de [month] na revisão mais recente, ou `null` se o mês
-  /// ainda não foi fechado.
-  MonthClose? closeOf(BudgetMonth month) =>
-      closes.where((close) => close.month == month).firstOrNull;
-
-  /// A renda em dinheiro que **de fato entrou** em [month]: só os
-  /// recebimentos registrados.
-  ///
-  /// Não é a mesma conta de [cashIncomeIn], que vale o esperado do plano
-  /// enquanto o recebimento não chega. Aqui, o que não foi registrado não
-  /// entrou: é o que o fechamento precisa saber (RN-623).
-  Money cashReceivedIn(BudgetMonth month) => receipts
-      .where(
-        (receipt) =>
-            receipt.tender == Tender.cash && month.contains(receipt.receivedOn),
-      )
-      .fold(Money.zero, (sum, receipt) => sum + receipt.amount);
-
-  /// O **resultado realizado** de [month]: a renda em dinheiro que entrou
-  /// menos as despesas em dinheiro contadas no mês (RN-623). É o número que
-  /// o fechamento congela.
-  Money cashResultIn(BudgetMonth month) =>
-      cashReceivedIn(month) - spentIn(month).cash;
 
   /// A categoria de identificador [id].
   Category categoryOf(String id) =>
