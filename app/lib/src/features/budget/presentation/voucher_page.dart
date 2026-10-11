@@ -65,6 +65,9 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
       title: 'Vale',
       overline: DateLabels.month(view.budget.month),
       onBack: back,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       footer: paired ? _footer() : null,
       children: [
         ..._numbers(view, book.voucher.balance),
@@ -80,9 +83,11 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
       cents: balance.cents,
       large: true,
       tone: CajuiAmountTone.accent,
-      caption:
-          'Pelo que está lançado: o que entrou de vale menos o que foi pago '
-          'com ele. Não se soma ao dinheiro.',
+      caption: balance.isPositive
+          ? 'Pelo que está lançado: o que entrou de vale menos o que foi '
+                'pago com ele. Não se soma ao dinheiro.'
+          : 'Ainda não há crédito do vale registrado. Se a operadora mostra '
+                'saldo, acerte abaixo.',
     ),
     const SizedBox(height: CajuiSpacing.lg),
     CajuiStatCard(

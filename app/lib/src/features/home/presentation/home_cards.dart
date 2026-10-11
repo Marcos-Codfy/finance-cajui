@@ -5,8 +5,10 @@ import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// Os números do Início, na ordem da planilha do dono: se o mês fecha — a
-/// sobra, ou quanto falta — e o vale.
+/// Os números do Início, na ordem da planilha do dono, num carrossel 3D
+/// (`CajuiCoverFlow`): se o mês fecha — a sobra, ou quanto falta —, o que
+/// entra, o que sai do bolso e o vale. Arrastar gira o tambor; o número da
+/// frente é o que se lê.
 ///
 /// O "pode gastar por semana" e o pote que o mostrava saíram em 11/10/2026,
 /// a pedido do dono: ele não usava. Sem plano, o Início mostra o que já saiu
@@ -14,15 +16,15 @@ import 'package:flutter/widgets.dart';
 /// tom é o do guia de voz: falta é "faltam R$ X para fechar", nunca alarme
 /// (RN-1060).
 abstract final class HomeCards {
-  /// Os cartões de [view], de cima para baixo. O mês no verde brilha — com
-  /// festa quando [party] (escolha 5 do dono).
-  static List<Widget> of(HomeView view, {bool party = false}) => [
-    if (view.hasPlan) _result(view, party: party) else _spent(view),
-    if (view.budget.voucher.isPositive) ...[
-      const SizedBox(height: CajuiSpacing.lg),
-      _voucher(view),
+  /// O carrossel de [view]. O mês no verde brilha — com festa quando
+  /// [party] (escolha 5 do dono).
+  static Widget of(HomeView view, {bool party = false}) => CajuiCoverFlow(
+    semanticLabel: 'Números do mês',
+    children: [
+      if (view.hasPlan) ..._sheet(view, party: party) else _spent(view),
+      if (view.budget.voucher.isPositive) _voucher(view),
     ],
-  ];
+  );
 
   static String _brl(int cents) => BrlFormatter.format(cents);
 
@@ -35,6 +37,29 @@ abstract final class HomeCards {
         'Cadastre o que entra e suas contas em Minhas contas para ver se o '
         'mês fecha.',
   );
+
+  /// A planilha de relance: o resultado na frente, o que entra e o que sai
+  /// nos vizinhos.
+  static List<Widget> _sheet(HomeView view, {required bool party}) {
+    final budget = view.budget;
+    return [
+      _result(view, party: party),
+      CajuiStatCard(
+        label: 'O que entra',
+        cents: budget.cashIncome.cents,
+        large: true,
+        caption: 'Em dinheiro, pelo que está em Minhas contas e no recebido',
+      ),
+      CajuiStatCard(
+        label: 'O que sai do bolso',
+        cents: budget.outOfPocket.cents,
+        large: true,
+        caption:
+            'Sai ${_brl(budget.totalOut.cents)} · o vale paga '
+            '${_brl(budget.voucherCovered.cents)}',
+      ),
+    ];
+  }
 
   static Widget _result(HomeView view, {required bool party}) {
     final budget = view.budget;
@@ -86,6 +111,7 @@ abstract final class HomeCards {
     return CajuiStatCard(
       label: 'Vale do mês',
       cents: budget.voucher.cents,
+      large: true,
       tone: CajuiAmountTone.accent,
       caption:
           '${_brl(budget.voucherCovered.cents)} cobre o mercado · não se '

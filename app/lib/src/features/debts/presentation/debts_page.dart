@@ -35,6 +35,9 @@ class DebtsPage extends ConsumerWidget {
       title: 'Minhas dívidas',
       overline: 'Só o que você paga em mais de um mês',
       onBack: Navigator.of(context).pop,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       footer: _register(context, ref),
       children: [
         if (debts.isEmpty) _noDebtsYet,

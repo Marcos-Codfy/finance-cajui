@@ -76,3 +76,18 @@ E quatro limites que não se negociam: 60 quadros num celular médio, nada passa
 - o deslize e o pulso do carrossel ouvidos e sentidos no aparelho;
 - o TalkBack percorrendo o carrossel: o foco numa página fora do palco deve trazê-la ao centro;
 - rolar o carrossel com o trackpad na web: hoje ele vai por arrasto, toque e teclado.
+
+## Complemento de 11/10/2026: a câmera entre telas e o 3D no app
+
+O dono pediu também "movimentação de câmera". A mesma lente (`CajuiDepth`) passou a mover a câmera entre telas, com as poses em funções puras (`CameraMove`):
+
+- **Abrir uma tela** (`CajuiPageRoute`) é a câmera avançando. A tela nova chega de longe, deitada uns 10°, menor e de baixo, e assenta com a curva `settle`; a de trás recua e apaga. Voltar é o mesmo movimento ao contrário.
+- **Trocar de aba** (`CajuiOrbitStack`, no lugar do `IndexedStack`) é a câmera orbitando. A aba que chega vem do lado da ida, girada uns 34°, e a que sai vai para o lado oposto. As duas guardam o estado, e só a da frente recebe toque.
+- A árvore de widgets tem a mesma forma em movimento e em repouso (`CajuiPosed`). Tirar a transformação no fim faria a tela que acabou de chegar perder a rolagem e o que foi digitado.
+
+No app:
+- **Início:** os números do mês num carrossel 3D (sobra ou falta, o que entra, o que sai do bolso e vale), com rolagem em profundidade e entrada cinematográfica, que roda de novo quando o mês vira.
+- **Cartões:** carteira 3D.
+- **Telas de lista** (Meu mês, Mês a mês, Minhas contas, Vale, Dívidas, Lançamentos, Ajustes): rolagem em profundidade e entrada cinematográfica.
+- **Juju:** fica plana, porque o mais novo da conversa nasce na borda de baixo, onde a rolagem curvaria.
+- O pote de água saiu do design system junto com o limite semanal.

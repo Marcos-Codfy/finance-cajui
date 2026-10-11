@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:design_system/design_system.dart';
 import 'package:design_system/src/components/credit_card/card_tilt_motion.dart';
-import 'package:design_system/src/components/gauge/water_motion.dart';
 import 'package:design_system/src/motion/damped_spring.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,67 +52,6 @@ void main() {
         ..step(30);
 
       expect(spring.value, lessThan(0.2));
-    });
-  });
-
-  group('RNF-A11Y-08 WaterMotion', () {
-    test('enche até o nível e para sozinha, em menos de 5 s', () {
-      final water = WaterMotion()..fillTo(0.6);
-      final took = _run(water.step);
-
-      expect(water.isAtRest, isTrue);
-      expect(water.level, closeTo(0.6, 0.001));
-      expect(took, lessThan(5));
-      water.dispose();
-    });
-
-    test('a superfície gira ao contrário do aparelho, com limite', () {
-      final water = WaterMotion(level: 0.5)..tiltTo(0.2);
-      _run(water.step);
-
-      // O aparelho gira para a direita: a água, que fica na horizontal do
-      // mundo, gira para a esquerda na tela.
-      expect(water.angle, closeTo(-math.asin(0.2), 0.001));
-
-      water.tiltTo(1);
-      _run(water.step);
-      expect(water.angle, closeTo(-WaterMotion.maxAngle, 0.001));
-      water.dispose();
-    });
-
-    test('ao parar a mão, a água ainda balança e depois assenta', () {
-      final water = WaterMotion(level: 0.5)..tiltTo(0.3);
-      _run(water.step, seconds: 0.15);
-
-      expect(water.ripple, greaterThan(0));
-      expect(water.isAtRest, isFalse);
-      _run(water.step);
-      expect(water.isAtRest, isTrue);
-      water.dispose();
-    });
-
-    test('valor que não é número não deixa a água balançando para sempre', () {
-      final water = WaterMotion()
-        ..fillTo(double.nan)
-        ..tiltTo(double.infinity);
-      _run(water.step);
-
-      expect(water.isAtRest, isTrue);
-      expect(water.level, 0);
-      water.dispose();
-    });
-
-    test('a versão parada: nível certo, superfície reta, sem onda', () {
-      final water = WaterMotion()
-        ..fillTo(0.4)
-        ..tiltTo(0.5)
-        ..settle();
-
-      expect(water.level, 0.4);
-      expect(water.angle, 0);
-      expect(water.ripple, 0);
-      expect(water.isAtRest, isTrue);
-      water.dispose();
     });
   });
 

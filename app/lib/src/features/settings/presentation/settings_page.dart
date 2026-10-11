@@ -30,6 +30,9 @@ class SettingsPage extends ConsumerWidget {
     return CajuiScreen(
       title: 'Ajustes',
       onBack: Navigator.of(context).maybePop,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       children: [
         ..._cadastros(context, ref),
         const BankNotificationsRow(),

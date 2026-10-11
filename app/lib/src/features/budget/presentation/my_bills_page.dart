@@ -38,25 +38,29 @@ class MyBillsPage extends ConsumerWidget {
         children: const [CajuiSkeleton(height: 240)],
       );
     }
-    final readOnly = !ref.watch(ledgerUplinkProvider).isPaired;
-    final rows = MyBillsRows(
-      plan: finances.plan,
-      categories: finances.categories,
-      debts: finances.openDebtsOn(ref.watch(todayProvider)),
-      readOnly: readOnly,
-      onLine: (group, line) => BillLinePage.open(context, group, line: line),
-      onSalary: (salary) => SalaryPage.open(context, salary: salary),
-      onVoucher: () => _voucher(context, ref, finances.plan),
-      onExtra: () => IncomePage.open(context),
-      onTithe: () => TithePage.open(context),
-    );
     return CajuiScreen(
       title: 'Minhas contas',
       overline: 'Só mexa no que mudou: o resto o app calcula',
       onBack: back,
-      children: rows.all(),
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
+      children: _rows(context, ref, finances).all(),
     );
   }
+
+  MyBillsRows _rows(BuildContext context, WidgetRef ref, Finances finances) =>
+      MyBillsRows(
+        plan: finances.plan,
+        categories: finances.categories,
+        debts: finances.openDebtsOn(ref.watch(todayProvider)),
+        readOnly: !ref.watch(ledgerUplinkProvider).isPaired,
+        onLine: (group, line) => BillLinePage.open(context, group, line: line),
+        onSalary: (salary) => SalaryPage.open(context, salary: salary),
+        onVoucher: () => _voucher(context, ref, finances.plan),
+        onExtra: () => IncomePage.open(context),
+        onTithe: () => TithePage.open(context),
+      );
 
   /// O vale que entra por mês: um valor só, na tela de valor de sempre.
   static Future<void> _voucher(

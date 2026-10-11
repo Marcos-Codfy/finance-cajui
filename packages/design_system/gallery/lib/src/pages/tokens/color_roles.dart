@@ -107,7 +107,6 @@ abstract final class ColorRoles {
       'data.debt': c.data.debt,
       'data.voucher': c.data.voucher,
       'data.track': c.data.track,
-      'data.water': c.data.water,
       'brand.sheen': c.brand.sheen,
     },
   );

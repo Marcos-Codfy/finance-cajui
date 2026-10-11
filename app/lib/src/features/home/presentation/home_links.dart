@@ -57,11 +57,14 @@ abstract final class HomeLinks {
     if (!view.budget.voucher.isPositive && !view.voucherBalance.isPositive) {
       return null;
     }
+    // Sem crédito registrado o saldo é zero, e "Saldo de R$ 0,00" ao lado
+    // de um vale de R$ 500 no plano confunde: aí o número é o do mês.
+    final number = view.voucherBalance.isPositive
+        ? 'Saldo de ${_brl(view.voucherBalance.cents)}'
+        : 'Vale do mês ${_brl(view.budget.voucher.cents)}';
     return _row(
       title: 'Vale',
-      subtitle:
-          'Saldo de ${_brl(view.voucherBalance.cents)} · conferir com a '
-          'operadora',
+      subtitle: '$number · conferir com a operadora',
       open: () => VoucherPage.open(context),
     );
   }
