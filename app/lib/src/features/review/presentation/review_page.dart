@@ -1,7 +1,7 @@
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/review/presentation/review_entry_card.dart';
 import 'package:cajui/src/features/review/presentation/review_state.dart';
 import 'package:cajui/src/features/review/presentation/review_view_model.dart';
@@ -52,7 +52,7 @@ class ReviewPage extends ConsumerWidget {
     ReviewPending state,
   ) {
     final book = ref.watch(ledgerProvider).value;
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     final error = state.error;
     return [
       _introText(context, state.items.length),

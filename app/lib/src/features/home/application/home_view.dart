@@ -1,7 +1,7 @@
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
@@ -80,5 +80,5 @@ final homeViewProvider = Provider<HomeView?>((ref) {
   final finances = ref.watch(financesProvider);
   final book = ref.watch(ledgerProvider).value;
   if (finances == null || book == null) return null;
-  return HomeView.of(finances, book, ref.watch(clockProvider).today());
+  return HomeView.of(finances, book, ref.watch(todayProvider));
 });

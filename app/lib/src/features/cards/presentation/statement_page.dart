@@ -2,7 +2,7 @@ import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/cards/application/statement_view.dart';
 import 'package:cajui/src/features/cards/presentation/statement_section.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -31,7 +31,7 @@ class StatementPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final book = ref.watch(ledgerProvider).value;
     if (book == null) return const SizedBox.shrink();
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     final views = StatementView.current(book, card, today);
     final nothingYet = views.every((view) => view.statement.total.isZero);
     final limit = StatementView.limitOf(book, card, today);

@@ -6,8 +6,8 @@ import 'package:cajui/src/features/budget/presentation/income_page.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_rows.dart';
 import 'package:cajui/src/features/budget/presentation/salary_page.dart';
 import 'package:cajui/src/features/budget/presentation/tithe_page.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -42,7 +42,7 @@ class MyBillsPage extends ConsumerWidget {
     final rows = MyBillsRows(
       plan: finances.plan,
       categories: finances.categories,
-      debts: finances.openDebtsOn(ref.watch(clockProvider).today()),
+      debts: finances.openDebtsOn(ref.watch(todayProvider)),
       readOnly: readOnly,
       onLine: (group, line) => BillLinePage.open(context, group, line: line),
       onSalary: (salary) => SalaryPage.open(context, salary: salary),

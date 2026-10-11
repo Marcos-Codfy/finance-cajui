@@ -2,8 +2,8 @@ import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/amount_page.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -28,7 +28,7 @@ class DebtActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // A consulta pela web não grava: sem botão que gire para sempre.
     if (!ref.watch(ledgerUplinkProvider).isPaired) return const SizedBox();
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     final open = ref.watch(financesProvider)?.openDebtsOn(today);
     final first = open == null || open.isEmpty || open.first.id == debt.id;
     return Column(

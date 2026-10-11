@@ -1,6 +1,7 @@
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -85,7 +86,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
         gap,
         DateSection(
           selected: _receivedOn,
-          today: ref.watch(clockProvider).today(),
+          today: ref.watch(todayProvider),
           onChanged: (day) => setState(() => _receivedOn = day),
         ),
       ],

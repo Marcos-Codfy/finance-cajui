@@ -1,5 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
@@ -41,7 +41,7 @@ class PendingCapturesCard extends ConsumerWidget {
   }
 
   Widget _row(WidgetRef ref, PendingCapture capture) {
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     final name = _nameOf(capture);
     return CajuiListRow(
       title: name,

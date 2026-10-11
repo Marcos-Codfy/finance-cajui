@@ -2,8 +2,8 @@ import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/debts/presentation/debt_detail_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_form_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_row.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -27,7 +27,7 @@ class DebtsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final finances = ref.watch(financesProvider);
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     final debts = finances?.debts ?? const <Debt>[];
     final open = finances?.openDebtsOn(today) ?? const <Debt>[];
     final paidOff = [...debts.where((debt) => !open.contains(debt))];

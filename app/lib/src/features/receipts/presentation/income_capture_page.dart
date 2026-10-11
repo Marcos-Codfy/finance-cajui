@@ -1,6 +1,6 @@
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
@@ -102,7 +102,7 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
         const SizedBox(height: CajuiSpacing.lg),
         DateSection(
           selected: _on,
-          today: ref.watch(clockProvider).today(),
+          today: ref.watch(todayProvider),
           onChanged: (day) => setState(() => _on = day),
         ),
         const SizedBox(height: CajuiSpacing.lg),

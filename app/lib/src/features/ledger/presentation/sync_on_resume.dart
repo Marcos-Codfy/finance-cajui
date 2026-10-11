@@ -2,6 +2,7 @@ import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/live_sync.dart';
 import 'package:cajui/src/features/ledger/application/server_head.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +47,12 @@ class _SyncOnResumeState extends ConsumerState<SyncOnResume> {
     _resume();
   }
 
-  void _resume() => _live.resume(force: _onPhone);
+  void _resume() {
+    // A volta ao app confere o dia na hora: quem deixou o app no domingo e
+    // volta na segunda vê a semana nova, sem esperar o minuto seguinte.
+    ref.read(todayProvider.notifier).check();
+    _live.resume(force: _onPhone);
+  }
 
   /// No celular, a sincronização de sempre, na mesma fila da que acontece
   /// depois de cada lançamento. Na web, o livro relido no lugar.

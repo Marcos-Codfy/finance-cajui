@@ -3,7 +3,7 @@ import 'package:cajui/src/features/debts/presentation/debt_actions.dart';
 import 'package:cajui/src/features/debts/presentation/debt_kind_label.dart';
 import 'package:cajui/src/features/debts/presentation/debt_payoff_section.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -34,7 +34,7 @@ class DebtDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final saved = ref.watch(ledgerProvider).value?.debtOf(debtId);
     if (saved == null) return const SizedBox.shrink();
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     // A dívida como está hoje: na parcelada, o calendário já venceu parcelas
     // que o cadastro não contava, e "já pago", o medidor e "terminar antes"
     // precisam vê-las, como o "ainda devo" (RN-1030).

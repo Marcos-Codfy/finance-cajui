@@ -54,6 +54,7 @@ List<Override> testOverrides({
   LedgerJournal? journal,
   MutePlayer? player,
   LocalDate? today,
+  Clock? clock,
   ReceiptInbox? inbox,
   ReceiptReader? reader,
   EventStore? captureStore,
@@ -69,7 +70,7 @@ List<Override> testOverrides({
   return [
     soundPlayerProvider.overrideWithValue(player ?? MutePlayer()),
     ledgerJournalProvider.overrideWithValue(journal ?? MemoryLedgerJournal()),
-    clockProvider.overrideWithValue(FixedClock(today ?? testToday)),
+    clockProvider.overrideWithValue(clock ?? FixedClock(today ?? testToday)),
     newIdProvider.overrideWithValue(() => '$idPrefix-${next++}'),
     ..._capture(inbox, reader, captureStore),
     assistantGatewayProvider.overrideWithValue(

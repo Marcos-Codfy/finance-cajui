@@ -3,8 +3,8 @@ import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
 import 'package:cajui/src/features/cards/presentation/statement_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -30,7 +30,7 @@ class CardsPage extends ConsumerWidget {
     final book = ref.watch(ledgerProvider).value;
     final finances = ref.watch(financesProvider);
     final cards = book?.cards ?? const <CreditCard>[];
-    final month = ref.watch(clockProvider).today().budgetMonth;
+    final month = ref.watch(todayProvider).budgetMonth;
     CardMonthUsage? usageOf(CreditCard card) =>
         finances?.cardUsage(card, month);
     final tilt = _tilt(context, ref);
