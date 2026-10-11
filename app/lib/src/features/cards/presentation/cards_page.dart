@@ -4,6 +4,7 @@ import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
 import 'package:cajui/src/features/cards/presentation/statement_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -36,7 +37,9 @@ class CardsPage extends ConsumerWidget {
     return CajuiScreen(
       title: 'Cartões de crédito',
       onBack: Navigator.of(context).pop,
-      footer: _register(context),
+      footer: ref.watch(ledgerUplinkProvider).isPaired
+          ? _register(context)
+          : null,
       children: [
         if (cards.isEmpty) _noCardsYet,
         for (final card in cards)

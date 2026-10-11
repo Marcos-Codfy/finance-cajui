@@ -34,6 +34,8 @@ abstract final class DebtCodec {
     'balanceCents': ?debt.informedBalance?.cents,
     'informedOn': ?debt.informedOn?.toString(),
     'note': ?debt.note,
+    // O carimbo da versão (ADR-024): entre dois celulares, vale a mais nova.
+    'definedAt': ?debt.definedAt?.toUtc().toIso8601String(),
   };
 
   /// A dívida gravada em [payload]. Já foi aceita pelo domínio quando foi
@@ -61,7 +63,15 @@ abstract final class DebtCodec {
     dueDay: payload['dueDay']! as int,
     informedOn: EntryCodec.parseDate(payload['informedOn']! as String),
     note: payload['note'] as String?,
-  ).valueOrNull!;
+    definedAt: _definedAt(payload),
+  ).valueOrNull!.withCard(payload['cardId'] as String?);
+
+  /// O carimbo, se houver; o que não se lê conta como sem carimbo, isto é,
+  /// a versão mais velha.
+  static DateTime? _definedAt(Map<String, Object?> payload) {
+    final raw = payload['definedAt'];
+    return raw is String ? DateTime.tryParse(raw)?.toUtc() : null;
+  }
 
   static Debt _byInstallments(Map<String, Object?> payload) {
     return Debt.create(
@@ -74,6 +84,8 @@ abstract final class DebtCodec {
       dueDay: payload['dueDay']! as int,
       firstMonth: EntryCodec.parseMonth(payload['firstMonth']! as String),
       cardId: payload['cardId'] as String?,
+      note: payload['note'] as String?,
+      definedAt: _definedAt(payload),
     ).valueOrNull!;
   }
 

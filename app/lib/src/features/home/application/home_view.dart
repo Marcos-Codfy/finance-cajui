@@ -19,6 +19,7 @@ final class HomeView {
     required this.owed,
     required this.hasPlan,
     required this.entriesThisMonth,
+    this.hasDebts = false,
     this.suggestion,
     this.cardsNearLimit = const [],
   });
@@ -32,6 +33,7 @@ final class HomeView {
       week: finances.weekOf(today),
       owed: finances.owedOn(today),
       hasPlan: !finances.plan.isEmpty,
+      hasDebts: finances.debts.isNotEmpty,
       entriesThisMonth: book.entries
           .where((entry) => entry.occurredOn.budgetMonth == month)
           .length,
@@ -58,6 +60,10 @@ final class HomeView {
 
   /// Se há plano: salários, contas, vale ou dízimo.
   final bool hasPlan;
+
+  /// Se há dívida cadastrada, mesmo quitada: "tudo quitado" não é "nenhuma
+  /// dívida".
+  final bool hasDebts;
 
   /// Quantos lançamentos o mês tem.
   final int entriesThisMonth;

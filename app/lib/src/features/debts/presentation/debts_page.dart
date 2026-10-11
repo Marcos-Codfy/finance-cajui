@@ -3,6 +3,7 @@ import 'package:cajui/src/features/debts/presentation/debt_detail_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_form_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_row.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -34,12 +35,7 @@ class DebtsPage extends ConsumerWidget {
       title: 'Minhas dívidas',
       overline: 'Só o que você paga em mais de um mês',
       onBack: Navigator.of(context).pop,
-      footer: CajuiButton(
-        label: 'Cadastrar dívida',
-        icon: CajuiIconData.plus,
-        expand: true,
-        onPressed: () => DebtFormPage.open(context),
-      ),
+      footer: _register(context, ref),
       children: [
         if (debts.isEmpty) _noDebtsYet,
         for (final (index, debt) in open.indexed)
@@ -53,6 +49,17 @@ class DebtsPage extends ConsumerWidget {
       ],
     );
   }
+
+  /// A consulta pela web não grava: sem o botão que giraria para sempre.
+  static Widget? _register(BuildContext context, WidgetRef ref) =>
+      ref.watch(ledgerUplinkProvider).isPaired
+      ? CajuiButton(
+          label: 'Cadastrar dívida',
+          icon: CajuiIconData.plus,
+          expand: true,
+          onPressed: () => DebtFormPage.open(context),
+        )
+      : null;
 
   static const _noDebtsYet = CajuiEmptyState(
     title: 'Nenhuma dívida cadastrada',

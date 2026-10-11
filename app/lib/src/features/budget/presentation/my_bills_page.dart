@@ -74,8 +74,11 @@ class MyBillsPage extends ConsumerWidget {
       initialCents: plan.voucher.cents,
     );
     if (cents == null) return;
+    // Relido depois da espera: o outro aparelho pode ter salvo o plano
+    // enquanto a tela de valor estava aberta.
+    final current = ref.read(financesProvider)?.plan ?? plan;
     await ref
         .read(planServiceProvider)
-        .define(plan.copyWith(voucher: Money.fromCents(cents)));
+        .define(current.copyWith(voucher: Money.fromCents(cents)));
   }
 }

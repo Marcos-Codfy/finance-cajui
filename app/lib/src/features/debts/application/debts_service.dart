@@ -33,6 +33,7 @@ class DebtsService {
     required int dueDay,
     required BudgetMonth firstMonth,
     String? id,
+    String? note,
   }) async {
     final result = Debt.create(
       id: id ?? 'debt-${ref.read(newIdProvider)()}',
@@ -43,12 +44,9 @@ class DebtsService {
       paidInstallments: paidInstallments,
       dueDay: dueDay,
       firstMonth: firstMonth,
+      note: note,
     );
-    if (result.valueOrNull case final debt?) {
-      await _append(
-        DebtDefined(id: 'debt-fact-${ref.read(newIdProvider)()}', debt: debt),
-      );
-    }
+    if (result.valueOrNull case final debt?) await _save(debt);
     return result;
   }
 
@@ -73,16 +71,15 @@ class DebtsService {
       informedOn: ref.read(clockProvider).today(),
       note: note,
     );
-    if (result.valueOrNull case final debt?) {
-      await _append(
-        DebtDefined(id: 'debt-fact-${ref.read(newIdProvider)()}', debt: debt),
-      );
-    }
+    if (result.valueOrNull case final debt?) await _save(debt);
     return result;
   }
 
   /// Atualiza o saldo de [debt] para [balance], informado hoje: depois de
-  /// negociar, ou para dizer que quitou (saldo zero).
+  /// negociar, ou para dizer que quitou (saldo zero). É uma versão nova, e
+  /// não uma reescrita: os meses passados continuam com a que valia neles
+  /// (RN-1040). Só a dívida de saldo informado passa por aqui — a parcelada
+  /// segue o calendário (RN-1030).
   Future<void> updateBalance(Debt debt, Money balance) async {
     final updated = Debt.withBalance(
       id: debt.id,
@@ -95,9 +92,7 @@ class DebtsService {
       note: debt.note,
     ).valueOrNull;
     if (updated == null) return;
-    await _append(
-      DebtDefined(id: 'debt-fact-${ref.read(newIdProvider)()}', debt: updated),
-    );
+    await _save(updated.keepingFrom(debt));
   }
 
   /// Guarda o valor para quitar hoje que o credor informou (RN-511). O app
@@ -108,10 +103,24 @@ class DebtsService {
       amount: amount,
       quotedOn: ref.read(clockProvider).today(),
     );
+    await _save(debt.withPayoffQuote(quote));
+  }
+
+  /// Grava a versão [debt], carimbada (ADR-024): agora, ou logo depois da
+  /// versão que o aparelho já tem, se o relógio daqui estiver atrás. Quem
+  /// muda a dívida depois de ver a mudança do outro vence, mesmo com o
+  /// relógio atrasado.
+  Future<void> _save(Debt debt) async {
+    final now = ref.read(clockProvider).now();
+    final book = await ref.read(ledgerProvider.future);
+    final known = book.debtOf(debt.id)?.definedAt;
+    final at = known != null && !now.isAfter(known)
+        ? known.add(const Duration(milliseconds: 1))
+        : now;
     await _append(
       DebtDefined(
         id: 'debt-fact-${ref.read(newIdProvider)()}',
-        debt: debt.withPayoffQuote(quote),
+        debt: debt.stamped(at),
       ),
     );
   }

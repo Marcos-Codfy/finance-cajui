@@ -3,6 +3,7 @@ import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/amount_page.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -25,6 +26,8 @@ class DebtActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // A consulta pela web não grava: sem botão que gire para sempre.
+    if (!ref.watch(ledgerUplinkProvider).isPaired) return const SizedBox();
     final today = ref.watch(clockProvider).today();
     final open = ref.watch(financesProvider)?.openDebtsOn(today);
     final first = open == null || open.isEmpty || open.first.id == debt.id;
@@ -38,17 +41,21 @@ class DebtActions extends ConsumerWidget {
             expand: true,
             onPressed: () => _first(ref, open),
           ),
-        CajuiButton(
-          label: owed.isPositive ? 'Atualizar quanto devo' : 'Mudar o saldo',
-          variant: first
-              ? CajuiButtonVariant.primary
-              : CajuiButtonVariant.ghost,
-          expand: true,
-          onPressed: () => _balance(context, ref),
-        ),
+        // Só a dívida de saldo — conta atrasada, rotativo — se atualiza à
+        // mão. A parcelada segue o calendário (RN-1030): trocá-la por um
+        // saldo apagava as parcelas do mês e reescrevia o passado.
+        if (debt.informedBalance != null) _update(context, ref, first: first),
       ],
     );
   }
+
+  Widget _update(BuildContext context, WidgetRef ref, {required bool first}) =>
+      CajuiButton(
+        label: owed.isPositive ? 'Atualizar quanto devo' : 'Mudar o saldo',
+        variant: first ? CajuiButtonVariant.primary : CajuiButtonVariant.ghost,
+        expand: true,
+        onPressed: () => _balance(context, ref),
+      );
 
   Future<void> _first(WidgetRef ref, List<Debt>? open) =>
       ref.read(planServiceProvider).orderDebts([

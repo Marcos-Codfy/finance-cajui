@@ -147,5 +147,38 @@ void main() {
 
       expect(fact.payload.keys, unorderedEquals(['debtId', 'entryId']));
     });
+
+    test('ADR-024 · a versão da dívida leva o carimbo, e a parcelada leva a '
+        'observação: os dois passam pela leitura do servidor', () {
+      final stamped = Debt.create(
+        id: 'debt-1',
+        creditor: 'Banco do bairro',
+        kind: DebtKind.loan,
+        installmentAmount: const Money.fromCents(21200),
+        totalInstallments: 12,
+        paidInstallments: 5,
+        dueDay: 10,
+        firstMonth: const BudgetMonth(2026, 4),
+        note: 'negociar à vista',
+        definedAt: DateTime.utc(2026, 10, 11, 13),
+      ).valueOrNull!;
+
+      final fact = DeviceFact.read(
+        _fact(DeviceFact.debtDefined, DebtCodec.encodeDebt(stamped)),
+      );
+      final back = DebtCodec.decodeDebt(fact.payload);
+
+      expect(back.definedAt, DateTime.utc(2026, 10, 11, 13));
+      expect(back.note, 'negociar à vista');
+    });
+
+    test(
+      'a dívida gravada antes do carimbo continua sendo lida, sem carimbo',
+      () {
+        final back = DebtCodec.decodeDebt(DebtCodec.encodeDebt(_debt));
+
+        expect(back.definedAt, isNull);
+      },
+    );
   });
 }

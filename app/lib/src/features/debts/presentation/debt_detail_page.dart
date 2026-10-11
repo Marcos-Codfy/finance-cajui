@@ -32,32 +32,38 @@ class DebtDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final debt = ref.watch(ledgerProvider).value?.debtOf(debtId);
-    if (debt == null) return const SizedBox.shrink();
+    final saved = ref.watch(ledgerProvider).value?.debtOf(debtId);
+    if (saved == null) return const SizedBox.shrink();
     final today = ref.watch(clockProvider).today();
+    // A dívida como está hoje: na parcelada, o calendário já venceu parcelas
+    // que o cadastro não contava, e "já pago", o medidor e "terminar antes"
+    // precisam vê-las, como o "ainda devo" (RN-1030).
+    final debt = DebtCalendar.asOf(saved, today);
     final owed = DebtCalendar.outstandingOn(debt, today);
     return CajuiScreen(
       title: debt.creditor,
       onBack: Navigator.of(context).pop,
       footer: DebtActions(debt: debt, owed: owed),
       children: [
-        CajuiStatCard(
-          label: 'Ainda devo',
-          cents: owed.cents,
-          large: true,
-          caption: _caption(debt, owed),
-          // O medidor é secundário e conta desde o começo (RN-541); só a
-          // parcelada tem começo e fim para medir.
-          meter: debt.informedBalance == null && debt.totalInstallments > 0
-              ? debt.paidInstallments / debt.totalInstallments
-              : null,
-        ),
+        _owedCard(debt, owed),
         const CajuiSectionTitle('Como está'),
         ..._facts(debt),
         ...DebtPayoffSection.of(debt, today: today),
       ],
     );
   }
+
+  static Widget _owedCard(Debt debt, Money owed) => CajuiStatCard(
+    label: 'Ainda devo',
+    cents: owed.cents,
+    large: true,
+    caption: _caption(debt, owed),
+    // O medidor é secundário e conta desde o começo (RN-541); só a
+    // parcelada tem começo e fim para medir.
+    meter: debt.informedBalance == null && debt.totalInstallments > 0
+        ? debt.paidInstallments / debt.totalInstallments
+        : null,
+  );
 
   static String _caption(Debt debt, Money owed) {
     if (owed.isZero) return 'Quitada. Fica no histórico.';

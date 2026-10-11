@@ -21,10 +21,9 @@ class DebtFormPage extends ConsumerStatefulWidget {
   const new({super.key});
 
   /// Abre a tela.
-  static Future<void> open(BuildContext context) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => const DebtFormPage()));
-  }
+  static Future<void> open(BuildContext context) =>
+      Navigator.of(context)
+          .push<void>(CajuiPageRoute(builder: (_) => const DebtFormPage()));
 
   @override
   ConsumerState<DebtFormPage> createState() => _DebtFormPageState();
@@ -65,6 +64,9 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
     return next.addMonths(-_paid);
   }
 
+  // Vale nos dois tipos: a observação da parcelada era descartada.
+  String? get _noteText => _note.text.trim().isEmpty ? null : _note.text.trim();
+
   Future<Result<Debt>> _define() {
     final service = ref.read(debtsServiceProvider);
     if (_byBalance) {
@@ -74,7 +76,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
         balance: Money.fromCents(_balance),
         monthlyPayment: Money.fromCents(_cents),
         dueDay: _dueDay,
-        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+        note: _noteText,
       );
     }
     return service.define(
@@ -85,6 +87,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
       paidInstallments: _paid,
       dueDay: _dueDay,
       firstMonth: _firstMonth,
+      note: _noteText,
     );
   }
 
@@ -174,13 +177,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
       onChanged: (cents) => setState(() => _cents = cents),
     ),
     _gap,
-    _number(
-      label: 'Dia do vencimento',
-      value: 'dia $_dueDay',
-      options: _counted(1, 28),
-      selected: _dueDay,
-      onPicked: (value) => _dueDay = value,
-    ),
+    _dueDayField(),
   ];
 
   List<Widget> _whichKind() => [
@@ -223,16 +220,18 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
       onPicked: (value) => _paid = value,
     ),
     _gap,
-    _number(
-      label: 'Dia do vencimento',
-      value: 'dia $_dueDay',
-      options: _counted(1, 28),
-      selected: _dueDay,
-      onPicked: (value) => _dueDay = value,
-    ),
+    _dueDayField(),
     _gap,
     ..._whenIsNext(),
   ];
+
+  Widget _dueDayField() => _number(
+    label: 'Dia do vencimento',
+    value: 'dia $_dueDay',
+    options: _counted(1, 28),
+    selected: _dueDay,
+    onPicked: (value) => _dueDay = value,
+  );
 
   Widget _number({
     required String label,

@@ -85,11 +85,21 @@ void main() {
   });
 
   testWidgets('RN-1030 · depois de negociar, "Atualizar quanto devo" troca o '
-      'saldo, e o fato novo fica no registro', (tester) async {
+      'saldo da conta atrasada, e o fato novo fica no registro', (
+    tester,
+  ) async {
     final journal = await _openDebts(tester);
-    await _loan(tester, 'Empréstimo Banco X');
+    await _tap(tester, find.text('Cadastrar dívida'));
+    await tester.enterText(_field('A quem você deve'), 'Conta de luz');
+    await _settle(tester);
+    await _tap(tester, find.text('Conta atrasada'));
+    await tester.enterText(_field('Quanto ainda devo'), '380000');
+    await _settle(tester);
+    await tester.enterText(_field('Quanto pago por mês'), '20000');
+    await _settle(tester);
+    await _tap(tester, find.text('Cadastrar'));
 
-    await _tap(tester, find.text('Empréstimo Banco X'));
+    await _tap(tester, find.text('Conta de luz'));
     await _tap(tester, find.text('Atualizar quanto devo'));
     await tester.enterText(_field('Quanto ainda devo'), '100000');
     await _settle(tester);
@@ -97,6 +107,16 @@ void main() {
 
     expect(find.text('R\$${_nbsp}1.000,00'), findsWidgets);
     expect((await journal.readAll()).whereType<DebtDefined>(), hasLength(2));
+  });
+
+  testWidgets('RN-1030 · a parcelada segue o calendário: não há "Atualizar '
+      'quanto devo" que a troque por um saldo', (tester) async {
+    await _openDebts(tester);
+    await _loan(tester, 'Empréstimo Banco X');
+
+    await _tap(tester, find.text('Empréstimo Banco X'));
+
+    expect(find.text('Atualizar quanto devo'), findsNothing);
   });
 
   testWidgets('RN-1031 · "Quitar esta primeiro" põe a dívida no alto da fila', (
