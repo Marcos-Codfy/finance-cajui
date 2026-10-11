@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cajui/src/features/auth/application/household_key_store.dart';
 import 'package:web/web.dart' as web;
 
@@ -13,6 +15,8 @@ final class BrowserHouseholdKey implements HouseholdKeyStore {
 
   static const _slot = 'cajui.chave-da-casa';
 
+  static final _changes = StreamController<void>.broadcast();
+
   @override
   String? read() {
     final key = web.window.localStorage.getItem(_slot);
@@ -20,9 +24,17 @@ final class BrowserHouseholdKey implements HouseholdKeyStore {
   }
 
   @override
-  Future<void> write(String key) async =>
-      web.window.localStorage.setItem(_slot, key.trim());
+  Future<void> write(String key) async {
+    web.window.localStorage.setItem(_slot, key.trim());
+    _changes.add(null);
+  }
 
   @override
-  Future<void> forget() async => web.window.localStorage.removeItem(_slot);
+  Future<void> forget() async {
+    web.window.localStorage.removeItem(_slot);
+    _changes.add(null);
+  }
+
+  @override
+  Stream<void> get changes => _changes.stream;
 }

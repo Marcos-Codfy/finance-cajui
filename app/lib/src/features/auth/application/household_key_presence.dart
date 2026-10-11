@@ -5,7 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// entrada: na web, é o que faz a tela de entrada dar lugar ao app.
 class HouseholdKeyPresence extends Notifier<bool> {
   @override
-  bool build() => ref.watch(householdKeyProvider).read() != null;
+  bool build() {
+    final store = ref.watch(householdKeyProvider);
+    final changes = store.changes.listen((_) => refresh());
+    ref.onDispose(changes.cancel);
+    return store.read() != null;
+  }
 
   /// Confere de novo o que está guardado.
   void refresh() => state = ref.read(householdKeyProvider).read() != null;
