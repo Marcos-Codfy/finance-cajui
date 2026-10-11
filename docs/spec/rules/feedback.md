@@ -85,3 +85,13 @@ A planilha não avisa nada: só mostra a situação para quem abre. O retorno pe
 | RN-862 | Gráfico só onde há parte-todo — uma barra empilhada de fixos, variáveis e dívidas sobre a renda, e o vale em barra separada — ou progresso. Todo gráfico tem o número equivalente em texto | — | D-UX-16 · Ancker2006 |
 | RN-863 | O resumo diário só tem o nível simplificado | — | modelagem |
 | RN-864 | Nível e forma são preferências do aparelho, lembradas entre sessões, e valem também para a web | — | prompt |
+
+## Revisão da semana e widget
+
+Ver [ADR-025](../../architecture/adr/ADR-025-notificacoes-do-banco.md).
+
+| ID | Regra | Exemplo ou teste | Origem |
+|---|---|---|---|
+| RN-870 | No domingo, perto das 10h, se há gasto dos últimos sete dias — contando hoje — em Outros ou lançado sozinho pela notificação do banco, e ainda não revisto, chega um aviso em canal de baixa prioridade, sem som (RN-825). Sem nada para revisar, nenhum aviso | "3 gastos da semana ficaram para conferir. Confere em 1 minuto?"; gasto em Outros de dez dias atrás não conta | decisão 2026-10-11 |
+| RN-871 | A revisão mostra cada gasto com as categorias a um toque: trocar é corrigir (RN-208); tocar na que ele já tem confirma, sem gravar fato. "Está tudo certo" marca o resto como revisto. O revisto fica só no aparelho e nunca sobe ao servidor | Tocar "Padaria" no gasto em Outros corrige e o tira da lista | decisão 2026-10-11 |
+| RN-872 | O widget da tela inicial mostra o que resta na semana (RN-642), o mesmo número do painel, com os botões de câmera e galeria. Sem faixas no plano, mostra o gasto do mês. Passada a semana do número, pede para abrir o app. Nunca mostra o valor do que passou do limite | Plano com 410,00 de variável em dinheiro, semana de 14 a 20 de setembro: "Pode gastar esta semana · R$ 168,82" | decisão 2026-10-11 · RN-843 |
