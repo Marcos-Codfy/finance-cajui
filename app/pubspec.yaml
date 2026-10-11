@@ -33,6 +33,7 @@ dependencies:
     path: ../packages/persistence
   # O armazenamento local do navegador, onde a chave da casa fica na web
   # (ADR-020). Só é tocado no build web.
+  sensors_plus: ^7.1.1
   web: ^1.1.0
 
 dev_dependencies:

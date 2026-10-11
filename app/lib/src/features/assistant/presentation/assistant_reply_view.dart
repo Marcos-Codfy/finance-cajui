@@ -71,6 +71,8 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
   final Set<String> _undone = {};
 
   Future<void> _undo(AssistantActionDone action) async {
+    // A folha: desfeito a pedido de quem usa (escolha 4 do dono).
+    CajuiFeedbackScope.of(context).undone();
     setState(() => _undone.add(action.id));
     await widget.onUndo(action);
   }
@@ -80,7 +82,8 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
     AssistantAnswered(:final text, :final actions) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CajuiChatBubble(text),
+        // A resposta nova chega palavra por palavra (escolha 7 do dono).
+        CajuiChatBubble(text, streamed: true),
         for (final action in actions)
           if (widget.canUndo && action.isUndoable) _undoRow(context, action),
       ],
@@ -121,6 +124,8 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
             label: done ? 'Desfeito' : 'Desfazer',
             variant: CajuiButtonVariant.ghost,
             size: CajuiButtonSize.compact,
+            // Mudo: o toque abafaria a folha.
+            silent: true,
             onPressed: done ? null : () => _undo(action),
           ),
         ],

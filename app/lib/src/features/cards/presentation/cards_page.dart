@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/motion/tilt_providers.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
 import 'package:cajui/src/features/cards/presentation/statement_page.dart';
@@ -31,15 +32,11 @@ class CardsPage extends ConsumerWidget {
     final month = ref.watch(clockProvider).today().budgetMonth;
     CardMonthUsage? usageOf(CreditCard card) =>
         finances?.cardUsage(card, month);
+    final tilt = _tilt(context, ref);
     return CajuiScreen(
       title: 'Cartões de crédito',
       onBack: Navigator.of(context).pop,
-      footer: CajuiButton(
-        label: 'Cadastrar cartão',
-        icon: CajuiIconData.plus,
-        expand: true,
-        onPressed: () => CardFormPage.open(context),
-      ),
+      footer: _register(context),
       children: [
         if (cards.isEmpty) _noCardsYet,
         for (final card in cards)
@@ -47,10 +44,26 @@ class CardsPage extends ConsumerWidget {
             alert,
             const SizedBox(height: CajuiSpacing.md),
           ],
-        for (final card in cards) _row(context, card, usageOf(card)),
+        for (final card in cards) ...[
+          ?_plastic(card, usageOf(card), tilt),
+          _row(context, card, usageOf(card)),
+        ],
       ],
     );
   }
+
+  static Widget _register(BuildContext context) => CajuiButton(
+    label: 'Cadastrar cartão',
+    icon: CajuiIconData.plus,
+    expand: true,
+    onPressed: () => CardFormPage.open(context),
+  );
+
+  /// Só à vista o sensor é lido: tela coberta por outra não balança.
+  static CajuiTilt? _tilt(BuildContext context, WidgetRef ref) =>
+      TickerMode.valuesOf(context).enabled
+      ? ref.watch(deviceTiltProvider)
+      : null;
 
   static const _noCardsYet = CajuiEmptyState(
     title: 'Nenhum cartão ainda',
@@ -78,6 +91,27 @@ class CardsPage extends ConsumerWidget {
             '${BrlFormatter.format(usage.limit.cents)}.',
       ),
     };
+  }
+
+  /// O cartão em 3D, que inclina com o celular e vira com um toque para
+  /// mostrar o limite (escolha 2 do dono). Só com limite informado: sem ele
+  /// não há o que mostrar no verso.
+  static Widget? _plastic(
+    CreditCard card,
+    CardMonthUsage? usage,
+    CajuiTilt? tilt,
+  ) {
+    if (usage == null || !usage.limit.isPositive) return null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: CajuiSpacing.sm),
+      child: CajuiCreditCard3D(
+        name: card.name,
+        detail: 'fecha dia ${card.closingDay} · vence dia ${card.dueDay}',
+        usedCents: usage.used.cents,
+        limitCents: usage.limit.cents,
+        tilt: tilt,
+      ),
+    );
   }
 
   /// O uso do mês em texto; sem limite informado, os dias do cartão.

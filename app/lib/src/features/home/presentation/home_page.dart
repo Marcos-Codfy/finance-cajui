@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/motion/tilt_providers.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
@@ -6,6 +7,7 @@ import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home/presentation/home_cards.dart';
 import 'package:cajui/src/features/home/presentation/home_links.dart';
 import 'package:cajui/src/features/home/presentation/home_state.dart';
+import 'package:cajui/src/features/home/presentation/month_celebration.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
@@ -52,25 +54,47 @@ class HomePage extends ConsumerWidget {
   ) {
     final month = DateLabels.month(view.budget.month).split(' ').first;
     final week = view.week;
+    // O Início fica montado por baixo da conversa e das telas abertas por
+    // cima: só à vista ele lê o sensor e faz festa.
+    final visible = TickerMode.valuesOf(context).enabled;
     return CajuiScreen(
       title: month[0].toUpperCase() + month.substring(1),
       overline: 'Semana desde ${DateLabels.short(week.from)}',
       trailing: _tools(context, ref, readOnly: state.readOnly),
-      footer: state.readOnly
-          ? null
-          : CajuiButton(
-              label: 'Novo lançamento',
-              icon: CajuiIconData.plus,
-              expand: true,
-              onPressed: () => EntryFormPage.open(context),
-            ),
+      footer: state.readOnly ? null : _newEntry(context),
       children: [
         ..._notice(context, ref, state),
-        ...HomeCards.of(view),
+        ...HomeCards.of(
+          view,
+          tilt: visible ? ref.watch(deviceTiltProvider) : null,
+          party: _party(ref, view, visible: visible),
+        ),
         const SizedBox(height: CajuiSpacing.xl),
         ...HomeLinks.of(context, view),
       ],
     );
+  }
+
+  static Widget _newEntry(BuildContext context) => CajuiButton(
+    label: 'Novo lançamento',
+    icon: CajuiIconData.plus,
+    expand: true,
+    onPressed: () => EntryFormPage.open(context),
+  );
+
+  /// Se o mês no verde está em festa; a primeira vez é anotada, para não
+  /// repetir na próxima abertura (escolha 5 do dono).
+  static bool _party(WidgetRef ref, HomeView view, {required bool visible}) {
+    final month = view.budget.month;
+    final celebration = ref.watch(monthCelebrationProvider);
+    final party =
+        view.budget.closes && celebration.party(month, visible: visible);
+    if (party) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => celebration.mark(month),
+      );
+    }
+    return party;
   }
 
   /// A câmera e a galeria no alto — fotografar ou escolher um comprovante é

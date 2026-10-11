@@ -1,3 +1,5 @@
+import 'package:cajui/src/core/motion/accelerometer_tilt_source.dart';
+import 'package:cajui/src/core/motion/tilt_providers.dart';
 import 'package:cajui/src/core/settings/event_store_preferences.dart';
 import 'package:cajui/src/core/settings/no_preferences_store.dart';
 import 'package:cajui/src/core/settings/preferences_store.dart';
@@ -95,6 +97,8 @@ abstract final class Composition {
       notificationAccessProvider.overrideWithValue(channel),
       launchRequestsProvider.overrideWithValue(channel),
       homeScreenProvider.overrideWithValue(const NativeHomeScreen()),
+      // O pote de água e os cartões balançam com o celular (ADR-026).
+      tiltSourceProvider.overrideWithValue(const AccelerometerTiltSource()),
     ];
   }
 

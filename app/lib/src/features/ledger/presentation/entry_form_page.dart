@@ -140,7 +140,8 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
 
   void _closeWhenSaved(EntryFormState? _, EntryFormState next) {
     if (next is! EntryFormSaved) return;
-    CajuiFeedbackScope.of(context).saved();
+    // A semente caindo: o lançamento entrou (escolha 4 do dono).
+    CajuiFeedbackScope.of(context).entrySaved();
     final onSaved = widget.onSaved;
     onSaved == null ? Navigator.of(context).pop() : onSaved(next.entry);
   }
@@ -284,6 +285,8 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
           label: widget.submitLabel,
           expand: true,
           loading: state is EntryFormSaving,
+          // Mudo: o toque abafaria a semente, que soa logo depois.
+          silent: true,
           onPressed: state.draft.isComplete ? _form.submit : null,
         ),
         for (final action in widget.extraActions) ...[

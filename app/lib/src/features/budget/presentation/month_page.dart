@@ -37,11 +37,38 @@ class MonthPage extends ConsumerWidget {
       overline: DateLabels.month(budget.month),
       onBack: back,
       children: [
+        ?_headline(budget),
         ..._comesIn(budget, finances.plan),
         ..._goesOut(budget, finances.categories),
         ..._closes(budget),
       ],
     );
+  }
+
+  /// A etiqueta do número do mês: o do Início voa até aqui (escolha 3 do
+  /// dono), e o olho não precisa procurá-lo de novo.
+  static const String resultTag = 'month-result';
+
+  /// O número que veio voando do Início: a sobra, ou o que falta. Sem o que
+  /// entra cadastrado, não há número, e nada voa.
+  static Widget? _headline(MonthBudget budget) {
+    if (budget.spentPercent == null) return null;
+    final month = DateLabels.month(budget.month).split(' ').first;
+    return budget.closes
+        ? CajuiStatCard(
+            label: 'Sobra de $month',
+            cents: budget.result.cents,
+            tone: CajuiAmountTone.positive,
+            large: true,
+            heroTag: resultTag,
+          )
+        : CajuiStatCard(
+            label: 'Faltam para fechar $month',
+            cents: budget.shortfall.cents,
+            tone: CajuiAmountTone.shortfall,
+            large: true,
+            heroTag: resultTag,
+          );
   }
 
   static Widget _row(String title, Money amount, {String? subtitle}) =>
