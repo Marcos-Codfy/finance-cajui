@@ -14,9 +14,8 @@ import 'package:server/src/auth/secure_random.dart';
 /// disco não acha nada que sirva para entrar.
 ///
 /// Chega por credencial cifrada do systemd, como a chave dos dados. Sem a
-/// credencial o servidor sobe do mesmo jeito e só aceita a autenticação
-/// antiga, por aparelho cadastrado — é o que mantém o celular com o APK
-/// velho funcionando até ser atualizado.
+/// credencial o servidor sobe do mesmo jeito, mas ninguém entra: a
+/// autenticação antiga, por aparelho cadastrado, saiu em 11/10 (ADR-024).
 final class HouseholdKey {
   /// Cria a chave a partir do segredo em claro, que não fica guardado.
   new(String key) : _hash = SecureRandom.hash(key.trim());

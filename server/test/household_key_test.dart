@@ -68,19 +68,35 @@ void main() {
       },
     );
 
-    test('servidor sem a chave configurada não a aceita, e a autenticação '
-        'por aparelho cadastrado continua valendo', () async {
-      final server = await TestApp.start();
+    test('servidor sem a chave configurada não deixa ninguém entrar, e só '
+        'diz que está de pé', () async {
+      final server = await TestApp.start(keyless: true);
 
       final (byKey, _) = await server.call('GET', '/v1/entries', token: _key);
-      final (bySession, _) = await server.call(
-        'GET',
-        '/v1/entries',
-        token: server.token(),
-      );
+      final (health, _) = await server.call('GET', '/health');
 
       expect(byKey, 401);
-      expect(bySession, 200);
+      expect(health, 200);
+    });
+
+    test('ADR-024 · o cadastro de aparelho saiu: as rotas antigas não '
+        'existem mais, nem para quem não tem a chave', () async {
+      final server = await TestApp.start(householdKey: HouseholdKey(_key));
+
+      for (final path in ['/v1/auth/enroll', '/v1/auth/challenge']) {
+        final response = await server.send(
+          'POST',
+          path,
+          body: const {'deviceId': 'pixel'},
+        );
+        expect(response.statusCode, 404, reason: path);
+      }
+      final devices = await server.send(
+        'GET',
+        '/v1/devices',
+        headers: const {'authorization': 'Bearer $_key'},
+      );
+      expect(devices.statusCode, 404);
     });
 
     test('a chave é lida da credencial do systemd, e chave curta demais não '

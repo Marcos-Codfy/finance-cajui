@@ -1,19 +1,11 @@
-import 'dart:io';
-
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/ai/receipt_routes.dart';
 import 'package:server/src/assistant/assistant_routes.dart';
 import 'package:server/src/assistant/assistant_service.dart';
-import 'package:server/src/auth/auth_routes.dart';
 import 'package:server/src/auth/authenticate.dart';
-import 'package:server/src/auth/challenge_book.dart';
-import 'package:server/src/auth/device_registry.dart';
-import 'package:server/src/auth/device_routes.dart';
-import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
-import 'package:server/src/auth/web_codes.dart';
 import 'package:server/src/http/cors.dart';
 import 'package:server/src/http/middlewares.dart';
 import 'package:server/src/http/rate_limiter.dart';
@@ -31,74 +23,31 @@ import 'package:shelf_router/shelf_router.dart';
 final class App {
   /// Monta o servidor sobre o registro [store], já aberto.
   ///
-  /// O cadastro de aparelhos e os códigos de convite são **os mesmos** para
-  /// as rotas públicas de autenticação e para as de dentro: um convite
-  /// emitido pelo celular é o que o cadastro do computador consome.
+  /// Quem entra é quem tem a chave da casa (ADR-020, ADR-024). O cadastro
+  /// de aparelho com código, o desafio assinado e o código da web saíram:
+  /// protegiam contra um risco que esta casa não tem e cobravam uma
+  /// cerimônia a cada aparelho. O livro de sessões fica — vazio hoje — para
+  /// o login com código de seis dígitos que ainda vai entrar.
   new({
     required EventStore store,
-    required Directory dataDirectory,
-    required Clock clock,
-    required void Function(String line) log,
-    required SessionBook sessions,
-    RateLimiter? rateLimiter,
-    ReceiptClassifier classifier = const RuleBasedClassifier(),
-    AssistantService? assistant,
-    HouseholdKey? householdKey,
-    String webOrigin = defaultWebOrigin,
-  }) : this._shared(
-         store: store,
-         devices: DeviceRegistry(store),
-         codes: EnrollmentCodes(dataDirectory),
-         clock: clock,
-         log: log,
-         sessions: sessions,
-         rateLimiter: rateLimiter,
-         classifier: classifier,
-         assistant: assistant,
-         householdKey: householdKey,
-         webCodes: WebCodes(),
-         webOrigin: webOrigin,
-       );
-
-  new _shared({
-    required EventStore store,
-    required DeviceRegistry devices,
-    required EnrollmentCodes codes,
     required Clock clock,
     required this._log,
     required this.sessions,
-    required RateLimiter? rateLimiter,
-    required this.classifier,
-    required this.assistant,
-    required this.householdKey,
-    required WebCodes webCodes,
-    required this.webOrigin,
+    RateLimiter? rateLimiter,
+    this.classifier = const RuleBasedClassifier(),
+    this.assistant,
+    this.householdKey,
+    this.webOrigin = defaultWebOrigin,
   }) : _clock = clock,
        _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
-       _auth = AuthRoutes(
-         devices: devices,
-         codes: codes,
-         challenges: ChallengeBook(),
-         sessions: sessions,
-         webCodes: webCodes,
-       ),
-       _devices = DeviceRoutes(
-         devices: devices,
-         codes: codes,
-         sessions: sessions,
-         webCodes: webCodes,
-       ),
-       _ledger = _ledgerRoutes(store, clock);
+       _ledger = LedgerRoutes(
+         store: store,
+         state: LedgerState(store.events),
+         clock: clock,
+       );
 
-  static LedgerRoutes _ledgerRoutes(EventStore store, Clock clock) =>
-      LedgerRoutes(
-        store: store,
-        state: LedgerState(store.events),
-        clock: clock,
-      );
-
-  /// As sessões abertas. Expostas para o teste abrir uma sem passar pela
-  /// biometria.
+  /// As sessões abertas. Sem rota que as abra por enquanto: o teste abre
+  /// uma direto, para conferir que o escopo continua imposto no servidor.
   final SessionBook sessions;
 
   /// Quem classifica comprovantes. Sem chave da IA, são só as regras locais —
@@ -109,8 +58,8 @@ final class App {
   /// credencial da IA, que responde `E-AI-01` às perguntas.
   final AssistantService? assistant;
 
-  /// A chave da casa (ADR-020). `null` num servidor que ainda só conhece
-  /// a autenticação por aparelho cadastrado.
+  /// A chave da casa (ADR-020). `null` num servidor sem a credencial: aí
+  /// ninguém entra, e o servidor só responde se está de pé.
   final HouseholdKey? householdKey;
 
   /// A única origem de navegador que pode ler as respostas: a web de
@@ -124,8 +73,6 @@ final class App {
   final Clock _clock;
   final void Function(String line) _log;
   final RateLimiter _limiter;
-  final AuthRoutes _auth;
-  final DeviceRoutes _devices;
   final LedgerRoutes _ledger;
 
   late final IncomeRoutes _income = IncomeRoutes(
@@ -174,8 +121,6 @@ final class App {
   Handler get handler {
     final routes = Router()
       ..get('/health', _health)
-      ..mount('/v1/auth', _auth.router.call)
-      ..mount('/v1/devices', _devices.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1/assistant', _assistant.router.call)
       ..mount('/v1', _income.router.call)
