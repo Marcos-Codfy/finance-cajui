@@ -23,20 +23,27 @@ O código de pareamento antigo pedia um celular com o app para gerá-lo. O dono 
    - Nunca passa pelo chat nem pelo repositório.
 2. **O script do PC também calcula o código** (`-Codigo`): o dono entra na web mesmo sem o celular à mão. Ele mostra a chave para o autenticador quando pedido (`-Mostrar`), e cria o segredo sem mostrar nada (`-Calado`), para quem prepara o servidor por ele.
 3. **`POST /v1/auth/code`** troca o código por uma sessão de 30 dias com escopo `webReadOnly`: lê e conversa (RN-906), não grava.
-   - A sessão fica no registro como evento `auth.session-opened`, só com o hash do token, e volta quando o servidor reinicia.
+   - A sessão fica no registro como evento `auth.session-opened`, só com o hash do token e uma impressão do segredo que a abriu, e volta quando o servidor reinicia.
+   - **A Juju também não grava por ela.** A conversa recebe só a ferramenta de consulta (`listar_lancamentos`), o cadastro avisa que a conversa vem da consulta, e as ferramentas que gravam recusam o pedido mesmo que o modelo o faça.
 4. **Defesas básicas:**
    - vale o passo de agora e os vizinhos;
    - cada passo vale uma vez só;
    - cinco códigos errados seguidos fecham a entrada por quinze minutos;
    - código errado, entrada fechada e servidor sem segredo dão a mesma resposta (`E-AUTH-03`).
+   - A porta é conferida **depois** de ler o pedido, junto com o teste do código e a contagem do erro, sem espera no meio. Conferida antes, cem pedidos simultâneos passavam todos e furavam a trava.
 
    Sem a trava, seis dígitos se acertariam por tentativa em horas, mesmo com o limite de taxa. Com ela, levariam anos.
-5. **A tela de entrada aceita os dois:** seis dígitos viram código, e o resto é a chave da casa. O código que não serviu mostra o `E-AUTH-04`, do catálogo.
+5. **A tela de entrada aceita os dois:** seis dígitos viram código, com ou sem o espaço do meio, e o resto é a chave da casa.
+   - O código que não serviu mostra o `E-AUTH-04`, do catálogo.
+   - Sem rede, com o limite de taxa ou com o servidor fora, a frase é a do caso (`E-NET-01`, `E-RATE-01`, `E-SRV-01`), para a pessoa não achar que o autenticador está errado.
+   - Na consulta, Ajustes não mostra a "Chave da casa": o que o navegador guarda pode ser a sessão do código, e não a chave.
 
 ## Consequências
 
 - Entrar na web de um computador novo é abrir o autenticador e digitar seis dígitos.
 - O celular continua entrando com a chave compilada no APK. O código serve só à consulta pela web.
-- Trocar o segredo é `autenticador.ps1 -Novo`, refazer a conta no autenticador e levá-lo de novo à VM.
+- Trocar o segredo é `autenticador.ps1 -Novo`, refazer a conta no autenticador e levá-lo de novo à VM (`servidor-atualizar.ps1 -Autenticador`).
+  - **É também como derrubar todas as sessões da web:** o servidor reinicia no deploy e não reabre as sessões abertas pelo segredo antigo. Tirar o segredo da VM tem o mesmo efeito.
+  - "Sair" na web esquece a sessão só naquele navegador; no servidor ela vale até vencer ou até o segredo mudar (BL-089).
 
 **Não validado:** a primeira configuração no Google Authenticator do dono, que só ele pode fazer.
