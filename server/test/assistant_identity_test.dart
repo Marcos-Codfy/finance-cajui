@@ -8,6 +8,14 @@ void main() {
       AssistantPrompt.system,
       startsWith('Você se chama Juju e é a assistente do Cajui'),
     );
-    expect(AssistantPrompt.version, 5);
+    expect(AssistantPrompt.version, greaterThanOrEqualTo(5));
+  });
+
+  test('ADR-023 · as instruções falam com as palavras da planilha e proíbem '
+      'as de banco', () {
+    expect(AssistantPrompt.version, 6);
+    expect(AssistantPrompt.system, contains('pode gastar por semana'));
+    expect(AssistantPrompt.system, contains('faltam R\$ X para fechar'));
+    expect(AssistantPrompt.system, contains('mudar_categoria'));
   });
 }

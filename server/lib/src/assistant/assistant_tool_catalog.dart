@@ -20,6 +20,9 @@ abstract final class AssistantToolCatalog {
   /// O nome da ferramenta que registra uma renda.
   static const recordIncome = 'registrar_renda';
 
+  /// O nome da ferramenta que troca a categoria de um lançamento.
+  static const recategorize = 'mudar_categoria';
+
   /// As ferramentas, como vão para o modelo.
   static const List<ChatTool> tools = [
     ChatTool(
@@ -119,6 +122,24 @@ abstract final class AssistantToolCatalog {
           },
         },
         'required': ['valor_centavos'],
+      },
+    ),
+    ChatTool(
+      name: recategorize,
+      description:
+          'Troca a categoria de um lançamento: "isso foi farmácia, não '
+          'mercado", "a padaria de ontem era lanche". Sem o id, liste os '
+          'lançamentos antes.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'id': {'type': 'string', 'description': 'O id do lançamento.'},
+          'categoria_id': {
+            'type': 'string',
+            'description': 'O id da categoria nova, do cadastro.',
+          },
+        },
+        'required': ['id', 'categoria_id'],
       },
     ),
   ];
