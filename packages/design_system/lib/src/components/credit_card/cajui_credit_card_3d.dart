@@ -10,6 +10,7 @@ import 'package:design_system/src/motion/cajui_tilt.dart';
 import 'package:design_system/src/motion/frame_clock.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/tokens/primitives/cajui_curves.dart';
+import 'package:design_system/src/tokens/primitives/cajui_depth.dart';
 import 'package:design_system/src/tokens/primitives/cajui_durations.dart';
 import 'package:flutter/widgets.dart';
 
@@ -71,7 +72,8 @@ class _CajuiCreditCard3DState extends State<CajuiCreditCard3D>
   /// A inclinação máxima, uns 14°: o bastante para o brilho andar, pouco
   /// para o texto deformar.
   static const double _maxAngle = 0.24;
-  static const double _perspective = 0.0012;
+  /// A lente do design system: a mesma do carrossel e da rolagem.
+  static const double _perspective = CajuiDepth.perspective;
 
   final CardTiltMotion _tilt = CardTiltMotion();
   late final FrameClock _clock = FrameClock(vsync: this, onFrame: _tilt.step);
