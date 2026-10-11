@@ -38,9 +38,12 @@ class HomePage extends ConsumerWidget {
           CajuiSkeleton(height: 112),
         ],
       ),
-      HomeFirstUse() => const CajuiScreen(
+      // Os ajustes também aqui: é por eles que a consulta sai (ADR-027), e
+      // a web de quem começou do zero passa a primeira visita nesta tela.
+      HomeFirstUse() => CajuiScreen(
         title: 'Início',
-        children: [WebEmptyState()],
+        trailing: _tools(context, readOnly: true),
+        children: const [WebEmptyState()],
       ),
       HomeReady(:final view) => _ready(context, ref, state, view),
     };
