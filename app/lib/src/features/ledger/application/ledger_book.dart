@@ -189,20 +189,32 @@ final class LedgerBook {
   /// renda só; recebimento ligado a ela **substitui** o esperado no mês.
   static const cashIncomeSourceId = 'cash-income';
 
+  IncomeSource get _cashSource => IncomeSource(
+    id: cashIncomeSourceId,
+    name: 'Renda em dinheiro',
+    tender: Tender.cash,
+    expectedAmount: setup.cashIncome,
+    expectedDay: 5,
+  );
+
+  /// Se um recebimento em dinheiro de [amount] em [on] parece ser a renda do
+  /// plano (RN-758) — e ela ainda não foi registrada naquele mês. Sem isso, o
+  /// salário que chega pelo extrato ou pelo Pix entrava como avulso, por
+  /// cima do esperado, e a renda do mês contava duas vezes.
+  bool looksLikePlanIncome(Money amount, LocalDate on) =>
+      _cashSource.looksLike(amount, on) &&
+      !receipts.any(
+        (receipt) =>
+            receipt.sourceId == cashIncomeSourceId &&
+            on.budgetMonth.contains(receipt.receivedOn),
+      );
+
   /// A renda em dinheiro que vale em [month]: a recebida, se já houve
   /// recebimento da fonte do plano, senão a esperada — mais as entradas
   /// avulsas do mês (RN-131, RN-133). A conta é do domínio.
   Money cashIncomeIn(BudgetMonth month) => MonthIncome.of(
     month,
-    sources: [
-      IncomeSource(
-        id: cashIncomeSourceId,
-        name: 'Renda em dinheiro',
-        tender: Tender.cash,
-        expectedAmount: setup.cashIncome,
-        expectedDay: 5,
-      ),
-    ],
+    sources: [_cashSource],
     receipts: receipts,
   ).amounts.cash;
 

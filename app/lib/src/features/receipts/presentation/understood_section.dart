@@ -57,6 +57,7 @@ abstract final class UnderstoodSection {
     DocumentKind.incomeReceipt => 'Dinheiro que entrou',
     DocumentKind.statementPayment => 'Pagamento de fatura',
     DocumentKind.ownTransfer => 'Transferência entre contas suas',
+    DocumentKind.statement => 'Extrato',
   };
 }
 

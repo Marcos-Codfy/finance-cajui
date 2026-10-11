@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:meta/meta.dart';
+import 'package:server/src/ai/ai_statement_lines.dart';
 
 /// O que sobrou da resposta da IA depois de validada: só campos que passaram
 /// em todas as conferências. O resto foi descartado, campo a campo.
@@ -23,6 +24,7 @@ final class AiSuggestion {
     this.description,
     this.paymentKind,
     this.installments,
+    this.lines = const [],
   });
 
   static const _fields = {
@@ -34,6 +36,7 @@ final class AiSuggestion {
     'description',
     'paymentKind',
     'installments',
+    'lines',
   };
 
   /// O maior valor aceito: R$ 1.000.000,00. Acima disso é leitura errada.
@@ -69,6 +72,9 @@ final class AiSuggestion {
   /// Em quantas vezes, quando foi parcelado.
   final int? installments;
 
+  /// As movimentações, quando o documento é um extrato (RN-707).
+  final List<StatementLine> lines;
+
   /// Valida [content], a resposta crua da IA, contra o pedido [request].
   ///
   /// Devolve **nulo** quando a resposta inteira é inaproveitável — não é
@@ -88,7 +94,7 @@ final class AiSuggestion {
       confidence: ((json['confidence'] as num?) ?? 0).toDouble().clamp(0, 1),
       amount: inText || request.hasImages ? money : null,
       amountInText: inText,
-      occurredOn: _date(json['occurredOn'], request),
+      occurredOn: plausibleDate(json['occurredOn'], request),
       documentKind: DocumentKind.values.asNameMap()[json['documentKind']],
       // O único texto livre da IA que pode chegar à tela: só passa o que tem
       // cara de nome de compra (RN-775).
@@ -97,6 +103,7 @@ final class AiSuggestion {
       ),
       paymentKind: PaymentMethodKind.values.asNameMap()[json['paymentKind']],
       installments: _installments(json['installments']),
+      lines: AiStatementLines.parse(json['lines'], request),
     );
   }
 
@@ -122,15 +129,18 @@ final class AiSuggestion {
       json['documentKind'] is String? &&
       json['description'] is String? &&
       json['paymentKind'] is String? &&
-      json['installments'] is num?;
+      json['installments'] is num? &&
+      json['lines'] is List<Object?>?;
 
   /// Categoria fora da lista enviada não existe (RN-773).
   static String? _category(Object? id, ClassificationRequest request) =>
       id is String && request.categoryById(id) != null ? id : null;
 
   static Money? _money(Object? cents) {
-    // Número quebrado é a IA respondendo em reais: 23.9 viraria R$ 0,24.
-    if (cents is! num || cents != cents.roundToDouble()) return null;
+    // Número quebrado é a IA respondendo em reais: 23.9 viraria R$ 0,24. E o
+    // infinito (1e400 no JSON) derrubaria a conta inteira.
+    if (cents is! num || !cents.isFinite) return null;
+    if (cents != cents.roundToDouble()) return null;
     final rounded = cents.round();
     return rounded > 0 && rounded <= maxCents ? Money.fromCents(rounded) : null;
   }
@@ -138,7 +148,7 @@ final class AiSuggestion {
   /// A data do texto, em qualquer escrita que o leitor entende; sem ela, e
   /// com a foto, a data que a IA leu da imagem — se não estiver no futuro
   /// nem velha demais para ser compra de agora.
-  static LocalDate? _date(Object? iso, ClassificationRequest request) {
+  static LocalDate? plausibleDate(Object? iso, ClassificationRequest request) {
     final inText = ReceiptFieldReader.datesIn(
       request.text,
       today: request.today,
@@ -159,7 +169,7 @@ final class AiSuggestion {
   }
 
   static int? _installments(Object? raw) {
-    if (raw is! num) return null;
+    if (raw is! num || !raw.isFinite) return null;
     final count = raw.round();
     return count >= 2 && count <= 48 ? count : null;
   }

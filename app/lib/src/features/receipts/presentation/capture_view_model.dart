@@ -5,6 +5,7 @@ import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/application/capture_outcome.dart';
+import 'package:cajui/src/features/receipts/application/capture_service.dart';
 import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
@@ -17,6 +18,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class CaptureViewModel extends Notifier<CaptureState> {
   final List<SharedItem> _queue = [];
   SharedItem? _current;
+
+  /// As capturas que já estão sendo fechadas. Um segundo toque em
+  /// "Descartar" antes do primeiro terminar chamava `_next()` duas vezes, e o
+  /// comprovante seguinte da fila sumia sem ter aparecido.
+  final Set<String> _finishing = {};
+
+  Future<void> _finish(
+    Capture capture,
+    Future<void> Function(CaptureService service) action,
+  ) async {
+    final id = capture.source.id;
+    if (!_finishing.add(id)) return;
+    try {
+      await action(ref.read(captureServiceProvider));
+      await _next();
+    } finally {
+      _finishing.remove(id);
+    }
+  }
 
   @override
   CaptureState build() {
@@ -79,22 +99,33 @@ class CaptureViewModel extends Notifier<CaptureState> {
 
   /// O lançamento foi gravado: fecha a captura, aprende e segue para a
   /// próxima da fila.
-  Future<void> confirmed(Capture capture, Entry entry) async {
-    await ref.read(captureServiceProvider).confirmed(capture, entry);
-    await _next();
+  Future<void> confirmed(Capture capture, Entry entry) =>
+      _finish(capture, (service) => service.confirmed(capture, entry));
+
+  /// "É uma despesa": a mesma captura, na conferência de lançamento.
+  void treatAsExpense() {
+    final current = state;
+    if (current is! CaptureReady) return;
+    state = CaptureReady(
+      current.capture,
+      waiting: current.waiting,
+      asExpense: true,
+    );
   }
+
+  /// A captura virou outra coisa que não um lançamento só — entrada,
+  /// pagamento de fatura, as linhas de um extrato —, ou não virou nada:
+  /// fecha, sem aprender, e segue para a próxima da fila.
+  Future<void> closed(Capture capture) =>
+      _finish(capture, (service) => service.close(capture));
 
   /// "Conferir depois".
-  Future<void> defer(Capture capture) async {
-    await ref.read(captureServiceProvider).defer(capture);
-    await _next();
-  }
+  Future<void> defer(Capture capture) =>
+      _finish(capture, (service) => service.defer(capture));
 
   /// "Descartar".
-  Future<void> discard(Capture capture) async {
-    await ref.read(captureServiceProvider).discard(capture);
-    await _next();
-  }
+  Future<void> discard(Capture capture) =>
+      _finish(capture, (service) => service.discard(capture));
 
   /// Dispensa o aviso de uma captura que falhou e segue.
   Future<void> dismiss() => _next();

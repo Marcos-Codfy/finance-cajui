@@ -29,7 +29,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     required this.budget,
     required this.breaker,
     this.timeout = const Duration(seconds: 8),
-    this.imageTimeout = const Duration(seconds: 15),
+    this.imageTimeout = const Duration(seconds: 35),
     this.categoryAccuracy = const {},
     SuggestionCache? cache,
   }) : cache = cache ?? SuggestionCache();
@@ -60,8 +60,15 @@ final class AiReceiptClassifier implements ReceiptClassifier {
 
   static const _rules = RuleBasedClassifier();
 
-  /// O teto da resposta: o objeto da proposta tem uns cem tokens.
-  static const _maxTokens = 300;
+  /// O teto da resposta só com texto. O objeto de um comprovante tem uns
+  /// cem tokens, mas o texto também pode ser de um extrato, e resposta
+  /// cortada no meio não se lê: perde tudo, até o tipo. O teto não custa
+  /// nada — paga-se o que a IA escreve.
+  static const _maxTokens = 2000;
+
+  /// O teto com a foto: trinta linhas de extrato chegam perto de 2.000
+  /// tokens, e o modelo às vezes passa das trinta.
+  static const _maxTokensWithImages = 4000;
 
   @override
   Future<EntryProposal> classify(ClassificationRequest request) async {
@@ -153,7 +160,7 @@ final class AiReceiptClassifier implements ReceiptClassifier {
     return client
         .converse(
           messages: _withImages(user, request),
-          maxTokens: _maxTokens,
+          maxTokens: _maxTokensWithImages,
           json: true,
         )
         .timeout(imageTimeout);

@@ -28,7 +28,39 @@ abstract final class ProposalMerge {
     AiSuggestion ai, {
     required bool sawImage,
     Map<String, double> categoryAccuracy = const {},
-  }) => local.copyWith(
+  }) {
+    // Um extrato não é um comprovante com um valor: são as linhas, e é
+    // dentro delas que mora a proteção do pagamento de fatura (RN-756).
+    // Uma linha só não é extrato: é um comprovante que a IA leu torto — ou
+    // uma foto que quer fazer uma compra sumir numa lista (INJ-07).
+    if (ai.documentKind == DocumentKind.statement && ai.lines.length >= 2) {
+      return local.copyWith(
+        documentKind: const ProposedField.resolved(
+          DocumentKind.statement,
+          source: FieldSource.ai,
+        ),
+        lines: _inTender(ai.lines, local.paymentKind.value ?? ai.paymentKind),
+        description: ai.description,
+      );
+    }
+    return _single(local, ai, sawImage, categoryAccuracy);
+  }
+
+  /// No extrato do vale, toda linha é vale: ele não repete a palavra em cada
+  /// linha, e linha sem forma cairia no dinheiro (RN-111).
+  static List<StatementLine> _inTender(
+    List<StatementLine> lines,
+    PaymentMethodKind? document,
+  ) => document != PaymentMethodKind.mealVoucher
+      ? lines
+      : [for (final line in lines) line.paidBy(PaymentMethodKind.mealVoucher)];
+
+  static EntryProposal _single(
+    EntryProposal local,
+    AiSuggestion ai,
+    bool sawImage,
+    Map<String, double> categoryAccuracy,
+  ) => local.copyWith(
     documentKind: _kind(local.documentKind, ai.documentKind),
     amount: _amount(local.amount, ai, sawImage: sawImage),
     occurredOn: _filled(local.occurredOn, ai.occurredOn),
@@ -44,7 +76,9 @@ abstract final class ProposalMerge {
     DocumentKind? fromAi,
   ) {
     final read = local.value;
-    if (fromAi == null || read == null || fromAi == read) return local;
+    // "Extrato" sem linhas não é nada que a tela saiba mostrar.
+    if (fromAi == null || fromAi == DocumentKind.statement) return local;
+    if (read == null || fromAi == read) return local;
     // Pagamento de fatura só pela IA pergunta (RN-757): dar como certo faria
     // uma despesa sumir — e a foto, que agora vai junto, pode trazer o texto
     // de quem quer isso (INJ-07).

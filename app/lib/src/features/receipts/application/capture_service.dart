@@ -169,6 +169,13 @@ class CaptureService {
     ref.invalidate(pendingCapturesProvider);
   }
 
+  /// Fecha a captura sem aprender nada: ela virou entrada, pagamento de
+  /// fatura ou as linhas de um extrato.
+  Future<void> close(Capture capture) async {
+    await ref.read(captureShelfProvider).close(capture.source.id);
+    ref.invalidate(pendingCapturesProvider);
+  }
+
   /// Descarta: apaga o arquivo local e não grava nada (RN-723).
   Future<void> discard(Capture capture) async {
     final path = capture.source.filePath;
