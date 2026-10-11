@@ -28,6 +28,7 @@ class CajuiTextField extends StatefulWidget {
     this.textInputAction,
     this.keyboardType,
     this.inputFormatters,
+    this.maxLength,
     this.style,
     this.textAlign = TextAlign.start,
     super.key,
@@ -69,6 +70,10 @@ class CajuiTextField extends StatefulWidget {
 
   /// Filtros e máscaras aplicados ao que é digitado.
   final List<TextInputFormatter>? inputFormatters;
+
+  /// O teto de caracteres. O que passa dele não entra no campo: é melhor
+  /// parar a digitação do que o servidor recusar o texto depois, calado.
+  final int? maxLength;
 
   /// O estilo do texto digitado. Por padrão, `body`.
   final TextStyle? style;
@@ -134,7 +139,11 @@ class _CajuiTextFieldState extends State<CajuiTextField> {
         onSubmitted: widget.onSubmitted,
         textInputAction: widget.textInputAction,
         keyboardType: widget.keyboardType,
-        inputFormatters: widget.inputFormatters,
+        inputFormatters: [
+          ...?widget.inputFormatters,
+          if (widget.maxLength case final max?)
+            LengthLimitingTextInputFormatter(max),
+        ],
         textAlign: widget.textAlign,
         style: base.copyWith(color: ink),
         cursorColor: colors.action.primary,

@@ -203,6 +203,44 @@ void main() {
       expect(teimoso.entries.keys, containsAll(['e1', 'e3']));
     });
 
+    test('um fato recusado não cala os fatos nem os recebimentos que vêm '
+        'depois dele', () async {
+      // O plano com um nome longo demais era recusado, e a subida parava
+      // ali: as dívidas e os salários seguintes nunca chegavam ao servidor.
+      final teimoso = _RefusingFirstFact();
+      final debt = Debt.withBalance(
+        id: 'd1',
+        creditor: 'Carnê',
+        kind: DebtKind.loan,
+        balance: const Money.fromCents(50000),
+        monthlyPayment: const Money.fromCents(5000),
+        dueDay: 10,
+        informedOn: _today,
+      ).valueOrNull!;
+      final book = _bookOf(
+        const [],
+        receipts: [
+          IncomeReceipt(
+            id: 'r1',
+            tender: Tender.cash,
+            amount: const Money.fromCents(10000),
+            receivedOn: _today,
+          ),
+        ],
+        facts: [
+          DebtOrdered(ids: const ['x'], definedAt: DateTime.utc(2026, 9)),
+          DebtDefined(id: 'divida', debt: debt),
+        ],
+      );
+
+      final (sent: _, received: _, :error) = await LedgerSync(teimoso)
+          .run(book);
+
+      expect(error, ErrorCode.req01, reason: 'a recusa é relatada');
+      expect(teimoso.facts, contains('divida'));
+      expect(teimoso.income, contains('r1'));
+    });
+
     test('aparelho sem cadastro não tenta subir nada', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
 
@@ -230,4 +268,17 @@ final class _RefusingOne extends FakeUplink {
   @override
   Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async =>
       entry.id == refused ? ErrorCode.req01 : await super.sendEntry(entry);
+}
+
+/// Recusa o primeiro fato e aceita os outros, como o servidor faz com o
+/// texto acima do teto.
+final class _RefusingFirstFact extends FakeUplink {
+  var _refused = false;
+
+  @override
+  Future<ErrorCode?> sendFact(DeviceFact fact) async {
+    if (_refused) return await super.sendFact(fact);
+    _refused = true;
+    return ErrorCode.req01;
+  }
 }

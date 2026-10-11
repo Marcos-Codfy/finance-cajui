@@ -1,3 +1,4 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -93,6 +94,7 @@ class _SalaryPageState extends ConsumerState<SalaryPage> {
       label: 'De quem',
       controller: _name,
       hint: 'Meu salário, salário da esposa',
+      maxLength: BudgetPlanCodec.maxName,
       onChanged: (_) => setState(() {}),
     ),
     const SizedBox(height: CajuiSpacing.lg),

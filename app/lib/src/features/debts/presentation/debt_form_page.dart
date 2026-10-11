@@ -1,3 +1,4 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
@@ -133,6 +134,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
           label: 'A quem você deve',
           controller: _creditor,
           hint: 'Empréstimo Banco X',
+          maxLength: DeviceFact.maxText,
           onChanged: (_) => setState(() {}),
         ),
         _gap,
@@ -144,6 +146,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
           label: 'Observação',
           controller: _note,
           hint: 'Negociar à vista com desconto',
+          maxLength: DeviceFact.maxText,
         ),
       ],
     );

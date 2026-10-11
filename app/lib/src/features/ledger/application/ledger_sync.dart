@@ -47,15 +47,18 @@ final class LedgerSync {
     final (remote, failure) = await uplink.remoteEntries();
     if (failure != null) return (sent: 0, received: 0, error: failure);
     final (sent, refused) = await _sendEntries(book, remote);
-    // O plano e o que entrou vão por último e não interrompem nada: sem eles
-    // o assistente ainda responde quanto saiu — só não responde quanto ainda
-    // cabe nem quanto sobrou de vale.
-    final error =
-        refused ??
-        await _sendReversals(book) ??
-        await _sendFacts(book) ??
-        await _sendPlan(book) ??
-        await _sendIncome(book);
+    // Cada etapa sobe o que pode, e uma recusa não cala as seguintes: um
+    // fato que o servidor não aceita prendia, para sempre e em silêncio,
+    // as dívidas, os planos e os recebimentos que vinham depois dele. Fica
+    // o primeiro erro, para a tela saber que algo não subiu.
+    final errors = [
+      refused,
+      await _sendReversals(book),
+      await _sendFacts(book),
+      await _sendPlan(book),
+      await _sendIncome(book),
+    ];
+    final error = errors.nonNulls.firstOrNull;
     // A descida acontece mesmo com recusa na subida: o que o outro aparelho
     // fez não depende do que este não conseguiu mandar.
     final (received, broken) = await _pull(book);
@@ -94,13 +97,15 @@ final class LedgerSync {
     if (book.facts.isEmpty) return null;
     final (known, failure) = await uplink.remoteFacts();
     if (failure != null) return failure;
+    ErrorCode? first;
     for (final event in book.facts) {
       final fact = DeviceFacts.of(event);
       if (fact == null || known.contains(fact.id)) continue;
+      // Segue depois de uma recusa: cada fato vale por si.
       final error = await uplink.sendFact(fact);
-      if (error != null) return error;
+      first ??= error;
     }
-    return null;
+    return first;
   }
 
   /// O que entrou: recebimentos e acertos de saldo do vale (RN-132, RN-123).
