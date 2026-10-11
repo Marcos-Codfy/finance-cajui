@@ -121,9 +121,10 @@ final class LedgerEventCodec {
   static Map<String, Object?> _planPayload(LedgerEvent event) =>
       switch (event) {
         BudgetDefined(:final plan) => BudgetPlanCodec.encode(plan),
-        DebtOrdered(:final ids, :final definedAt) => DebtCodec.encodeOrdering(
-          (ids: ids, definedAt: definedAt),
-        ),
+        DebtOrdered(:final ids, :final definedAt) => DebtCodec.encodeOrdering((
+          ids: ids,
+          definedAt: definedAt,
+        )),
         HouseholdNamed(:final names) => HouseholdCodec.encode(names),
         _ => const {},
       };

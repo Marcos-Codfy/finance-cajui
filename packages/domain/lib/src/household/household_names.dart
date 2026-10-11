@@ -74,7 +74,7 @@ final class HouseholdNames {
       _betweenAccounts.contains(reading.kind) &&
       whoIs(reading.counterpart) != null;
 
-  static const _betweenAccounts = {
+  static const Set<MovementKind> _betweenAccounts = {
     MovementKind.pixSent,
     MovementKind.pixReceived,
     MovementKind.transferSent,

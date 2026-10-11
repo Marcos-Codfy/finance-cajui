@@ -61,7 +61,7 @@ void main() {
   });
 
   group('RN-1076 · o comprovante que a notificação já lançou', () {
-    test('ontem, R\$ 150,00, "Joana P Lima": o comprovante de hoje para '
+    test(r'ontem, R$ 150,00, "Joana P Lima": o comprovante de hoje para '
         'JOANA PEREIRA LIMA é o mesmo Pix', () {
       final notice = _entry('notice-n1', 15000, _day10, 'Joana P Lima');
 
@@ -166,7 +166,7 @@ void main() {
       );
     });
 
-    test('Pix de R\$ 50,00 para Lucas Lima avisado no dia 10 e no dia 11 são '
+    test(r'Pix de R$ 50,00 para Lucas Lima avisado no dia 10 e no dia 11 são '
         'dois lançamentos', () {
       final first = _entry('notice-n1', 5000, _day10, 'Lucas Lima');
 

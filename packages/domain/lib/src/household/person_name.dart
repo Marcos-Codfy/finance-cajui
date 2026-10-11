@@ -52,7 +52,8 @@ final class PersonName {
   /// Se as duas formas podem ser a mesma pessoa, seja qual for a que veio
   /// do cadastro: o comprovante abrevia de um jeito e a notificação de
   /// outro (RN-1075).
-  bool sameAs(PersonName other) => isWrittenAs(other) || other.isWrittenAs(this);
+  bool sameAs(PersonName other) =>
+      isWrittenAs(other) || other.isWrittenAs(this);
 
   /// A palavra [read] é a palavra [full] escrita inteira ou só pela inicial;
   /// com [cut], também cortada no fim, que é onde o banco corta.

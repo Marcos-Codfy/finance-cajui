@@ -56,8 +56,7 @@ class _HouseholdNamesPageState extends ConsumerState<HouseholdNamesPage> {
   @override
   Widget build(BuildContext context) {
     final names =
-        ref.watch(ledgerProvider).value?.householdNames ??
-        HouseholdNames.empty;
+        ref.watch(ledgerProvider).value?.householdNames ?? HouseholdNames.empty;
     final salaries = ref.watch(financesProvider)?.plan.salaries ?? const [];
     final suggestions = names.suggestedBy(salaries.map((s) => s.name));
     return CajuiScreen(
