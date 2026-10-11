@@ -157,14 +157,6 @@ class MonthPage extends ConsumerWidget {
       _row('O vale paga parte do mercado', budget.voucherCovered),
       _row('Precisa sair do bolso', budget.outOfPocket),
       _result(budget),
-      _row(
-        'Pode gastar por semana',
-        budget.weeklyLimit,
-        subtitle:
-            'Depois de separar contas fixas, assinaturas, dívida e '
-            'dízimo · ${BrlFormatter.format(budget.weeklyVoucher.cents)} '
-            'é vale',
-      ),
       CajuiListRow(
         title: 'Já está gasto',
         subtitle: 'Da sua renda em dinheiro',

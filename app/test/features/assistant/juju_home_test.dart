@@ -54,8 +54,8 @@ Future<FakeInbox> _open(WidgetTester tester, List<LedgerEvent> events) async {
 }
 
 void main() {
-  testWidgets('sugestão 3 · a conversa abre com o nome da Juju e o pode '
-      'gastar da semana no alto', (tester) async {
+  testWidgets('sugestão 3 · a conversa abre com o nome da Juju e a sobra '
+      'do mês no alto', (tester) async {
     await _open(tester, [_plan()]);
 
     expect(
@@ -67,7 +67,8 @@ void main() {
     );
     // O sobretítulo é em versalete: o texto chega em maiúsculas.
     expect(
-      find.text('PODE GASTAR R\$${BrlFormatter.nbsp}500,00 NESTA SEMANA'),
+      // 3.000 de salário − 1.000 de aluguel.
+      find.text('SOBRAM R\$${BrlFormatter.nbsp}2.000,00 NESTE MÊS'),
       findsOneWidget,
     );
   });

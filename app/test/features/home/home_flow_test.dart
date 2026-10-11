@@ -26,8 +26,7 @@ BudgetLine _line(String id, int cents, LineGroup group, String category) =>
     ).valueOrNull!;
 
 /// Uma casa inventada, com conta de cabeça: salário de [salary], aluguel de
-/// R$ 1.000,00 e mercado de R$ 800,00. Sem vale e sem dízimo, o limite da
-/// semana é (salário − aluguel) ÷ 4.
+/// R$ 1.000,00 e mercado de R$ 800,00, sem vale e sem dízimo.
 BudgetDefined _plan({int salary = 300000}) => BudgetDefined(
   BudgetPlan(
     salaries: [
@@ -87,16 +86,11 @@ Future<MemoryLedgerJournal> _openHome(
 }
 
 void main() {
-  testWidgets('RN-1010 RN-1011 · com o plano, o Início diz quanto dá para '
-      'gastar na semana e quanto sobra no mês', (tester) async {
+  testWidgets('RN-1010 · com o plano, o Início diz quanto sobra no mês, e '
+      'nada de semana', (tester) async {
     await _openHome(tester, [_plan()]);
 
-    expect(find.text('Pode gastar esta semana'), findsOneWidget);
-    // (3.000 − 1.000) ÷ 4 = 500.
-    expect(
-      find.text('${_brl('0,00')} de ${_brl('500,00')} já gastos'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Pode gastar'), findsNothing);
     // 3.000 − 1.000 − 800 = 1.200, e 1.800 de 3.000 = 60%.
     expect(find.text('Sobra de setembro'), findsOneWidget);
     expect(find.text(_brl('1.200,00')), findsOneWidget);
@@ -106,16 +100,13 @@ void main() {
     );
   });
 
-  testWidgets('RN-1011 · o gasto da semana sai do que dá para gastar', (
-    tester,
-  ) async {
-    await _openHome(tester, [_plan(), _bakery(12000, testToday)]);
+  testWidgets('RN-1005 · o mercado abaixo do previsto não mexe na sobra; '
+      'acima, mexe pelo que passou', (tester) async {
+    // 3.000 − 1.000 − 900 de mercado (acima dos 800 previstos) = 1.100.
+    await _openHome(tester, [_plan(), _bakery(90000, testToday)]);
 
-    expect(find.text(_brl('380,00')), findsOneWidget);
-    expect(
-      find.text('${_brl('120,00')} de ${_brl('500,00')} já gastos'),
-      findsOneWidget,
-    );
+    expect(find.text('Sobra de setembro'), findsOneWidget);
+    expect(find.text(_brl('1.100,00')), findsOneWidget);
   });
 
   testWidgets('RN-1060 · mês que não fecha diz quanto falta, sem alarme', (
@@ -136,7 +127,7 @@ void main() {
 
     expect(find.text('Já saiu este mês'), findsOneWidget);
     expect(find.text(_brl('45,00')), findsOneWidget);
-    expect(find.text('Pode gastar esta semana'), findsNothing);
+    expect(find.textContaining('Pode gastar'), findsNothing);
     expect(find.text('Usar como minhas contas'), findsNothing);
   });
 

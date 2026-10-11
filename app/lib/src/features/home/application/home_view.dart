@@ -6,16 +6,15 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
 
-/// O que o Início mostra, já respondido pelo domínio: o mês da planilha, a
-/// semana, quanto ainda se deve, os cartões que pedem atenção e a sugestão
-/// de contas. A tela só lê; nenhuma conta é feita aqui.
+/// O que o Início mostra, já respondido pelo domínio: o mês da planilha,
+/// quanto ainda se deve, os cartões que pedem atenção e a sugestão de
+/// contas. A tela só lê; nenhuma conta é feita aqui.
 @immutable
 final class HomeView {
   /// Cria a visão.
   const new({
     required this.today,
     required this.budget,
-    required this.week,
     required this.owed,
     required this.hasPlan,
     required this.entriesThisMonth,
@@ -30,7 +29,6 @@ final class HomeView {
     return HomeView(
       today: today,
       budget: finances.budgetFor(month),
-      week: finances.weekOf(today),
       owed: finances.owedOn(today),
       hasPlan: !finances.plan.isEmpty,
       hasDebts: finances.debts.isNotEmpty,
@@ -51,9 +49,6 @@ final class HomeView {
 
   /// O mês corrente, como na planilha.
   final MonthBudget budget;
-
-  /// A semana corrente.
-  final WeekAllowance week;
 
   /// Quanto ainda se deve, somando dívidas e parcelas de cartão.
   final Money owed;

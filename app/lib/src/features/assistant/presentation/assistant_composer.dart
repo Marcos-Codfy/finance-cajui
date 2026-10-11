@@ -118,7 +118,7 @@ class _AssistantComposerState extends ConsumerState<AssistantComposer> {
 
   Widget _field() => CajuiTextField(
     label: 'Sua pergunta',
-    hint: 'Quanto dá para gastar nesta semana?',
+    hint: 'Quanto sobra neste mês?',
     controller: _text,
     focusNode: _focus,
     enabled: widget.enabled,

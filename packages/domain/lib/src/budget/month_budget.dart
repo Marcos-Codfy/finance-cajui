@@ -8,7 +8,8 @@ import 'package:domain/src/money/money.dart';
 import 'package:meta/meta.dart';
 
 /// O mês como na planilha do dono (11/10/2026): o que entra, o que sai, o
-/// que o vale cobre, sobrou ou faltou, e quanto dá para gastar por semana.
+/// que o vale cobre, e se sobrou ou faltou. O "pode gastar por semana" saiu
+/// no mesmo dia, a pedido do dono: ele não usava.
 ///
 /// É função pura: os mesmos números no celular, na web e no servidor, e a
 /// IA nunca calcula nenhum deles (RN-601, RN-602).
@@ -126,9 +127,6 @@ final class MonthBudget {
   Money get totalOut =>
       fixedBills + subscriptions + dayToDay + debtInstallments + tithe;
 
-  /// O que é certo sair antes do dia a dia.
-  Money get _committed => fixedBills + subscriptions + debtInstallments + tithe;
-
   /// O que o vale paga do mercado: `min(vale, gasto com comida)`.
   Money get voucherCovered {
     final food = foodSpending.orZeroIfNegative;
@@ -146,23 +144,6 @@ final class MonthBudget {
 
   /// Quanto falta para o mês fechar; zero quando fecha.
   Money get shortfall => (-result).orZeroIfNegative;
-
-  /// Quanto dá para gastar por semana: o que sobra depois de separar contas
-  /// fixas, assinaturas, parcelas e dízimo, mais o que o vale cobre,
-  /// dividido por quatro. Nunca negativo; limite arredonda para baixo
-  /// (RN-103).
-  Money get weeklyLimit => Money.ratioFloor(
-    (cashIncome - _committed + voucherCovered).orZeroIfNegative,
-    1,
-    4,
-  );
-
-  /// A parte do limite da semana que é vale: a tela mostra as duas moedas
-  /// separadas, porque elas nunca se somam na mão da pessoa (RN-111).
-  Money get weeklyVoucher {
-    final part = Money.ratioFloor(voucherCovered, 1, 4);
-    return part > weeklyLimit ? weeklyLimit : part;
-  }
 
   /// O quanto da renda já está gasto: `sai do bolso ÷ dinheiro`, em
   /// percentual inteiro. Passa de 100 quando o mês não fecha. Nulo sem

@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home_widget/application/home_snapshot.dart';
 import 'package:cajui/src/features/review/application/review_providers.dart';
@@ -8,9 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// domingo; `null` enquanto o livro abre.
 ///
 /// **É o único lugar que diz de onde sai o número do widget.** Ele sai de
-/// [homeViewProvider] — o mesmo "pode gastar esta semana" que o Início
-/// mostra primeiro (RN-1011). O publicador, o canal e o lado nativo só
-/// repassam o que ele disser.
+/// [homeViewProvider] — o mesmo mês que o Início mostra primeiro. O
+/// publicador, o canal e o lado nativo só repassam o que ele disser.
 final homeSnapshotProvider = Provider<HomeSnapshot?>((ref) {
   final view = ref.watch(homeViewProvider);
   if (view == null) return null;
@@ -21,40 +21,47 @@ final homeSnapshotProvider = Provider<HomeSnapshot?>((ref) {
   );
 });
 
-/// As frases do widget. Sem valor do que passou do limite: o widget fica à
-/// vista de quem olha a tela do celular, e o número de dentro do app basta
-/// para isso (no espírito da RN-843).
+/// As frases do widget. O "pode gastar por semana" saiu em 11/10/2026, e o
+/// número passou a ser o do mês.
+///
+/// Sem o valor da falta: o widget fica à vista de quem olha a tela do
+/// celular, e esse número mora dentro do app (no espírito da RN-843). Mês que
+/// não fecha mostra o que sai do bolso, e a frase manda abrir o app.
 abstract final class _HomeWords {
   static HomeSnapshot of(
     HomeView view, {
     required List<LocalDate> reviewDates,
   }) {
-    // Sem plano, o widget mostra o que já saiu, como o Início (RN-1050).
-    if (!view.hasPlan) {
-      return HomeSnapshot(
-        label: 'Já saiu este mês',
-        amount: MoneyFormat.brl(view.budget.outOfPocket),
-        caption: 'Com Minhas contas, aqui aparece o limite da semana.',
-        validUntil: view.today.budgetMonth.lastDay,
-        reviewDates: reviewDates,
-      );
-    }
-    final week = view.week;
+    final (label, amount, caption) = _words(view);
     return HomeSnapshot(
-      label: 'Pode gastar esta semana',
-      amount: MoneyFormat.brl(week.left),
-      caption: _caption(week),
-      validUntil: week.until,
+      label: label,
+      amount: MoneyFormat.brl(amount),
+      caption: caption,
+      validUntil: view.budget.month.lastDay,
       reviewDates: reviewDates,
     );
   }
 
-  /// O mesmo tom do Início (RN-1060): nunca alarme.
-  static String _caption(WeekAllowance week) {
-    if (week.over.isPositive) {
-      return 'A semana passou do limite de ${MoneyFormat.brl(week.limit)}.';
-    }
-    return '${MoneyFormat.brl(week.spent)} de '
-        '${MoneyFormat.brl(week.limit)} já gastos';
+  static (String, Money, String) _words(HomeView view) {
+    final budget = view.budget;
+    final month = DateLabels.month(budget.month).split(' ').first;
+    return switch (view) {
+      // Sem plano, o widget mostra o que já saiu, como o Início (RN-1050).
+      HomeView(hasPlan: false) => (
+        'Já saiu este mês',
+        budget.outOfPocket,
+        'Com Minhas contas, aqui aparece a sobra do mês.',
+      ),
+      HomeView(budget: MonthBudget(closes: true)) => (
+        'Sobra de $month',
+        budget.result,
+        'Depois de pagar tudo, pelo que está lançado.',
+      ),
+      _ => (
+        'Sai do bolso em $month',
+        budget.outOfPocket,
+        'O mês ainda não fecha. Abra o Cajui para ver o que fazer.',
+      ),
+    };
   }
 }

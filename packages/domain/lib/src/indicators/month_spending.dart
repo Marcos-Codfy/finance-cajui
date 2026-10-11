@@ -15,9 +15,8 @@ typedef DatedSpend = ({LocalDate on, Money amount});
 /// do padrão.
 ///
 /// A separação é a RN-648: o conserto de R$ 700 conta inteiro no resultado do
-/// mês, mas fica fora do limite da semana. O limite governa o gasto de
-/// rotina; o susto aparece onde pode ser resolvido, em "quanto falta
-/// ajustar".
+/// mês, e aparece à parte da rotina, onde pode ser resolvido — em "quanto
+/// falta ajustar".
 @immutable
 final class MonthSpending {
   /// Soma o que conta em [month]: linha em dinheiro, de categoria do bloco

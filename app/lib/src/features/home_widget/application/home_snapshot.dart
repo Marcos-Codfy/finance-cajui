@@ -18,7 +18,7 @@ final class HomeSnapshot {
     required this.reviewDates,
   });
 
-  /// O que o número é: "Pode gastar esta semana".
+  /// O que o número é: "Sobra de outubro".
   final String label;
 
   /// O número, já formatado: "R$ 312,40".
@@ -27,9 +27,9 @@ final class HomeSnapshot {
   /// A frase de baixo, no tom do painel.
   final String caption;
 
-  /// O último dia em que o número vale: o fim da semana. Depois dele, o
-  /// widget pede para abrir o app, em vez de mostrar o número da semana
-  /// passada como se fosse desta.
+  /// O último dia em que o número vale: o fim do mês. Depois dele, o widget
+  /// pede para abrir o app, em vez de mostrar o número do mês passado como
+  /// se fosse deste.
   final LocalDate validUntil;
 
   /// O dia de cada lançamento que espera revisão (RN-870). É o dia, e não a

@@ -27,10 +27,10 @@ Todas são função pura do domínio (`MonthBudget`), as mesmas no celular, na w
 | RN-1012 | `coberto pelo vale = min(vale, gasto com comida)`. Comida são as categorias que o vale paga (RN-112) | min(500, 600) = 500 |
 | RN-1013 | `sai do bolso = total que sai − coberto pelo vale` | 2.880 − 500 = 2.380 |
 | RN-1014 | `resultado = dinheiro − sai do bolso`. Zero ou mais: o mês fecha. Negativo: falta `−resultado` para fechar | 3.300 − 2.380 = 920, fecha. Com R$ 2.000 de renda: faltam 250 |
-| RN-1015 | `pode gastar por semana = max(0, dinheiro − fixas − assinaturas − parcelas − dízimo + coberto) ÷ 4`, arredondado para baixo. A tela mostra à parte quanto disso é vale (RN-111) | (3.300 − 1.270 − 60 − 120 − 330 + 500) ÷ 4 = 505, sendo 125 de vale |
+| RN-1015 | **Revogada em 11/10/2026.** `pode gastar por semana = max(0, dinheiro − fixas − assinaturas − parcelas − dízimo + coberto) ÷ 4`, arredondado para baixo. A tela mostra à parte quanto disso é vale (RN-111) | (3.300 − 1.270 − 60 − 120 − 330 + 500) ÷ 4 = 505, sendo 125 de vale |
 | RN-1016 | `já está gasto = sai do bolso ÷ dinheiro`, em percentual inteiro. Passa de 100% quando o mês não fecha. Sem renda, não há percentual | 2.380 ÷ 3.300 = 72% |
 | RN-1017 | Dízimo é um percentual configurável da renda em dinheiro, guardado em centésimos de por cento. Pode ser zero | 10% de 3.300 = 330 |
-| RN-1018 | A semana começa na segunda-feira, ou no dia 1 se o mês começou no meio dela. O gasto da semana é o do dia a dia, nas duas moedas, porque o limite também conta o vale | Segunda 19/10 a terça 20/10: R$ 130 de 505, restam 375 |
+| RN-1018 | **Revogada em 11/10/2026.** A semana começa na segunda-feira, ou no dia 1 se o mês começou no meio dela. O gasto da semana é o do dia a dia, nas duas moedas, porque o limite também conta o vale | Segunda 19/10 a terça 20/10: R$ 130 de 505, restam 375 |
 | RN-1019 | Pagar no vale nunca é recusado por saldo. O vale é o do mês (RN-1006), e o que passa dele só deixa de ser coberto (RN-1012). Substitui a RN-122, que recusava pelo saldo da operadora — número que a planilha não tem e que a tela deixou de mostrar | Vale de R$ 500, mercado de R$ 620 no vale: lança; R$ 500 cobertos, R$ 120 saem do bolso |
 
 ## Cartões
@@ -65,4 +65,4 @@ Todas são função pura do domínio (`MonthBudget`), as mesmas no celular, na w
 
 | ID | Regra |
 |---|---|
-| RN-1060 | A tela usa as palavras da planilha: "o que entra", "o que sai", "sobrou ou faltou", "pode gastar por semana", "já está gasto". Nada de "déficit", "comprometimento", "provisionamento" ou "pior caso". Tom descritivo, nunca de culpa |
+| RN-1060 | A tela usa as palavras da planilha: "o que entra", "o que sai", "sobrou ou faltou", "já está gasto". Nada de "déficit", "comprometimento", "provisionamento" ou "pior caso". Tom descritivo, nunca de culpa |
