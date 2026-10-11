@@ -72,6 +72,40 @@ void main() {
       expect(sheet, contains('<c r="A1" t="inlineStr" s="1">'));
     });
 
+    test('caractere de controle colado na descrição sai, e o XML continua '
+        'válido', () {
+      final sheet = _unzip(
+        XlsxWriter.write([
+          const XlsxSheet(
+            name: 'Lançamentos',
+            widths: [30],
+            rows: [
+              [XlsxText('Pão e café')],
+            ],
+          ),
+        ]),
+      )['xl/worksheets/sheet1.xml']!;
+
+      expect(sheet, contains('Pão e café</t>'));
+      expect(sheet.contains('') || sheet.contains(''), isFalse);
+    });
+
+    test('o percentual vai como número com o formato de %', () {
+      final sheet = _unzip(
+        XlsxWriter.write([
+          const XlsxSheet(
+            name: 'Resumo',
+            widths: [30],
+            rows: [
+              [XlsxPercent(72)],
+            ],
+          ),
+        ]),
+      )['xl/worksheets/sheet1.xml']!;
+
+      expect(sheet, contains('<c r="A1" s="6"><v>0.72</v></c>'));
+    });
+
     test('as colunas passam do Z como no Excel', () {
       expect(
         [

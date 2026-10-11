@@ -32,6 +32,13 @@ abstract final class MonthWorkbook {
       const [XlsxEmpty()],
       for (final line in month.summary)
         [XlsxText(line.label), XlsxMoney(line.amount)],
+      // O "já está gasto" do Meu mês (RN-1016), em percentual; sem renda
+      // em dinheiro não há como dizer (RN-604).
+      if (month.spentPercent case final percent?)
+        [
+          const XlsxText('Já está gasto, da renda em dinheiro'),
+          XlsxPercent(percent),
+        ],
     ],
   );
 
