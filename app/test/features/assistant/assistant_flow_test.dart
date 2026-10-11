@@ -32,7 +32,7 @@ Future<MemoryLedgerJournal> _open(
     ),
   );
   await _settle(tester);
-  await tester.tap(find.bySemanticsLabel('Assistente'));
+  await tester.tap(find.bySemanticsLabel('Conversar'));
   await _settle(tester);
   return journal;
 }

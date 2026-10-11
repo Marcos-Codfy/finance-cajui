@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_inbox.dart';
 import '../../support/fake_reader.dart';
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
@@ -52,7 +53,7 @@ Future<FakeInbox> _openEntries(
     ),
   );
   await tester.pump();
-  await _tap(tester, find.bySemanticsLabel('Lançamentos'));
+  await openFromHome(tester, 'Lançamentos');
   return inbox;
 }
 
@@ -92,12 +93,13 @@ void main() {
     expect(find.text('653,58'), findsOneWidget);
   });
 
-  testWidgets('o painel também tem a galeria, no alto', (tester) async {
+  testWidgets('o Início também tem a galeria, no alto', (tester) async {
     final inbox = await _openEntries(tester);
     inbox.picked = const [
       SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
     ];
-    await _tap(tester, find.bySemanticsLabel('Painel'));
+    await backToTabs(tester);
+    await _tap(tester, find.bySemanticsLabel('Início'));
 
     await _tap(
       tester,

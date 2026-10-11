@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_inbox.dart';
 import 'fake_reader.dart';
+import 'home_navigation.dart';
 import 'memory_ledger_journal.dart';
 import 'sample_plan.dart';
 import 'test_scope.dart';
@@ -87,7 +88,7 @@ Future<(FakeInbox, LedgerBook Function())> pickDocument(
   final inbox = FakeInbox();
   await tester.pumpWidget(_app(inbox, proposal, events));
   await tester.pump();
-  await tapAndSettle(tester, find.bySemanticsLabel('Lançamentos'));
+  await openFromHome(tester, 'Lançamentos');
   inbox.picked = const [
     SharedFile(id: 'doc', path: '/inbox/doc', isPdf: false),
   ];

@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
@@ -66,31 +67,39 @@ Future<void> _openCards(WidgetTester tester, CreditCard card) async {
     ),
   );
   await _settle(tester);
-  await _tap(tester, find.bySemanticsLabel('Ajustes'));
-  await _tap(tester, find.text('Cartões de crédito'));
+  await openFromHome(tester, 'Cartões');
 }
 
 void main() {
-  testWidgets('RN-305 · o limite livre aparece na lista e na fatura, com o '
-      'que está tomado dito por extenso', (tester) async {
-    await _openCards(tester, _card(limitCents: 500000));
+  testWidgets(
+    'RN-305 RN-1020 · o limite livre aparece na lista e na fatura, com o '
+    'que está tomado dito por extenso',
+    (tester) async {
+      await _openCards(tester, _card(limitCents: 500000));
 
-    expect(
-      find.text('fecha dia 25 · vence dia 5 · R\$${_nbsp}4.200,00 livres'),
-      findsOneWidget,
-    );
+      // RN-1020: o uso do mês são as compras do mês no cartão.
+      expect(
+        find.text(
+          'Usei R\$${_nbsp}800,00 este mês · sobra R\$${_nbsp}4.200,00 · '
+          'fecha dia 25 · vence dia 5',
+        ),
+        findsOneWidget,
+      );
+      // 16% do limite: abaixo da metade, nenhum aviso.
+      expect(find.byType(CajuiNotice), findsNothing);
 
-    await _tap(tester, find.text('Cartão da casa'));
+      await _tap(tester, find.text('Cartão da casa'));
 
-    expect(find.text('Limite livre'), findsOneWidget);
-    expect(
-      find.text(
-        'R\$${_nbsp}800,00 tomados de R\$${_nbsp}5.000,00: faturas em aberto '
-        'e parcelas por vencer.',
-      ),
-      findsOneWidget,
-    );
-  });
+      expect(find.text('Limite livre'), findsOneWidget);
+      expect(
+        find.text(
+          'R\$${_nbsp}800,00 tomados de R\$${_nbsp}5.000,00: faturas em aberto '
+          'e parcelas por vencer.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('RN-305 · passar do limite não vira alarme: a frase diz quanto '
       'passou', (tester) async {

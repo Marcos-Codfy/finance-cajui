@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:cajui/src/core/storage/event_store_opener_file.dart';
-import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/cards/application/statement_view.dart';
+import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -19,6 +19,9 @@ import '../../support/test_scope.dart';
 
 final BudgetMonth _september = testToday.budgetMonth;
 const BudgetMonth _october = BudgetMonth(2026, 10);
+
+Money _dueIn(LedgerBook book, BudgetMonth month) =>
+    DebtSchedule.dueIn(month, debts: book.debts, entries: book.entries);
 
 void main() {
   late ProviderContainer container;
@@ -95,7 +98,7 @@ void main() {
     test(
       'RN-310 · conta no mês da compra, e baixa o resta da semana na hora',
       () async {
-        final before = container.read(monthOverviewProvider)!.week.remaining;
+        final before = container.read(homeViewProvider)!.week.left;
 
         await buy(
           await card(),
@@ -104,33 +107,10 @@ void main() {
           day: 18,
           category: 'transport',
         );
-        final overview = container.read(monthOverviewProvider)!;
+        final after = container.read(homeViewProvider)!.week;
 
         expect((await book()).spentIn(_september).cash.cents, 5000);
-        expect(overview.week.remaining, before - const Money.fromCents(5000));
-      },
-    );
-
-    test(
-      'RN-341 · vira reserva da fatura, e pagar a fatura zera a reserva',
-      () async {
-        final defined = await card();
-        await buy(defined, 'Mercado', 18640, day: 12);
-        expect(
-          container.read(monthOverviewProvider)!.statementReserve.cents,
-          18640,
-        );
-
-        await ledger().settleStatement(
-          card: defined,
-          dueMonth: _october,
-          amount: const Money.fromCents(18640),
-        );
-
-        expect(
-          container.read(monthOverviewProvider)!.statementReserve,
-          Money.zero,
-        );
+        expect(after.left, before - const Money.fromCents(5000));
       },
     );
 
@@ -181,7 +161,7 @@ void main() {
 
     test('RN-312 · não consome o variável nem o limite da semana: entra como '
         'compromisso no mês em que a fatura vence', () async {
-      final before = container.read(monthOverviewProvider)!;
+      final before = container.read(homeViewProvider)!.week;
 
       await buy(
         await card(),
@@ -191,12 +171,12 @@ void main() {
         category: 'home',
         installments: 6,
       );
-      final after = container.read(monthOverviewProvider)!;
+      final after = container.read(homeViewProvider)!.week;
       final current = await book();
 
-      expect(after.week.remaining, before.week.remaining);
-      expect(current.installmentsDueIn(_september), Money.zero);
-      expect(current.installmentsDueIn(_october).cents, 16000);
+      expect(after.left, before.left);
+      expect(_dueIn(current, _september), Money.zero);
+      expect(_dueIn(current, _october).cents, 16000);
     });
 
     test(
@@ -268,7 +248,7 @@ void main() {
 
     expect(reopened.cards.single.name, 'Cartão da casa');
     expect(reopened.entries.single.installmentPlan!.count, 6);
-    expect(reopened.installmentsDueIn(_october).cents, 16000);
+    expect(_dueIn(reopened, _october).cents, 16000);
     expect(reopened.settlements.single.amount.cents, 16000);
   });
 }

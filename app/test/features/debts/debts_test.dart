@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:cajui/src/core/storage/event_store_opener_file.dart';
-import 'package:cajui/src/features/budget/application/month_overview.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
+import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -26,7 +26,9 @@ void main() {
 
   DebtsService debts() => container.read(debtsServiceProvider);
   Future<LedgerBook> book() => container.read(ledgerProvider.future);
-  MonthOverview overview() => container.read(monthOverviewProvider)!;
+  MonthBudget month() => container.read(homeViewProvider)!.budget;
+  Money dueIn(LedgerBook book, BudgetMonth month) =>
+      DebtSchedule.dueIn(month, debts: book.debts, entries: book.entries);
 
   /// Um empréstimo de 12 parcelas de R$ 212,00, com 5 pagas e a próxima
   /// vencendo neste mês.
@@ -84,16 +86,13 @@ void main() {
   group('a parcela no plano (RN-504)', () {
     test('RN-504 · a parcela do mês entra como compromisso e come a sobra '
         'planejada', () async {
-      final before = overview().indicators.plannedResult;
+      final before = month().result;
 
       await loan();
 
-      final after = overview().indicators.plannedResult;
+      final after = month().result;
       expect((before - after).cents, 21200);
-      expect(
-        (await book()).installmentsDueIn(testToday.budgetMonth).cents,
-        21200,
-      );
+      expect(dueIn(await book(), testToday.budgetMonth).cents, 21200);
     });
 
     test(
@@ -103,11 +102,8 @@ void main() {
         await loan(paid: 11);
         final current = await book();
 
-        expect(current.installmentsDueIn(testToday.budgetMonth).cents, 21200);
-        expect(
-          current.installmentsDueIn(testToday.budgetMonth.next),
-          Money.zero,
-        );
+        expect(dueIn(current, testToday.budgetMonth).cents, 21200);
+        expect(dueIn(current, testToday.budgetMonth.next), Money.zero);
       },
     );
   });

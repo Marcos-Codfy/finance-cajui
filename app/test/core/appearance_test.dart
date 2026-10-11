@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/home_navigation.dart';
 import '../support/memory_ledger_journal.dart';
 import '../support/test_scope.dart';
 
@@ -49,8 +50,7 @@ void main() {
   ) async {
     await _open(tester, device: Brightness.light);
 
-    await tester.tap(find.bySemanticsLabel('Ajustes'));
-    await _settle(tester);
+    await openFromHome(tester, 'Ajustes');
     await tester.tap(find.bySemanticsLabel('Tema escuro'));
     await _settle(tester);
 

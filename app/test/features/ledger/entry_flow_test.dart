@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/test_scope.dart';
 
@@ -24,7 +25,7 @@ Future<void> _openEntries(
     ),
   );
   await tester.pump();
-  await tester.tap(find.bySemanticsLabel('Lançamentos'));
+  await openFromHome(tester, 'Lançamentos');
   await _settle(tester);
 }
 
