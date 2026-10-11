@@ -46,4 +46,27 @@ void main() {
       },
     );
   });
+
+  group('RN-1004 · editar minhas contas', () {
+    test('trocar, acrescentar e tirar linha e salário', () {
+      final plan = householdPlan();
+      final cheaper = BudgetLine.create(
+        id: 'Aluguel',
+        name: 'Aluguel',
+        amount: _brl(900),
+        group: LineGroup.fixedBill,
+        categoryId: 'rent',
+      ).valueOrNull!;
+
+      final edited = plan
+          .withLine(cheaper)
+          .withoutLine('Música')
+          .withSalary(salary('salary-c', 50000))
+          .withoutSalary('salary-b');
+
+      expect(edited.lines.first.amount, _brl(900));
+      expect(edited.lines, hasLength(7));
+      expect(edited.salaries.map((s) => s.id), ['salary-a', 'salary-c']);
+    });
+  });
 }

@@ -59,6 +59,20 @@ final class WeekAllowance {
   /// O primeiro dia da semana contada.
   final LocalDate from;
 
+  /// A mesma semana com mais [amount] gasto: o "antes e depois" de uma
+  /// compra que ainda vai ser lançada.
+  WeekAllowance withSpending(Money amount) =>
+      WeekAllowance(limit: limit, spent: spent + amount, from: from);
+
+  /// Se [day] cai nesta semana: de [from] até o domingo, sem passar do
+  /// fim do mês.
+  bool contains(LocalDate day) {
+    final sunday = from.addDays(7 - from.weekday);
+    final last = from.budgetMonth.lastDay;
+    final end = sunday.isAfter(last) ? last : sunday;
+    return !day.isBefore(from) && !day.isAfter(end);
+  }
+
   /// Quanto resta; zero quando já passou.
   Money get left => (limit - spent).orZeroIfNegative;
 
