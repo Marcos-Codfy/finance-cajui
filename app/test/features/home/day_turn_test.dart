@@ -20,7 +20,7 @@ final class _MovingClock implements Clock {
 }
 
 void main() {
-  test('o dia vira com o app aberto: o Início passa para a semana nova sem o '
+  test('o dia vira com o app aberto: o Início passa para o mês novo sem o '
       'livro mudar', () async {
     final clock = _MovingClock();
     final container = ProviderContainer(
@@ -30,10 +30,13 @@ void main() {
     await container.read(ledgerProvider.future);
     expect(container.read(homeViewProvider)!.today, LocalDate(2026, 9, 20));
 
-    clock.day = LocalDate(2026, 9, 28);
+    clock.day = LocalDate(2026, 10, 1);
     container.read(todayProvider.notifier).check();
 
-    expect(container.read(homeViewProvider)!.today, LocalDate(2026, 9, 28));
-    expect(container.read(homeViewProvider)!.week.from, LocalDate(2026, 9, 28));
+    expect(container.read(homeViewProvider)!.today, LocalDate(2026, 10, 1));
+    expect(
+      container.read(homeViewProvider)!.budget.month,
+      const BudgetMonth(2026, 10),
+    );
   });
 }

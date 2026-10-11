@@ -48,8 +48,8 @@ class _SyncOnResumeState extends ConsumerState<SyncOnResume> {
   }
 
   void _resume() {
-    // A volta ao app confere o dia na hora: quem deixou o app no domingo e
-    // volta na segunda vê a semana nova, sem esperar o minuto seguinte.
+    // A volta ao app confere o dia na hora: quem deixou o app no dia 30 e
+    // volta no dia 1 vê o mês novo, sem esperar o minuto seguinte.
     ref.read(todayProvider.notifier).check();
     _live.resume(force: _onPhone);
   }

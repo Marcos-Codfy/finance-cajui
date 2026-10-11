@@ -5,6 +5,7 @@ import app.cajui.auth.DeviceKeyChannel
 import app.cajui.capture.CaptureChannel
 import app.cajui.capture.FileIntake
 import app.cajui.capture.PhotoIntake
+import app.cajui.files.FileShareChannel
 import app.cajui.home.HomeChannel
 import app.cajui.notifications.BackgroundEngine
 import app.cajui.notifications.NoticeChannel
@@ -39,18 +40,12 @@ class MainActivity : FlutterActivity() {
     private var restored = false
 
     /**
-     * A tela não vai para a miniatura do seletor de apps, e não se deixa
-     * fotografar nem gravar (T-07).
-     *
-     * O Android guarda uma imagem da última tela de cada app para mostrar no
-     * seletor — e essa imagem ficaria com o saldo e os gastos à vista de
-     * quem pegasse o celular desbloqueado, sem precisar abrir nada.
+     * A tela se deixa fotografar e gravar, e aparece na miniatura do seletor
+     * de apps. Até 11/10/2026 o `FLAG_SECURE` impedia os três (T-07); o dono
+     * pediu print e gravação ("não existe nenhum dado sensível"), e o risco
+     * da miniatura com os números à vista ficou aceito por ele.
      */
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        window.setFlags(
-            android.view.WindowManager.LayoutParams.FLAG_SECURE,
-            android.view.WindowManager.LayoutParams.FLAG_SECURE,
-        )
         // Recriada depois de o sistema matar o processo, a atividade recebe a
         // mesma intenção de antes: o botão de câmera do widget não pode abrir
         // a câmera de novo sozinho.
@@ -64,6 +59,7 @@ class MainActivity : FlutterActivity() {
         capture = CaptureChannel(applicationContext, messenger, photos, files)
         speech = SpeechChannel(this, messenger)
         DeviceKeyChannel(messenger)
+        FileShareChannel(this, messenger)
         configureOutside(messenger)
         capture?.handle(intent)
         if (!restored) handleShortcut(intent, appIsRunning = false)

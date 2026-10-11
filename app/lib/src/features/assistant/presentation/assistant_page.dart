@@ -6,6 +6,7 @@ import 'package:cajui/src/features/assistant/presentation/assistant_view_model.d
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -15,8 +16,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// o que gastou e ela lança; pergunte e ela responde com os números do mês
 /// na mão (ADR-021).
 ///
-/// No alto, o "pode gastar" da semana e a câmera e a galeria: o mais comum
-/// do dia fica a um olhar e a um toque, sem trocar de aba.
+/// No alto, o mês de relance — a sobra, ou quanto falta — e a câmera e a
+/// galeria: o mais comum do dia fica a um olhar e a um toque, sem trocar de
+/// aba.
 class AssistantPage extends ConsumerStatefulWidget {
   /// Cria a tela do assistente.
   const new({super.key});
@@ -25,7 +27,7 @@ class AssistantPage extends ConsumerStatefulWidget {
   /// diante de um campo vazio.
   static const _suggestions = [
     'Gastei 35 no mercado',
-    'Quanto dá para gastar nesta semana?',
+    'Quanto sobra neste mês?',
     'Para onde foi o dinheiro deste mês?',
   ];
 
@@ -75,7 +77,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final paired = ref.read(ledgerUplinkProvider).isPaired;
     return CajuiScreen(
       title: AssistantIdentity.name,
-      overline: _week(ref.watch(homeViewProvider)),
+      overline: _month(ref.watch(homeViewProvider)),
       trailing: CaptureTools(readOnly: !paired),
       controller: _scroll,
       footer: AssistantComposer(
@@ -109,21 +111,27 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         onRetry: assistant.retry,
         onUndo: assistant.undo,
         canUndo: canUndo,
+        // Só o celular tem conferência: a web é consulta (ADR-013).
+        onCapture: canUndo && SpokenExpense.looksLikeExpense(question)
+            ? () => ref
+                  .read(captureProvider.notifier)
+                  .startText(SpokenExpense.asReceipt(question))
+            : null,
       ),
     ];
   }
 
-  /// A semana de relance, com as palavras do Início (RN-1011). Sem plano,
-  /// o que já saiu no mês (RN-1050).
-  static String? _week(HomeView? view) {
+  /// O mês de relance, com as palavras do Início: a sobra, ou quanto falta
+  /// para fechar (RN-1060). Sem plano, o que já saiu no mês (RN-1050).
+  static String? _month(HomeView? view) {
     if (view == null) return null;
     String brl(Money amount) => BrlFormatter.format(amount.cents);
-    if (!view.hasPlan) {
-      return 'Já saiu ${brl(view.budget.outOfPocket)} este mês';
+    final budget = view.budget;
+    if (!view.hasPlan) return 'Já saiu ${brl(budget.outOfPocket)} este mês';
+    if (!budget.closes) {
+      return 'Faltam ${brl(budget.shortfall)} para fechar o mês';
     }
-    final week = view.week;
-    if (week.over.isPositive) return 'A semana passou do limite';
-    return 'Pode gastar ${brl(week.left)} nesta semana';
+    return 'Sobram ${brl(budget.result)} neste mês';
   }
 
   List<Widget> _firstTalk(ValueChanged<String> onAsk) => [

@@ -18,6 +18,8 @@ A planilha não avisa nada: só mostra a situação para quem abre. O retorno pe
 
 ## Diário
 
+> **Revogado em 11/10/2026**: os resumos do dia e da semana saíram do domínio junto com o limite semanal, a pedido do dono ("aquele item de quanto eu posso gastar na semana retire, na prática eu não uso e nem é útil pra mim"). Nunca tiveram tela (BL-038). O resumo do mês continua.
+
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
 | RN-810 | O resumo do dia está sempre disponível dentro do app, atualizado a cada lançamento | — | prompt |
@@ -28,6 +30,8 @@ A planilha não avisa nada: só mostra a situação para quem abre. O retorno pe
 | RN-815 | O resumo diário usa sempre o modelo de frase, sem IA: é curto, formular e diário — não justifica o custo | — | modelagem ⚑ validar |
 
 ## Semanal
+
+> **Revogado em 11/10/2026**: os resumos do dia e da semana saíram do domínio junto com o limite semanal, a pedido do dono ("aquele item de quanto eu posso gastar na semana retire, na prática eu não uso e nem é útil pra mim"). Nunca tiveram tela (BL-038). O resumo do mês continua.
 
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
@@ -110,4 +114,4 @@ Ver [ADR-025](../../architecture/adr/ADR-025-notificacoes-do-banco.md).
 |---|---|---|---|
 | RN-870 | No domingo, perto das 10h, se há gasto dos últimos sete dias — contando hoje — em Outros ou lançado sozinho pela notificação do banco, e ainda não revisto, chega um aviso em canal de baixa prioridade, sem som (RN-825). Sem nada para revisar, nenhum aviso | "3 gastos da semana ficaram para conferir. Confere em 1 minuto?"; gasto em Outros de dez dias atrás não conta | decisão 2026-10-11 |
 | RN-871 | A revisão mostra cada gasto com as categorias a um toque: trocar é corrigir (RN-208); tocar na que ele já tem confirma, sem gravar fato. "Está tudo certo" marca o resto como revisto. O revisto fica só no aparelho e nunca sobe ao servidor | Tocar "Padaria" no gasto em Outros corrige e o tira da lista | decisão 2026-10-11 |
-| RN-872 | O widget da tela inicial mostra o que resta na semana (RN-642), o mesmo número do painel, com os botões de câmera e galeria. Sem faixas no plano, mostra o gasto do mês. Passada a semana do número, pede para abrir o app. Nunca mostra o valor do que passou do limite | Plano com 410,00 de variável em dinheiro, semana de 14 a 20 de setembro: "Pode gastar esta semana · R$ 168,82" | decisão 2026-10-11 · RN-843 |
+| RN-872 | **Revista em 11/10/2026**, com a saída do limite semanal. O widget da tela inicial mostra o número do mês com os botões de câmera e galeria: com plano e sobra, a sobra do mês; sem plano, o que já saiu; mês que não fecha, o que sai do bolso e uma frase para abrir o app — nunca o valor da falta, no espírito da RN-843. Passado o mês do número, pede para abrir o app | Plano com sobra de R$ 920: "Sobra de outubro · R$ 920,00" | decisão 2026-10-11 |

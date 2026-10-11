@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A caixa de entrada da captura, e nada mais: o app de câmera recebe
-     permissão de escrever só neste diretório (ADR-006 e ADR-017). -->
+<!-- O que o Cajui deixa outro app tocar, e nada mais:
+     - a caixa de entrada da captura: o app de câmera recebe permissão de
+       escrever só neste diretório (ADR-006 e ADR-017);
+     - as planilhas exportadas, na pasta temporária: quem recebe o mês pela
+       tela de compartilhar lê só o arquivo que foi mandado (RN-1090). -->
 <paths>
     <files-path name="captures" path="capture-inbox/" />
+    <cache-path name="exports" path="exports/" />
 </paths>

@@ -58,12 +58,7 @@ void main() {
       // Saem 1.000 de aluguel, 86 de mercado e 330 de dízimo; o vale paga os
       // 86 do mercado. Do bolso, 1.330: sobram 1.970.
       expect(sent, contains('"cents":197000'));
-      // (3.300 − 1.000 − 330 + 86) ÷ 4 = 514.
-      expect(sent, contains('Pode gastar por semana'));
-      expect(sent, contains('"cents":51400'));
-      // O vale cobre os 86 do mercado: 86 ÷ 4 = 21,50 do limite é vale.
-      expect(sent, contains('Parte do limite da semana que é vale'));
-      expect(sent, contains('"cents":2150'));
+      expect(sent, isNot(contains('Pode gastar por semana')));
     });
 
     test('RN-1032 · a dívida cadastrada no aparelho vira "quanto ainda '
