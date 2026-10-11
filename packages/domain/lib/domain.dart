@@ -100,6 +100,7 @@ export 'src/receipts/receipt_field_reader.dart';
 export 'src/receipts/receipt_layout.dart';
 export 'src/receipts/receipt_text.dart';
 export 'src/receipts/rule_based_classifier.dart';
+export 'src/receipts/spoken_expense.dart';
 export 'src/receipts/statement_line.dart';
 export 'src/receipts/statement_line_kind.dart';
 export 'src/shared/clock.dart';
