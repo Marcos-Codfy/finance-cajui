@@ -13,12 +13,12 @@ import '../../support/test_scope.dart';
 /// Salário de R$ 3.000,00 e aluguel de R$ 1.000,00: R$ 500,00 por semana.
 BudgetDefined _plan() => BudgetDefined(
   BudgetPlan(
-    salaries: [
+    salaries: const [
       IncomeSource(
         id: 'ana',
         name: 'Ana',
         tender: Tender.cash,
-        expectedAmount: const Money.fromCents(300000),
+        expectedAmount: Money.fromCents(300000),
         expectedDay: 5,
       ),
     ],

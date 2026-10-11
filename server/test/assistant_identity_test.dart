@@ -15,7 +15,7 @@ void main() {
       'as de banco', () {
     expect(AssistantPrompt.version, 6);
     expect(AssistantPrompt.system, contains('pode gastar por semana'));
-    expect(AssistantPrompt.system, contains('faltam R\$ X para fechar'));
+    expect(AssistantPrompt.system, contains(r'faltam R$ X para fechar'));
     expect(AssistantPrompt.system, contains('mudar_categoria'));
   });
 }
