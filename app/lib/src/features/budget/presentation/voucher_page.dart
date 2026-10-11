@@ -101,9 +101,8 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
       Text(
         'Se o app da operadora mostra outro saldo, digite aqui. O Cajui '
         'acerta a diferença, que não conta como gasto nem como renda.',
-        style: CajuiTheme.of(context).typography.body.copyWith(
-          color: CajuiTheme.of(context).colors.text.muted,
-        ),
+        style: CajuiTheme.of(context).typography.body
+            .copyWith(color: CajuiTheme.of(context).colors.text.muted),
       ),
       const SizedBox(height: CajuiSpacing.lg),
       if (settled != null) ...[
