@@ -14,7 +14,9 @@ abstract final class DeviceFacts {
     StatementSettled() ||
     DebtDefined() ||
     DebtInstallmentPaid() ||
-    MonthClosed() => true,
+    MonthClosed() ||
+    BudgetDefined() ||
+    DebtOrdered() => true,
     _ => false,
   };
 
@@ -40,6 +42,22 @@ abstract final class DeviceFacts {
       type: DeviceFact.monthClosed,
       payload: MonthCloseCodec.encode(close),
     ),
+    BudgetDefined() || DebtOrdered() => _budget(event),
+    _ => null,
+  };
+
+  /// O plano da planilha e a ordem das dívidas (ADR-023).
+  static DeviceFact? _budget(LedgerEvent event) => switch (event) {
+    BudgetDefined(:final plan) => DeviceFact(
+      id: event.id,
+      type: DeviceFact.budgetDefined,
+      payload: BudgetPlanCodec.encode(plan),
+    ),
+    DebtOrdered(:final ids, :final definedAt) => DeviceFact(
+      id: event.id,
+      type: DeviceFact.debtOrdered,
+      payload: DebtCodec.encodeOrdering((ids: ids, definedAt: definedAt)),
+    ),
     _ => null,
   };
 
@@ -55,8 +73,17 @@ abstract final class DeviceFacts {
     ),
     DeviceFact.debtInstallmentPaid => _payment(fact.payload),
     DeviceFact.monthClosed => MonthClosed(MonthCloseCodec.decode(fact.payload)),
+    DeviceFact.budgetDefined => BudgetDefined(
+      BudgetPlanCodec.decode(fact.payload),
+    ),
+    DeviceFact.debtOrdered => _ordering(fact.payload),
     _ => null,
   };
+
+  static DebtOrdered _ordering(Map<String, Object?> payload) {
+    final (:ids, :definedAt) = DebtCodec.decodeOrdering(payload);
+    return DebtOrdered(ids: ids, definedAt: definedAt);
+  }
 
   static DebtInstallmentPaid _payment(Map<String, Object?> payload) {
     final (:debtId, :entryId) = DebtCodec.decodePayment(payload);

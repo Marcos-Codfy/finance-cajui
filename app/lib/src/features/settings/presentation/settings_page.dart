@@ -1,7 +1,6 @@
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
 import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
-import 'package:cajui/src/features/budget/presentation/month_close_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/cards/presentation/cards_page.dart';
 import 'package:cajui/src/features/debts/presentation/debts_page.dart';
@@ -46,11 +45,6 @@ class SettingsPage extends ConsumerWidget {
       title: 'Dívidas',
       subtitle: 'Quanto falta de cada uma, e quando termina',
       onPressed: () => DebtsPage.open(context),
-    ),
-    _opens(
-      title: 'Fechar o mês',
-      subtitle: 'O retrato do mês que terminou',
-      onPressed: () => MonthClosePage.open(context),
     ),
     _opens(
       title: 'Chave da casa',

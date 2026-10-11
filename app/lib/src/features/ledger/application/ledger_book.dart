@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/ledger/application/budget_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_projection.dart';
 import 'package:cajui/src/features/ledger/application/sync_trail.dart';
@@ -23,8 +24,8 @@ final class LedgerBook {
     this.reversals = const [],
     this.debts = const [],
     this.debtPayments = const {},
-    this.closes = const [],
     this.setup = MonthSetup.empty,
+    this.budget = const BudgetFacts(),
     this.trail = const SyncTrail(),
     VoucherAccount? voucher,
   }) : voucher = voucher ?? VoucherAccount();
@@ -62,11 +63,17 @@ final class LedgerBook {
   /// Qual dívida cada lançamento de parcela pagou: lançamento → dívida.
   final Map<String, String> debtPayments;
 
-  /// Os meses já fechados, cada um na revisão mais recente (RN-440).
-  final List<MonthClose> closes;
-
-  /// O plano do mês em vigor.
+  /// O plano do mês no formato antigo, de antes da planilha (ADR-023).
   final MonthSetup setup;
+
+  /// Os planos da planilha e a ordem de quitação das dívidas (ADR-023).
+  final BudgetFacts budget;
+
+  /// Os planos da planilha já definidos, na ordem em que chegaram.
+  List<BudgetPlan> get budgetPlans => budget.plans;
+
+  /// A ordem de quitação das dívidas, a mais nova.
+  List<String> get debtOrder => budget.debtOrder;
 
   /// O que a sincronização precisa saber além do estado: o que foi
   /// cancelado aqui e os fatos que sobem como estão.
@@ -110,9 +117,9 @@ final class LedgerBook {
     List<Reversal>? reversals,
     List<Debt>? debts,
     Map<String, String>? debtPayments,
-    List<MonthClose>? closes,
     VoucherAccount? voucher,
     MonthSetup? setup,
+    BudgetFacts? budget,
     SyncTrail? trail,
   }) => LedgerBook(
     categories: categories,
@@ -125,8 +132,8 @@ final class LedgerBook {
     reversals: reversals ?? this.reversals,
     debts: debts ?? this.debts,
     debtPayments: debtPayments ?? this.debtPayments,
-    closes: closes ?? this.closes,
     setup: setup ?? this.setup,
+    budget: budget ?? this.budget,
     trail: trail ?? this.trail,
     voucher: voucher ?? this.voucher,
   );
@@ -228,11 +235,6 @@ final class LedgerBook {
 
   /// A dívida de identificador [id], ou `null`.
   Debt? debtOf(String id) => debts.where((debt) => debt.id == id).firstOrNull;
-
-  /// O fechamento de [month] na revisão mais recente, ou `null` se o mês
-  /// ainda não foi fechado.
-  MonthClose? closeOf(BudgetMonth month) =>
-      closes.where((close) => close.month == month).firstOrNull;
 
   /// A renda em dinheiro que **de fato entrou** em [month]: só os
   /// recebimentos registrados.

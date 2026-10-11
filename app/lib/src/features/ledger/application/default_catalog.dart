@@ -95,6 +95,14 @@ abstract final class DefaultCatalog {
       block: Block.fixed,
       groupId: 'housing',
     ),
+    // O quarto grupo da planilha (ADR-023): streaming, apps, academia — o
+    // serviço que se paga todo mês.
+    Category(
+      id: 'subscriptions',
+      name: 'Assinaturas',
+      block: Block.subscription,
+      groupId: 'subscriptions',
+    ),
     // O pagamento de uma parcela de dívida é lançamento como qualquer outro
     // (RN-520); é o bloco que o separa do gasto do mês.
     Category(

@@ -1,5 +1,5 @@
 import 'package:cajui/src/features/budget/application/income_service.dart';
-import 'package:cajui/src/features/budget/application/month_closing.dart';
+import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -12,7 +12,6 @@ import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
 import '../../support/two_phones.dart';
 
-const _august = BudgetMonth(2026, 8);
 const _october = BudgetMonth(2026, 10);
 
 void main() {
@@ -95,22 +94,26 @@ void main() {
       expect(onB.settlements.single.amount, const Money.fromCents(80000));
     });
 
-    test(
-      'RN-440 · o mês fechado num celular aparece fechado no outro',
-      () async {
-        await a.read(ledgerProvider.notifier).definePlan(samplePlan);
-        final closed = await a.read(monthClosingProvider).close(_august);
-        await TwoPhones.sync(a);
+    test('ADR-023 · o plano da planilha e a ordem das dívidas salvos num '
+        'celular aparecem no outro', () async {
+      final debt = await loanOn(a);
+      await a
+          .read(planServiceProvider)
+          .define(
+            const BudgetPlan(
+              voucher: Money.fromCents(50000),
+              titheBasisPoints: 1000,
+            ),
+          );
+      await a.read(planServiceProvider).orderDebts([debt.id]);
+      await TwoPhones.sync(a);
 
-        final onB = await TwoPhones.sync(b);
+      final onB = await TwoPhones.sync(b);
 
-        expect(closed.valueOrNull, isNotNull);
-        expect(
-          onB.closeOf(_august)?.cashResult,
-          closed.valueOrNull!.cashResult,
-        );
-      },
-    );
+      expect(onB.budgetPlans.single.titheBasisPoints, 1000);
+      expect(onB.budgetPlans.single.voucher, const Money.fromCents(50000));
+      expect(onB.debtOrder, [debt.id]);
+    });
 
     test('RN-314 · os juros da compra parcelada atravessam (BL-063)', () async {
       await cardOn(a);
@@ -205,7 +208,9 @@ void main() {
             dueMonth: _october,
             amount: const Money.fromCents(80000),
           );
-      await a.read(monthClosingProvider).close(_august);
+      await a
+          .read(planServiceProvider)
+          .define(const BudgetPlan(titheBasisPoints: 1000));
       final bought = (await a.read(ledgerProvider.future)).entries.first;
       await a
           .read(ledgerProvider.notifier)
@@ -227,7 +232,7 @@ void main() {
       expect(after.debts.single.paidInstallments, 6);
       expect(after.settlements, hasLength(1));
       expect(after.reversals.single.line.amount.cents, 1000);
-      expect(after.closeOf(_august), isNotNull);
+      expect(after.budgetPlans.single.titheBasisPoints, 1000);
     });
   });
 }

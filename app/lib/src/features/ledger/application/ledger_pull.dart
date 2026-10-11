@@ -77,7 +77,9 @@ final class LedgerPull {
     // é o mesmo nos dois aparelhos.
     StatementSettled() ||
     DebtDefined() ||
-    MonthClosed() => !book.factIds.contains(event.id),
+    MonthClosed() ||
+    BudgetDefined() ||
+    DebtOrdered() => !book.factIds.contains(event.id),
   };
 
   /// O que foi cancelado **aqui** não volta pela descida, nem quando o
