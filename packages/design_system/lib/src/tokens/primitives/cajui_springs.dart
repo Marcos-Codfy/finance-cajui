@@ -23,4 +23,9 @@ abstract final class CajuiSprings {
 
   /// Barra crescendo no gráfico: ultrapassa um pouco a altura certa e volta.
   static const grow = SpringDescription(mass: 1, stiffness: 180, damping: 16);
+
+  /// O carrossel encaixando na página: razão 0,83, uma ultrapassagem de
+  /// uns 1%, que se sente como trava e não se vê como quique. Assenta em
+  /// uns 350 ms, abaixo do tempo de uma troca de tela.
+  static const page = SpringDescription(mass: 1, stiffness: 210, damping: 24);
 }

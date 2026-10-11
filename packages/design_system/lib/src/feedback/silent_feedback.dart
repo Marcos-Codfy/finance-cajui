@@ -29,4 +29,7 @@ class SilentFeedback implements CajuiFeedback {
 
   @override
   void undone() {}
+
+  @override
+  void pageTurned() {}
 }

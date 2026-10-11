@@ -107,6 +107,22 @@ Som e toque novos: `feedback.entrySaved()` (semente caindo na cuia) e `feedback.
 
 **Ponto em aberto.** O `CajuiBarChart` não é parte-todo nem progresso, e a letra da RN-862 só admite esses dois. Ele entrou por decisão do dono (11/10/2026) e cumpre a outra metade da regra — todo valor tem o equivalente em texto —, mas a regra precisa ser revista na especificação.
 
+## Profundidade
+
+Pedido do dono em 11/10/2026: "3D scrolling, com animações cinematográficas". Na gallery, grupo **Profundidade**, uma página por componente, cada uma num palco do tamanho de um celular. As escolhas e o custo estão na [ADR-028](../architecture/adr/ADR-028-rolagem-3d-e-entrada-cinematografica.md).
+
+Todos usam a mesma lente (`CajuiDepth.perspective`) e a mesma geometria: **a superfície é a face de um tambor** — de frente no meio, curvando para longe nas bordas. Tudo é matriz aplicada na pintura: o texto continua texto, e o toque e o leitor de tela acompanham a matriz.
+
+| Componente | Para quê | Regras |
+|---|---|---|
+| `CajuiDepthScroll` | Corpo de tela feita de seções, como o Início | Só curva o que está **cortado pela borda** (faixa de 32% da altura, no máximo a altura do bloco): entra deitado e menor por baixo, assenta, recua por cima e é coberto pelo seguinte. Inteiro à vista, plano — matriz identidade, sem camada. Fundo opcional (`backdrop`) sobe a 1/3 da velocidade. Física que quica, sempre rolável. `lite`: sem esmaecer. `reduced`: lista comum, fundo parado |
+| `CajuiParallax` | Camada em outra velocidade dentro de qualquer rolagem | `factor` positivo fica para trás, negativo adianta. No centro da tela, está onde o layout a pôs. Enfeite: para o fundo, nunca para o número. `reduced`: parada |
+| `CajuiCoverFlow` | Poucos blocos irmãos que se folheiam: os números do mês | A do centro de frente; as vizinhas giram com a borda de fora para longe, encolhem, esmaecem e enfiam a borda de dentro atrás da do centro. Encaixe com `CajuiSprings.page`; um gesto passa uma página só; a ponta cede e volta. **Sem arrastar**: tocar na vizinha, os pontos (toque e setas) ou o ajuste do leitor de tela. Cada página é anunciada "Página 2 de 4"; página fora do palco continua na leitura e, ao receber o foco, vem para o centro. Altura da página mais alta. Som `swipe` e pulso de tecla no soltar (`pageTurned`). `reduced`: plano, lado a lado, troca é corte com esmaecer de 120 ms |
+| `CajuiCinematicEntrance` + `CajuiCinematicShot` | O travelling ao abrir uma tela | Cada tomada vem de longe (escala 0,86), de baixo (28 px), deitada (~10°) e fora de foco (sigma 8), e assenta com `CajuiCurves.settle`. Opacidade antes do foco, foco antes do fim. Cascata de 35 ms; do 6º bloco em diante, juntos; tudo em 600 ms. Uma faixa de luz rasante cruza uma vez, no máximo a 12%. Roda uma vez, e de novo só se `replayKey` mudar; espera a tela estar à vista. O leitor de tela acha os blocos desde o primeiro quadro. `lite`: sem desfoque nem luz. `reduced`: esmaecem juntos, em 120 ms |
+| `CajuiWalletStack` | Os cartões da tela de Cartões | Ao aparecer, saem de um maço, o da frente primeiro (dentro de uma entrada cinematográfica, no ritmo dela). Rolando, cada cartão para no alto da tela e é coberto pelo seguinte; puxando além do topo, abrem em leque. O layout é sempre o da coluna aberta: a rolagem não pula, e o toque acha o cartão onde ele aparece. `lite`: sem escurecer os de trás. `reduced`: coluna parada |
+
+O `CajuiScreen` liga os dois efeitos de tela sem montagem à mão: `depth: true` troca a lista pela `CajuiDepthScroll` (com `backdrop`), e `cinematic: true` faz do alto e de cada filho uma tomada, com `replayKey` para rodar de novo. Para tela de painel; em formulário o efeito só atrapalha.
+
 ## Regras de composição
 
 1. **Uma tela, uma pergunta.** O número-manchete responde a ela; o resto apoia.

@@ -23,12 +23,13 @@ cd packages/design_system/gallery
 flutter run -d chrome
 ```
 
-O menu tem cinco grupos:
+O menu tem seis grupos:
 
 | Grupo | O que mostra |
 |---|---|
 | Fundação | Cores por papel, tabela de contraste calculada ao vivo, escala tipográfica, espaço, raio e sombra |
 | Componentes | Ação, conteúdo, campos, estados e efeitos vivos — cada componente em todos os estados, com o nome do estado escrito |
+| Profundidade | Rolagem em profundidade, carrossel 3D, entrada cinematográfica e pilha de carteira, cada um num palco do tamanho de um celular, com as regras ao lado e os três níveis de movimento à mão |
 | Telas | Painel, captura, fatura, fechamento, dívidas e assistente, em cada estado da [matriz de telas](../spec/use-cases.md#telas-e-seus-estados): 62 estados ao todo |
 | Decisões | O que ainda espera escolha, com as opções lado a lado — hoje, a falta do mês em barro × em vermelho |
 | Sentidos | Mesa de som (ouvir cada som) e mesa de movimento (curvas, durações e os três níveis de qualidade) |
@@ -44,6 +45,7 @@ Os chips "Tema escuro" e "Som" valem para a gallery inteira: qualquer estado pod
 | Rótulo longo e fonte ampliada não estouram a tela | Teste do chip e teste de fumaça da gallery em 390 × 844 |
 | Movimento reduzido é respeitado | `test/motion/motion_test.dart`, `test/motion/number_motion_test.dart` e o teste de cada efeito vivo |
 | Nada se move em laço: a física assenta sozinha | `test/motion/spring_physics_test.dart` |
+| No 3D, o que se lê fica plano, tudo cai para plano no reduzido, e o carrossel se usa sem arrastar | `test/components/depth_scroll_test.dart`, `cover_flow_test.dart`, `wallet_stack_test.dart`, `screen_depth_test.dart` e `test/motion/cinematic_entrance_test.dart` |
 | O som nasce desligado, e não existe som de erro | `test/sound/sound_feedback_test.dart` |
 | Toda página e todo estado de tela abrem sem erro | `gallery/test/gallery_smoke_test.dart` |
 | Arquivo ≤ 300 linhas, função ≤ 30, aninhamento ≤ 3 | `tool/` (verificador próprio) |
@@ -52,5 +54,5 @@ Os chips "Tema escuro" e "Som" valem para a gallery inteira: qualquer estado pod
 
 - **Um token**: no arquivo do grupo em `lib/src/tokens/`. Se for cor, incluir os pares em `ContrastAudit` — cor sem par medido não entra.
 - **Um componente**: pasta em `lib/src/components/`, sobre `CajuiPressable` se for tocável; export em `lib/design_system.dart`; teste; exemplares na página do grupo na gallery, com todos os estados.
-- **Uma página da gallery**: um valor em `GalleryDestination` e um caso no `switch` de `gallery_shell.dart`. Sem os dois, não compila.
+- **Uma página da gallery**: um valor em `GalleryDestination` e um caso no `switch` de `gallery_pages.dart`. Sem os dois, não compila.
 - **Uma tela de estado**: pasta em `gallery/lib/src/pages/screens/`, devolvendo um `ScreenStatePage`. O teste de fumaça passa a percorrer os estados dela sozinho.
