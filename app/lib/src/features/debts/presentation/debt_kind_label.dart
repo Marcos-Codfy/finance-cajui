@@ -11,6 +11,7 @@ abstract final class DebtKindLabel {
     DebtKind.loan,
     DebtKind.financing,
     DebtKind.cardRevolving,
+    DebtKind.overdueBill,
     DebtKind.informal,
   ];
 
@@ -21,5 +22,6 @@ abstract final class DebtKindLabel {
     DebtKind.cardInstallment => 'Compra parcelada no cartão',
     DebtKind.cardRevolving => 'Fatura parcelada ou rotativo',
     DebtKind.informal => 'Devo a alguém',
+    DebtKind.overdueBill => 'Conta atrasada',
   };
 }

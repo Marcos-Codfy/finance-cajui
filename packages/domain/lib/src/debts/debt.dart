@@ -1,5 +1,8 @@
 import 'package:domain/src/calendar/budget_month.dart';
+import 'package:domain/src/calendar/local_date.dart';
+import 'package:domain/src/debts/debt_calendar.dart';
 import 'package:domain/src/debts/debt_kind.dart';
+import 'package:domain/src/debts/debt_type.dart';
 import 'package:domain/src/debts/payoff_quote.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:domain/src/shared/failure.dart';
@@ -24,6 +27,9 @@ final class Debt {
     required this.firstMonth,
     this.cardId,
     this.payoffQuote,
+    this.informedBalance,
+    this.informedOn,
+    this.note,
   });
 
   /// O identificador da dívida.
@@ -57,19 +63,35 @@ final class Debt {
   /// O valor para quitar hoje, se a pessoa informou (RN-511).
   final PayoffQuote? payoffQuote;
 
+  /// O saldo que a pessoa informou, para a dívida que não se mede em
+  /// parcelas — a conta atrasada, o rotativo. Nulo na dívida parcelada,
+  /// cujo saldo é a soma das parcelas que faltam.
+  final Money? informedBalance;
+
+  /// O dia em que [informedBalance] valia.
+  final LocalDate? informedOn;
+
+  /// A observação da planilha: "negociar à vista com desconto".
+  final String? note;
+
+  /// Parcelado, atrasado ou rotativo: os três tipos da planilha.
+  DebtType get type => DebtType.of(kind);
+
   /// Quantas parcelas faltam.
   int get remainingInstallments => totalInstallments - paidInstallments;
 
   /// O **saldo devedor nominal**: a soma das parcelas que faltam (RN-510).
   /// É o número padrão porque não depende de dado que a pessoa talvez não
   /// tenha.
-  Money get outstandingBalance => installmentAmount * remainingInstallments;
+  Money get outstandingBalance =>
+      informedBalance ?? installmentAmount * remainingInstallments;
 
   /// O que já foi pago — mostrado ao lado do que falta (RN-541).
   Money get paidSoFar => installmentAmount * paidInstallments;
 
-  /// Quitada: as pagas igualaram o total (RN-530).
-  bool get isPaidOff => remainingInstallments == 0;
+  /// Quitada: as pagas igualaram o total (RN-530), ou o saldo informado
+  /// chegou a zero.
+  bool get isPaidOff => informedBalance?.isZero ?? remainingInstallments == 0;
 
   /// O mês da última parcela, no calendário atual. É sempre apresentado como
   /// projeção: "no ritmo atual, quita em abril de 2027" (RN-531).
@@ -79,6 +101,7 @@ final class Debt {
   /// fora do calendário da dívida: ela sai do plano no mês seguinte ao da
   /// última parcela (RN-532).
   Money installmentDueIn(BudgetMonth month) {
+    if (informedBalance != null) return DebtCalendar.balanceDueIn(this, month);
     final inCalendar =
         !month.isBefore(firstMonth) && !month.isAfter(payoffForecast);
     return inCalendar ? installmentAmount : Money.zero;
@@ -111,6 +134,9 @@ final class Debt {
     firstMonth: firstMonth,
     cardId: cardId,
     payoffQuote: payoffQuote ?? this.payoffQuote,
+    informedBalance: informedBalance,
+    informedOn: informedOn,
+    note: note,
   );
 
   /// Cria a dívida, recusando parcela não positiva e mais pagas que o total.
@@ -139,6 +165,46 @@ final class Debt {
             cardId: cardId,
           ),
         );
+  }
+
+  /// Cria a dívida que se mede pelo saldo — a conta atrasada, o rotativo,
+  /// o carnê de que não se sabe quantas parcelas faltam. [monthlyPayment]
+  /// pode ser zero: "não pago nada por mês ainda". O saldo cai sozinho a
+  /// cada vencimento depois de [informedOn] (ver `DebtCalendar`).
+  static Result<Debt> withBalance({
+    required String id,
+    required String creditor,
+    required DebtKind kind,
+    required Money balance,
+    required Money monthlyPayment,
+    required int dueDay,
+    required LocalDate informedOn,
+    String? note,
+  }) {
+    for (final amount in [balance, monthlyPayment]) {
+      if (amount.isNegative) return Err(NonPositiveAmount(amount));
+    }
+    return Ok(
+      Debt._(
+        id: id,
+        creditor: creditor,
+        kind: kind,
+        installmentAmount: monthlyPayment,
+        totalInstallments: _installmentsFor(balance, monthlyPayment),
+        paidInstallments: 0,
+        dueDay: dueDay,
+        firstMonth: informedOn.budgetMonth,
+        informedBalance: balance,
+        informedOn: informedOn,
+        note: note,
+      ),
+    );
+  }
+
+  /// Quantas parcelas quitam [balance], para a previsão de quando acaba.
+  static int _installmentsFor(Money balance, Money payment) {
+    if (!payment.isPositive) return 0;
+    return (balance.cents + payment.cents - 1) ~/ payment.cents;
   }
 
   static Err<Debt>? _validate(Money installment, int total, int paid) {
