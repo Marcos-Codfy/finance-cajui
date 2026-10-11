@@ -29,17 +29,25 @@ final class _FakeUplink implements LedgerUplink {
   Future<bool> canSendQuietly() async => session;
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async {
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() async {
     runs++;
     if (hold case final espera?) await espera.future;
     final erro = refuse;
     if (erro != null) throw StateError('sem rede');
-    return (const <String>{'groceries'}, null);
+    return (
+      {
+        'groceries': CatalogVersion(
+          signature: '?',
+          definedAt: DateTime.utc(9999),
+        ),
+      },
+      null,
+    );
   }
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
-      (const <String>{}, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() async =>
+      (const <String, CatalogVersion>{}, null);
 
   @override
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;

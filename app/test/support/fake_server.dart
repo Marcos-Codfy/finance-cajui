@@ -61,6 +61,10 @@ final class FakeServer {
   /// Caminho que não estiver aqui continua caindo em [answer].
   final Map<String, Map<String, Object?>> bodies = {};
 
+  /// Caminhos que respondem falha do servidor, e só eles: é como o teste
+  /// simula uma parte da leitura que não veio.
+  final Set<String> failing = {};
+
   /// Passa a recusar tudo com [code]. [retryAfterSeconds] é o tempo de
   /// espera que as classes *limite* e *ia* mandam no corpo do erro.
   void refuseWith(ErrorCode code, {int status = 401, int? retryAfterSeconds}) {
@@ -98,7 +102,19 @@ final class FakeServer {
     }
   }
 
+  /// O caminho em [failing] responde falha do servidor, e só ele.
+  bool _failed(HttpRequest request) {
+    if (!failing.contains(request.uri.path)) return false;
+    request.response
+      ..statusCode = 503
+      ..write(
+        jsonEncode(const ApiError(code: ErrorCode.srv01, ref: 't').toJson()),
+      );
+    return true;
+  }
+
   void _reply(HttpRequest request) {
+    if (_failed(request)) return;
     final refusal = _refusal;
     // O cadastro nunca é recusado por engano: quem recusa é a regra do teste.
     if (refusal != null && !request.uri.path.endsWith('/challenge')) {

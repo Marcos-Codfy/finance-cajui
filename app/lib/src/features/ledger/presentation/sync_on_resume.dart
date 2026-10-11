@@ -1,20 +1,22 @@
-import 'dart:async';
-
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/live_sync.dart';
+import 'package:cajui/src/features/ledger/application/server_head.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Manda o livro subir quando o app volta ao primeiro plano.
+/// Mantém o livro em dia com o servidor enquanto o app está na frente.
 ///
-/// O que foi lançado sem rede — no subsolo do mercado, no ônibus — não sobe
-/// na hora, e depois disso fica esperando o **próximo** lançamento para
-/// pegar carona. Podia esperar dias.
+/// Três momentos. **Ao abrir e ao voltar ao app**, o celular sobe o que
+/// foi lançado sem rede — no subsolo do mercado, no ônibus — e traz o que
+/// o outro fez. **Enquanto está na frente**, pergunta a cada 20 segundos
+/// se o servidor mudou, e só desce o livro quando mudou (ADR-024). **No
+/// fundo**, para de perguntar.
 ///
-/// Voltar ao app é o momento natural de tentar de novo, e não custa quase
-/// nada: a subida pergunta ao servidor o que falta, manda só isso e traz o
-/// que o outro celular fez. Nada disto aparece na tela.
+/// Na web, que só consulta, não há o que subir: quando o servidor muda,
+/// o livro é relido no lugar. Nada disto aparece na tela.
 class SyncOnResume extends ConsumerStatefulWidget {
-  /// Envolve [child] com a tentativa de subida ao voltar.
+  /// Envolve [child] com a sincronização ao vivo.
   const new({required this.child, super.key});
 
   /// O que fica na tela; esta camada não desenha nada.
@@ -26,28 +28,43 @@ class SyncOnResume extends ConsumerStatefulWidget {
 
 class _SyncOnResumeState extends ConsumerState<SyncOnResume> {
   AppLifecycleListener? _lifecycle;
+  late final LiveSync _live = LiveSync(
+    head: ref.read(serverHeadProvider),
+    refresh: _refresh,
+  );
+
+  /// O celular tem livro próprio para subir; a web, não.
+  bool get _onPhone => ref.read(ledgerUplinkProvider).isPaired;
 
   @override
   void initState() {
     super.initState();
-    _lifecycle = AppLifecycleListener(onResume: () => unawaited(_send()));
+    _lifecycle = AppLifecycleListener(onResume: _resume, onHide: _live.pause);
     // O arranque não é uma **volta**, e o ouvinte de ciclo de vida não
     // dispara nele: o app já nasce em primeiro plano. Sem esta linha, abrir
     // o app depois de um dia lançando offline não mandava nada.
-    unawaited(_send());
+    _resume();
   }
 
-  Future<void> _send() async {
+  void _resume() => _live.resume(force: _onPhone);
+
+  /// No celular, a sincronização de sempre, na mesma fila da que acontece
+  /// depois de cada lançamento. Na web, o livro relido no lugar.
+  Future<bool> _refresh() async {
     // No arranque o livro ainda está abrindo quando o app resume. Esperar
-    // por ele é o que faz a subida acontecer também na primeira abertura do
-    // dia — que é justamente quando há mais coisa esperando.
+    // por ele é o que faz a subida acontecer também na primeira abertura
+    // do dia — que é justamente quando há mais coisa esperando.
     final book = await ref.read(ledgerProvider.future);
-    if (!mounted) return;
-    ref.read(ledgerProvider.notifier).quietSync.schedule(book);
+    if (!mounted) return false;
+    final ledger = ref.read(ledgerProvider.notifier);
+    if (!_onPhone) return await ledger.reload();
+    await ledger.quietSync.request(book);
+    return true;
   }
 
   @override
   void dispose() {
+    _live.pause();
     _lifecycle?.dispose();
     super.dispose();
   }

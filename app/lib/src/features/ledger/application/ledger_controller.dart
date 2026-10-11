@@ -5,12 +5,10 @@ import 'package:cajui/src/features/ledger/application/draft_defaults.dart';
 import 'package:cajui/src/features/ledger/application/entry_changes.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
-import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
-import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
-import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/ledger_reload.dart';
 import 'package:cajui/src/features/ledger/application/quiet_sync.dart';
 import 'package:cajui/src/features/ledger/application/serial_queue.dart';
 import 'package:domain/domain.dart';
@@ -22,7 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// O caminho de toda escrita é o mesmo do servidor: aplicar as regras do
 /// domínio, **gravar o fato** e só então mudar o estado que a tela vê. Se a
 /// gravação falhar, a tela nunca chega a mostrar o que não foi salvo.
-class LedgerController extends AsyncNotifier<LedgerBook> {
+class LedgerController extends AsyncNotifier<LedgerBook> with LedgerReload {
   @override
   Future<LedgerBook> build() async {
     final events = await ref.watch(ledgerJournalProvider).readAll();
@@ -174,7 +172,14 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
     if (card == null) return result;
     await _commit(
       book,
-      CardDefined(id: 'card-fact-${ref.read(newIdProvider)()}', card: card),
+      CardDefined(
+        id: 'card-fact-${ref.read(newIdProvider)()}',
+        card: card,
+        definedAt: book.trail.nextCardStamp(
+          card.id,
+          ref.read(clockProvider).now(),
+        ),
+      ),
     );
     return result;
   }
@@ -277,16 +282,7 @@ class LedgerController extends AsyncNotifier<LedgerBook> {
 
   /// A cópia para o servidor, que acontece sozinha e não aparece na tela —
   /// e que traz de volta o que outro aparelho fez.
-  late final QuietSync quietSync = QuietSync(
-    LedgerSync(
-      ref.read(ledgerUplinkProvider),
-      pull: LedgerPull(
-        ref.read(ledgerDownlinkProvider),
-        clock: ref.read(clockProvider),
-        absorb: absorb,
-      ),
-    ),
-  );
+  late final QuietSync quietSync = QuietSync.over(ref, absorb: absorb);
 }
 
 /// O livro de lançamentos em vigor.

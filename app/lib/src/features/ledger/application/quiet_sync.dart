@@ -1,5 +1,11 @@
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
+import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
+import 'package:cajui/src/features/ledger/application/ledger_event.dart';
+import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
 import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A subida que acontece sozinha, depois de cada lançamento (RN-781).
 ///
@@ -20,6 +26,23 @@ final class QuietSync {
   /// Cria a subida silenciosa sobre [_sync].
   new(this._sync);
 
+  /// A subida e a descida das portas que a raiz do app ligou, gravando o
+  /// que desce por [absorb] — o do controlador do livro, que confere de
+  /// novo, já na fila, se o fato ainda faz diferença.
+  factory over(
+    Ref ref, {
+    required Future<bool> Function(LedgerEvent event) absorb,
+  }) => QuietSync(
+    LedgerSync(
+      ref.read(ledgerUplinkProvider),
+      pull: LedgerPull(
+        ref.read(ledgerDownlinkProvider),
+        clock: ref.read(clockProvider),
+        absorb: absorb,
+      ),
+    ),
+  );
+
   final LedgerSync _sync;
   Future<void>? _running;
   LedgerBook? _queued;
@@ -37,8 +60,18 @@ final class QuietSync {
     _running = _run(book).whenComplete(_afterRun);
   }
 
-  /// Espera o que estiver no ar acabar, inclusive o que ficou na fila. É
-  /// para o teste: nenhuma tela espera por isto.
+  /// Pede que [book] suba e desça, e espera acabar.
+  ///
+  /// É para quem precisa do servidor em dia antes de seguir — a pergunta
+  /// ao assistente, a conferência ao vivo (ADR-024). Passa pela mesma fila
+  /// de [schedule]: continua havendo **uma** sincronização por vez, e duas
+  /// ao mesmo tempo mandariam o mesmo lançamento duas vezes.
+  Future<void> request(LedgerBook book) {
+    schedule(book);
+    return settled;
+  }
+
+  /// Espera o que estiver no ar acabar, inclusive o que ficou na fila.
   Future<void> get settled async {
     while (_running != null) {
       await _running;

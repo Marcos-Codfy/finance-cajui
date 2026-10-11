@@ -26,20 +26,35 @@ base class FakeUplink implements LedgerUplink {
   @override
   Future<bool> canSendQuietly() async => session;
 
+  /// O que o servidor tem de cada categoria e de cada cartão, como chegou.
+  final Map<String, Map<String, Object?>> catalog = {};
+
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
-      (categories, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() async =>
+      (_versions(categories, 'category'), null);
 
   final Set<String> cards = {};
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async => (cards, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() async =>
+      (_versions(cards, 'card'), null);
 
   @override
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async {
     cards.add('${card['id']}');
+    catalog['card:${card['id']}'] = card;
     return null;
   }
+
+  /// A versão de cada item de [ids]. Item posto pelo teste sem conteúdo é
+  /// "o servidor tem, e ninguém tem mais novo": não sobe de novo.
+  Map<String, CatalogVersion> _versions(Set<String> ids, String kind) => {
+    for (final id in ids)
+      id: switch (catalog['$kind:$id']) {
+        final payload? => CatalogVersion.of(payload),
+        _ => CatalogVersion(signature: '?', definedAt: DateTime.utc(9999)),
+      },
+  };
 
   Map<String, Object?>? plan;
 
@@ -85,6 +100,7 @@ base class FakeUplink implements LedgerUplink {
   @override
   Future<ErrorCode?> sendCategory(Map<String, Object?> category) async {
     categories.add('${category['id']}');
+    catalog['category:${category['id']}'] = category;
     return null;
   }
 

@@ -83,7 +83,10 @@ final class LedgerEventCodec {
     EntryCancelled() => EntryFactCodec.encodeCancellation(event),
     EntryReversed(:final reversal) => EntryFactCodec.encodeReversal(reversal),
     PlanDefined(:final setup) => MonthSetupCodec.encode(setup),
-    CardDefined(:final card) => CardCodec.encodeCard(card),
+    CardDefined(:final card, :final definedAt) => CatalogVersion.stamped(
+      CardCodec.encodeCard(card),
+      definedAt,
+    ),
     StatementSettled(:final settlement) => CardCodec.encodeSettlement(
       settlement,
     ),
@@ -142,7 +145,7 @@ final class LedgerEventCodec {
         id: id,
         setup: MonthSetupCodec.decode(payload),
       ),
-      cardDefined => CardDefined(id: id, card: CardCodec.decodeCard(payload)),
+      cardDefined => _decodeCard(id, payload),
       statementSettled => StatementSettled(CardCodec.decodeSettlement(payload)),
       incomeReceived => IncomeReceived(_decodeReceipt(payload)),
       debtDefined => DebtDefined(id: id, debt: DebtCodec.decodeDebt(payload)),
@@ -152,6 +155,15 @@ final class LedgerEventCodec {
       _ => null,
     };
   }
+
+  /// O cartão com o carimbo da versão; o gravado antes do carimbo existir
+  /// volta sem ele, e conta como o mais velho (ADR-024).
+  static CardDefined _decodeCard(String id, Map<String, Object?> payload) =>
+      CardDefined(
+        id: id,
+        card: CardCodec.decodeCard(payload),
+        definedAt: CatalogVersion.definedAtOf(payload),
+      );
 
   static DebtInstallmentPaid _decodePayment(Map<String, Object?> payload) {
     final (:debtId, :entryId) = DebtCodec.decodePayment(payload);

@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/ledger/application/catalog_stamp.dart';
 import 'package:cajui/src/features/ledger/application/device_facts.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
@@ -17,10 +18,9 @@ typedef SyncOutcome = ({int sent, int received, ErrorCode? error});
 /// servidor restaurado de backup se completa sozinho, e um aparelho
 /// reinstalado não duplica nada.
 ///
-/// A subida acontece nos momentos em que a pessoa já está esperando o
-/// servidor — antes de uma pergunta que precisa da IA, ou quando ela pede em
-/// Ajustes. Sincronizar a cada lançamento pediria a digital a cada
-/// lançamento, e isso ninguém merece.
+/// Quem a chama é a `QuietSync`, uma de cada vez: depois de cada gravação,
+/// ao abrir e ao voltar ao app, antes de uma pergunta ao assistente, e
+/// quando o topo do registro no servidor anda (ADR-024).
 final class LedgerSync {
   /// Cria o sincronismo sobre [uplink]. Com [pull], depois de subir ele
   /// também **desce** o que os outros aparelhos fizeram (BL-062).
@@ -145,19 +145,33 @@ final class LedgerSync {
       : await uplink.sendPlan(MonthSetupCodec.encode(book.setup));
 
   /// O servidor recusa lançamento de categoria que ele não conhece, então as
-  /// categorias vão primeiro.
+  /// categorias vão primeiro. Vai também a que o servidor tem **diferente**,
+  /// quando a daqui é mais nova: é a categoria reagrupada numa versão nova
+  /// do app, que antes nunca subia (ADR-024).
   Future<ErrorCode?> _sendCategories(LedgerBook book) async {
     final (known, failure) = await uplink.remoteCategories();
     if (failure != null) return failure;
-    for (final category in book.categories) {
-      if (known.contains(category.id)) continue;
-      final error = await uplink.sendCategory({
-        'id': category.id,
-        'name': category.name,
-        'block': category.block.name,
-        'groupId': category.groupId,
-        'voucherEligible': category.voucherEligible,
-      });
+    final payloads = [
+      for (final category in book.categories)
+        CatalogVersion.stamped(
+          CategoryCodec.encode(category),
+          CatalogStamp.definedAt,
+        ),
+    ];
+    return await _sendChanged(payloads, known, uplink.sendCategory);
+  }
+
+  /// Manda, de [payloads], o que [remote] não tem ou tem numa versão mais
+  /// velha que a daqui.
+  static Future<ErrorCode?> _sendChanged(
+    List<Map<String, Object?>> payloads,
+    Map<String, CatalogVersion> remote,
+    Future<ErrorCode?> Function(Map<String, Object?> payload) send,
+  ) async {
+    for (final payload in payloads) {
+      final mine = CatalogVersion.of(payload);
+      if (!mine.overrides(remote['${payload['id']}'])) continue;
+      final error = await send(payload);
       if (error != null) return error;
     }
     return null;
@@ -172,17 +186,21 @@ final class LedgerSync {
   /// a primeira recusa e segue-se em frente.
   /// Os cartões vão antes dos lançamentos, e pelo mesmo motivo que as
   /// categorias: sem o cartão, o servidor recusa toda compra parcelada —
-  /// ele recalcula o plano de parcelas a partir dele.
+  /// ele recalcula o plano de parcelas a partir dele. Cartão editado aqui
+  /// depois também vai: antes só subia o que o servidor não conhecia, e
+  /// trocar o limite num celular ficava só nele (ADR-024).
   Future<ErrorCode?> _sendCards(LedgerBook book) async {
     if (book.cards.isEmpty) return null;
     final (known, failure) = await uplink.remoteCards();
     if (failure != null) return failure;
-    for (final card in book.cards) {
-      if (known.contains(card.id)) continue;
-      final error = await uplink.sendCard(CardCodec.encodeCard(card));
-      if (error != null) return error;
-    }
-    return null;
+    final payloads = [
+      for (final card in book.cards)
+        CatalogVersion.stamped(
+          CardCodec.encodeCard(card),
+          book.trail.cardStamps[card.id],
+        ),
+    ];
+    return await _sendChanged(payloads, known, uplink.sendCard);
   }
 
   Future<(int, ErrorCode?)> _sendEntries(
