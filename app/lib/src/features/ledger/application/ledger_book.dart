@@ -75,6 +75,9 @@ final class LedgerBook {
   /// A ordem de quitação das dívidas, a mais nova.
   List<String> get debtOrder => budget.debtOrder;
 
+  /// Os nomes da casa em vigor (RN-1070).
+  HouseholdNames get householdNames => budget.household;
+
   /// O que a sincronização precisa saber além do estado: o que foi
   /// cancelado aqui e os fatos que sobem como estão.
   final SyncTrail trail;

@@ -135,6 +135,34 @@ void main() {
       expect(gravado, 403);
     });
 
+    test('RN-1070 · os nomes da casa são guardados para o outro celular, e '
+        'nome sem sobrenome é recusado', () async {
+      Map<String, Object?> named(List<String> names) => {
+        'id': 'household-2026-10-11T12:00:00.000Z',
+        'type': 'household.named',
+        'payload': {'names': names, 'definedAt': '2026-10-11T12:00:00.000Z'},
+      };
+
+      final (recusado, _) = await server.call(
+        'POST',
+        '/v1/facts',
+        body: named(['Marcos']),
+        token: token,
+      );
+      final (aceito, _) = await server.call(
+        'POST',
+        '/v1/facts',
+        body: named(['Marcos Arruda', 'Beatriz Souza Lima']),
+        token: token,
+      );
+      final facts = await listed();
+
+      expect(recusado, 400);
+      expect(aceito, 201);
+      final payload = (facts.single! as Map)['payload']! as Map;
+      expect(payload['names'], ['Marcos Arruda', 'Beatriz Souza Lima']);
+    });
+
     test('sem sessão, nada se lê nem se grava', () async {
       final (lido, _) = await server.call('GET', '/v1/facts');
       final (gravado, _) = await server.call(

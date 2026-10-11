@@ -12,7 +12,8 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Decide o que fazer com a movimentação que o banco avisou, e faz: lança
-/// sozinho, pede um toque ou deixa quieto (RN-786 a RN-789).
+/// sozinho, pede um toque ou deixa quieto (RN-786 a RN-789, RN-1072,
+/// RN-1073 e RN-1077).
 class NoticeRecorder {
   /// Cria o caso de uso sobre os providers de [ref].
   const new(this.ref);
@@ -32,14 +33,23 @@ class NoticeRecorder {
 
   /// O que avisar depois de tratar [reading], vinda da notificação
   /// [noticeId]; `null` quando não há o que avisar.
+  ///
+  /// Dinheiro mudando de conta dentro da casa (RN-1072, RN-1073) não é
+  /// gasto nem renda: o que entra de alguém da casa fica quieto — o
+  /// celular de quem mandou já avisou —, e o que sai para alguém da casa
+  /// avisa sem lançar, com o toque para quem quiser lançar mesmo assim.
   Future<NoticeAnnouncement?> handle(
     String noticeId,
     BankReading reading,
   ) async {
-    if (reading.kind.isIncoming) return NoticeWords.income(noticeId, reading);
     final book = await ref.read(ledgerProvider.future);
+    final withinHouse = book.householdNames.movesWithin(reading);
+    if (reading.kind.isIncoming) {
+      return withinHouse ? null : NoticeWords.income(noticeId, reading);
+    }
     final id = entryIdOf(noticeId);
     if (_known(book, id) || _alreadyThere(book, reading)) return null;
+    if (withinHouse) return NoticeWords.ownTransfer(noticeId, reading);
     final method = NoticePaymentMethod.of(reading, book);
     if (method == null || reading.isInstallment || _cardBill(reading, book)) {
       return _ask(noticeId, reading);
@@ -72,16 +82,11 @@ class NoticeRecorder {
   static bool _known(LedgerBook book, String id) =>
       book.entryOf(id) != null || book.cancelledIds.contains(id);
 
-  /// O mesmo valor no mesmo dia já está no livro: o comprovante foi
-  /// compartilhado também, ou a carteira e o banco avisaram a mesma compra.
+  /// Já está no livro: o mesmo valor no mesmo dia — o comprovante foi
+  /// compartilhado também, ou a carteira e o banco avisaram a mesma compra
+  /// —, ou o comprovante de ontem com o nome compatível (RN-1077).
   static bool _alreadyThere(LedgerBook book, BankReading reading) =>
-      PossibleDuplicate.near(
-        book.entries,
-        amount: reading.amount,
-        occurredOn: reading.occurredOn,
-        days: 0,
-      ) !=
-      null;
+      NoticeTwin.ofNotice(book.entries, reading) != null;
 
   /// A carteira não diz o banco do cartão: quando nem os dígitos o
   /// identificam, quem lança é a notificação do próprio banco, que chega
