@@ -14,10 +14,18 @@ final class StatementView {
   factory of(LedgerBook book, CreditCard card, StatementCycle cycle) {
     return StatementView._(
       cycle: cycle,
+      // As parcelas de compras anteriores ao app também estão na fatura
+      // (RN-330): sem elas, a tela dizia um total e o lembrete da mesma
+      // fatura, outro (BL-102).
       statement: CardStatement.of(
         cycle,
         entries: book.entries,
         reversals: book.reversals,
+        legacyInstallments: DebtSchedule.legacyCardInstallmentsDueIn(
+          cycle.dueMonth,
+          cardId: card.id,
+          debts: book.debts,
+        ),
       ),
       paid: book.settlements
           .where((s) => s.cardId == card.id && s.dueMonth == cycle.dueMonth)

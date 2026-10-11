@@ -7,6 +7,7 @@ import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
 import 'package:domain/domain.dart';
@@ -199,6 +200,29 @@ void main() {
         expect(plan.committedFrom(_october).cents, 96000);
       },
     );
+  });
+
+  test('RN-330 BL-102 · a fatura da tela soma a parcela de uma compra de '
+      'antes do app, como o lembrete da mesma fatura', () async {
+    final defined = await card();
+    final sofa = Debt.create(
+      id: 'sofa',
+      creditor: 'Loja de móveis',
+      kind: DebtKind.cardInstallment,
+      installmentAmount: const Money.fromCents(15000),
+      totalInstallments: 10,
+      paidInstallments: 6,
+      dueDay: 5,
+      firstMonth: const BudgetMonth(2026, 3),
+      cardId: defined.id,
+    ).valueOrNull!;
+    await ledger().append(DebtDefined(id: 'debt-sofa', debt: sofa));
+    await buy(defined, 'Mercado', 18640, day: 12);
+
+    final open = StatementView.current(await book(), defined, testToday).last;
+
+    // 186,40 do mercado + 150,00 da parcela do sofá, que vence em outubro.
+    expect(open.statement.total.cents, 18640 + 15000);
   });
 
   test('cartão, compra parcelada e pagamento de fatura voltam iguais do '
