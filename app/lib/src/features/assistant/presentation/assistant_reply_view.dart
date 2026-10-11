@@ -77,6 +77,17 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
   /// O que já foi desfeito nesta resposta: o botão vira "Desfeito".
   final Set<String> _undone = {};
 
+  /// Se a saída da falha já foi usada — "Tentar de novo" ou "Lançar pela
+  /// conferência". Usada, as duas somem desta resposta: um segundo toque
+  /// lançaria o mesmo gasto outra vez.
+  bool _used = false;
+
+  void _once(VoidCallback action) {
+    if (_used) return;
+    setState(() => _used = true);
+    action();
+  }
+
   Future<void> _undo(AssistantActionDone action) async {
     // A folha: desfeito a pedido de quem usa (escolha 4 do dono).
     CajuiFeedbackScope.of(context).undone();
@@ -101,20 +112,23 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ErrorNotice(
-            error: (
-              code: code,
-              text: AssistantReplyView.textOf(
-                code,
-                retryAfterSeconds: retryAfterSeconds,
-              ),
-            ),
-            onAction: (_) => widget.onRetry(),
+            error: (code: code, text: _failure(code, retryAfterSeconds)),
+            onAction: (_) => _once(widget.onRetry),
           ),
-          ?_capture(),
+          if (!_used) ?_capture(),
         ],
       ),
     ),
   };
+
+  /// O texto da falha; depois de usada a saída, sem botão.
+  ErrorText _failure(ErrorCode code, int? retryAfterSeconds) {
+    final text = AssistantReplyView.textOf(
+      code,
+      retryAfterSeconds: retryAfterSeconds,
+    );
+    return _used ? ErrorText(text.message) : text;
+  }
 
   /// "Lançar pela conferência", quando a frase é um gasto dito.
   Widget? _capture() {
@@ -126,7 +140,7 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
         label: 'Lançar pela conferência',
         icon: CajuiIconData.receipt,
         variant: CajuiButtonVariant.secondary,
-        onPressed: capture,
+        onPressed: () => _once(capture),
       ),
     );
   }

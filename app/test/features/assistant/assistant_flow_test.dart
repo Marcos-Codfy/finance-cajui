@@ -165,6 +165,7 @@ void main() {
       'me explica o que é renda comprometida',
     ]);
     expect(find.text('Certo.'), findsOneWidget);
+    expect(find.text('Perguntar de novo'), findsNothing);
   });
 
   test(

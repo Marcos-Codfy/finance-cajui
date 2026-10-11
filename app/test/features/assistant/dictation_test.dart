@@ -81,6 +81,12 @@ void main() {
     final proposal = (state as CaptureReady).capture.proposal;
     expect(proposal.amount.value?.cents, 4000);
     expect(proposal.paymentKind.value, PaymentMethodKind.pix);
+    // Usada a saída, a resposta que falhou não a oferece de novo: um segundo
+    // toque lançaria o mesmo gasto duas vezes.
+    expect(
+      find.text('Lançar pela conferência', skipOffstage: false),
+      findsNothing,
+    );
   });
 
   testWidgets('RN-1091 · pergunta que falha não oferece a conferência', (
