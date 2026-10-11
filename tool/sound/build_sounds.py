@@ -66,6 +66,31 @@ def drop(start: float, end: float, seconds: float) -> list[float]:
     return samples
 
 
+def seed_drop(rng: random.Random) -> list[float]:
+    """Semente caindo na cuia: um estalo de grão com a madeira respondendo, e
+    dois quiques cada vez menores e mais próximos, como a física pede."""
+    bounces = [(0.0, 1.0, 560), (0.085, 0.42, 600), (0.14, 0.18, 640)]
+    hits = [
+        at(offset, gain(mix(grain(rng, 0.018, 260, 5600), gain(wood(freq, 0.12, 34), 0.7)), level))
+        for offset, level, freq in bounces
+    ]
+    return mix(*hits, gain(wood(330, 0.22, 16), 0.3))
+
+
+def rustle(rng: random.Random, seconds: float, cutoff: float, flutter: float) -> list[float]:
+    """Folha roçando: ruído que cresce e some, com o tremor da nervura.
+
+    O envelope sobe e desce, em vez de só decair como o grão: é o que faz o
+    ouvido ler um gesto que vai e volta — o desfazer —, e não uma batida."""
+    total = int(RATE * seconds)
+    raw = []
+    for n in range(total):
+        swell = math.sin(math.pi * n / total) ** 1.5
+        tremor = 0.75 + 0.25 * math.sin(2 * math.pi * flutter * n / RATE)
+        raw.append(rng.uniform(-1, 1) * swell * tremor)
+    return low_pass(low_pass(raw, cutoff), cutoff)
+
+
 def low_pass(samples: list[float], cutoff: float) -> list[float]:
     """Passa-baixa de um polo: é o que tira a aspereza do agudo."""
     alpha = 1 - math.exp(-2 * math.pi * cutoff / RATE)
@@ -121,6 +146,10 @@ def build(rng: random.Random) -> dict[str, list[float]]:
             at(0.22, wood(784, 0.36, 8)),
             at(0.22, gain(drop(1046, 1568, 0.30), 0.18)),
         ),
+        # Os dois últimos ficam no fim de propósito: o gerador é um só, e som
+        # novo no meio da lista mudaria o ruído de todos os que vêm depois.
+        "entry_saved": seed_drop(rng),
+        "undone": mix(rustle(rng, 0.20, 2600, 23), at(0.13, gain(wood(294, 0.08, 45), 0.18))),
     }
 
 

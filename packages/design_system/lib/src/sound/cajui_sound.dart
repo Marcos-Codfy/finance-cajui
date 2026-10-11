@@ -36,7 +36,16 @@ enum CajuiSound {
   success('success', SoundCategory.confirmations),
 
   /// Conquista: três notas subindo. O único som acima de 300 ms, e raro.
-  achievement('achievement', SoundCategory.confirmations);
+  achievement('achievement', SoundCategory.confirmations),
+
+  /// Lançamento feito: uma semente caindo na cuia, com dois quiques.
+  ///
+  /// É mais leve que [saved] de propósito: lançar é o gesto mais repetido do
+  /// app, e o som dele precisa dar gosto na décima vez do dia.
+  entrySaved('entry_saved', SoundCategory.confirmations),
+
+  /// Desfeito: uma folha roçando, que vai e volta.
+  undone('undone', SoundCategory.confirmations);
 
   new(this._file, this.category);
 

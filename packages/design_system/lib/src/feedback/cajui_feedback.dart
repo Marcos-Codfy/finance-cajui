@@ -23,4 +23,10 @@ abstract interface class CajuiFeedback {
 
   /// Uma conquista: dívida quitada, semanas seguidas dentro do limite.
   void achievement();
+
+  /// Um lançamento acabou de entrar: a semente caindo.
+  void entrySaved();
+
+  /// Algo foi desfeito a pedido de quem usa: a folha.
+  void undone();
 }

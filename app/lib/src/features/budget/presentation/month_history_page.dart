@@ -38,11 +38,34 @@ class MonthHistoryPage extends ConsumerWidget {
                 'Assim que houver um lançamento ou uma entrada, cada mês '
                 'aparece aqui com o que entrou, saiu e sobrou.',
           ),
+        if (history.length > 1) ...[
+          _chart(history),
+          const SizedBox(height: CajuiSpacing.xl),
+        ],
         for (final record in history)
           _row(record, current: record.month == month),
       ],
     );
   }
+
+  /// As barras do mês a mês, da mais antiga à mais nova, crescendo com mola
+  /// (escolha 6 do dono). A palavra diz o sentido; a cor, não.
+  static Widget _chart(List<MonthRecord> history) => CajuiBarChart(
+    semanticLabel: 'Mês a mês: o que sobrou ou faltou',
+    bars: [
+      for (final record in history.reversed)
+        CajuiChartBar(
+          label: DateLabels.month(record.month).substring(0, 3),
+          title: DateLabels.month(record.month),
+          cents: record.leftOver.cents,
+          note: switch (record.leftOver.cents) {
+            > 0 => 'Sobrou',
+            < 0 => 'Faltou',
+            _ => 'Fechou no zero',
+          },
+        ),
+    ],
+  );
 
   static Widget _row(MonthRecord record, {required bool current}) {
     String brl(Money amount) => BrlFormatter.format(amount.cents);

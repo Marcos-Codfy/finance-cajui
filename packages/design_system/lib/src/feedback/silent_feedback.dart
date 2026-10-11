@@ -23,4 +23,10 @@ class SilentFeedback implements CajuiFeedback {
 
   @override
   void achievement() {}
+
+  @override
+  void entrySaved() {}
+
+  @override
+  void undone() {}
 }

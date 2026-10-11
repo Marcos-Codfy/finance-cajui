@@ -87,8 +87,10 @@ void main() {
       );
       // 16% do limite: abaixo da metade, nenhum aviso.
       expect(find.byType(CajuiNotice), findsNothing);
+      // Escolha 2 do dono: com limite, o cartão aparece em 3D.
+      expect(find.byType(CajuiCreditCard3D), findsOneWidget);
 
-      await _tap(tester, find.text('Cartão da casa'));
+      await _tap(tester, find.bySemanticsLabel('Cartão da casa, ver a fatura'));
 
       expect(find.text('Limite livre'), findsOneWidget);
       expect(
@@ -104,7 +106,7 @@ void main() {
   testWidgets('RN-305 · passar do limite não vira alarme: a frase diz quanto '
       'passou', (tester) async {
     await _openCards(tester, _card(limitCents: 50000));
-    await _tap(tester, find.text('Cartão da casa'));
+    await _tap(tester, find.bySemanticsLabel('Cartão da casa, ver a fatura'));
 
     expect(
       find.textContaining('O tomado passou R\$${_nbsp}300,00 do limite'),
@@ -118,8 +120,9 @@ void main() {
     await _openCards(tester, _card());
 
     expect(find.text('fecha dia 25 · vence dia 5'), findsOneWidget);
+    expect(find.byType(CajuiCreditCard3D), findsNothing);
 
-    await _tap(tester, find.text('Cartão da casa'));
+    await _tap(tester, find.bySemanticsLabel('Cartão da casa, ver a fatura'));
 
     expect(find.text('Limite livre'), findsNothing);
   });

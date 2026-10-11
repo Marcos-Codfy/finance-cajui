@@ -2,6 +2,8 @@ import 'package:design_system/src/components/button/cajui_button_size.dart';
 import 'package:design_system/src/components/button/cajui_button_tokens.dart';
 import 'package:design_system/src/components/button/cajui_button_variant.dart';
 import 'package:design_system/src/components/feedback/cajui_loading_dots.dart';
+import 'package:design_system/src/feedback/cajui_feedback_scope.dart';
+import 'package:design_system/src/feedback/silent_feedback.dart';
 import 'package:design_system/src/icons/cajui_icon.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
 import 'package:design_system/src/interaction/cajui_pressable.dart';
@@ -28,6 +30,7 @@ class CajuiButton extends StatelessWidget {
     this.icon,
     this.loading = false,
     this.expand = false,
+    this.silent = false,
     super.key,
   });
 
@@ -53,16 +56,26 @@ class CajuiButton extends StatelessWidget {
   /// Se ocupa toda a largura disponível.
   final bool expand;
 
+  /// Não soa nem vibra ao toque. É para o botão cuja ação tem som próprio
+  /// logo depois — a semente do lançamento, a folha do desfazer —, que o
+  /// toque abafaria.
+  final bool silent;
+
   static const _radius = BorderRadius.all(CajuiRadius.lg);
 
   @override
   Widget build(BuildContext context) {
-    return CajuiPressable(
+    final pressable = CajuiPressable(
       onPressed: onPressed,
       busy: loading,
       radius: _radius,
       semanticLabel: loading ? '$label, aguarde' : label,
       builder: _surface,
+    );
+    if (!silent) return pressable;
+    return CajuiFeedbackScope(
+      feedback: const SilentFeedback(),
+      child: pressable,
     );
   }
 

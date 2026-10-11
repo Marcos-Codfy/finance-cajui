@@ -55,4 +55,10 @@ class RecordingFeedback implements CajuiFeedback {
 
   @override
   void achievement() => calls.add('achievement');
+
+  @override
+  void entrySaved() => calls.add('entrySaved');
+
+  @override
+  void undone() => calls.add('undone');
 }

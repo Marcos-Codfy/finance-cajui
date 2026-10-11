@@ -82,7 +82,7 @@ A planilha não avisa nada: só mostra a situação para quem abre. O retorno pe
 |---|---|---|---|
 | RN-860 | Todo relatório tem dois níveis: **simplificado** (os números essenciais) e **detalhado** (tudo). Trocar de nível nunca muda um número, só quantos aparecem | O fechamento simplificado mostra resultado, três blocos, vale e sugestões; o detalhado acrescenta categorias, comparação e lançamentos | prompt |
 | RN-861 | A preferência **mais visual** ou **mais numérico** troca a forma, não o conteúdo: o visual usa gráfico onde há parte-todo ou progresso; o numérico usa tabela | — | prompt |
-| RN-862 | Gráfico só onde há parte-todo — uma barra empilhada de fixos, variáveis e dívidas sobre a renda, e o vale em barra separada — ou progresso. Todo gráfico tem o número equivalente em texto | — | D-UX-16 · Ancker2006 |
+| RN-862 | Gráfico só onde há parte-todo — uma barra empilhada de fixos, variáveis e dívidas sobre a renda, e o vale em barra separada —, progresso, ou o mês a mês (uma barra por mês, para cima o que sobrou e para baixo o que faltou; escolha do dono em 11/10/2026, ADR-026). Todo gráfico tem o número equivalente em texto | — | D-UX-16 · Ancker2006 |
 | RN-863 | O resumo diário só tem o nível simplificado | — | modelagem |
 | RN-864 | Nível e forma são preferências do aparelho, lembradas entre sessões, e valem também para a web | — | prompt |
 
