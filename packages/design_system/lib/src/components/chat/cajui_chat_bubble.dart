@@ -1,4 +1,5 @@
 import 'package:design_system/src/components/feedback/cajui_loading_dots.dart';
+import 'package:design_system/src/components/streaming/cajui_streaming_text.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_radius.dart';
@@ -15,6 +16,7 @@ class CajuiChatBubble extends StatelessWidget {
     this.text, {
     this.fromUser = false,
     this.thinking = false,
+    this.streamed = false,
     super.key,
   });
 
@@ -26,6 +28,11 @@ class CajuiChatBubble extends StatelessWidget {
 
   /// O assistente ainda está respondendo: três pontos no lugar do texto.
   final bool thinking;
+
+  /// A resposta aparece palavra por palavra (`CajuiStreamingText`). Só vale
+  /// para a fala do assistente, e só para a resposta que acabou de chegar:
+  /// ao reabrir a conversa, o histórico aparece pronto.
+  final bool streamed;
 
   static const double _maxWidth = 290;
 
@@ -69,9 +76,10 @@ class CajuiChatBubble extends StatelessWidget {
         semanticLabel: 'Cajui está respondendo',
       );
     }
-    return Text(
-      text,
-      style: theme.typography.body.copyWith(color: theme.colors.text.primary),
+    final style = theme.typography.body.copyWith(
+      color: theme.colors.text.primary,
     );
+    if (streamed && !fromUser) return CajuiStreamingText(text, style: style);
+    return Text(text, style: style);
   }
 }
