@@ -40,11 +40,10 @@ final List<Entry> _routine = [
 MonthSpending _spending(List<Entry> entries) =>
     MonthSpending.of(september, entries: entries, categories: _categories);
 
-WeeklyLimit _limitOn(int day, List<Entry> entries) => WeeklyLimit.of(
-  week: BudgetWeek.containing(LocalDate(2026, 9, day)),
-  variableBudget: septemberPlan().variableCash,
-  spending: _spending(entries),
-);
+/// A rotina de 7 a 13 de setembro, a segunda semana do exemplo.
+Money _secondWeek(List<Entry> entries) =>
+    _spending(entries)
+        .routineBetween(LocalDate(2026, 9, 7), LocalDate(2026, 9, 13));
 
 void main() {
   final planned = MonthIndicators(septemberPlan(), _spending(const []));
@@ -87,40 +86,8 @@ void main() {
     });
   });
 
-  group('limite semanal', () {
-    test('RN-644 as semanas são de calendário, recortadas pelo mês', () {
-      final first = BudgetWeek.containing(LocalDate(2026, 9, 1));
-      final last = BudgetWeek.containing(LocalDate(2026, 9, 29));
-
-      // Setembro de 2026 começa numa terça: a 1ª semana tem 6 dias.
-      expect((first.start.day, first.end.day, first.days), (1, 6, 6));
-      expect((last.start.day, last.end.day, last.days), (28, 30, 3));
-      expect(last.next, isNull);
-      expect(first.next!.start, LocalDate(2026, 9, 7));
-    });
-
-    test('RN-641 os cinco limites do exemplo, centavo a centavo', () {
-      final limits = [
-        for (final day in [1, 7, 14, 21, 28]) _limitOn(day, _routine).limit,
-      ];
-
-      expect(limits.map((limit) => limit.cents), [
-        19600,
-        23625,
-        22647,
-        24500,
-        12000,
-      ]);
-    });
-
-    test('RN-642 passar do limite aparece como valor, sem bloquear nada', () {
-      final secondWeek = _limitOn(9, _routine);
-
-      expect(secondWeek.spent, _cents(26000));
-      expect(secondWeek.remaining, _cents(-2375));
-    });
-
-    test('RN-643 vale, fixo, parcela e outro mês não contam na semana', () {
+  group('o que conta como rotina do mês', () {
+    test('RN-643 vale, fixo, parcela e outro mês não contam na rotina', () {
       final entries = [
         ..._routine,
         entry(id: 'vale', cents: 9000, lines: [voucher(9000)]),
@@ -139,33 +106,16 @@ void main() {
         ),
       ];
 
-      expect(_limitOn(9, entries).spent, _cents(26000));
+      expect(_secondWeek(entries), _cents(26000));
     });
 
-    test('RN-310 compra à vista no cartão reduz a semana da compra', () {
+    test('RN-310 compra à vista no cartão conta na data da compra', () {
       final entries = [
         ..._routine,
         entry(id: 'mercado', cents: 18640, lines: [credit(18640)]),
       ];
 
-      expect(_limitOn(12, entries).spent, _cents(26000 + 18640));
-    });
-
-    test('RN-646 lançamento tardio de semana passada recalcula esta', () {
-      final late = [..._routine, _spend('tardio', 5000, 8)];
-
-      // restante 550 − 50 = 500; 500 × 7 ÷ 17 = 205,88
-      expect(_limitOn(14, late).limit, _cents(20588));
-    });
-
-    test('RN-645 variável esgotado: limite zero, e quanto passou do plano', () {
-      final spentAll = [..._routine, _spend('extra', 16000, 17)];
-
-      final lastWeek = _limitOn(28, spentAll);
-
-      // 980 − 170 − 260 − 200 − 160 − 230 = −40
-      expect(lastWeek.limit, Money.zero);
-      expect(lastWeek.monthOverrun, _cents(4000));
+      expect(_secondWeek(entries), _cents(26000 + 18640));
     });
   });
 
@@ -184,11 +134,11 @@ void main() {
       expect(withRepair.projectedResult, _cents(-14200));
     });
 
-    test('RN-648 mas fica fora do limite da semana', () {
-      final week = _limitOn(3, [repair]);
+    test('RN-648 mas fica fora da rotina', () {
+      final spending = _spending([repair]);
 
-      expect(week.limit, _cents(19600));
-      expect(week.spent, Money.zero);
+      expect(spending.routine, isEmpty);
+      expect(spending.exceptional, _cents(70000));
     });
 
     test('RN-660 a 662 ajuste de 142 cabe na folga de 540', () {

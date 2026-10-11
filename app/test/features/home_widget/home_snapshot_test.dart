@@ -49,21 +49,33 @@ void main() {
 
   setUp(() => screen = _CountingScreen());
 
-  test('RN-872 RN-1011 · com plano, o widget diz quanto dá para gastar na '
-      'semana — o mesmo número do Início', () async {
-    // O plano antigo lido como o novo: (3.200 − 1.200 de fixas − 362 de
-    // parcelas) ÷ 4 = 409,50, e nada gasto ainda.
+  test('RN-872 · com plano, o widget diz a sobra do mês — o mesmo número do '
+      'Início', () async {
     final container = open(samplePlanEvents);
     final snapshot = await snapshotOf(container);
+    final budget = container.read(homeViewProvider)!.budget;
 
-    expect(snapshot.label, 'Pode gastar esta semana');
-    expect(snapshot.amount, _brl(40950));
-    expect(
-      snapshot.amount,
-      MoneyFormat.brl(container.read(homeViewProvider)!.week.left),
-    );
-    expect(snapshot.caption, '${_brl(0)} de ${_brl(40950)} já gastos');
-    expect(snapshot.validUntil, testToday, reason: 'o domingo fecha a semana');
+    expect(budget.closes, isTrue);
+    expect(snapshot.label, 'Sobra de setembro');
+    expect(snapshot.amount, MoneyFormat.brl(budget.result));
+    expect(snapshot.caption, 'Depois de pagar tudo, pelo que está lançado.');
+    expect(snapshot.validUntil, LocalDate(2026, 9, 30));
+  });
+
+  test('RN-843 · mês que não fecha não põe a falta na tela inicial: mostra o '
+      'que sai do bolso e manda abrir o app', () async {
+    final container = open([
+      ...samplePlanEvents,
+      EntryRecorded(reviewEntry('reforma', categoryId: 'home', cents: 900000)),
+    ]);
+    final snapshot = await snapshotOf(container);
+    final budget = container.read(homeViewProvider)!.budget;
+
+    expect(budget.closes, isFalse);
+    expect(snapshot.label, 'Sai do bolso em setembro');
+    expect(snapshot.amount, MoneyFormat.brl(budget.outOfPocket));
+    expect(snapshot.amount, isNot(MoneyFormat.brl(budget.shortfall)));
+    expect(snapshot.caption, contains('Abra o Cajui'));
   });
 
   test('RN-872 RN-1050 · sem plano, o widget mostra o que já saiu', () async {

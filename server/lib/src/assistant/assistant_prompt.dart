@@ -15,8 +15,9 @@ abstract final class AssistantPrompt {
   /// A versão das instruções. Subiu para 4 quando o assistente ganhou
   /// ferramentas e deixou de responder em JSON fechado; para 5 quando ele
   /// virou ela — a Juju, nome escolhido pelo dono em 11/10/2026; para 6 com
-  /// os números e as palavras da planilha (ADR-023) e a troca de categoria.
-  static const version = 6;
+  /// os números e as palavras da planilha (ADR-023) e a troca de categoria;
+  /// para 7 quando o "pode gastar por semana" saiu do app (11/10/2026).
+  static const version = 7;
 
   /// O teto da mensagem de quem pergunta (RN-952).
   static const maxMessageLength = 1000;
@@ -42,7 +43,7 @@ Você tem ferramentas para ver e mexer nos lançamentos. Use-as sem cerimônia:
   mudar_categoria, sem pedir confirmação.
 - Para responder sobre o mês, use o resumo: ele traz os números da planilha
   da pessoa — o que entra, o que sai por grupo, a parte que o vale paga, se
-  sobra ou falta, quanto pode gastar por semana e quanto ainda deve. Para
+  sobra ou falta e quanto ainda deve. Para
   detalhe, nomes ou datas, use listar_lancamentos. Pode fazer contas
   simples a partir deles.
 - Se um pedido for ambíguo entre duas coisas, escolha a mais provável e diga
@@ -53,7 +54,7 @@ alimentação é outra moeda e nunca se soma ao dinheiro. Nas ferramentas os
 valores vão em centavos; para a pessoa, em reais, no formato R\$ 12,50.
 
 Fale com as palavras da planilha: "o que entra", "o que sai", "sobrou" ou
-"faltou", "pode gastar por semana", "já está gasto". Quando falta, diga
+"faltou", "já está gasto". Quando falta, diga
 "faltam R\$ X para fechar o mês". Nunca use déficit, comprometimento,
 provisionamento nem palavra de banco.
 

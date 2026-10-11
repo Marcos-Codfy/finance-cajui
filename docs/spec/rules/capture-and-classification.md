@@ -164,6 +164,12 @@ O final do cartão é lido pelo classificador por regras **antes** da redação 
 | RN-784 | A queda da IA é dita na tela, no tom do guia de voz, e nunca impede lançar | "A classificação automática está fora do ar. Usei as regras locais — confira a categoria antes de salvar." | prompt · D-UX-22 |
 | RN-785 | O servidor revalida todo comando vindo da fila como qualquer outro. Comando rejeitado volta para "Para conferir" com o motivo do catálogo; nunca some em silêncio | Sem rede, vale com saldo local de R$ 86,00; no servidor o saldo é R$ 30,00 (RN-122): volta com a proposta de R$ 30,00 no vale e R$ 56,00 em dinheiro | D-ASVS-03 |
 
+## Ditar o lançamento
+
+| ID | Regra | Exemplo ou teste | Origem |
+|---|---|---|---|
+| RN-1091 | A fala que **conta um gasto** — verbo de gasto (gastei, paguei, comprei, lança, anota) e um valor, sem ser pergunta — vira lançamento. Com rede, o ditado na conversa vai direto para a Juju, que lança e mostra o Desfazer (ADR-021). Sem rede, ou com a IA fora do ar, a resposta de falha oferece "Lançar pela conferência": a mesma frase abre a conferência do comprovante, lida pelo leitor do aparelho (RN-744, RN-782), que funciona sem rede (RN-780) | "gastei 40 no mercado no Pix" sem rede → conferência com R$ 40,00 e Pix; "quanto gastei em outubro?" → não oferece | BL-050 · decisão 2026-10-11 |
+
 ## Notificações do banco
 
 Ver [ADR-025](../../architecture/adr/ADR-025-notificacoes-do-banco.md). Só valem depois que a pessoa libera o acesso às notificações na tela do sistema, e só para os apps da lista fechada de bancos e carteiras.

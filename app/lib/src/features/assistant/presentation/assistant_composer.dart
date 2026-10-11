@@ -53,8 +53,11 @@ class _AssistantComposerState extends ConsumerState<AssistantComposer> {
     if (mounted) setState(() => _canDictate = can);
   }
 
-  /// Ouve e **põe o texto no campo**, sem enviar: quem confere o que foi
-  /// entendido é a pessoa, não o reconhecedor.
+  /// Ouve e **manda**: "segurar o microfone, dizer e pronto", como o dono
+  /// pediu em 11/10/2026 (BL-050). Até ali o texto parava no campo, à espera
+  /// de um toque (ADR-018); a Juju passou a lançar sozinha e a mostrar o que
+  /// fez com o Desfazer ao lado (ADR-021), e a conferência mudou de lugar —
+  /// da frase ouvida para o lançamento feito.
   Future<void> _dictate() async {
     setState(() => _listening = true);
     final heard = await ref.read(speechInputProvider).listen();
@@ -63,6 +66,7 @@ class _AssistantComposerState extends ConsumerState<AssistantComposer> {
       _listening = false;
       if (heard != null && heard.isNotEmpty) _text.text = heard;
     });
+    _send();
   }
 
   @override
@@ -118,7 +122,7 @@ class _AssistantComposerState extends ConsumerState<AssistantComposer> {
 
   Widget _field() => CajuiTextField(
     label: 'Sua pergunta',
-    hint: 'Quanto dá para gastar nesta semana?',
+    hint: 'Quanto sobra neste mês?',
     controller: _text,
     focusNode: _focus,
     enabled: widget.enabled,

@@ -41,7 +41,7 @@ String _reply(String text) => text;
 void main() {
   group('BL-049 · o plano do mês no contexto do assistente', () {
     test('RN-1010 · entra com os números da planilha: o que entra, o que '
-        'sai, a sobra e o que dá para gastar por semana', () async {
+        'sai e a sobra, sem limite da semana', () async {
       final client = SequencedChatClient([_reply('Certo.')]);
       final (server, token) = await _server(client);
       await server.call('POST', '/v1/plan', body: planBody(), token: token);
@@ -60,9 +60,7 @@ void main() {
       expect(sent, contains('"cents":225000'));
       expect(sent, contains('Sobra do mês'));
       expect(sent, contains('"cents":95000'));
-      // (3.200 − 1.200 − 450) ÷ 4 = 387,50.
-      expect(sent, contains('Pode gastar por semana'));
-      expect(sent, contains('"cents":38750'));
+      expect(sent, isNot(contains('semana')));
       expect(sent, isNot(contains('Renda planejada')));
     });
 

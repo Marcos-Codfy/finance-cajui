@@ -27,10 +27,10 @@ Todas são função pura do domínio (`MonthBudget`), as mesmas no celular, na w
 | RN-1012 | `coberto pelo vale = min(vale, gasto com comida)`. Comida são as categorias que o vale paga (RN-112) | min(500, 600) = 500 |
 | RN-1013 | `sai do bolso = total que sai − coberto pelo vale` | 2.880 − 500 = 2.380 |
 | RN-1014 | `resultado = dinheiro − sai do bolso`. Zero ou mais: o mês fecha. Negativo: falta `−resultado` para fechar | 3.300 − 2.380 = 920, fecha. Com R$ 2.000 de renda: faltam 250 |
-| RN-1015 | `pode gastar por semana = max(0, dinheiro − fixas − assinaturas − parcelas − dízimo + coberto) ÷ 4`, arredondado para baixo. A tela mostra à parte quanto disso é vale (RN-111) | (3.300 − 1.270 − 60 − 120 − 330 + 500) ÷ 4 = 505, sendo 125 de vale |
+| RN-1015 | **Revogada em 11/10/2026.** `pode gastar por semana = max(0, dinheiro − fixas − assinaturas − parcelas − dízimo + coberto) ÷ 4`, arredondado para baixo. A tela mostra à parte quanto disso é vale (RN-111) | (3.300 − 1.270 − 60 − 120 − 330 + 500) ÷ 4 = 505, sendo 125 de vale |
 | RN-1016 | `já está gasto = sai do bolso ÷ dinheiro`, em percentual inteiro. Passa de 100% quando o mês não fecha. Sem renda, não há percentual | 2.380 ÷ 3.300 = 72% |
 | RN-1017 | Dízimo é um percentual configurável da renda em dinheiro, guardado em centésimos de por cento. Pode ser zero | 10% de 3.300 = 330 |
-| RN-1018 | A semana começa na segunda-feira, ou no dia 1 se o mês começou no meio dela. O gasto da semana é o do dia a dia, nas duas moedas, porque o limite também conta o vale | Segunda 19/10 a terça 20/10: R$ 130 de 505, restam 375 |
+| RN-1018 | **Revogada em 11/10/2026.** A semana começa na segunda-feira, ou no dia 1 se o mês começou no meio dela. O gasto da semana é o do dia a dia, nas duas moedas, porque o limite também conta o vale | Segunda 19/10 a terça 20/10: R$ 130 de 505, restam 375 |
 | RN-1019 | Pagar no vale nunca é recusado por saldo. O vale é o do mês (RN-1006), e o que passa dele só deixa de ser coberto (RN-1012). Substitui a RN-122, que recusava pelo saldo da operadora — número que a planilha não tem e que a tela deixou de mostrar | Vale de R$ 500, mercado de R$ 620 no vale: lança; R$ 500 cobertos, R$ 120 saem do bolso |
 
 ## Cartões
@@ -55,8 +55,14 @@ Todas são função pura do domínio (`MonthBudget`), as mesmas no celular, na w
 | RN-1050 | O plano não é obrigatório: sem ele, o mês conta só o que aconteceu. Depois de 30 dias de uso sem nenhuma conta cadastrada, o app sugere as contas pelo gasto dos últimos 30 dias, arredondando cada uma para cima, de dez em dez reais | R$ 523,40 de mercado vira R$ 530 |
 | RN-1051 | O plano antigo é lido como o novo: a renda vira o primeiro salário (mesmo identificador, para o salário recebido continuar substituindo o esperado); cada fixo vira conta fixa; cada variável vira dia a dia pelo máximo; as parcelas digitadas soltas continuam contando até a pessoa salvar um plano novo | — |
 
+## Levar o mês para fora
+
+| ID | Regra | Exemplo |
+|---|---|---|
+| RN-1090 | O mês sai em planilha (`.xlsx`), com duas abas. **Resumo** traz os números do Meu mês, com as palavras da planilha (RN-1010 a RN-1017, RN-1060). **Lançamentos** traz uma linha por lançamento do mês, com data, descrição, categoria, grupo, forma de pagamento e as colunas de **dinheiro** e de **vale**, nunca somadas (RN-111). A compra parcelada diz em quantas vezes. O estorno tem linha própria, negativa, no mês em que o dinheiro voltou, mesmo se a compra foi de outro mês. No celular o arquivo sai pela tela de compartilhar do Android; na web, como download | Outubro: mercado de R$ 86,00 em 03/10 (R$ 30,00 no vale e R$ 56,00 no Pix), ônibus de R$ 50,00 no Pix em 05/10 e o estorno de R$ 10,00 do ônibus em 07/10. Saem três linhas: o dinheiro soma R$ 96,00 (56 + 50 − 10) e o vale, R$ 30,00 |
+
 ## Linguagem
 
 | ID | Regra |
 |---|---|
-| RN-1060 | A tela usa as palavras da planilha: "o que entra", "o que sai", "sobrou ou faltou", "pode gastar por semana", "já está gasto". Nada de "déficit", "comprometimento", "provisionamento" ou "pior caso". Tom descritivo, nunca de culpa |
+| RN-1060 | A tela usa as palavras da planilha: "o que entra", "o que sai", "sobrou ou faltou", "já está gasto". Nada de "déficit", "comprometimento", "provisionamento" ou "pior caso". Tom descritivo, nunca de culpa |

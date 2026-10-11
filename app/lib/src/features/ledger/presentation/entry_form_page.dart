@@ -2,7 +2,6 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
-import 'package:cajui/src/features/budget/presentation/week_effect_line.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -280,7 +279,6 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
           ),
           const SizedBox(height: CajuiSpacing.md),
         ],
-        WeekEffectLine(draft: state.draft),
         CajuiButton(
           label: widget.submitLabel,
           expand: true,

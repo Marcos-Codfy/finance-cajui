@@ -39,16 +39,18 @@ Formato e convenções em [README.md](README.md). Termos em [glossary.md](../glo
 
 ## Limite semanal
 
+> **Revogado em 11/10/2026**, a pedido do dono ("aquele item de quanto eu posso gastar na semana retire, na prática eu não uso e nem é útil pra mim"). As regras ficam como registro. O que delas vale para o mês continua valendo, testado sem a semana: o que conta como rotina (RN-643), a compra à vista no cartão na data da compra (RN-310) e o fora do padrão fora da rotina (RN-648).
+
 | ID | Regra | Fórmula ou exemplo | Origem |
 |---|---|---|---|
 | RN-640 | **Orçamento variável em dinheiro** do mês | `VB = Vd` (RN-620) + provisão de fora do padrão, se adotada (RN-432) | prompt |
-| RN-641 | **Limite da semana**, calculado no início de cada semana de calendário (ou no dia 1, para a primeira) | `limite = ⌊ restante × dias_da_semana_no_mês ÷ dias_restantes_no_mês ⌋`, em que `restante = VB −` variável em dinheiro gasto no mês antes do início da semana | decisão 2026-09-19 |
-| RN-642 | **Resta na semana** | `limite −` variável em dinheiro gasto na semana. Negativo é exibido como "a semana passou R$ X do limite" | prompt |
+| RN-641 | **Revogada em 11/10/2026.** **Limite da semana**, calculado no início de cada semana de calendário (ou no dia 1, para a primeira) | `limite = ⌊ restante × dias_da_semana_no_mês ÷ dias_restantes_no_mês ⌋`, em que `restante = VB −` variável em dinheiro gasto no mês antes do início da semana | decisão 2026-09-19 |
+| RN-642 | **Revogada em 11/10/2026.** **Resta na semana** | `limite −` variável em dinheiro gasto na semana. Negativo é exibido como "a semana passou R$ X do limite" | prompt |
 | RN-643 | Conta no gasto da semana toda linha de pagamento **em dinheiro**, de lançamento do bloco **variável**, pela **data da compra** — inclusive compra à vista no cartão (RN-310). Não contam: vale, fixos, dívidas, parcelas e lançamento marcado como fora do padrão (RN-648) | Mercado de R$ 186,40 no crédito em 12/09 reduz o limite da semana de 07 a 13/09 | decisão 2026-09-19 |
-| RN-644 | Semana partida pela virada do mês pertence a cada mês só pelos dias que estão nele; cada parte tem seu próprio limite | 28 a 30/09 é uma semana de 3 dias em setembro; 01 a 04/10 é uma de 4 dias em outubro | decisão 2026-09-19 |
-| RN-645 | Se o `restante` for zero ou negativo, o limite da semana é zero e o painel mostra o quanto o variável já passou do plano, em tom neutro | "O variável do mês já passou R$ 40 do plano" | D-UX-22 |
-| RN-646 | O limite é função dos lançamentos **anteriores** ao início da semana. Lançamento tardio com data de semana passada recalcula o limite da semana corrente | Lançar hoje um gasto de R$ 50 de terça passada reduz o limite desta semana | modelagem |
-| RN-647 | O limite semanal é informação, não bloqueio: nenhum lançamento é recusado por ultrapassá-lo | — | D-UX-18 |
+| RN-644 | **Revogada em 11/10/2026.** Semana partida pela virada do mês pertence a cada mês só pelos dias que estão nele; cada parte tem seu próprio limite | 28 a 30/09 é uma semana de 3 dias em setembro; 01 a 04/10 é uma de 4 dias em outubro | decisão 2026-09-19 |
+| RN-645 | **Revogada em 11/10/2026.** Se o `restante` for zero ou negativo, o limite da semana é zero e o painel mostra o quanto o variável já passou do plano, em tom neutro | "O variável do mês já passou R$ 40 do plano" | D-UX-22 |
+| RN-646 | **Revogada em 11/10/2026.** O limite é função dos lançamentos **anteriores** ao início da semana. Lançamento tardio com data de semana passada recalcula o limite da semana corrente | Lançar hoje um gasto de R$ 50 de terça passada reduz o limite desta semana | modelagem |
+| RN-647 | **Revogada em 11/10/2026.** O limite semanal é informação, não bloqueio: nenhum lançamento é recusado por ultrapassá-lo | — | D-UX-18 |
 | RN-648 | Lançamento marcado como **fora do padrão** (RN-240) conta inteiro no resultado projetado do mês (RN-621), mas fica fora do gasto da semana e do `restante` da RN-641. O limite semanal governa o gasto de rotina; o susto aparece onde pode ser resolvido, em "quanto falta ajustar" | Conserto de R$ 700 no dia 3, marcado fora do padrão: o mês passa a ter falta de R$ 142 e o limite da semana continua R$ 196,00. Sem a marca, a semana apareceria R$ 504 acima do limite | modelagem ⚑ validar |
 
 ## Custo de vida por dia
@@ -72,7 +74,7 @@ Formato e convenções em [README.md](README.md). Termos em [glossary.md](../glo
 
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
-| RN-670 | O número principal do painel é o **resta na semana** (RN-642), que continua útil com o mês no negativo. Sobra ou falta do mês e comprometimento ficam no segundo nível da mesma tela, visíveis sem toque | O painel abre em "Sobram R$ 412 até domingo", nunca em "Faltam R$ 142" | D-UX-01 |
+| RN-670 | **Revogada em 11/10/2026.** O número principal do painel é o **resta na semana** (RN-642), que continua útil com o mês no negativo. Sobra ou falta do mês e comprometimento ficam no segundo nível da mesma tela, visíveis sem toque | O painel abre em "Sobram R$ 412 até domingo", nunca em "Faltam R$ 142" | D-UX-01 |
 | RN-671 | Falta, dívida e limite ultrapassado nunca dependem só de cor: levam sinal, rótulo e ícone | — | D-UX-02 · D-WCAG |
 
 ## Exemplo completo

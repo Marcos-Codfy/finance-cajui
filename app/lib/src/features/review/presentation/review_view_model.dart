@@ -23,8 +23,8 @@ class ReviewViewModel extends Notifier<ReviewState> {
 
   /// As categorias de gasto do dia a dia e as assinaturas, menos Outros —
   /// que é o que se está tirando. A assinatura chega pela notificação como
-  /// qualquer compra ("Netflix R$ 39,90"), e tirá-la do dia a dia a tira
-  /// do limite da semana (RN-1003). Fixos e dívidas ficam de fora.
+  /// qualquer compra ("Netflix R$ 39,90"), e tirá-la do dia a dia a põe no
+  /// grupo certo do mês (RN-1003). Fixos e dívidas ficam de fora.
   static List<Category> _choices(LedgerBook book) => [
     for (final category in book.categories)
       if (_reviewable.contains(category.block) &&
