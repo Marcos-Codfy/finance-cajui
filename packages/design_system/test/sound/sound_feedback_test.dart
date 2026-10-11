@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -98,6 +100,42 @@ void main() {
       );
     });
 
+    test('lançar toca a semente e desfazer toca a folha, com pulso leve', () {
+      final player = _RecordingPlayer();
+      SoundAndHapticFeedback(
+          player: player,
+          settings: const SoundSettings(soundEnabled: true),
+        )
+        ..entrySaved()
+        ..undone();
+
+      expect(player.played.map((play) => play.$1), [
+        CajuiSound.entrySaved,
+        CajuiSound.undone,
+      ]);
+      // Lançar se repete o dia inteiro: o pulso é o de tecla, nunca o médio.
+      expect(haptics, [
+        'HapticFeedbackType.lightImpact',
+        'HapticFeedbackType.lightImpact',
+      ]);
+    });
+
+    test('semente e folha são confirmações: desligar a família as cala', () {
+      final player = _RecordingPlayer();
+      SoundAndHapticFeedback(
+          player: player,
+          settings: const SoundSettings(
+            soundEnabled: true,
+            categories: {SoundCategory.touches},
+          ),
+        )
+        ..entrySaved()
+        ..undone();
+
+      expect(player.played, isEmpty);
+      expect(haptics, hasLength(2));
+    });
+
     test('resposta tátil desligada não vibra', () {
       SoundAndHapticFeedback(
         player: _RecordingPlayer(),
@@ -116,6 +154,19 @@ void main() {
           startsWith('packages/design_system/assets/sounds/'),
         );
         expect(sound.asset, endsWith('.wav'));
+      }
+    });
+
+    test('todo token tem o arquivo de verdade, curto e leve', () {
+      // O caminho do token sem o prefixo de pacote é o caminho no disco.
+      for (final sound in CajuiSound.values) {
+        final file = File(
+          sound.asset.replaceFirst('packages/design_system/', ''),
+        );
+
+        expect(file.existsSync(), isTrue, reason: sound.asset);
+        // 60 KB cabem 680 ms de mono a 16 bits: nenhum som chega perto.
+        expect(file.lengthSync(), lessThan(60 * 1024), reason: sound.asset);
       }
     });
   });

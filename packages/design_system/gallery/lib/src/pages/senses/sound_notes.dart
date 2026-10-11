@@ -59,5 +59,15 @@ abstract final class SoundNotes {
       use: 'Dívida quitada, meta batida. Raro, e o único acima de 300 ms',
       milliseconds: 580,
     ),
+    CajuiSound.entrySaved: (
+      timbre: 'Semente caindo na cuia, com dois quiques',
+      use: 'Lançamento feito, com pulso leve',
+      milliseconds: 260,
+    ),
+    CajuiSound.undone: (
+      timbre: 'Folha roçando, que vai e volta',
+      use: 'Desfazer um lançamento, com pulso leve',
+      milliseconds: 210,
+    ),
   };
 }

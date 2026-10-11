@@ -80,4 +80,19 @@ class SoundAndHapticFeedback implements CajuiFeedback {
     _sound(CajuiSound.achievement);
     _haptic(HapticFeedback.mediumImpact);
   }
+
+  /// Pulso de tecla, e não a confirmação média de [saved]: lançar se repete
+  /// o dia inteiro, e um tranco a cada lançamento cansaria a mão.
+  @override
+  void entrySaved() {
+    _sound(CajuiSound.entrySaved);
+    _haptic(HapticFeedback.lightImpact);
+  }
+
+  /// Desfazer responde tão leve quanto lançar: é a mesma conversa, de volta.
+  @override
+  void undone() {
+    _sound(CajuiSound.undone);
+    _haptic(HapticFeedback.lightImpact);
+  }
 }
