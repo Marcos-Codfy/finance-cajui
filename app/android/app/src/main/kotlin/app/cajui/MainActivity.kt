@@ -5,6 +5,7 @@ import app.cajui.auth.DeviceKeyChannel
 import app.cajui.capture.CaptureChannel
 import app.cajui.capture.FileIntake
 import app.cajui.capture.PhotoIntake
+import app.cajui.files.FileShareChannel
 import app.cajui.home.HomeChannel
 import app.cajui.notifications.BackgroundEngine
 import app.cajui.notifications.NoticeChannel
@@ -62,6 +63,7 @@ class MainActivity : FlutterActivity() {
         capture = CaptureChannel(applicationContext, messenger, photos, files)
         speech = SpeechChannel(this, messenger)
         DeviceKeyChannel(messenger)
+        FileShareChannel(this, messenger)
         configureOutside(messenger)
         capture?.handle(intent)
         if (!restored) handleShortcut(intent, appIsRunning = false)
