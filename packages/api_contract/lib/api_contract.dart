@@ -5,6 +5,8 @@ library;
 
 export 'src/api_error.dart';
 export 'src/card_codec.dart';
+export 'src/catalog_version.dart';
+export 'src/category_codec.dart';
 export 'src/create_entry_request.dart';
 export 'src/debt_codec.dart';
 export 'src/device_fact.dart';
