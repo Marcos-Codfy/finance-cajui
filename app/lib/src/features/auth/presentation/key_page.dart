@@ -38,7 +38,11 @@ class _KeyPageState extends ConsumerState<KeyPage> {
 
   String get _typed => _key.text.trim();
 
-  bool get _isCode => _sixDigits.hasMatch(_typed);
+  /// O código sem espaços: o Google Authenticator o mostra em dois grupos
+  /// de três, e é assim que muita gente digita.
+  String get _digits => _typed.replaceAll(RegExp(r'\s'), '');
+
+  bool get _isCode => _sixDigits.hasMatch(_digits);
 
   bool get _ready => _isCode || _typed.length >= _minLength;
 
@@ -53,11 +57,12 @@ class _KeyPageState extends ConsumerState<KeyPage> {
       _saving = true;
       _problem = null;
     });
-    final secret = _isCode
-        ? await ref.read(codeExchangeProvider).tokenFor(_typed)
-        : _typed;
+    final outcome = _isCode
+        ? await ref.read(codeExchangeProvider).tokenFor(_digits)
+        : (token: _typed, error: null, retryAfterSeconds: null);
     if (!mounted) return;
-    if (secret == null) return _refused();
+    final secret = outcome.token;
+    if (secret == null) return _refused(outcome);
     await ref.read(householdKeyProvider).write(secret);
     if (!mounted) return;
     // O livro da consulta é o que o servidor tem, e foi lido antes de haver
@@ -67,12 +72,20 @@ class _KeyPageState extends ConsumerState<KeyPage> {
       ..read(hasHouseholdKeyProvider.notifier).refresh();
   }
 
-  /// O código não serviu: a frase do catálogo, e o campo limpo para o
-  /// próximo — o código muda a cada trinta segundos.
-  void _refused() => setState(() {
+  /// Não entrou: a frase do catálogo para o caso. Código que não serviu
+  /// limpa o campo para o próximo — ele muda a cada trinta segundos.
+  void _refused(CodeOutcome outcome) => setState(() {
+    final code = outcome.error ?? ErrorCode.auth04;
     _saving = false;
-    _key.clear();
-    _problem = (code: ErrorCode.auth04, text: ErrorTexts.of(ErrorCode.auth04));
+    if (code == ErrorCode.auth04) _key.clear();
+    _problem = (
+      code: code,
+      text: ErrorTexts.of(code).fill({
+        'recurso': 'Entrar na consulta',
+        'segundos': '${outcome.retryAfterSeconds ?? 60}',
+        'ação': 'conferir o código',
+      }),
+    );
   });
 
   List<Widget> _notice(PresentedError problem) => [
