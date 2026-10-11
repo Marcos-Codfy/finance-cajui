@@ -55,6 +55,12 @@ Todas são função pura do domínio (`MonthBudget`), as mesmas no celular, na w
 | RN-1050 | O plano não é obrigatório: sem ele, o mês conta só o que aconteceu. Depois de 30 dias de uso sem nenhuma conta cadastrada, o app sugere as contas pelo gasto dos últimos 30 dias, arredondando cada uma para cima, de dez em dez reais | R$ 523,40 de mercado vira R$ 530 |
 | RN-1051 | O plano antigo é lido como o novo: a renda vira o primeiro salário (mesmo identificador, para o salário recebido continuar substituindo o esperado); cada fixo vira conta fixa; cada variável vira dia a dia pelo máximo; as parcelas digitadas soltas continuam contando até a pessoa salvar um plano novo | — |
 
+## Levar o mês para fora
+
+| ID | Regra | Exemplo |
+|---|---|---|
+| RN-1090 | O mês sai em planilha (`.xlsx`), com duas abas. **Resumo** traz os números do Meu mês, com as palavras da planilha (RN-1010 a RN-1017, RN-1060). **Lançamentos** traz uma linha por lançamento do mês, com data, descrição, categoria, grupo, forma de pagamento e as colunas de **dinheiro** e de **vale**, nunca somadas (RN-111). A compra parcelada diz em quantas vezes. O estorno tem linha própria, negativa, no mês em que o dinheiro voltou, mesmo se a compra foi de outro mês. No celular o arquivo sai pela tela de compartilhar do Android; na web, como download | Outubro: mercado de R$ 86,00 em 03/10 (R$ 30,00 no vale e R$ 56,00 no Pix), ônibus de R$ 50,00 no Pix em 05/10 e o estorno de R$ 10,00 do ônibus em 07/10. Saem três linhas: o dinheiro soma R$ 96,00 (56 + 50 − 10) e o vale, R$ 30,00 |
+
 ## Linguagem
 
 | ID | Regra |
