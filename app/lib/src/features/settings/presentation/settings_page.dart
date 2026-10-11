@@ -1,12 +1,13 @@
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
 import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
+import 'package:cajui/src/features/notifications/presentation/bank_notifications_row.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// O que a pessoa regula no app: a chave da casa, o tema e o retorno
-/// sensorial. O plano, os cartões e as dívidas moram no Início, junto do
+/// O que a pessoa regula no app: a chave da casa, as notificações do banco,
+/// o tema e o retorno sensorial. O plano, os cartões e as dívidas moram no Início, junto do
 /// mês, como na planilha.
 ///
 /// Nada de servidor: o celular sincroniza sozinho (ADR-020), e o que havia
@@ -27,6 +28,7 @@ class SettingsPage extends ConsumerWidget {
       onBack: Navigator.of(context).maybePop,
       children: [
         ..._cadastros(context),
+        const BankNotificationsRow(),
         ..._appearance(ref),
         ..._feedback(ref),
       ],

@@ -3,6 +3,13 @@
          traziam; a versão de uso só a tinha por acaso, herdada de uma
          biblioteca — e ficaria sem rede no dia em que ela saísse. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Postar o "Lancei R$ 45,90. Desfazer?" e o aviso de domingo
+         (ADR-025). Do Android 13 em diante, pedida quando a pessoa liga o
+         lançamento pelas notificações do banco. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Marcar de novo o aviso de domingo depois de o celular reiniciar: o
+         Android esquece os alarmes ao desligar. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="Cajui"
         android:allowBackup="false"
@@ -58,6 +65,51 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/capture_paths" />
         </provider>
+        <!-- O leitor das notificações dos bancos (ADR-025). Só o sistema se
+             liga a ele, e só depois que a pessoa libera o acesso na tela do
+             sistema. Do que chega, fica só o que vem de um banco da lista
+             (`BankApps.kt`). -->
+        <service
+            android:name=".notifications.BankNotificationListener"
+            android:exported="true"
+            android:label="@string/notice_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+            </intent-filter>
+        </service>
+        <!-- O botão Desfazer do aviso de lançamento automático. Só o próprio
+             Cajui o chama, pela intenção que ele mesmo montou. -->
+        <receiver
+            android:name=".notifications.UndoReceiver"
+            android:exported="false"/>
+        <!-- O aviso de domingo da revisão da semana. -->
+        <receiver
+            android:name=".home.ReviewAlarmReceiver"
+            android:exported="false"/>
+        <!-- Celular reiniciado ou app atualizado: marca o aviso de novo. Os
+             dois são avisos que só o sistema manda. -->
+        <receiver
+            android:name=".home.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
+        <!-- O widget da tela inicial: quanto dá para gastar na semana, e a
+             câmera e a galeria a um toque. -->
+        <receiver
+            android:name=".home.HomeWidget"
+            android:exported="false"
+            android:label="@string/home_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/home_widget_info"/>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

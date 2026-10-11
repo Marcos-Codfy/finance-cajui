@@ -164,6 +164,17 @@ O final do cartão é lido pelo classificador por regras **antes** da redação 
 | RN-784 | A queda da IA é dita na tela, no tom do guia de voz, e nunca impede lançar | "A classificação automática está fora do ar. Usei as regras locais — confira a categoria antes de salvar." | prompt · D-UX-22 |
 | RN-785 | O servidor revalida todo comando vindo da fila como qualquer outro. Comando rejeitado volta para "Para conferir" com o motivo do catálogo; nunca some em silêncio | Sem rede, vale com saldo local de R$ 86,00; no servidor o saldo é R$ 30,00 (RN-122): volta com a proposta de R$ 30,00 no vale e R$ 56,00 em dinheiro | D-ASVS-03 |
 
+## Notificações do banco
+
+Ver [ADR-025](../../architecture/adr/ADR-025-notificacoes-do-banco.md). Só valem depois que a pessoa libera o acesso às notificações na tela do sistema, e só para os apps da lista fechada de bancos e carteiras.
+
+| ID | Regra | Exemplo ou teste | Origem |
+|---|---|---|---|
+| RN-786 | Compra no débito, Pix e transferência enviados, boleto pago e compra no crédito com cartão inequívoco, avisados pelo app do banco, viram lançamento sozinhos, com origem `notification`, e o Cajui avisa com o botão Desfazer. É a única exceção às RN-795 e RN-796: o Desfazer e a revisão de domingo (RN-870) fazem o papel da conferência | "Compra de R$ 45,90 APROVADA em MERCADO BOM PRECO para o cartão com final 1234", com o cartão Roxinho cadastrado → "Lancei R$ 45,90 em Mercado Bom Preco" · "Mercado · Roxinho" · Desfazer | decisão 2026-10-11 |
+| RN-787 | Só movimentação de dinheiro é lida. Propaganda, saldo, fatura — inclusive o pagamento dela (RN-340) —, código de acesso, alerta de limite, compra negada, estorno e agendamento não viram nada | "A fatura fechou em R$ 1.234,56" → nada; "Pix enviado para pagamento da fatura: R$ 500,00" → nada | decisão 2026-10-11 · RN-340 |
+| RN-788 | Pedem um toque, e não lançam: dinheiro que entrou, compra no crédito sem cartão reconhecível e compra parcelada. O toque abre a conferência de sempre com o que a notificação disse | "Pix recebido: R$ 300,00 de Ciclano" → "Entrou R$ 300,00 de Ciclano. Toque para registrar" → tela de recebimento | decisão 2026-10-11 · RN-758 |
+| RN-789 | A chave do lançamento é derivada da notificação: a mesma notificação nunca lança duas vezes, nem depois de desfeita. O que já está no livro com o mesmo valor no mesmo dia não lança. A forma é Débito, Pix ou Boleto pelo tipo; no crédito, o cartão cujo nome traz os quatro dígitos da notificação, ou o único com o nome do banco que avisou. A categoria vem do classificador da captura; sem palpite, Outros | Comprovante de R$ 45,90 compartilhado hoje + notificação de R$ 45,90 hoje → um lançamento só | decisão 2026-10-11 · RN-781 |
+
 ## Contador de sugestões
 
 | ID | Regra | Exemplo ou teste | Origem |
