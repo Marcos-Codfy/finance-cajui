@@ -40,13 +40,14 @@ abstract final class LedgerProjection {
       DebtDefined(:final debt) => _debtDefined(book, debt),
       MonthClosed() ||
       BudgetDefined() ||
-      DebtOrdered() => _planned(book, event),
+      DebtOrdered() ||
+      HouseholdNamed() => _planned(book, event),
     };
   }
 
-  /// O plano da planilha e a ordem das dívidas (ADR-023). O fechamento
-  /// antigo continua sendo lido e guardado para subir, mas não muda nenhum
-  /// número: o mês a mês agora é calculado.
+  /// O plano da planilha, a ordem das dívidas (ADR-023) e os nomes da casa
+  /// (RN-1070). O fechamento antigo continua sendo lido e guardado para
+  /// subir, mas não muda nenhum número: o mês a mês agora é calculado.
   static LedgerBook _planned(LedgerBook book, LedgerEvent event) =>
       switch (event) {
         BudgetDefined(:final plan) => book.copyWith(
@@ -54,6 +55,9 @@ abstract final class LedgerProjection {
         ),
         DebtOrdered(:final ids, :final definedAt) => book.copyWith(
           budget: book.budget.ordered(ids, definedAt),
+        ),
+        HouseholdNamed(:final names) => book.copyWith(
+          budget: book.budget.named(names),
         ),
         _ => book,
       };

@@ -57,6 +57,9 @@ final class LedgerEventCodec {
   /// O tipo do fato "ordem de quitação das dívidas".
   static const String debtOrdered = DeviceFact.debtOrdered;
 
+  /// O tipo do fato "nomes da casa definidos" (RN-1070).
+  static const String householdNamed = DeviceFact.householdNamed;
+
   /// Acha a categoria pelo identificador.
   final Category Function(String id) categoryOf;
 
@@ -83,6 +86,7 @@ final class LedgerEventCodec {
     VoucherBalanceAdjusted() => voucherAdjusted,
     BudgetDefined() => budgetDefined,
     DebtOrdered() => debtOrdered,
+    HouseholdNamed() => householdNamed,
   };
 
   static Map<String, Object?> _payloadOf(LedgerEvent event) => switch (event) {
@@ -109,12 +113,21 @@ final class LedgerEventCodec {
       on: adjustment.on,
       reason: adjustment.reason,
     ),
-    BudgetDefined(:final plan) => BudgetPlanCodec.encode(plan),
-    DebtOrdered(:final ids, :final definedAt) => DebtCodec.encodeOrdering((
-      ids: ids,
-      definedAt: definedAt,
-    )),
+    BudgetDefined() || DebtOrdered() || HouseholdNamed() => _planPayload(event),
   };
+
+  /// O plano da planilha, a ordem das dívidas (ADR-023) e os nomes da casa
+  /// (RN-1070).
+  static Map<String, Object?> _planPayload(LedgerEvent event) =>
+      switch (event) {
+        BudgetDefined(:final plan) => BudgetPlanCodec.encode(plan),
+        DebtOrdered(:final ids, :final definedAt) => DebtCodec.encodeOrdering((
+          ids: ids,
+          definedAt: definedAt,
+        )),
+        HouseholdNamed(:final names) => HouseholdCodec.encode(names),
+        _ => const {},
+      };
 
   static Map<String, Object?> _encodeReceipt(IncomeReceipt receipt) => {
     'id': receipt.id,
@@ -167,6 +180,7 @@ final class LedgerEventCodec {
       voucherAdjusted => _decodeVoucher(id, payload),
       budgetDefined => BudgetDefined(BudgetPlanCodec.decode(payload)),
       debtOrdered => _decodeOrdering(payload),
+      householdNamed => HouseholdNamed(HouseholdCodec.decode(payload)),
       _ => null,
     };
   }

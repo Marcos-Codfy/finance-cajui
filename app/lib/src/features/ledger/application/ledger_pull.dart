@@ -81,7 +81,8 @@ final class LedgerPull {
     DebtDefined() ||
     MonthClosed() ||
     BudgetDefined() ||
-    DebtOrdered() => !book.factIds.contains(event.id),
+    DebtOrdered() ||
+    HouseholdNamed() => !book.factIds.contains(event.id),
   };
 
   /// O cartão do servidor entra quando o daqui não existe, ou quando diz
