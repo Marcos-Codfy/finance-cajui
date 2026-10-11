@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import app.cajui.auth.DeviceKeyChannel
 import app.cajui.home.HomeChannel
+import app.cajui.reminders.ReminderChannel
 import io.flutter.FlutterInjector
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.dart.DartExecutor
@@ -74,6 +75,9 @@ class BackgroundEngine private constructor(
             // Sem assinatura desde a ADR-024, o canal da chave não pede tela:
             // o motor sem janela usa o mesmo do app, só para o nome do aparelho.
             DeviceKeyChannel(messenger)
+            // Os lembretes também são republicados daqui: a conta paga pela
+            // notificação, com o app fechado, sai da lista na hora (BL-101).
+            ReminderChannel(context, messenger, activity = null)
             MethodChannel(messenger, BACKGROUND_CHANNEL).setMethodCallHandler { call, result ->
                 if (call.method == "finished") NoticeRouter.finished(background, context)
                 result.success(null)

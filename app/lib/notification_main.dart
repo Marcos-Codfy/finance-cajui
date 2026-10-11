@@ -5,6 +5,7 @@ import 'package:cajui/src/app/composition.dart';
 import 'package:cajui/src/core/storage/event_store_opener.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
 import 'package:cajui/src/features/notifications/application/notification_providers.dart';
+import 'package:cajui/src/features/reminders/application/reminders_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,6 +65,9 @@ abstract final class BackgroundRun {
       await container
           .read(homeSnapshotPublisherProvider)
           .publishFrom(container);
+      // A conta paga pela notificação, com o app fechado, sai dos lembretes
+      // agora — e não só quando o app abrir (BL-101).
+      await container.read(remindersPublisherProvider).publishFrom(container);
     } finally {
       container.dispose();
       await store.close();
