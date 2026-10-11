@@ -57,9 +57,4 @@ dependencies {
     // OCR no aparelho, com o modelo embutido no APK: lê sem rede desde a
     // primeira vez e não depende do Google Play Services (ADR-007).
     implementation("com.google.mlkit:text-recognition:16.0.1")
-
-    // A caixa de diálogo da digital, que o sistema desenha e o app não vê:
-    // o Cajui nunca toca na biometria em si, só pede que o Android libere a
-    // chave do Keystore (ADR-008).
-    implementation("androidx.biometric:biometric:1.1.0")
 }

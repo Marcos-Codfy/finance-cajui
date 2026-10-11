@@ -7,8 +7,8 @@ import 'package:flutter/services.dart';
 /// `app.cajui/device`.
 ///
 /// Só a chave pública atravessa: assinar deixou de ser preciso quando a
-/// chave da casa passou a provar quem somos (ADR-020). O lado nativo
-/// continua sabendo assinar, e ninguém mais pede.
+/// chave da casa passou a provar quem somos (ADR-020), e o lado nativo
+/// parou de saber assinar (ADR-024).
 final class NativeDeviceKeyStore implements DeviceKeyStore {
   /// Cria a porta. O canal entra por parâmetro para o teste simular o lado
   /// nativo.
