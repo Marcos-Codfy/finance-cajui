@@ -65,11 +65,7 @@ abstract final class DrumPose {
   }
 
   /// Recuando, preso pela borda de baixo: o alto vai para longe primeiro.
-  static SpacePose _leaving(
-    double amount,
-    double span, {
-    required bool fades,
-  }) {
+  static SpacePose _leaving(double amount, double span, {required bool fades}) {
     return SpacePose(
       tilt: -CajuiDepth.drumTilt * 0.8 * amount,
       scale: 1 - 0.12 * amount,

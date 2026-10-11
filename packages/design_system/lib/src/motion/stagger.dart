@@ -14,7 +14,9 @@ double _fraction(Duration part) =>
 /// terminam dentro de `CajuiDurations.slowest`: a cascata inteira cabe no
 /// teto de 600 ms do projeto, qualquer que seja o tamanho da lista.
 double staggered(double progress, int index) {
-  final start = _fraction(CajuiDurations.stagger * index.clamp(0, maxStaggered));
+  final start = _fraction(
+    CajuiDurations.stagger * index.clamp(0, maxStaggered),
+  );
   final span = 1 - _fraction(CajuiDurations.stagger * maxStaggered);
   return ((progress - start) / span).clamp(0.0, 1.0);
 }

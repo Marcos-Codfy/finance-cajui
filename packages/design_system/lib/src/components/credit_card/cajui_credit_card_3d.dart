@@ -72,6 +72,7 @@ class _CajuiCreditCard3DState extends State<CajuiCreditCard3D>
   /// A inclinação máxima, uns 14°: o bastante para o brilho andar, pouco
   /// para o texto deformar.
   static const double _maxAngle = 0.24;
+
   /// A lente do design system: a mesma do carrossel e da rolagem.
   static const double _perspective = CajuiDepth.perspective;
 

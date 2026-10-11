@@ -39,12 +39,9 @@ class DepthItem extends SingleChildRenderObjectWidget {
 }
 
 class _RenderDepthItem extends RenderViewportPose {
-  new({
-    required MotionLevel motion,
-    super.position,
-    super.geometry,
-  }) : _motion = motion,
-       super(active: motion != MotionLevel.reduced);
+  new({required MotionLevel motion, super.position, super.geometry})
+    : _motion = motion,
+      super(active: motion != MotionLevel.reduced);
 
   MotionLevel _motion;
 

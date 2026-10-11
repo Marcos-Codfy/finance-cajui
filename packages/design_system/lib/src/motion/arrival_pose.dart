@@ -29,7 +29,10 @@ abstract final class ArrivalPose {
   ///
   /// No `lite` não há desfoque; no `reduced`, só a opacidade muda — o bloco
   /// está no lugar desde o primeiro quadro.
-  static (SpacePose, double) of(double progress, {required MotionLevel motion}) {
+  static (SpacePose, double) of(
+    double progress, {
+    required MotionLevel motion,
+  }) {
     final t = progress.clamp(0.0, 1.0);
     if (motion == MotionLevel.reduced) {
       return (SpacePose(opacity: CajuiCurves.standard.transform(t)), 0);

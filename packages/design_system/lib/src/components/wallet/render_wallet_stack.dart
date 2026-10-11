@@ -113,7 +113,8 @@ class RenderWalletStack extends RenderBox
   @override
   Size computeDryLayout(BoxConstraints constraints) => _column(
     constraints,
-    (child) => child.getDryLayout(BoxConstraints(maxWidth: constraints.maxWidth)),
+    (child) =>
+        child.getDryLayout(BoxConstraints(maxWidth: constraints.maxWidth)),
   );
 
   @override
@@ -153,7 +154,10 @@ class RenderWalletStack extends RenderBox
     if (viewport is! RenderViewportBase || viewport.axis != Axis.vertical) {
       return (top: null, pull: 0);
     }
-    final top = MatrixUtils.transformPoint(getTransformTo(viewport), Offset.zero);
+    final top = MatrixUtils.transformPoint(
+      getTransformTo(viewport),
+      Offset.zero,
+    );
     final scroll = _position;
     final measured =
         scroll != null && scroll.hasPixels && scroll.hasContentDimensions;

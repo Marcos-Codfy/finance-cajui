@@ -6,11 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/host.dart';
 
-Widget _scene({
-  CajuiThemeData? theme,
-  Object? replay,
-  bool visible = true,
-}) {
+Widget _scene({CajuiThemeData? theme, Object? replay, bool visible = true}) {
   return host(
     TickerMode(
       enabled: visible,
@@ -94,9 +90,7 @@ void main() {
   });
 
   group('CajuiCinematicEntrance', () {
-    testWidgets('RNF-A11Y-08 roda uma vez e termina assentada', (
-      tester,
-    ) async {
+    testWidgets('RNF-A11Y-08 roda uma vez e termina assentada', (tester) async {
       await tester.pumpWidget(_scene());
       await tester.pump();
 

@@ -61,13 +61,16 @@ double _lens(WidgetTester tester, String label) => tester
 
 void main() {
   group('DrumPose', () {
-    test('RNF-PERF-01 item inteiro à vista fica plano, com matriz identidade', () {
-      final pose = DrumPose.of(top: 220, bottom: 420, extent: 640);
+    test(
+      'RNF-PERF-01 item inteiro à vista fica plano, com matriz identidade',
+      () {
+        final pose = DrumPose.of(top: 220, bottom: 420, extent: 640);
 
-      expect(pose.isFlat, isTrue);
-      expect(pose.alpha, 255);
-      expect(pose.matrix(const Size(320, 200)).isIdentity(), isTrue);
-    });
+        expect(pose.isFlat, isTrue);
+        expect(pose.alpha, 255);
+        expect(pose.matrix(const Size(320, 200)).isIdentity(), isTrue);
+      },
+    );
 
     test('quem entra por baixo vem deitado, menor e esmaecido', () {
       // Faixa da borda: 640 × 0,32 = 204,8; a seção de 200 é toda faixa.

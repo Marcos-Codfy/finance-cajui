@@ -56,22 +56,28 @@ abstract final class WalletPose {
     final deckShift = -slot.top - behind * _peek;
     final stick = _stick(slot, viewportTop);
     final recede = (stick / (slot.height + slot.gap)).clamp(0.0, 3.0);
-    // Nas pontas, zero exato: o seno de π em ponto flutuante não é zero, e
-    // um resto de giro manteria uma camada viva no cartão parado.
-    final flight = deal <= 0 || deal >= 1 ? 0.0 : math.sin(deal * math.pi);
     return SpacePose(
-      tilt: flight * _flightTilt,
+      tilt: _flight(deal) * _flightTilt,
       scale:
           lerpDouble(1 - _deckShrink * behind, 1, dealt)! *
           (1 - 0.045 * recede),
       shift: Offset(
         0,
-        deckShift * (1 - dealt) + stick - recede * _peek + slot.index * pull * _fan,
+        deckShift * (1 - dealt) +
+            stick -
+            recede * _peek +
+            slot.index * pull * _fan,
       ),
       opacity: fades ? 1 - 0.15 * recede : 1,
       pivot: Alignment.topCenter,
     );
   }
+
+  /// O quanto o cartão está no meio do voo, de 0 a 1. Nas pontas, zero
+  /// exato: o seno de π em ponto flutuante não é zero, e um resto de giro
+  /// manteria uma camada viva no cartão parado.
+  static double _flight(double deal) =>
+      deal <= 0 || deal >= 1 ? 0 : math.sin(deal * math.pi);
 
   /// O quanto o cartão desce para ficar parado na borda de cima: até o
   /// último cartão chegar lá, quando a pilha inteira vai embora junta.

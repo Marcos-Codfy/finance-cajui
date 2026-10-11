@@ -1,5 +1,8 @@
 import 'package:design_system/src/components/button/cajui_icon_button.dart';
+import 'package:design_system/src/components/depth/cajui_depth_scroll.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
+import 'package:design_system/src/motion/cajui_cinematic_entrance.dart';
+import 'package:design_system/src/motion/cajui_cinematic_shot.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/tokens/primitives/cajui_curves.dart';
 import 'package:design_system/src/tokens/primitives/cajui_durations.dart';
@@ -11,6 +14,11 @@ import 'package:flutter/widgets.dart';
 ///
 /// O título rola junto com o conteúdo, em vez de ocupar uma barra fixa: em
 /// tela de celular, cada linha presa no topo é uma linha a menos de dado.
+///
+/// Tela de painel pode ligar a profundidade ([depth]) e a entrada
+/// cinematográfica ([cinematic]) sem montar nada à mão: o título e cada
+/// filho viram seções da `CajuiDepthScroll` e tomadas da
+/// `CajuiCinematicEntrance`, na ordem em que estão.
 class CajuiScreen extends StatelessWidget {
   /// Cria a tela [title] com o conteúdo [children].
   const new({
@@ -21,6 +29,10 @@ class CajuiScreen extends StatelessWidget {
     this.trailing,
     this.footer,
     this.controller,
+    this.depth = false,
+    this.backdrop,
+    this.cinematic = false,
+    this.replayKey,
     super.key,
   });
 
@@ -45,6 +57,21 @@ class CajuiScreen extends StatelessWidget {
   /// Quem comanda a rolagem, quando a tela precisa mandar nela — uma conversa
   /// que acompanha a mensagem nova, por exemplo.
   final ScrollController? controller;
+
+  /// Liga a rolagem em profundidade: as seções curvam nas bordas da tela e
+  /// a superfície quica nas pontas. Para tela de painel, como o Início — em
+  /// formulário, o efeito só atrapalharia.
+  final bool depth;
+
+  /// Com [depth], a camada do fundo, que sobe mais devagar que as seções.
+  final Widget? backdrop;
+
+  /// Liga a entrada cinematográfica: o título e cada filho chegam da
+  /// profundidade, nessa ordem, uma vez por montagem.
+  final bool cinematic;
+
+  /// Com [cinematic], a chave que faz a entrada rodar de novo: o mês.
+  final Object? replayKey;
 
   /// A largura máxima do conteúdo. Em janela larga, a tela não estica: linha
   /// comprida demais cansa a leitura.
@@ -83,6 +110,7 @@ class CajuiScreen extends StatelessWidget {
   }
 
   Widget _content(BuildContext context) {
+    if (depth || cinematic) return _staged(context);
     return ListView(
       controller: controller,
       padding: const EdgeInsets.all(CajuiSpacing.xl),
@@ -90,6 +118,42 @@ class CajuiScreen extends StatelessWidget {
         if (onBack != null || trailing != null) _corner(),
         ..._header(context),
         ...children,
+      ],
+    );
+  }
+
+  /// A tela encenada: o alto (canto e título) é um bloco só, para curvar e
+  /// chegar inteiro, e cada filho é um bloco depois dele.
+  Widget _staged(BuildContext context) {
+    final blocks = [_top(context), ...children];
+    final scenes = cinematic
+        ? [
+            for (final (index, block) in blocks.indexed)
+              CajuiCinematicShot(index: index, child: block),
+          ]
+        : blocks;
+    // A margem da rolagem em profundidade já é a mesma da tela comum.
+    final list = depth
+        ? CajuiDepthScroll(
+            controller: controller,
+            backdrop: backdrop,
+            children: scenes,
+          )
+        : ListView(
+            controller: controller,
+            padding: const EdgeInsets.all(CajuiSpacing.xl),
+            children: scenes,
+          );
+    if (!cinematic) return list;
+    return CajuiCinematicEntrance(replayKey: replayKey, child: list);
+  }
+
+  Widget _top(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (onBack != null || trailing != null) _corner(),
+        ..._header(context),
       ],
     );
   }

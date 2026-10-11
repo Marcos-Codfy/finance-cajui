@@ -26,10 +26,7 @@ Widget _flow({
         child: CajuiCoverFlow(
           semanticLabel: 'Números do mês',
           onPageChanged: onPage,
-          children: [
-            for (final page in pages)
-              CajuiCard(child: Text(page)),
-          ],
+          children: [for (final page in pages) CajuiCard(child: Text(page))],
         ),
       ),
     ),
@@ -43,10 +40,7 @@ SemanticsNode _dots(WidgetTester tester) =>
 
 Rect _stage(WidgetTester tester) => tester.getRect(
   find
-      .descendant(
-        of: find.byType(CajuiCoverFlow),
-        matching: find.byType(Stack),
-      )
+      .descendant(of: find.byType(CajuiCoverFlow), matching: find.byType(Stack))
       .first,
 );
 
@@ -158,7 +152,11 @@ void main() {
       final pages = <int>[];
       await tester.pumpWidget(_flow(onPage: pages.add));
 
-      await tester.fling(find.text('Sobra do mês'), const Offset(-300, 0), 4000);
+      await tester.fling(
+        find.text('Sobra do mês'),
+        const Offset(-300, 0),
+        4000,
+      );
       await tester.pumpAndSettle();
 
       expect(pages, [1]);

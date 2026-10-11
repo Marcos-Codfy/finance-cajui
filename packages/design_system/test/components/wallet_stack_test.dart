@@ -31,18 +31,17 @@ Widget _wallet({
 }) {
   return host(
     MediaQuery(
-      data: MediaQueryData(size: _screen, textScaler: TextScaler.linear(textScale)),
+      data: MediaQueryData(
+        size: _screen,
+        textScaler: TextScaler.linear(textScale),
+      ),
       child: SizedBox.fromSize(
         size: _screen,
         child: ListView(
           controller: controller,
           children: [
             const SizedBox(height: 100),
-            CajuiWalletStack(
-              children: [
-                for (var i = 0; i < 3; i++) _card(i, onTap: () => onTap?.call(i)),
-              ],
-            ),
+            _stack(onTap),
             const SizedBox(height: 1200),
           ],
         ),
@@ -51,6 +50,10 @@ Widget _wallet({
     theme: theme,
   );
 }
+
+Widget _stack(ValueChanged<int>? onTap) => CajuiWalletStack(
+  children: [for (var i = 0; i < 3; i++) _card(i, onTap: () => onTap?.call(i))],
+);
 
 Future<void> _screenSize(WidgetTester tester) async {
   tester.view.physicalSize = _screen;
@@ -128,17 +131,20 @@ void main() {
       expect(tester.hasRunningAnimations, isFalse);
     });
 
-    testWidgets('RNF-A11Y-07 no reduzido é uma coluna desde o primeiro quadro', (
-      tester,
-    ) async {
-      await _screenSize(tester);
-      await tester.pumpWidget(
-        _wallet(theme: CajuiThemeData.light(motionLevel: MotionLevel.reduced)),
-      );
+    testWidgets(
+      'RNF-A11Y-07 no reduzido é uma coluna desde o primeiro quadro',
+      (tester) async {
+        await _screenSize(tester);
+        await tester.pumpWidget(
+          _wallet(
+            theme: CajuiThemeData.light(motionLevel: MotionLevel.reduced),
+          ),
+        );
 
-      expect(tester.hasRunningAnimations, isFalse);
-      expect(_paintedTop(tester, 2), 524);
-    });
+        expect(tester.hasRunningAnimations, isFalse);
+        expect(_paintedTop(tester, 2), 524);
+      },
+    );
 
     testWidgets('rolando, o cartão para no alto e o toque acha o de cima', (
       tester,
@@ -182,7 +188,9 @@ void main() {
               size: _screen,
               child: ListView(
                 children: [
-                  CajuiWalletStack(children: [for (var i = 0; i < 3; i++) _card(i)]),
+                  CajuiWalletStack(
+                    children: [for (var i = 0; i < 3; i++) _card(i)],
+                  ),
                 ],
               ),
             ),
