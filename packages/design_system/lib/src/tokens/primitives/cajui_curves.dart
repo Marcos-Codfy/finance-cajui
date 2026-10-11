@@ -14,4 +14,11 @@ abstract final class CajuiCurves {
 
   /// Ida e volta equilibrada: mudança de valor, troca de cor.
   static const Curve standard = Cubic(0.4, 0, 0.2, 1);
+
+  /// Chegada de câmera: sai rápido, freia, passa uns 3% do destino e volta.
+  ///
+  /// É a curva da entrada cinematográfica e da pilha de carteira que se
+  /// abre. A ultrapassagem é menor que a de [spring] de propósito: num
+  /// toque, o exagero é resposta; num bloco inteiro chegando, seria tremor.
+  static const Curve settle = Cubic(0.16, 1.2, 0.3, 1.04);
 }

@@ -1,14 +1,16 @@
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_warnings.dart';
 import 'package:cajui/src/features/receipts/presentation/read_text_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// O que a conferência mostra acima dos campos: com que certeza a leitura
-/// veio, se parece repetido, e as alternativas dos campos em que o app
-/// ficou em dúvida — a um toque de trocar.
+/// O que a conferência mostra acima dos campos: os avisos de repetido e de
+/// transferência dentro da casa ([CaptureWarnings]), com que certeza a
+/// leitura veio, e as alternativas dos campos em que o app ficou em
+/// dúvida — a um toque de trocar.
 ///
 /// A confiança nunca é dita só por cor: leva rótulo em texto e ícone
 /// (RN-671). O campo já vem com o candidato mais provável; o que aparece
@@ -34,7 +36,7 @@ class CaptureHeader extends StatelessWidget {
   /// Troca o rascunho do formulário.
   final EntryFormEdit edit;
 
-  /// O dia de hoje, para o aviso de repetido dizer "hoje" em vez da data.
+  /// O dia de hoje, para os avisos dizerem "hoje" e "ontem" em vez da data.
   final LocalDate today;
 
   /// A categoria que está no campo, para não a oferecer de novo.
@@ -56,10 +58,7 @@ class CaptureHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_alreadyThere case final existing?) ...[
-          _duplicateNotice(existing),
-          const SizedBox(height: CajuiSpacing.lg),
-        ],
+        CaptureWarnings(capture: capture, book: book, today: today),
         CajuiConfidenceIndicator(_levels[proposal.category.confidence]!),
         if (proposal.amount.candidates.length > 1) ...[
           const SizedBox(height: CajuiSpacing.md),
@@ -74,39 +73,6 @@ class CaptureHeader extends StatelessWidget {
       ],
     );
   }
-
-  /// O lançamento que já existe e **parece** ser este comprovante: mesmo
-  /// valor, mesma data e mesmo lugar (RN-221).
-  Entry? get _alreadyThere {
-    final proposal = capture.proposal;
-    final merchant = proposal.merchant;
-    final amount = proposal.amount.value;
-    final on = proposal.occurredOn.value;
-    // Comprovante em que a leitura não resolveu valor, data ou lugar não dá
-    // para comparar com nada: aí não há aviso.
-    if (merchant == null || amount == null || on == null) return null;
-    return PossibleDuplicate.among(
-      book.entries,
-      amount: amount,
-      occurredOn: on,
-      description: merchant,
-    );
-  }
-
-  /// **Aviso, e não bloqueio.** Dois cafés de R$ 8,50 no mesmo dia são
-  /// legítimos: quem decide é quem está olhando (RN-221).
-  Widget _duplicateNotice(Entry existing) => CajuiNotice(
-    what:
-        'Já existe um lançamento de ${MoneyFormat.brl(existing.amount)} '
-        'em ${existing.description}, '
-        '${_when(existing.occurredOn)}.',
-    meaning: 'É outro?',
-  );
-
-  /// "hoje", quando for hoje; no dia tal, quando não.
-  String _when(LocalDate day) => day == today
-      ? 'hoje'
-      : 'no dia ${day.day} de ${CalendarWords.month(day.budgetMonth)}';
 
   /// A porta para a transparência do fluxo (RN-735).
   Widget _seeWhatWasRead(BuildContext context) => Align(

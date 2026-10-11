@@ -95,4 +95,13 @@ class SoundAndHapticFeedback implements CajuiFeedback {
     _sound(CajuiSound.undone);
     _haptic(HapticFeedback.lightImpact);
   }
+
+  /// O deslize é som de ambiente, não de toque: quem folheia os números do
+  /// mês várias vezes ao dia pode calar só ele. A vibração é o pulso de
+  /// tecla, a trava que se sente quando a página assenta.
+  @override
+  void pageTurned() {
+    _sound(CajuiSound.swipe);
+    _haptic(HapticFeedback.lightImpact);
+  }
 }

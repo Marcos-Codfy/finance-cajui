@@ -1,6 +1,7 @@
 import 'package:api_contract/src/budget_plan_codec.dart';
 import 'package:api_contract/src/card_codec.dart';
 import 'package:api_contract/src/debt_codec.dart';
+import 'package:api_contract/src/household_codec.dart';
 import 'package:api_contract/src/json_reader.dart';
 import 'package:api_contract/src/month_close_codec.dart';
 import 'package:meta/meta.dart';
@@ -57,6 +58,9 @@ final class DeviceFact {
   /// O tipo do fato "ordem de quitação das dívidas" (RN-1031).
   static const debtOrdered = 'debt.ordered';
 
+  /// O tipo do fato "nomes da casa definidos" (RN-1070).
+  static const householdNamed = 'household.named';
+
   /// Os tipos que o servidor aceita guardar assim, e só eles.
   static const Set<String> types = {
     statementSettled,
@@ -65,6 +69,7 @@ final class DeviceFact {
     monthClosed,
     budgetDefined,
     debtOrdered,
+    householdNamed,
   };
 
   /// O identificador do fato: o mesmo do registro do aparelho que o gravou.
@@ -97,6 +102,7 @@ final class DeviceFact {
         debtOrdered => DebtCodec.encodeOrdering(
           DebtCodec.decodeOrdering(payload),
         ),
+        householdNamed => HouseholdCodec.encode(HouseholdCodec.decode(payload)),
         _ => _close(payload),
       };
       return _bounded(normalized);

@@ -136,6 +136,28 @@ void main() {
       expect(haptics, hasLength(2));
     });
 
+    test('a página do carrossel encaixa com o deslize, que é de ambiente', () {
+      final player = _RecordingPlayer();
+      final feedback = SoundAndHapticFeedback(
+        player: player,
+        settings: const SoundSettings(soundEnabled: true),
+      )..pageTurned();
+
+      expect(player.played.single.$1, CajuiSound.swipe);
+      expect(haptics, ['HapticFeedbackType.lightImpact']);
+
+      // Quem folheia muito cala só o ambiente; o pulso continua.
+      player.played.clear();
+      feedback
+        ..settings = const SoundSettings(
+          soundEnabled: true,
+          categories: {SoundCategory.touches, SoundCategory.confirmations},
+        )
+        ..pageTurned();
+      expect(player.played, isEmpty);
+      expect(haptics, hasLength(2));
+    });
+
     test('resposta tátil desligada não vibra', () {
       SoundAndHapticFeedback(
         player: _RecordingPlayer(),

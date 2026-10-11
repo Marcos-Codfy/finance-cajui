@@ -61,4 +61,7 @@ class RecordingFeedback implements CajuiFeedback {
 
   @override
   void undone() => calls.add('undone');
+
+  @override
+  void pageTurned() => calls.add('pageTurned');
 }

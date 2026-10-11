@@ -15,6 +15,7 @@ export 'src/entry_codec.dart';
 export 'src/error_class.dart';
 export 'src/error_code.dart';
 export 'src/failure_mapper.dart';
+export 'src/household_codec.dart';
 export 'src/income_codec.dart';
 export 'src/json_reader.dart';
 export 'src/month_close_codec.dart';

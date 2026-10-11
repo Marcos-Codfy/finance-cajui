@@ -50,6 +50,22 @@ abstract final class NoticeWords {
     );
   }
 
+  /// "Pix de R$ 500,00 para Marcos V M Arruda" (RN-1072): dinheiro que
+  /// mudou de conta dentro da casa, sem lançamento. O toque abre a
+  /// conferência, que repete o aviso e deixa lançar se foi gasto.
+  static AskAnnouncement ownTransfer(String noticeId, BankReading reading) {
+    final what = reading.kind == MovementKind.pixSent ? 'Pix' : 'Transferência';
+    final to = _name(reading) ?? 'alguém da casa';
+    return AskAnnouncement(
+      noticeId: noticeId,
+      title: '$what de ${_brl(reading.amount)} para $to',
+      text:
+          'Entre contas da casa: não entrou como gasto. Se foi gasto, toque '
+          'para lançar.',
+      shareText: receiptText(reading),
+    );
+  }
+
   /// A compra que pede um toque: o cartão não deu para saber, ou foi
   /// parcelada e as parcelas saem de quem confirma (RN-788).
   static AskAnnouncement purchase(String noticeId, BankReading reading) {

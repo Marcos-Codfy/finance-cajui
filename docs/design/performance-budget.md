@@ -27,6 +27,12 @@ Meta: 60 quadros por segundo — 16,6 ms por quadro — nos níveis `full` e `li
 | Esqueleto pulsando · três pontos | sim | sim | parados |
 | Paralaxe do painel · elemento compartilhado | sim | simplificados | fusão de 120 ms |
 | Desfoque atrás de folha · shader de fundo | sim | — | — |
+| Rolagem em profundidade | curva, esmaece, fundo em paralaxe | curva, sem esmaecer | lista comum |
+| Carrossel 3D | gira, encolhe, esmaece | igual | plano; troca é fusão de 120 ms |
+| Entrada cinematográfica | viagem, desfoque e luz | viagem | fusão de 120 ms, todos juntos |
+| Pilha de carteira | maço, pilha e leque | sem escurecer | coluna parada |
+
+**A exceção do desfoque.** A entrada cinematográfica é o único lugar que anima desfoque quadro a quadro: só no `full`, por no máximo 600 ms, em até seis blocos, e com o filtro desligado — sem camada — quando acaba. Se o aparelho perder quadros com ela, o monitor baixa para `lite` e o desfoque some (ADR-028). Os outros efeitos de profundidade só trocam matriz na pintura: parados, custam o mesmo que a tela plana.
 
 Quem escolhe o nível é o `MotionLevelResolver`, nesta ordem: **sistema** (movimento reduzido ligado → `reduced`) · **medição** (mais de 5% dos quadros acima de 16,6 ms numa janela de 120 → cai para `lite` e não volta a subir na sessão, RNF-PERF-02) · **preferência** de quem usa. Nunca pelo modelo do aparelho.
 
