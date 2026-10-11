@@ -93,14 +93,28 @@ Escalas curtas de propósito: com poucos degraus, duas telas feitas em dias dife
 | `CajuiSprings.level` | ultrapassagem de ~4% | O nível da água subindo ou baixando |
 | `CajuiSprings.tilt` | perto do crítico (razão 0,85) | Cartão seguindo a mão ou o sensor, sem tremer |
 | `CajuiSprings.grow` | ultrapassagem de ~10% | Barra do gráfico crescendo |
+| `CajuiSprings.page` | razão 0,83, ultrapassagem de ~1% | O carrossel encaixando na página: trava que se sente, quique que não se vê |
+| `CajuiCurves.settle` | `cubic-bezier(0.16, 1.2, 0.3, 1.04)` | Chegada de câmera: sai rápido, freia, passa ~3% e volta — entrada cinematográfica e maço da carteira |
 
 O **nível de movimento** (`MotionLevel`) é parte do tema: `full` libera tudo; `lite` mantém mola e corta o decorativo; `reduced` troca todo percurso por uma fusão curta. Quem decide é o `MotionLevelResolver`: primeiro o sistema (movimento reduzido), depois a medição de quadros no aparelho, por último a preferência. Um componente nunca pergunta "posso animar?" por conta própria — pergunta ao tema.
 
+### Profundidade
+
+| Token | Valor | Uso |
+|---|---|---|
+| `CajuiDepth.perspective` | 0,0012 (uns 830 px de distância) | A lente única de todo efeito 3D: cartão, rolagem, carrossel, entrada |
+| `edgeZone` | 32% da altura da tela | A faixa da borda em que a rolagem curva; fora dela, o que está inteiro fica plano |
+| `drumTilt` | 0,42 rad (~24°) | O quanto uma seção curva ao entrar ou sair pela borda |
+| `carouselTurn` | 0,5 rad (~29°) | O giro da vizinha no carrossel |
+| `arrivalBlur` | sigma 8 | O desfoque de onde a entrada parte — só no `full` |
+
 ## Som e toque
 
-`CajuiSound` nomeia cada som pelo que ele **significa** (`saved`, `notice`), como os tokens de cor. Os componentes não tocam som: avisam o `CajuiFeedback` do que aconteceu (`tap`, `toggle`, `open`, `saved`, `notice`, `achievement`, `entrySaved`, `undone`), e a implementação em vigor decide som e vibração juntos.
+`CajuiSound` nomeia cada som pelo que ele **significa** (`saved`, `notice`), como os tokens de cor. Os componentes não tocam som: avisam o `CajuiFeedback` do que aconteceu (`tap`, `toggle`, `open`, `saved`, `notice`, `achievement`, `entrySaved`, `undone`, `pageTurned`), e a implementação em vigor decide som e vibração juntos.
 
 `entrySaved` (semente caindo na cuia) e `undone` (folha que vai e volta) são confirmações com o pulso leve de tecla: lançar se repete o dia inteiro, e um tranco médio a cada lançamento cansaria. Como todos, são sintetizados por `tool/sound/build_sounds.py`; a receita de cada arquivo está em `packages/design_system/assets/CREDITS.md`.
+
+`pageTurned` (o carrossel encaixando numa página) toca o `swipe`, a palha roçando, que é da família **ambiente**: quem folheia os números do mês várias vezes ao dia cala só ela, e o pulso de tecla continua.
 
 - O som **nasce desligado** (`SoundSettings`), com três famílias que ligam separadas: toques, confirmações, ambiente.
 - A velocidade varia até ±3% a cada disparo: o mesmo som nunca toca igual duas vezes seguidas.
