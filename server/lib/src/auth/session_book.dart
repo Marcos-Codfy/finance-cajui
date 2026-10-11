@@ -1,3 +1,4 @@
+import 'package:persistence/persistence.dart';
 import 'package:server/src/auth/secure_random.dart';
 import 'package:server/src/auth/session.dart';
 import 'package:server/src/auth/session_scope.dart';
@@ -10,9 +11,10 @@ import 'package:server/src/auth/session_scope.dart';
 /// de bloqueio para manter (ADR-008). O livro guarda o hash do token, nunca o
 /// token.
 ///
-/// Desde a ADR-024 nenhuma rota abre sessão: quem entra usa a chave da
-/// casa. O livro fica para o login com código de seis dígitos, que vai
-/// trocar o código por uma sessão daqui.
+/// Desde a ADR-024 o aparelho entra com a chave da casa. A sessão daqui é a
+/// da web que entrou com o código de seis dígitos do autenticador (ADR-027):
+/// longa, e gravada no registro — só o hash —, para um reinício do servidor
+/// não pedir o código de novo.
 final class SessionBook {
   /// Cria o livro. [now] existe para o teste controlar o relógio.
   new({DateTime Function()? now}) : _now = now ?? DateTime.now;
@@ -24,21 +26,63 @@ final class SessionBook {
   /// consulta não deveria ser interrompido no meio da leitura.
   static const webLifetime = Duration(hours: 2);
 
+  /// Quanto dura a sessão aberta pelo código do autenticador: o dono pediu
+  /// sessão longa, e a sessão só lê e conversa (RN-906).
+  static const codeLifetime = Duration(days: 30);
+
+  /// O tipo do evento que guarda a sessão aberta pelo código.
+  static const openedType = 'auth.session-opened';
+
   final DateTime Function() _now;
   final Map<String, Session> _byTokenHash = {};
 
   /// Abre uma sessão para [deviceId] e devolve o token, em claro, uma vez.
-  String open(String deviceId, {required SessionScope scope}) {
+  /// [lifetime] troca o prazo padrão do escopo.
+  String open(
+    String deviceId, {
+    required SessionScope scope,
+    Duration? lifetime,
+  }) {
     final token = SecureRandom.token();
-    final lifetime = scope == SessionScope.webReadOnly
-        ? webLifetime
-        : deviceLifetime;
+    final duration =
+        lifetime ??
+        (scope == SessionScope.webReadOnly ? webLifetime : deviceLifetime);
     _byTokenHash[SecureRandom.hash(token)] = Session(
       deviceId: deviceId,
       scope: scope,
-      expiresAt: _now().add(lifetime),
+      expiresAt: _now().add(duration),
     );
     return token;
+  }
+
+  /// O que gravar no registro para a sessão de [token]: o hash, nunca o
+  /// token em claro.
+  Map<String, Object?> recordOf(String token) {
+    final hash = SecureRandom.hash(token);
+    final session = _byTokenHash[hash]!;
+    return {
+      'hash': hash,
+      'deviceId': session.deviceId,
+      'scope': session.scope.name,
+      'expiresAt': session.expiresAt.toUtc().toIso8601String(),
+    };
+  }
+
+  /// Reabre as sessões gravadas em [events] que ainda não venceram.
+  void restore(Iterable<StoredEvent> events) {
+    for (final event in events) {
+      if (event.type != openedType) continue;
+      final payload = event.payload;
+      final expiresAt = DateTime.tryParse('${payload['expiresAt']}');
+      if (expiresAt == null || _now().isAfter(expiresAt)) continue;
+      _byTokenHash['${payload['hash']}'] = Session(
+        deviceId: '${payload['deviceId']}',
+        scope:
+            SessionScope.values.asNameMap()['${payload['scope']}'] ??
+            SessionScope.webReadOnly,
+        expiresAt: expiresAt,
+      );
+    }
   }
 
   /// A sessão do [token], se ele existe e não venceu.

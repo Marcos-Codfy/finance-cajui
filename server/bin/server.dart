@@ -11,6 +11,7 @@ import 'package:server/src/app.dart';
 import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
+import 'package:server/src/auth/totp.dart';
 import 'package:server/src/system_clock.dart';
 import 'package:shelf/shelf_io.dart' as io;
 
@@ -116,6 +117,10 @@ App _app(EventStore store, {String? accessKeyFile}) {
     file: accessKeyFile,
   );
   if (key == null) stdout.writeln('sem chave da casa: ninguém vai entrar');
+  final totp = Totp.load(environment: Platform.environment);
+  if (totp == null) {
+    stdout.writeln('sem segredo do autenticador: a web entra só com a chave');
+  }
   return App(
     store: store,
     clock: const SystemClock(),
@@ -124,6 +129,7 @@ App _app(EventStore store, {String? accessKeyFile}) {
     classifier: ai.classifier,
     assistant: ai.assistant,
     householdKey: key,
+    totp: totp,
     // Um ensaio em outra Vercel troca a origem sem recompilar.
     webOrigin: Platform.environment['WEB_ORIGIN'] ?? App.defaultWebOrigin,
   );
