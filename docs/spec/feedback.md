@@ -2,6 +2,8 @@
 
 Três ritmos — diário, semanal e mensal — e os lembretes de vencimento. As regras estão em [rules/feedback.md](rules/feedback.md) (RN-8xx); este documento mostra cada resumo escrito de verdade, com os números do [exemplo de setembro de 2026](rules/indicators.md#exemplo-completo) e a história das [jornadas](journeys.md).
 
+> **Nota de 11/10/2026:** o limite semanal e os resumos do dia e da semana saíram do app a pedido do dono (ADR-023, revisão). O que segue sobre eles fica como registro; o resumo do mês continua.
+
 ## O pedido e a literatura
 
 O pedido original inclui retorno **diário**. A literatura lida na Fase 1 recomenda cautela: retorno frequente demais leva a foco excessivo no dado mais recente (Lurie2009), notificação em excesso está associada a emoções negativas (Pielot2014), e não há evidência de que um ritmo seja melhor que outro em finanças pessoais (D-UX-17).
