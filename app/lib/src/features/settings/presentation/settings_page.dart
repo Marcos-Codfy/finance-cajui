@@ -5,6 +5,7 @@ import 'package:cajui/src/features/budget/presentation/month_close_page.dart';
 import 'package:cajui/src/features/budget/presentation/plan_page.dart';
 import 'package:cajui/src/features/cards/presentation/cards_page.dart';
 import 'package:cajui/src/features/debts/presentation/debts_page.dart';
+import 'package:cajui/src/features/notifications/presentation/bank_notifications_row.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +25,7 @@ class SettingsPage extends ConsumerWidget {
       title: 'Ajustes',
       children: [
         ..._cadastros(context),
+        const BankNotificationsRow(),
         ..._appearance(ref),
         ..._feedback(ref),
       ],

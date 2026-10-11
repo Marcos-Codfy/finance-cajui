@@ -12,6 +12,8 @@ import 'package:cajui/src/features/auth/infrastructure/built_in_household_key.da
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
 import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
+import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
+import 'package:cajui/src/features/home_widget/infrastructure/native_home_screen.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -21,6 +23,8 @@ import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_jour
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/infrastructure/remote_ledger_journal.dart';
+import 'package:cajui/src/features/notifications/application/notification_providers.dart';
+import 'package:cajui/src/features/notifications/infrastructure/native_notifications_channel.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/infrastructure/event_store_capture_shelf.dart';
 import 'package:cajui/src/features/receipts/infrastructure/http_receipt_classifier.dart';
@@ -28,6 +32,8 @@ import 'package:cajui/src/features/receipts/infrastructure/native_receipt_inbox.
 import 'package:cajui/src/features/receipts/infrastructure/native_receipt_reader.dart';
 import 'package:cajui/src/features/receipts/infrastructure/no_receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/infrastructure/no_receipt_reader.dart';
+import 'package:cajui/src/features/review/application/review_providers.dart';
+import 'package:cajui/src/features/review/infrastructure/event_store_review_log.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:persistence/event_store.dart';
@@ -65,6 +71,26 @@ abstract final class Composition {
       _preferences(store, local: nativeCapture),
       ..._server(api, local: nativeCapture),
       ..._capture(inbox, api),
+      ..._device(store, native: nativeCapture),
+    ];
+  }
+
+  /// As notificações do banco, o widget da tela inicial e a revisão da
+  /// semana (ADR-025). Um canal só atende as três portas das notificações:
+  /// o lado nativo fala com um tratador por canal. Na web, só o registro do
+  /// que foi revisto — inerte lá, onde nada chega para revisar.
+  static List<Override> _device(EventStore store, {required bool native}) {
+    final review = reviewLogProvider.overrideWithValue(
+      EventStoreReviewLog(store),
+    );
+    if (!native) return [review];
+    final channel = NativeNotificationsChannel();
+    return [
+      review,
+      bankNoticeDeviceProvider.overrideWithValue(channel),
+      notificationAccessProvider.overrideWithValue(channel),
+      launchRequestsProvider.overrideWithValue(channel),
+      homeScreenProvider.overrideWithValue(const NativeHomeScreen()),
     ];
   }
 
