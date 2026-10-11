@@ -43,3 +43,13 @@ Aparelho sem reconhecedor não mostra o botão, em vez de mostrar um botão que 
 O reconhecedor padrão de muitos aparelhos é o do Google, que **pode** enviar o áudio aos servidores dele para transcrever, conforme a configuração do aparelho e a existência do pacote de idioma local. Isso é escolha da pessoa e do fabricante, e está fora do alcance do app — mas está escrito aqui para que ninguém suponha o contrário. Quem quiser garantir que nada saia do aparelho instala o reconhecimento de voz offline em português nas configurações do Android.
 
 Ditar **um lançamento** inteiro — "gastei quarenta reais no mercado hoje no Pix" — é outra história: precisa interpretar valor, data, categoria e forma de pagamento a partir de fala solta. Fica no BACKLOG (BL-050), e o caminho natural é reaproveitar o que já existe para comprovante: o texto passa pelo mesmo leitor de campos e cai na mesma tela de conferência.
+
+## Revisão de 11/10/2026: o ditado manda sozinho
+
+O dono aprovou "segurar o microfone, dizer 'gastei 35 no mercado no débito' e pronto" (BL-050). O texto ditado deixa de parar no campo à espera de um toque e vai direto para a Juju.
+
+O motivo de antes era a pessoa conferir o que o reconhecedor entendeu. Esse motivo mudou de lugar: desde a ADR-021, a Juju lança sozinha e mostra o que fez, com o Desfazer ao lado. Agora se confere o lançamento feito, e não a frase ouvida.
+
+Sem rede, ou com a IA fora do ar, a fala que conta um gasto (RN-1091) ganha um segundo caminho: "Lançar pela conferência". A frase entra na fila da captura como um texto compartilhado, com o valor no rótulo de total, e o leitor do aparelho a lê como leria um comprovante. A pergunta ("quanto gastei em outubro?") nunca recebe esse caminho.
+
+Continua igual: o app não grava, não guarda e não manda áudio. Quem ouve é o reconhecedor do aparelho, e o que atravessa a porta já é texto.

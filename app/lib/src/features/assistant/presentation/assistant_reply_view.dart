@@ -12,11 +12,13 @@ import 'package:flutter/widgets.dart';
 /// assistente fez e o botão de desfazer, ou o erro do catálogo.
 class AssistantReplyView extends StatefulWidget {
   /// Mostra [reply]. [onRetry] pergunta de novo; [onUndo] desfaz uma ação.
+  /// Com [onCapture], a falha oferece lançar a frase pela conferência.
   const new({
     required this.reply,
     required this.onRetry,
     required this.onUndo,
     this.canUndo = true,
+    this.onCapture,
     super.key,
   });
 
@@ -32,6 +34,11 @@ class AssistantReplyView extends StatefulWidget {
 
   /// Chamado por "Desfazer", com a ação a desfazer.
   final Future<void> Function(AssistantActionDone action) onUndo;
+
+  /// O caminho sem a Juju para um gasto dito (RN-1091): sem rede ou com a
+  /// IA fora do ar, a frase abre a conferência, que funciona no aparelho.
+  /// `null` quando a frase não conta um gasto.
+  final VoidCallback? onCapture;
 
   /// A frase do assistente para [code]. O catálogo traz, em alguns códigos,
   /// uma frase por tela; aqui vale a do assistente, e só a saída que faz
@@ -90,18 +97,39 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
     ),
     AssistantFailed(:final code, :final retryAfterSeconds) => Padding(
       padding: const EdgeInsets.only(bottom: CajuiSpacing.md),
-      child: ErrorNotice(
-        error: (
-          code: code,
-          text: AssistantReplyView.textOf(
-            code,
-            retryAfterSeconds: retryAfterSeconds,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ErrorNotice(
+            error: (
+              code: code,
+              text: AssistantReplyView.textOf(
+                code,
+                retryAfterSeconds: retryAfterSeconds,
+              ),
+            ),
+            onAction: (_) => widget.onRetry(),
           ),
-        ),
-        onAction: (_) => widget.onRetry(),
+          ?_capture(),
+        ],
       ),
     ),
   };
+
+  /// "Lançar pela conferência", quando a frase é um gasto dito.
+  Widget? _capture() {
+    final capture = widget.onCapture;
+    if (capture == null) return null;
+    return Padding(
+      padding: const EdgeInsets.only(top: CajuiSpacing.sm),
+      child: CajuiButton(
+        label: 'Lançar pela conferência',
+        icon: CajuiIconData.receipt,
+        variant: CajuiButtonVariant.secondary,
+        onPressed: capture,
+      ),
+    );
+  }
 
   /// "Desfazer" ao lado do que foi lançado: um toque, sem pergunta. Já
   /// desfeito, a linha fica como registro do que aconteceu.

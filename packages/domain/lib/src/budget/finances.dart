@@ -3,7 +3,6 @@ import 'package:domain/src/budget/month_actuals.dart';
 import 'package:domain/src/budget/month_budget.dart';
 import 'package:domain/src/budget/month_record.dart';
 import 'package:domain/src/budget/plan_suggestion.dart';
-import 'package:domain/src/budget/week_allowance.dart';
 import 'package:domain/src/calendar/budget_month.dart';
 import 'package:domain/src/calendar/business_time.dart';
 import 'package:domain/src/calendar/local_date.dart';
@@ -24,7 +23,7 @@ import 'package:domain/src/money/money.dart';
 import 'package:domain/src/money/tender.dart';
 import 'package:meta/meta.dart';
 
-/// Os números da casa, a partir dos fatos: o mês, a semana, os cartões, as
+/// Os números da casa, a partir dos fatos: o mês, os cartões, as
 /// dívidas e o histórico. É a mesma conta no celular, na web e no servidor —
 /// quem monta os fatos é cada um; quem conta é aqui.
 @immutable
@@ -153,16 +152,6 @@ final class Finances {
       debts: _versions.forMonth(month),
       entries: entries,
     ),
-  );
-
-  /// A semana de [today].
-  WeekAllowance weekOf(LocalDate today) => WeekAllowance.of(
-    limit: budgetFor(today.budgetMonth).weeklyLimit,
-    today: today,
-    entries: entries,
-    categories: categories,
-    reversals: reversals,
-    excluded: excluded,
   );
 
   /// A linha de [month] no "Mês a mês".

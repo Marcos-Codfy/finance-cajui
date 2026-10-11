@@ -95,24 +95,16 @@ void main() {
   });
 
   group('compra à vista no cartão', () {
-    test(
-      'RN-310 · conta no mês da compra, e baixa o resta da semana na hora',
-      () async {
-        final before = container.read(homeViewProvider)!.week.left;
-
-        await buy(
-          await card(),
-          'Ônibus do mês',
-          5000,
-          day: 18,
-          category: 'transport',
-        );
-        final after = container.read(homeViewProvider)!.week;
-
-        expect((await book()).spentIn(_september).cash.cents, 5000);
-        expect(after.left, before - const Money.fromCents(5000));
-      },
-    );
+    test('RN-310 · conta no mês da compra', () async {
+      await buy(
+        await card(),
+        'Ônibus do mês',
+        5000,
+        day: 18,
+        category: 'transport',
+      );
+      expect((await book()).spentIn(_september).cash.cents, 5000);
+    });
 
     test(
       'RN-340 · pagar a fatura não é lançamento nem muda o gasto do mês',
@@ -159,9 +151,9 @@ void main() {
       },
     );
 
-    test('RN-312 · não consome o variável nem o limite da semana: entra como '
-        'compromisso no mês em que a fatura vence', () async {
-      final before = container.read(homeViewProvider)!.week;
+    test('RN-312 · não consome o variável do mês: entra como compromisso no '
+        'mês em que a fatura vence', () async {
+      final before = container.read(homeViewProvider)!.budget.dayToDay;
 
       await buy(
         await card(),
@@ -171,10 +163,10 @@ void main() {
         category: 'home',
         installments: 6,
       );
-      final after = container.read(homeViewProvider)!.week;
+      final after = container.read(homeViewProvider)!.budget.dayToDay;
       final current = await book();
 
-      expect(after.left, before.left);
+      expect(after, before);
       expect(_dueIn(current, _september), Money.zero);
       expect(_dueIn(current, _october).cents, 16000);
     });

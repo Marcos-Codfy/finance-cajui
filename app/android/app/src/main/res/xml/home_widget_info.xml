@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- O widget se atualiza quando o app publica um retrato novo. A atualização
-     periódica é só para a virada da semana: o número da semana passada sai
+     periódica é só para a virada do mês: o número do mês passado sai
      de cena mesmo que o app não seja aberto. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/home_widget_description"

@@ -1,5 +1,6 @@
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
+import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -36,6 +37,7 @@ class MonthPage extends ConsumerWidget {
       title: 'Meu mês',
       overline: DateLabels.month(budget.month),
       onBack: back,
+      footer: _export(ref, budget.month),
       children: [
         ?_headline(budget),
         ..._comesIn(budget, finances.plan),
@@ -44,6 +46,16 @@ class MonthPage extends ConsumerWidget {
       ],
     );
   }
+
+  /// Levar o mês para planilha (RN-1090): a garantia de que os números
+  /// nunca ficam presos no app — o dono veio de uma planilha.
+  static Widget _export(WidgetRef ref, BudgetMonth month) => CajuiButton(
+    label: 'Levar para planilha',
+    icon: CajuiIconData.share,
+    variant: CajuiButtonVariant.secondary,
+    expand: true,
+    onPressed: () => ref.read(exportMonthProvider).call(month),
+  );
 
   /// A etiqueta do número do mês: o do Início voa até aqui (escolha 3 do
   /// dono), e o olho não precisa procurá-lo de novo.
@@ -145,14 +157,6 @@ class MonthPage extends ConsumerWidget {
       _row('O vale paga parte do mercado', budget.voucherCovered),
       _row('Precisa sair do bolso', budget.outOfPocket),
       _result(budget),
-      _row(
-        'Pode gastar por semana',
-        budget.weeklyLimit,
-        subtitle:
-            'Depois de separar contas fixas, assinaturas, dívida e '
-            'dízimo · ${BrlFormatter.format(budget.weeklyVoucher.cents)} '
-            'é vale',
-      ),
       CajuiListRow(
         title: 'Já está gasto',
         subtitle: 'Da sua renda em dinheiro',
