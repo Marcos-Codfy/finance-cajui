@@ -46,7 +46,7 @@ class WaterMotion extends ChangeNotifier {
   /// ruim do sensor — vira zero aqui. Sem isso a mola nunca chegaria ao
   /// alvo, e o relógio de quadros nunca dormiria.
   static double _finite(double value, double lower, double upper) =>
-      value.isFinite ? value.clamp(lower, upper).toDouble() : 0;
+      value.isFinite ? value.clamp(lower, upper) : 0;
 
   static double _fraction(double value) => _finite(value, 0, 1);
 
