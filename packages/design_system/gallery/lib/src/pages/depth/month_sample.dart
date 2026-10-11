@@ -66,7 +66,10 @@ abstract final class MonthSample {
   /// Uma lista de linhas com o valor à direita.
   static Widget rows(List<(String, String, int)> items) {
     return CajuiCard(
-      padding: const EdgeInsets.symmetric(vertical: CajuiSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CajuiSpacing.lg,
+        vertical: CajuiSpacing.sm,
+      ),
       child: Column(
         children: [
           for (final (title, detail, cents) in items)

@@ -1,12 +1,11 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
-import 'package:gallery/src/pages/depth/depth_notes.dart';
+import 'package:gallery/src/pages/depth/depth_showcase.dart';
 import 'package:gallery/src/pages/depth/depth_stage.dart';
 import 'package:gallery/src/pages/depth/month_sample.dart';
 import 'package:gallery/src/pages/depth/motion_level_chips.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
-import 'package:gallery/src/shell/gallery_specimens.dart';
 
 /// A pilha de carteira, com os cartões 3D da tela de Cartões.
 class WalletPage extends StatefulWidget {
@@ -47,24 +46,22 @@ class _WalletPageState extends State<WalletPage> {
       description:
           'Role para baixo dentro do aparelho e veja a carteira se fechar; '
           'volte e ela se abre. Um toque ainda vira cada cartão.',
-      child: GallerySpecimens(
-        children: [
-          DepthStage(
-            child: CajuiDepthScroll(
-              children: [
-                MonthSample.heading(context, 'Cartões de crédito'),
-                CajuiWalletStack(
-                  key: ValueKey(_deal),
-                  children: [for (final card in _cards) _plastic(card)],
-                ),
-                const SizedBox(height: CajuiSpacing.xl),
-                const CajuiSectionTitle('Últimos lançamentos'),
-                MonthSample.rows(MonthSample.entries),
-              ],
-            ),
+      child: DepthShowcase(
+        notes: _notes,
+        stage: DepthStage(
+          child: CajuiDepthScroll(
+            children: [
+              MonthSample.heading(context, 'Cartões de crédito'),
+              CajuiWalletStack(
+                key: ValueKey(_deal),
+                children: [for (final card in _cards) _plastic(card)],
+              ),
+              const SizedBox(height: CajuiSpacing.xl),
+              const CajuiSectionTitle('Últimos lançamentos'),
+              MonthSample.rows(MonthSample.entries),
+            ],
           ),
-          const DepthNotes(notes: _notes),
-        ],
+        ),
       ),
     );
   }

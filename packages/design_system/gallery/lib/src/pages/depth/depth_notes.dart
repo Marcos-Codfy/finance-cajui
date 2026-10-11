@@ -20,7 +20,9 @@ class DepthNotes extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: _maxWidth),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [for (final (title, body) in notes) _note(theme, title, body)],
+        children: [
+          for (final (title, body) in notes) _note(theme, title, body),
+        ],
       ),
     );
   }

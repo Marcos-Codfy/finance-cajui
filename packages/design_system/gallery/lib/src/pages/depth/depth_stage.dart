@@ -16,8 +16,9 @@ class DepthStage extends StatelessWidget {
   /// A tela.
   final Widget child;
 
-  /// A altura do palco.
-  final double height;
+  /// A altura do palco. `null` deixa a tela do tamanho do conteúdo — para
+  /// um bloco só, como o carrossel, que não rola.
+  final double? height;
 
   /// A largura de um Android pequeno: o pior caso de leitura.
   static const double _width = 360;

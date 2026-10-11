@@ -1,11 +1,11 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
-import 'package:gallery/src/pages/depth/depth_notes.dart';
+import 'package:gallery/src/pages/depth/depth_showcase.dart';
+import 'package:gallery/src/pages/depth/depth_stage.dart';
 import 'package:gallery/src/pages/depth/month_sample.dart';
 import 'package:gallery/src/pages/depth/motion_level_chips.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
-import 'package:gallery/src/shell/gallery_specimens.dart';
 
 /// O carrossel 3D, com os números do mês.
 class CoverFlowPage extends StatefulWidget {
@@ -18,9 +18,6 @@ class CoverFlowPage extends StatefulWidget {
 
 class _CoverFlowPageState extends State<CoverFlowPage> {
   static const _titles = ['Sobra do mês', 'O que entra', 'O que sai', 'Vale'];
-
-  /// A largura de um celular: o carrossel é feito para o polegar.
-  static const double _phone = 390;
 
   int _page = 0;
 
@@ -39,9 +36,7 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
           description:
               'O alto do Início. A altura é a do número mais alto: com fonte '
               'grande, o carrossel cresce em vez de cortar.',
-          child: GallerySpecimens(
-            children: [_carousel(context), const DepthNotes(notes: _notes)],
-          ),
+          child: DepthShowcase(stage: _carousel(context), notes: _notes),
         ),
         const GallerySection(
           title: 'Nível de movimento',
@@ -54,28 +49,33 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
     );
   }
 
-  /// O carrossel e, embaixo, a página em que ele assentou — o que o
-  /// `onPageChanged` entrega a quem usa.
+  /// O carrossel na largura de um celular, com a margem da tela: as
+  /// vizinhas aparecem cortadas pela borda, como no Início. Embaixo, a
+  /// página em que ele assentou — o que o `onPageChanged` entrega.
   Widget _carousel(BuildContext context) {
     final theme = CajuiTheme.of(context);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _phone),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CajuiCoverFlow(
-            semanticLabel: 'Números do mês',
-            onPageChanged: (page) => setState(() => _page = page),
-            children: MonthSample.numbers(),
-          ),
-          Text(
-            'Página ${_page + 1} de 4 · ${_titles[_page]}',
-            textAlign: TextAlign.center,
-            style: theme.typography.caption.copyWith(
-              color: theme.colors.text.faint,
+    return DepthStage(
+      height: null,
+      child: Padding(
+        padding: const EdgeInsets.all(CajuiSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MonthSample.heading(context, 'Início'),
+            CajuiCoverFlow(
+              semanticLabel: 'Números do mês',
+              onPageChanged: (page) => setState(() => _page = page),
+              children: MonthSample.numbers(),
             ),
-          ),
-        ],
+            Text(
+              'Página ${_page + 1} de 4 · ${_titles[_page]}',
+              textAlign: TextAlign.center,
+              style: theme.typography.caption.copyWith(
+                color: theme.colors.text.faint,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

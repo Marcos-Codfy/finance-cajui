@@ -1,12 +1,11 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
-import 'package:gallery/src/pages/depth/depth_notes.dart';
+import 'package:gallery/src/pages/depth/depth_showcase.dart';
 import 'package:gallery/src/pages/depth/depth_stage.dart';
 import 'package:gallery/src/pages/depth/month_sample.dart';
 import 'package:gallery/src/pages/depth/motion_level_chips.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
-import 'package:gallery/src/shell/gallery_specimens.dart';
 
 /// A rolagem em profundidade, num aparelho de verdade.
 class DepthScrollPage extends StatelessWidget {
@@ -41,16 +40,14 @@ class DepthScrollPage extends StatelessWidget {
       description:
           'O Início de outubro. Puxe além do topo: a superfície quica, e o '
           'halo do fundo desce junto, mais devagar.',
-      child: GallerySpecimens(
-        children: [
-          DepthStage(
-            child: CajuiDepthScroll(
-              backdrop: MonthSample.backdrop(context),
-              children: _screen(context),
-            ),
+      child: DepthShowcase(
+        notes: _notes,
+        stage: DepthStage(
+          child: CajuiDepthScroll(
+            backdrop: MonthSample.backdrop(context),
+            children: _screen(context),
           ),
-          const DepthNotes(notes: _notes),
-        ],
+        ),
       ),
     );
   }
