@@ -83,9 +83,11 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
       cents: balance.cents,
       large: true,
       tone: CajuiAmountTone.accent,
-      caption:
-          'Pelo que está lançado: o que entrou de vale menos o que foi pago '
-          'com ele. Não se soma ao dinheiro.',
+      caption: balance.isPositive
+          ? 'Pelo que está lançado: o que entrou de vale menos o que foi '
+                'pago com ele. Não se soma ao dinheiro.'
+          : 'Ainda não há crédito do vale registrado. Se a operadora mostra '
+                'saldo, acerte abaixo.',
     ),
     const SizedBox(height: CajuiSpacing.lg),
     CajuiStatCard(

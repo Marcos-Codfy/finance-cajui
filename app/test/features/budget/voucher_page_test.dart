@@ -96,4 +96,34 @@ void main() {
     expect(find.text('Saldo do vale'), findsOneWidget);
     expect(find.text('Acertar o saldo'), findsNothing);
   });
+
+  testWidgets('BL-079 · com o vale só no plano, a porta diz o vale do mês, e '
+      r'não "saldo de R$ 0,00"', (tester) async {
+    tester.view.physicalSize = const Size(400, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(
+          journal: MemoryLedgerJournal([
+            BudgetDefined(
+              BudgetPlan(
+                voucher: const Money.fromCents(50000),
+                definedAt: DateTime.utc(2026, 9),
+              ),
+            ),
+          ]),
+        ),
+        child: const CajuiApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.bySemanticsLabel('Início'));
+    await settleAfterTap(tester);
+
+    expect(
+      find.text('Vale do mês ${_brl('500,00')} · conferir com a operadora'),
+      findsOneWidget,
+    );
+  });
 }
