@@ -3,6 +3,7 @@ package app.cajui.notifications
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import app.cajui.auth.DeviceKeyChannel
 import app.cajui.home.HomeChannel
 import io.flutter.FlutterInjector
 import io.flutter.embedding.engine.FlutterEngine
@@ -70,7 +71,9 @@ class BackgroundEngine private constructor(
             val background = BackgroundEngine(context, engine, notices)
             NoticeChannel(context, notices, activity = null)
             HomeChannel(context, messenger)
-            HeadlessDeviceKey(context, messenger)
+            // Sem assinatura desde a ADR-024, o canal da chave não pede tela:
+            // o motor sem janela usa o mesmo do app, só para o nome do aparelho.
+            DeviceKeyChannel(messenger)
             MethodChannel(messenger, BACKGROUND_CHANNEL).setMethodCallHandler { call, result ->
                 if (call.method == "finished") NoticeRouter.finished(background, context)
                 result.success(null)
