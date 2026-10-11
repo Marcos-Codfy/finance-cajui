@@ -100,11 +100,12 @@ void main() {
       expect(spent.cash.cents, 5600);
     });
 
-    test('RN-122 · linha no vale maior que o saldo é recusada', () async {
+    test('RN-1019 · linha no vale maior que o saldo da operadora é lançada '
+        'assim mesmo: o vale da planilha é o do mês', () async {
       final result = await controller().record(_draft(method: _voucher));
 
-      expect(result.failureOrNull, isA<VoucherBalanceExceeded>());
-      expect(await recorded(), 1, reason: 'só o ajuste de saldo do preparo');
+      expect(result.failureOrNull, isNull);
+      expect(await recorded(), 2, reason: 'o ajuste do preparo e a compra');
     });
 
     test('RN-112 · o vale não paga categoria fora de alimentação', () async {

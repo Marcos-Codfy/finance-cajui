@@ -31,6 +31,7 @@ Todas são função pura do domínio (`MonthBudget`), as mesmas no celular, na w
 | RN-1016 | `já está gasto = sai do bolso ÷ dinheiro`, em percentual inteiro. Passa de 100% quando o mês não fecha. Sem renda, não há percentual | 2.380 ÷ 3.300 = 72% |
 | RN-1017 | Dízimo é um percentual configurável da renda em dinheiro, guardado em centésimos de por cento. Pode ser zero | 10% de 3.300 = 330 |
 | RN-1018 | A semana começa na segunda-feira, ou no dia 1 se o mês começou no meio dela. O gasto da semana é o do dia a dia, nas duas moedas, porque o limite também conta o vale | Segunda 19/10 a terça 20/10: R$ 130 de 505, restam 375 |
+| RN-1019 | Pagar no vale nunca é recusado por saldo. O vale é o do mês (RN-1006), e o que passa dele só deixa de ser coberto (RN-1012). Substitui a RN-122, que recusava pelo saldo da operadora — número que a planilha não tem e que a tela deixou de mostrar | Vale de R$ 500, mercado de R$ 620 no vale: lança; R$ 500 cobertos, R$ 120 saem do bolso |
 
 ## Cartões
 

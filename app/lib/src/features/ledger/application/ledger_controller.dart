@@ -43,8 +43,10 @@ class LedgerController extends AsyncNotifier<LedgerBook> with LedgerReload {
     if (entry == null) return result;
     // Já gravado: repetir a confirmação não lança de novo (RN-781).
     if (book.entryOf(entry.id) != null) return result;
-    final paid = book.voucher.pay(entry.paidByTender.mealVoucher);
-    if (paid.failureOrNull case final failure?) return Err(failure);
+    // O vale não é recusado por saldo: na planilha do dono (ADR-023) ele é o
+    // vale do mês, e o que passar dele só deixa de ser coberto (RN-1019).
+    // Recusar pelo saldo da operadora, que a tela nem mostra mais, travava
+    // a compra no mercado com "Vale do mês: R$ 500" à vista.
     await _commit(book, EntryRecorded(entry));
     return result;
   }
