@@ -12,6 +12,7 @@ import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_journal.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/server_head.dart';
 import 'package:cajui/src/features/receipts/application/receipt_inbox.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/receipt_reader.dart';
@@ -61,6 +62,7 @@ List<Override> testOverrides({
   LedgerUplink? uplink,
   LedgerDownlink? downlink,
   HouseholdKeyStore? householdKey,
+  ServerHead? head,
   String idPrefix = 'id',
 }) {
   var next = 0;
@@ -73,17 +75,33 @@ List<Override> testOverrides({
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const _SilentGateway(),
     ),
-    ..._server(uplink, downlink),
+    ..._server(uplink, downlink, head),
     ..._extras(preferences, householdKey),
   ];
 }
 
 /// O servidor: o teste roda como celular — é lá que se lança —, e o livro
-/// não sobe nem desce de lugar nenhum, a não ser que o teste mande.
-List<Override> _server(LedgerUplink? uplink, LedgerDownlink? downlink) => [
+/// não sobe nem desce de lugar nenhum, a não ser que o teste mande. O topo
+/// do servidor nunca responde: a conferência ao vivo não anda sozinha, a
+/// não ser que o teste passe [head].
+List<Override> _server(
+  LedgerUplink? uplink,
+  LedgerDownlink? downlink,
+  ServerHead? head,
+) => [
   ledgerUplinkProvider.overrideWithValue(uplink ?? const _PairedUplink()),
   ledgerDownlinkProvider.overrideWithValue(downlink ?? const _NoDownlink()),
+  serverHeadProvider.overrideWithValue(head ?? const _SilentHead()),
 ];
+
+/// Um topo de servidor que nunca responde: sem rede, para a conferência
+/// ao vivo (ADR-024).
+final class _SilentHead implements ServerHead {
+  const new();
+
+  @override
+  Future<int?> ledgerSeq() async => null;
+}
 
 /// A captura: nada chega, a não ser que o teste mande.
 List<Override> _capture(
@@ -126,12 +144,12 @@ final class _PairedUplink implements LedgerUplink {
   Future<bool> canSendQuietly() async => false;
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
-      (const <String>{}, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() async =>
+      (const <String, CatalogVersion>{}, null);
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
-      (const <String>{}, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() async =>
+      (const <String, CatalogVersion>{}, null);
 
   @override
   Future<(RemoteEntries, ErrorCode?)> remoteEntries() async => (

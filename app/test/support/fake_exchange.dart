@@ -16,7 +16,7 @@ import 'package:domain/domain.dart';
 final class FakeExchange implements LedgerUplink, LedgerDownlink {
   final Map<String, CreateEntryRequest> _entries = {};
   final Set<String> _cancelled = {};
-  final Map<String, CreditCard> _cards = {};
+  final Map<String, Map<String, Object?>> _cards = {};
   final Map<String, IncomeReceipt> _receipts = {};
   final Map<String, VoucherAdjustment> _adjustments = {};
   final Map<String, Map<String, Object?>> _reversals = {};
@@ -39,20 +39,48 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
   @override
   Future<bool> canSendQuietly() async => false;
 
-  @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
-      ({for (final c in DefaultCatalog.emptyBook.categories) c.id}, null);
+  /// As categorias que o servidor tem, como chegaram. Nasce com o cadastro
+  /// de fábrica, sem carimbo — como o servidor de antes da ADR-024.
+  final Map<String, Map<String, Object?>> categories = {
+    for (final c in DefaultCatalog.emptyBook.categories)
+      c.id: CategoryCodec.encode(c),
+  };
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
-      (_cards.keys.toSet(), null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() async =>
+      (
+        {for (final e in categories.entries) e.key: CatalogVersion.of(e.value)},
+        null,
+      );
 
+  @override
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() async => (
+    {for (final e in _cards.entries) e.key: CatalogVersion.of(e.value)},
+    null,
+  );
+
+  /// A versão mais nova pelo carimbo vence, como no servidor de verdade
+  /// (ADR-024).
   @override
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async {
-    final decoded = CardCodec.decodeCard(card);
-    _cards[decoded.id] = decoded;
+    final id = '${card['id']}';
+    final current = _cards[id];
+    final stays = current == null ? null : CatalogVersion.of(current);
+    if (CatalogVersion.of(card).replaces(stays)) _cards[id] = card;
     return null;
   }
+
+  /// O cartão como desce, com o carimbo da versão que o servidor tem.
+  static CardDefined _cardEvent(Map<String, Object?> payload) => CardDefined(
+    id: 'card-remoto-${payload['id']}',
+    card: CardCodec.decodeCard(payload),
+    definedAt: CatalogVersion.definedAtOf(payload),
+  );
+
+  CreditCard? _cardOf(String id) => switch (_cards[id]) {
+    final payload? => CardCodec.decodeCard(payload),
+    _ => null,
+  };
 
   @override
   Future<(RemoteIncome, ErrorCode?)> remoteIncome() async => (
@@ -101,7 +129,13 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
   );
 
   @override
-  Future<ErrorCode?> sendCategory(Map<String, Object?> category) async => null;
+  Future<ErrorCode?> sendCategory(Map<String, Object?> category) async {
+    final id = '${category['id']}';
+    final current = categories[id];
+    final stays = current == null ? null : CatalogVersion.of(current);
+    if (CatalogVersion.of(category).replaces(stays)) categories[id] = category;
+    return null;
+  }
 
   @override
   Future<ErrorCode?> sendEntry(CreateEntryRequest entry) async {
@@ -178,7 +212,7 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
         ?EntryCodec.toEntry(
           request,
           category: base.categoryOf(request.categoryId),
-          cardOf: (id) => _cards[id],
+          cardOf: _cardOf,
           today: EntryCodec.parseDate(request.occurredOn).addDays(1),
         ).valueOrNull,
     ];
@@ -189,8 +223,7 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
         for (final receipt in _receipts.values) IncomeReceived(receipt),
         for (final adjustment in _adjustments.values)
           VoucherBalanceAdjusted(adjustment),
-        for (final card in _cards.values)
-          CardDefined(id: 'card-remoto-${card.id}', card: card),
+        for (final payload in _cards.values) _cardEvent(payload),
         for (final entry in entries) EntryRecorded(entry),
         for (final reversal in reversals) EntryReversed(reversal),
         for (final fact in _facts.values) ?DeviceFacts.toEvent(fact),

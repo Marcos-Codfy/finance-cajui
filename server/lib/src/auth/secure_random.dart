@@ -7,7 +7,7 @@ import 'package:pointycastle/export.dart';
 /// Valores aleatórios do gerador criptográfico do sistema, e o hash com que
 /// eles são guardados.
 ///
-/// Token de sessão e código de cadastro nunca ficam guardados em claro: o
+/// Token de sessão e chave da casa nunca ficam guardados em claro: o
 /// servidor guarda o SHA-256 e compara hashes. Quem ler a memória ou o disco
 /// não acha nada que sirva para entrar.
 abstract final class SecureRandom {

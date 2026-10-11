@@ -210,12 +210,21 @@ final class _OpenUplink implements LedgerUplink {
   Future<bool> canSendQuietly() async => true;
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
-      ({for (final category in _book.categories) category.id}, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() async =>
+      (
+        {
+          for (final category in _book.categories)
+            category.id: CatalogVersion(
+              signature: '?',
+              definedAt: DateTime.utc(9999),
+            ),
+        },
+        null,
+      );
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
-      (const <String>{}, null);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() async =>
+      (const <String, CatalogVersion>{}, null);
 
   @override
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async => null;

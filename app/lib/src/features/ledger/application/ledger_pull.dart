@@ -19,6 +19,8 @@ import 'package:domain/domain.dart';
 /// - **Plano do mês**: vale o mais novo pelo carimbo de quando foi editado,
 ///   e não pelo que chegou por último — quem sincroniza tarde não apaga o
 ///   que o outro editou antes.
+/// - **Cartão**: vale a versão mais nova pelo carimbo de quando foi
+///   definida; a gravada antes do carimbo conta como a mais velha (ADR-024).
 /// - **Cancelamento**: o que um cancelou, os outros cancelam. Nunca o
 ///   contrário: nada aqui recria o que o servidor diz que morreu.
 final class LedgerPull {
@@ -59,7 +61,7 @@ final class LedgerPull {
     EntryCorrected(:final entry) => _corrects(book, entry),
     EntryCancelled(:final entryId) => book.entryOf(entryId) != null,
     PlanDefined(:final setup) => setup.isNewerThan(book.setup),
-    CardDefined(:final card) => book.cardOf(card.id) == null,
+    CardDefined() => _replacesCard(book, event),
     IncomeReceived(:final receipt) => !book.receipts.any(
       (r) => r.id == receipt.id,
     ),
@@ -81,6 +83,21 @@ final class LedgerPull {
     BudgetDefined() ||
     DebtOrdered() => !book.factIds.contains(event.id),
   };
+
+  /// O cartão do servidor entra quando o daqui não existe, ou quando diz
+  /// outra coisa e não é mais velho pelo carimbo. Antes só entrava cartão
+  /// novo: trocar o limite num celular nunca chegava ao outro (ADR-024).
+  static bool _replacesCard(LedgerBook book, CardDefined event) {
+    final local = book.cardOf(event.card.id);
+    if (local == null) return true;
+    return _versionOf(
+      event.card,
+      event.definedAt,
+    ).replaces(_versionOf(local, book.trail.cardStamps[local.id]));
+  }
+
+  static CatalogVersion _versionOf(CreditCard card, DateTime? at) =>
+      CatalogVersion.of(CatalogVersion.stamped(CardCodec.encodeCard(card), at));
 
   /// O que foi cancelado **aqui** não volta pela descida, nem quando o
   /// cancelamento ainda não conseguiu subir: sumiria e reapareceria.
@@ -137,9 +154,12 @@ final class LedgerPull {
       id: 'plan-sync-${setup.definedAt?.millisecondsSinceEpoch ?? 0}',
       setup: setup,
     ),
-    CardDefined(:final card) => CardDefined(
-      id: 'card-sync-${card.id}',
+    // Uma chave por versão: com `card-sync-<id>` só, a segunda versão que
+    // descesse voltaria do registro como repetida e sumiria.
+    CardDefined(:final card, :final definedAt) => CardDefined(
+      id: 'card-sync-${card.id}-${_versionKey(card, definedAt)}',
       card: card,
+      definedAt: definedAt,
     ),
     EntryCorrected() || EntryCancelled() => null,
     _ => event,
@@ -166,4 +186,13 @@ final class LedgerPull {
   /// A mesma assinatura da subida: tudo o que no lançamento é conteúdo.
   static String _signatureOf(Entry entry) =>
       LedgerUplink.signatureOf(EntryCodec.fromEntry(entry));
+
+  /// O carimbo da versão do cartão, ou — sem carimbo, servidor antigo — o
+  /// resumo do conteúdo dela.
+  static String _versionKey(CreditCard card, DateTime? definedAt) {
+    final key =
+        definedAt?.millisecondsSinceEpoch ??
+        _versionOf(card, null).signature.hashCode;
+    return key.toRadixString(16);
+  }
 }

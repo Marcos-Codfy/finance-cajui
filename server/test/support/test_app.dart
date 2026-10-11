@@ -30,11 +30,20 @@ final class TestApp {
   /// Tudo o que o servidor registrou.
   final List<String> logs;
 
-  /// Sobe um servidor novo. [rateLimiter] permite apertar o limite.
+  /// A chave da casa dos testes: fictícia, e do tamanho que a de verdade
+  /// precisa ter.
+  static const key = 'chave-ficticia-da-casa-de-teste';
+
+  /// Sobe um servidor novo, com a chave da casa [key] — ou com
+  /// [householdKey], quando o teste quer outra, e sem chave nenhuma com
+  /// [keyless]. [rateLimiter] permite apertar o limite; [seed] grava
+  /// eventos **antes** de o servidor subir, como um registro que já existia.
   static Future<TestApp> start({
     RateLimiter? rateLimiter,
     AssistantService? Function(FileEventStore store)? assistant,
     HouseholdKey? householdKey,
+    bool keyless = false,
+    Future<void> Function(FileEventStore store)? seed,
   }) async {
     final data = Directory.systemTemp.createTempSync('cajui-server-');
     addTearDown(() => data.deleteSync(recursive: true));
@@ -42,23 +51,27 @@ final class TestApp {
       data,
       AesGcmRecordCipher(List.generate(32, (i) => i)),
     );
+    await seed?.call(store);
     final logs = <String>[];
     final app = App(
       store: store,
-      dataDirectory: data,
       clock: const FixedClock(),
       log: logs.add,
       sessions: SessionBook(),
       rateLimiter: rateLimiter,
       assistant: assistant?.call(store),
-      householdKey: householdKey,
+      householdKey: keyless ? null : householdKey ?? HouseholdKey(key),
     );
     return TestApp._(app, store, data, logs);
   }
 
-  /// Um token de sessão válido, sem passar pela biometria.
+  /// Com o que o teste entra: a chave da casa, que lê e escreve (ADR-020).
+  /// Só de leitura, uma sessão aberta direto no livro — nenhuma rota abre
+  /// uma hoje, mas o escopo continua imposto no servidor (ADR-024).
   String token({SessionScope scope = SessionScope.device}) =>
-      app.sessions.open('test-device', scope: scope);
+      scope == SessionScope.device
+      ? key
+      : app.sessions.open('consulta', scope: scope);
 
   /// Faz uma requisição crua e devolve a resposta inteira, cabeçalhos
   /// inclusive — é o que o teste de origem cruzada precisa ver.

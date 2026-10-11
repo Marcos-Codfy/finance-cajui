@@ -18,8 +18,9 @@ void main() {
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
   group('a recusa do Keystore atravessa o canal como falha tipada', () {
-    test('E-AUTH-03 · digital trocada invalida a chave', () {
-      refuseWith('E-AUTH-03');
+    test('E-APP-01 · o Keystore recusou: a falha chega com o código que o '
+        'lado nativo mandou', () {
+      refuseWith('E-APP-01');
 
       expect(
         const NativeDeviceKeyStore().publicKey(),
@@ -27,7 +28,7 @@ void main() {
           isA<DeviceKeyFailure>().having(
             (failure) => failure.code,
             'código',
-            ErrorCode.auth03,
+            ErrorCode.app01,
           ),
         ),
       );

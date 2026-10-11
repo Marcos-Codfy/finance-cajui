@@ -9,17 +9,19 @@ import 'package:server/src/auth/session_scope.dart';
 /// autocontido: revogar é apagar, e não há assinatura para validar nem lista
 /// de bloqueio para manter (ADR-008). O livro guarda o hash do token, nunca o
 /// token.
+///
+/// Desde a ADR-024 nenhuma rota abre sessão: quem entra usa a chave da
+/// casa. O livro fica para o login com código de seis dígitos, que vai
+/// trocar o código por uma sessão daqui.
 final class SessionBook {
   /// Cria o livro. [now] existe para o teste controlar o relógio.
   new({DateTime Function()? now}) : _now = now ?? DateTime.now;
 
-  /// Quanto dura a sessão do app: curta, e renovada pela biometria.
+  /// Quanto dura uma sessão completa: curta, porque renovar é barato.
   static const deviceLifetime = Duration(minutes: 15);
 
-  /// Quanto dura a sessão da web. Mais longa que a do app porque o navegador
-  /// **não tem como se renovar sozinho** — não há chave ali para assinar um
-  /// desafio novo. Vencida, pede-se outro código ao celular. Ela morre com a
-  /// aba de qualquer jeito: nada é guardado no navegador (ADR-013).
+  /// Quanto dura uma sessão só de leitura. Mais longa, porque quem só
+  /// consulta não deveria ser interrompido no meio da leitura.
   static const webLifetime = Duration(hours: 2);
 
   final DateTime Function() _now;
@@ -51,8 +53,8 @@ final class SessionBook {
     return session;
   }
 
-  /// Encerra todas as sessões de [deviceId]: é o que acontece quando o
-  /// aparelho é revogado.
+  /// Encerra todas as sessões de [deviceId]: é o que sair de um aparelho
+  /// precisa fazer na hora, e não só no próximo login.
   void closeAllOf(String deviceId) =>
       _byTokenHash.removeWhere((_, session) => session.deviceId == deviceId);
 }

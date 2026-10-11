@@ -9,7 +9,6 @@ import 'package:server/src/ai/deepseek_chat_client.dart';
 import 'package:server/src/ai/token_budget.dart';
 import 'package:server/src/app.dart';
 import 'package:server/src/assistant/assistant_service.dart';
-import 'package:server/src/auth/enrollment_codes.dart';
 import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/system_clock.dart';
@@ -19,27 +18,21 @@ import 'package:shelf/shelf_io.dart' as io;
 ///
 /// ```text
 /// server serve  <pasta-de-dados> [--key-file <arquivo>] [--access-key-file <arquivo>]
-/// server enroll <pasta-de-dados>
 /// server db     verify|cat|export <pasta-de-dados> [--key-file <arquivo>]
 /// ```
 ///
-/// `serve` sobe a API. `enroll` emite o código que cadastra um aparelho novo
-/// — só por aqui, dentro da VM (ADR-008). `db` é o `dbtool` da ADR-005: a
-/// resposta ao "ler por SSH" num registro cifrado, **só de leitura**.
+/// `serve` sobe a API. `db` é o `dbtool` da ADR-005: a resposta ao "ler por
+/// SSH" num registro cifrado, **só de leitura**. O `enroll`, que emitia o
+/// código de cadastro de aparelho, saiu com a ADR-024: quem entra é quem
+/// tem a chave da casa.
 Future<void> main(List<String> arguments) async {
   if (arguments.length < 2) {
-    stderr.writeln(
-      'uso: server serve|enroll|db <pasta-de-dados> [--key-file f]',
-    );
+    stderr.writeln('uso: server serve|db <pasta-de-dados> [--key-file f]');
     exitCode = 64;
     return;
   }
   final data = Directory(arguments[1]);
   switch (arguments.first) {
-    case 'enroll':
-      stdout
-        ..writeln('Código de cadastro: ${EnrollmentCodes(data).issue()}')
-        ..writeln('Vale por 10 minutos, uma única vez.');
     case 'serve':
       await _serve(
         data,
@@ -113,22 +106,24 @@ _Ai _ai(EventStore store) {
 }
 
 /// O servidor montado sobre o registro [store]: a IA se houver credencial,
-/// a chave da casa (ADR-020) se houver credencial — sem ela, só a
-/// autenticação antiga vale —, e a origem da web.
-App _app(EventStore store, Directory data, {String? accessKeyFile}) {
+/// a chave da casa (ADR-020) e a origem da web. Sem a chave o servidor
+/// sobe, responde se está de pé e não deixa ninguém entrar — e diz isso
+/// no registro do serviço, que é onde quem fez o deploy vai olhar.
+App _app(EventStore store, {String? accessKeyFile}) {
   final ai = _ai(store);
+  final key = HouseholdKey.load(
+    environment: Platform.environment,
+    file: accessKeyFile,
+  );
+  if (key == null) stdout.writeln('sem chave da casa: ninguém vai entrar');
   return App(
     store: store,
-    dataDirectory: data,
     clock: const SystemClock(),
     log: stdout.writeln,
     sessions: SessionBook(),
     classifier: ai.classifier,
     assistant: ai.assistant,
-    householdKey: HouseholdKey.load(
-      environment: Platform.environment,
-      file: accessKeyFile,
-    ),
+    householdKey: key,
     // Um ensaio em outra Vercel troca a origem sem recompilar.
     webOrigin: Platform.environment['WEB_ORIGIN'] ?? App.defaultWebOrigin,
   );
@@ -143,7 +138,7 @@ Future<void> _serve(
     data,
     AesGcmRecordCipher(DataKey.read(keyFile)),
   );
-  final app = _app(store, data, accessKeyFile: accessKeyFile);
+  final app = _app(store, accessKeyFile: accessKeyFile);
   // Só na própria máquina: quem recebe a internet é o Caddy (ADR-003 · T-36).
   final host = Platform.environment['HOST'] ?? '127.0.0.1';
   final port = int.parse(Platform.environment['PORT'] ?? '8080');

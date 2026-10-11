@@ -17,6 +17,9 @@ abstract final class Authenticate {
   /// assistente. Sem ele, vale um nome só para a casa inteira.
   static const deviceHeader = 'x-cajui-device';
 
+  /// As rotas que respondem sem chave. Hoje não há nenhuma: o cadastro de
+  /// aparelho saiu (ADR-024). O prefixo fica reservado para a entrada que
+  /// troca um código por sessão — quem ainda não entrou não tem chave.
   static const _publicPrefix = 'v1/auth/';
 
   /// "Estou de pé", e nada além disso: é o que o deploy e um vigia de fora
@@ -60,8 +63,9 @@ abstract final class Authenticate {
       };
 
   /// A chave da casa abre uma sessão **completa** e sem prazo: o segredo não
-  /// vence, e quem o tem é o dono. O que não é a chave ainda pode ser o
-  /// token de um aparelho cadastrado do jeito antigo.
+  /// vence, e quem o tem é o dono. O que não é a chave ainda pode ser uma
+  /// sessão do livro — hoje nenhuma rota abre uma; é a porta que o login
+  /// com código de seis dígitos vai usar (ADR-024).
   static Session? _sessionOf(
     Request request,
     SessionBook sessions,

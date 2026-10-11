@@ -16,12 +16,12 @@ final class NoLedgerUplink implements LedgerUplink {
   Future<bool> canSendQuietly() async => false;
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async =>
-      (const <String>{}, ErrorCode.auth03);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() async =>
+      (const <String, CatalogVersion>{}, ErrorCode.auth03);
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async =>
-      (const <String>{}, ErrorCode.auth03);
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() async =>
+      (const <String, CatalogVersion>{}, ErrorCode.auth03);
 
   @override
   Future<ErrorCode?> sendCard(Map<String, Object?> card) async =>

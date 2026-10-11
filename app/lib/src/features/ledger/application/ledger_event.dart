@@ -42,11 +42,17 @@ final class PlanDefined extends LedgerEvent {
 /// onde se paga e quando a fatura fecha e vence — nada de valor.
 final class CardDefined extends LedgerEvent {
   /// Registra o cartão [card]. Alterar um cartão é um fato novo, com [id]
-  /// próprio: o registro guarda cada versão, e a mais recente vale.
-  const new({required super.id, required this.card});
+  /// próprio: o registro guarda cada versão, e a mais nova pelo carimbo
+  /// [definedAt] vale (ADR-024).
+  const new({required super.id, required this.card, this.definedAt});
 
   /// O cartão, já aceito pelo domínio.
   final CreditCard card;
+
+  /// Quando esta versão foi definida. É o que decide entre dois celulares
+  /// que editaram o mesmo cartão; nulo no que foi gravado antes do carimbo
+  /// existir, que conta como o mais velho.
+  final DateTime? definedAt;
 }
 
 /// A fatura de um cartão foi paga. É uma **liquidação** (RN-340): não é

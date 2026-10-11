@@ -95,9 +95,13 @@ void main() {
       final limited = await tight.send('GET', '/health', headers: origin);
       final malformed = await server.send(
         'POST',
-        '/v1/auth/web',
-        headers: {...origin, 'content-type': 'application/json'},
-        body: {'code': 123},
+        '/v1/categories',
+        headers: {
+          ...origin,
+          'content-type': 'application/json',
+          'authorization': 'Bearer ${TestApp.key}',
+        },
+        body: {'id': 123},
       );
 
       expect(limited.statusCode, 429);
