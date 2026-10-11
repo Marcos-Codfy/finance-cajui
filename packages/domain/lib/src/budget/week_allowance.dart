@@ -45,10 +45,10 @@ final class WeekAllowance {
     return monday.isBefore(first) ? first : monday;
   }
 
-  static bool _isDayToDay(Category? category) {
-    final block = category?.block ?? Block.variable;
-    return block == Block.variable || block == Block.debt;
-  }
+  /// Juros e tarifas contam no mês, mas não na semana: não são escolha de
+  /// gasto, e fariam o pote parecer vazio por algo que ninguém comprou.
+  static bool _isDayToDay(Category? category) =>
+      (category?.block ?? Block.variable) == Block.variable;
 
   /// Quanto dá para gastar na semana.
   final Money limit;

@@ -112,6 +112,31 @@ final class BudgetPlan {
   Money titheOf(Money cashIncome) =>
       Money.ratio(cashIncome.orZeroIfNegative, titheBasisPoints, 10000);
 
+  /// O mesmo plano com as partes dadas trocadas.
+  BudgetPlan copyWith({
+    List<IncomeSource>? salaries,
+    Money? voucher,
+    int? titheBasisPoints,
+    List<BudgetLine>? lines,
+  }) => BudgetPlan(
+    salaries: salaries ?? this.salaries,
+    voucher: voucher ?? this.voucher,
+    titheBasisPoints: titheBasisPoints ?? this.titheBasisPoints,
+    lines: lines ?? this.lines,
+    legacyDebtInstallments: legacyDebtInstallments,
+    definedAt: definedAt,
+  );
+
+  /// O plano salvo pela pessoa em [at]. Plano salvo agora nunca leva as
+  /// parcelas soltas do plano antigo: parcela vem da dívida (RN-1003).
+  BudgetPlan savedAt(DateTime at) => BudgetPlan(
+    salaries: salaries,
+    voucher: voucher,
+    titheBasisPoints: titheBasisPoints,
+    lines: lines,
+    definedAt: at.toUtc(),
+  );
+
   /// Se este plano é mais novo que [other].
   bool isNewerThan(BudgetPlan other) =>
       EditStamp.isNewer(definedAt, other.definedAt);
