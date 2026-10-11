@@ -132,7 +132,7 @@ abstract final class ErrorTexts {
       actions: ['Entrar de novo'],
     ),
     ErrorCode.auth04 => const ErrorText(
-      'Este código não serve mais. Gere outro no app do celular, em Ajustes › Aparelhos com acesso.',
+      'Esse código não serviu. Abra o autenticador e digite o do Cajui que está na tela agora. Depois de cinco tentativas, a entrada espera quinze minutos.',
       actions: ['Digitar outro código'],
     ),
     ErrorCode.rate01 => const ErrorText(

@@ -49,6 +49,35 @@ void main() {
       expect(await CajuiServerHead(api).ledgerSeq(), 12);
     });
 
+    test('ADR-027 · credencial recusada é esquecida: a web volta à entrada '
+        'quando a sessão do código vence', () async {
+      final keys = FakeHouseholdKey('token-da-sessao-vencida');
+      final expired = CajuiApi(
+        baseUrl: server.baseUrl,
+        keys: keys,
+        identity: _FakeIdentity(),
+      );
+      server.refuseWith(ErrorCode.auth03);
+
+      await CajuiServerHead(expired).ledgerSeq();
+
+      expect(keys.key, isNull);
+    });
+
+    test('recusa por outro motivo não tira ninguém da web', () async {
+      final keys = FakeHouseholdKey('token-que-vale');
+      final valid = CajuiApi(
+        baseUrl: server.baseUrl,
+        keys: keys,
+        identity: _FakeIdentity(),
+      );
+      server.refuseWith(ErrorCode.rate01, status: 429);
+
+      await CajuiServerHead(valid).ledgerSeq();
+
+      expect(keys.key, 'token-que-vale');
+    });
+
     test('sem servidor, "não sei" — e não zero', () async {
       await server.stop();
 

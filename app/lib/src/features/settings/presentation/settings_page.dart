@@ -1,6 +1,8 @@
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
+import 'package:cajui/src/features/auth/application/household_key_store.dart';
 import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
+import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/notifications/presentation/bank_notifications_row.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -27,7 +29,7 @@ class SettingsPage extends ConsumerWidget {
       title: 'Ajustes',
       onBack: Navigator.of(context).maybePop,
       children: [
-        ..._cadastros(context),
+        ..._cadastros(context, ref),
         const BankNotificationsRow(),
         ..._appearance(ref),
         ..._feedback(ref),
@@ -35,14 +37,37 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  /// O que a pessoa cadastra uma vez e revisita de vez em quando.
-  List<Widget> _cadastros(BuildContext context) => [
-    _opens(
-      title: 'Chave da casa',
-      subtitle: 'Para entrar na consulta pela web de outro computador',
-      onPressed: () => HouseholdKeyPage.open(context),
-    ),
+  /// O que a pessoa cadastra uma vez e revisita de vez em quando. A chave
+  /// da casa aparece só no celular: na consulta, o que o navegador guarda
+  /// pode ser a sessão do código (ADR-027), e mostrá-la como "a chave"
+  /// ensinaria a copiar um token que só lê e vence em trinta dias. No lugar
+  /// dela, a consulta tem o "Sair" que a tela de entrada promete.
+  List<Widget> _cadastros(BuildContext context, WidgetRef ref) => [
+    if (ref.watch(ledgerUplinkProvider).isPaired)
+      _opens(
+        title: 'Chave da casa',
+        subtitle: 'Para entrar na consulta pela web de outro computador',
+        onPressed: () => HouseholdKeyPage.open(context),
+      )
+    else
+      CajuiListRow(
+        title: 'Sair',
+        subtitle:
+            'Este navegador esquece a entrada; para voltar, o código '
+            'do autenticador',
+        semanticLabel: 'Sair deste navegador',
+        onPressed: () => _signOut(context, ref),
+      ),
   ];
+
+  /// Volta ao começo e esquece a entrada: a tela de entrada toma o lugar da
+  /// casca, e Ajustes não pode ficar empilhado por cima dela. A porta da
+  /// chave é lida antes de a tela sair, porque depois o `ref` já não vale.
+  static Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+    final keys = ref.read(householdKeyProvider);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await keys.forget();
+  }
 
   Widget _opens({
     required String title,

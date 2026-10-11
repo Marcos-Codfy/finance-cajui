@@ -7,6 +7,7 @@ import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/session_scope.dart';
+import 'package:server/src/auth/totp.dart';
 import 'package:server/src/http/rate_limiter.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
@@ -43,6 +44,7 @@ final class TestApp {
     AssistantService? Function(FileEventStore store)? assistant,
     HouseholdKey? householdKey,
     bool keyless = false,
+    Totp? totp,
     Future<void> Function(FileEventStore store)? seed,
   }) async {
     final data = Directory.systemTemp.createTempSync('cajui-server-');
@@ -61,6 +63,7 @@ final class TestApp {
       rateLimiter: rateLimiter,
       assistant: assistant?.call(store),
       householdKey: keyless ? null : householdKey ?? HouseholdKey(key),
+      totp: totp,
     );
     return TestApp._(app, store, data, logs);
   }

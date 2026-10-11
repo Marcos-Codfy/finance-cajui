@@ -8,10 +8,12 @@ import 'package:cajui/src/features/assistant/application/speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/http_assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/infrastructure/native_speech_input.dart';
 import 'package:cajui/src/features/assistant/infrastructure/no_speech_input.dart';
+import 'package:cajui/src/features/auth/application/code_exchange.dart';
 import 'package:cajui/src/features/auth/application/household_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/browser_household_key.dart';
 import 'package:cajui/src/features/auth/infrastructure/built_in_household_key.dart';
 import 'package:cajui/src/features/auth/infrastructure/cajui_api.dart';
+import 'package:cajui/src/features/auth/infrastructure/http_code_exchange.dart';
 import 'package:cajui/src/features/auth/infrastructure/native_device_key_store.dart';
 import 'package:cajui/src/features/auth/infrastructure/no_device_key_store.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
@@ -132,6 +134,8 @@ abstract final class Composition {
       local ? CajuiLedgerApi(api) : const NoLedgerUplink(),
     ),
     assistantGatewayProvider.overrideWithValue(HttpAssistantGateway(api)),
+    // A web entra com o código do autenticador (ADR-027).
+    codeExchangeProvider.overrideWithValue(HttpCodeExchange(api)),
     speechInputProvider.overrideWithValue(
       local ? const NativeSpeechInput() : const NoSpeechInput(),
     ),

@@ -4,8 +4,10 @@ import 'package:server/src/ai/receipt_routes.dart';
 import 'package:server/src/assistant/assistant_routes.dart';
 import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/authenticate.dart';
+import 'package:server/src/auth/code_routes.dart';
 import 'package:server/src/auth/household_key.dart';
 import 'package:server/src/auth/session_book.dart';
+import 'package:server/src/auth/totp.dart';
 import 'package:server/src/http/cors.dart';
 import 'package:server/src/http/middlewares.dart';
 import 'package:server/src/http/rate_limiter.dart';
@@ -25,11 +27,10 @@ import 'package:shelf_router/shelf_router.dart';
 final class App {
   /// Monta o servidor sobre o registro [store], já aberto.
   ///
-  /// Quem entra é quem tem a chave da casa (ADR-020, ADR-024). O cadastro
-  /// de aparelho com código, o desafio assinado e o código da web saíram:
-  /// protegiam contra um risco que esta casa não tem e cobravam uma
-  /// cerimônia a cada aparelho. O livro de sessões fica — vazio hoje — para
-  /// o login com código de seis dígitos que ainda vai entrar.
+  /// Quem entra é quem tem a chave da casa (ADR-020, ADR-024) — ou, na
+  /// web, quem digitou o código de seis dígitos do autenticador (ADR-027),
+  /// que abre uma sessão longa de consulta. As sessões gravadas no registro
+  /// voltam ao subir.
   new({
     required EventStore store,
     required Clock clock,
@@ -39,6 +40,7 @@ final class App {
     this.classifier = const RuleBasedClassifier(),
     this.assistant,
     this.householdKey,
+    this.totp,
     this.webOrigin = defaultWebOrigin,
   }) : _clock = clock,
        _limiter = rateLimiter ?? RateLimiter(perOrigin: 120, global: 600),
@@ -46,11 +48,16 @@ final class App {
          store: store,
          state: LedgerState(store.events),
          clock: clock,
-       );
+       ) {
+    sessions.restore(store.events, secret: totp?.fingerprint);
+  }
 
-  /// As sessões abertas. Sem rota que as abra por enquanto: o teste abre
-  /// uma direto, para conferir que o escopo continua imposto no servidor.
+  /// As sessões abertas: as da web que entrou com o código (ADR-027).
   final SessionBook sessions;
+
+  /// O verificador do código do autenticador; `null` sem o segredo, e aí
+  /// só a chave da casa entra.
+  final Totp? totp;
 
   /// Quem classifica comprovantes. Sem chave da IA, são só as regras locais —
   /// e o servidor funciona inteiro assim.
@@ -104,6 +111,13 @@ final class App {
     clock: _clock,
   );
 
+  late final CodeRoutes _codes = CodeRoutes(
+    totp: totp,
+    sessions: sessions,
+    store: _ledger.store,
+    clock: _clock,
+  );
+
   late final AssistantRoutes _assistant = AssistantRoutes(
     state: _ledger.state,
     store: _ledger.store,
@@ -134,6 +148,7 @@ final class App {
   Handler get handler {
     final routes = Router()
       ..get('/health', _health)
+      ..mount('/v1/auth', _codes.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1/assistant', _assistant.router.call)
       ..mount('/v1', _head.router.call)

@@ -16,6 +16,10 @@ abstract interface class HouseholdKeyStore {
 
   /// Esquece a chave: sair.
   Future<void> forget();
+
+  /// Avisa quando a chave guardada muda — entrou, saiu, ou o servidor a
+  /// recusou e ela foi esquecida. É o que leva a web de volta à entrada.
+  Stream<void> get changes;
 }
 
 /// Onde a chave mora. A raiz do app decide.

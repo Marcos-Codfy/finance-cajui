@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cajui/src/features/auth/application/household_key_store.dart';
 
 /// A chave da casa de mentira: nasce com a chave dada — ou sem nenhuma,
@@ -12,9 +14,20 @@ final class FakeHouseholdKey implements HouseholdKeyStore {
   @override
   String? read() => key;
 
-  @override
-  Future<void> write(String value) async => key = value.trim();
+  final _changes = StreamController<void>.broadcast();
 
   @override
-  Future<void> forget() async => key = null;
+  Future<void> write(String value) async {
+    key = value.trim();
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> forget() async {
+    key = null;
+    _changes.add(null);
+  }
+
+  @override
+  Stream<void> get changes => _changes.stream;
 }

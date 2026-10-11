@@ -15,4 +15,7 @@ final class BrowserHouseholdKey implements HouseholdKeyStore {
 
   @override
   Future<void> forget() async {}
+
+  @override
+  Stream<void> get changes => const Stream.empty();
 }

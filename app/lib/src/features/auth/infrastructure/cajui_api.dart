@@ -121,10 +121,19 @@ final class CajuiApi {
       final response = await Response.fromStream(
         await _client.send(request).timeout(waitFor),
       );
+      if (response.statusCode == 401) await _rejected(token);
       return _read(response.statusCode, utf8.decode(response.bodyBytes));
     } on Object {
       return (body: null, failure: _local(ErrorCode.net01));
     }
+  }
+
+  /// O servidor recusou [token]: se é o que está guardado, ele é
+  /// esquecido, e a web volta à tela de entrada — a sessão do código vence
+  /// em trinta dias (ADR-027), e ficar com ela era ficar numa web vazia sem
+  /// saída. No celular a chave vem compilada, e esquecer não faz nada.
+  Future<void> _rejected(String? token) async {
+    if (token != null && token == _keys.read()) await _keys.forget();
   }
 
   /// Lê a resposta. A recusa vem pelo `ApiError` do contrato, e não por um
