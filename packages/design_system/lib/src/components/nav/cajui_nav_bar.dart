@@ -8,7 +8,7 @@ import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
 import 'package:design_system/src/tokens/semantic/cajui_colors.dart';
 import 'package:flutter/widgets.dart';
 
-/// A barra de navegação do pé da tela: de três a cinco destinos, todos com
+/// A barra de navegação do pé da tela: de dois a cinco destinos, todos com
 /// nome à vista.
 ///
 /// Fica embaixo porque é onde o polegar alcança com o aparelho numa mão só.
@@ -22,9 +22,9 @@ class CajuiNavBar extends StatelessWidget {
     required this.onSelected,
     super.key,
   }) : assert(
-         destinations.length >= 3 && destinations.length <= 5,
-         'Com menos de três destinos não é navegação; com mais de cinco, '
-         'os alvos de toque ficam pequenos demais.',
+         destinations.length >= 2 && destinations.length <= 5,
+         'Com um destino só não é navegação; com mais de cinco, os alvos de '
+         'toque ficam pequenos demais.',
        );
 
   /// Os destinos, da esquerda para a direita.

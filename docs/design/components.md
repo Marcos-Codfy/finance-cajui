@@ -27,7 +27,7 @@ Um componente novo que se toca **não reimplementa** nada disso.
 | `CajuiIconButton` | As mesmas quatro variantes | Os mesmos | Desenho de 24, alvo de 48. `semanticLabel` obrigatório |
 | `CajuiChip` | — | Não selecionado · selecionado · inativo | Selecionado muda de cor **e** ganha o ícone de visto. Rótulo longo encolhe com reticências, não estoura |
 | `CajuiSwitch` | — | Ligada · desligada · inativa (ligada e desligada) | Efeito imediato, sem botão de salvar |
-| `CajuiNavBar` + `CajuiNavDestination` | De 3 a 5 destinos | Em vigor · repouso · mouse · pressionado · foco | No pé da tela, onde o polegar alcança. O destino em vigor é marcado pela pílula **e** pelo peso do nome. Todo destino tem nome à vista. Cabe em 320 px com fonte a 200% |
+| `CajuiNavBar` + `CajuiNavDestination` | De 2 a 5 destinos (o app usa 2: Conversar e Início) | Em vigor · repouso · mouse · pressionado · foco | No pé da tela, onde o polegar alcança. O destino em vigor é marcado pela pílula **e** pelo peso do nome. Todo destino tem nome à vista. Cabe em 320 px com fonte a 200% |
 
 ## Moldura do app
 
