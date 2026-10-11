@@ -10,7 +10,7 @@ import '../../support/home_navigation.dart';
 import '../../support/test_scope.dart';
 import 'fake_reminder_schedule.dart';
 
-const _title = DueRemindersRow.title;
+const String _title = DueRemindersRow.title;
 
 Future<void> _openSettings(
   WidgetTester tester, {
