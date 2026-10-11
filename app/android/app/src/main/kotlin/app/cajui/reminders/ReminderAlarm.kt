@@ -49,8 +49,10 @@ object ReminderAlarm {
             .sortedBy { it.fireAt }
             .forEach { reminder ->
                 val silent = reminder.oncePerEvent && store.eventShown(reminder)
-                if (!silent) poster.post(reminder)
-                store.markDelivered(reminder, shown = !silent)
+                // Entregue fica anotado de qualquer jeito, para não repetir;
+                // mostrado, só o que apareceu de fato.
+                val shown = !silent && poster.post(reminder)
+                store.markDelivered(reminder, shown = shown)
             }
         schedule(context)
     }
