@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
@@ -36,8 +37,12 @@ class _IncomePageState extends ConsumerState<IncomePage> {
   late Tender _tender = widget.tender;
   late LocalDate _receivedOn = ref.read(clockProvider).today();
   int _cents = 0;
-  bool _fromPlan = true;
+  // Começa no primeiro salário, que é o caso mais comum; nulo é avulsa.
+  late String? _salaryId = _salaries.firstOrNull?.id;
   bool _saving = false;
+
+  List<IncomeSource> get _salaries =>
+      ref.read(financesProvider)?.plan.salaries ?? const [];
 
   Future<void> _save() async {
     setState(() => _saving = true);
@@ -49,7 +54,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
           tender: _tender,
           amount: Money.fromCents(_cents),
           receivedOn: _receivedOn,
-          fromPlan: _fromPlan,
+          salaryId: _salaryId,
         );
     feedback.saved();
     navigator.pop();
@@ -103,23 +108,24 @@ class _IncomePageState extends ConsumerState<IncomePage> {
     ),
   ];
 
-  /// Só em dinheiro: a renda do plano troca o valor esperado pelo recebido
-  /// neste mês (RN-131); a entrada avulsa conta só agora, e nunca é projetada
-  /// para os meses seguintes (RN-133).
+  /// Só em dinheiro: o salário de alguém troca o valor esperado pelo
+  /// recebido neste mês (RN-131); a entrada avulsa — o extra do mês — conta
+  /// só agora, e nunca é projetada para os meses seguintes (RN-133).
   List<Widget> _whichKind() => [
     Wrap(
       spacing: CajuiSpacing.sm,
       runSpacing: CajuiSpacing.sm,
       children: [
+        for (final salary in _salaries)
+          CajuiChip(
+            label: 'Salário · ${salary.name}',
+            selected: _salaryId == salary.id,
+            onSelected: (_) => setState(() => _salaryId = salary.id),
+          ),
         CajuiChip(
-          label: 'É a renda do mês',
-          selected: _fromPlan,
-          onSelected: (_) => setState(() => _fromPlan = true),
-        ),
-        CajuiChip(
-          label: 'É uma entrada avulsa',
-          selected: !_fromPlan,
-          onSelected: (_) => setState(() => _fromPlan = false),
+          label: 'Dinheiro extra',
+          selected: _salaryId == null,
+          onSelected: (_) => setState(() => _salaryId = null),
         ),
       ],
     ),

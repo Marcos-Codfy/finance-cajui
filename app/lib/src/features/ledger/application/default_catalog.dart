@@ -95,6 +95,14 @@ abstract final class DefaultCatalog {
       block: Block.fixed,
       groupId: 'housing',
     ),
+    // Condomínio, escola, plano de saúde: conta que vem todo mês e não é
+    // aluguel nem água, luz e internet.
+    Category(
+      id: 'fixed-other',
+      name: 'Outra conta fixa',
+      block: Block.fixed,
+      groupId: 'housing',
+    ),
     // O quarto grupo da planilha (ADR-023): streaming, apps, academia — o
     // serviço que se paga todo mês.
     Category(

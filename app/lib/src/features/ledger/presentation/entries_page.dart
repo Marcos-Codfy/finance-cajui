@@ -23,12 +23,18 @@ class EntriesPage extends ConsumerWidget {
   /// Cria a tela de lançamentos.
   const new({super.key});
 
+  /// Abre a tela, a partir do Início.
+  static Future<void> open(BuildContext context) =>
+      Navigator.of(context)
+          .push<void>(CajuiPageRoute(builder: (_) => const EntriesPage()));
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(entriesStateProvider);
     return CajuiScreen(
       title: 'Lançamentos',
       overline: state is EntriesReady ? DateLabels.month(state.month) : null,
+      onBack: Navigator.of(context).maybePop,
       footer: _footer(context, ref, state),
       children: switch (state) {
         EntriesLoading() => _loading,

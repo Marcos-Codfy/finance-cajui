@@ -1,5 +1,5 @@
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
-import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
@@ -32,7 +32,8 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
   late LocalDate? _on =
       _proposal.occurredOn.value ?? widget.capture.source.receivedOn;
   late Tender _tender = _proposal.paymentKind.value?.tender ?? Tender.cash;
-  late bool _ofPlan = _looksLikePlan();
+  // O salário que o valor e o dia parecem ser (RN-758); nulo é avulsa.
+  late String? _salaryId = _looksLike()?.id;
   bool _saving = false;
 
   EntryProposal get _proposal => widget.capture.proposal;
@@ -47,12 +48,15 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
       : 'Li um comprovante de dinheiro recebido. Ele entra na renda do mês, '
             'e não nos gastos.';
 
-  bool _looksLikePlan() {
+  IncomeSource? _looksLike() {
     final on = _on;
-    final book = ref.read(ledgerProvider).value;
-    if (on == null || book == null || _cents == 0) return false;
-    return book.looksLikePlanIncome(Money.fromCents(_cents), on);
+    final finances = ref.read(financesProvider);
+    if (on == null || finances == null || _cents == 0) return null;
+    return finances.salaryLike(Money.fromCents(_cents), on);
   }
+
+  List<IncomeSource> get _salaries =>
+      ref.read(financesProvider)?.plan.salaries ?? const [];
 
   Future<void> _record() async {
     final on = _on;
@@ -67,7 +71,7 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
         tender: _tender,
         amount: Money.fromCents(_cents),
         receivedOn: on,
-        fromPlan: _ofPlan,
+        salaryId: _salaryId,
         id: widget.capture.source.id,
       );
       feedback.saved();
@@ -122,11 +126,15 @@ class _IncomeCapturePageState extends ConsumerState<IncomeCapturePage> {
           onSelected: (_) => setState(() => _tender = tender),
         ),
       if (_tender == Tender.cash)
-        CajuiChip(
-          label: 'É a renda do mês',
-          selected: _ofPlan,
-          onSelected: (_) => setState(() => _ofPlan = !_ofPlan),
-        ),
+        for (final salary in _salaries)
+          CajuiChip(
+            label: 'Salário · ${salary.name}',
+            selected: _salaryId == salary.id,
+            // Tocar de novo desmarca: vira dinheiro extra do mês.
+            onSelected: (_) => setState(
+              () => _salaryId = _salaryId == salary.id ? null : salary.id,
+            ),
+          ),
     ],
   );
 

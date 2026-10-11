@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -90,10 +91,12 @@ class StatementImport {
     return book.cards.length == 1;
   }
 
-  /// Se a entrada da linha parece ser a renda do plano (RN-758).
-  static bool isPlanIncome(StatementLine line, LedgerBook book) =>
-      _tender(line) == Tender.cash &&
-      book.looksLikePlanIncome(line.amount, line.occurredOn);
+  /// O salário que a entrada da linha parece ser (RN-758); nulo quando é
+  /// entrada avulsa.
+  static IncomeSource? salaryOf(StatementLine line, LedgerBook book) =>
+      _tender(line) == Tender.cash
+      ? BookFinances.of(book).salaryLike(line.amount, line.occurredOn)
+      : null;
 
   static Tender _tender(StatementLine line) =>
       line.paymentKind?.tender ?? Tender.cash;
@@ -122,7 +125,7 @@ class StatementImport {
             tender: _tender(line),
             amount: line.amount,
             receivedOn: line.occurredOn,
-            fromPlan: isPlanIncome(line, book),
+            salaryId: salaryOf(line, book)?.id,
             id: id,
           );
       return null;

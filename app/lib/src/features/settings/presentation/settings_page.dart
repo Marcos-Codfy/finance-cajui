@@ -1,15 +1,13 @@
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
 import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
-import 'package:cajui/src/features/budget/presentation/plan_page.dart';
-import 'package:cajui/src/features/cards/presentation/cards_page.dart';
-import 'package:cajui/src/features/debts/presentation/debts_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// O que a pessoa regula no app: o plano do mês, os cartões, as dívidas, o
-/// fechamento, a chave da casa e o retorno sensorial.
+/// O que a pessoa regula no app: a chave da casa, o tema e o retorno
+/// sensorial. O plano, os cartões e as dívidas moram no Início, junto do
+/// mês, como na planilha.
 ///
 /// Nada de servidor: o celular sincroniza sozinho (ADR-020), e o que havia
 /// aqui para mandar e para cadastrar aparelho deixou de existir.
@@ -17,10 +15,16 @@ class SettingsPage extends ConsumerWidget {
   /// Cria a tela de ajustes.
   const new({super.key});
 
+  /// Abre a tela, a partir do Início.
+  static Future<void> open(BuildContext context) =>
+      Navigator.of(context)
+          .push<void>(CajuiPageRoute(builder: (_) => const SettingsPage()));
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CajuiScreen(
       title: 'Ajustes',
+      onBack: Navigator.of(context).maybePop,
       children: [
         ..._cadastros(context),
         ..._appearance(ref),
@@ -31,21 +35,6 @@ class SettingsPage extends ConsumerWidget {
 
   /// O que a pessoa cadastra uma vez e revisita de vez em quando.
   List<Widget> _cadastros(BuildContext context) => [
-    _opens(
-      title: 'Plano do mês',
-      subtitle: 'Renda, contas fixas, gastos variáveis e dívidas',
-      onPressed: () => PlanPage.open(context),
-    ),
-    _opens(
-      title: 'Cartões de crédito',
-      subtitle: 'Por onde se paga — e a fatura de cada um',
-      onPressed: () => CardsPage.open(context),
-    ),
-    _opens(
-      title: 'Dívidas',
-      subtitle: 'Quanto falta de cada uma, e quando termina',
-      onPressed: () => DebtsPage.open(context),
-    ),
     _opens(
       title: 'Chave da casa',
       subtitle: 'Para entrar na consulta pela web de outro computador',

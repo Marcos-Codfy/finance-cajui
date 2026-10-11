@@ -1,6 +1,6 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/features/debts/presentation/debt_actions.dart';
 import 'package:cajui/src/features/debts/presentation/debt_kind_label.dart';
-import 'package:cajui/src/features/debts/presentation/debt_payment_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_payoff_section.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -35,54 +35,53 @@ class DebtDetailPage extends ConsumerWidget {
     final debt = ref.watch(ledgerProvider).value?.debtOf(debtId);
     if (debt == null) return const SizedBox.shrink();
     final today = ref.watch(clockProvider).today();
+    final owed = DebtCalendar.outstandingOn(debt, today);
     return CajuiScreen(
       title: debt.creditor,
       onBack: Navigator.of(context).pop,
-      footer: _payButton(context, debt),
+      footer: DebtActions(debt: debt, owed: owed),
       children: [
         CajuiStatCard(
-          label: 'Falta pagar',
-          cents: debt.outstandingBalance.cents,
+          label: 'Ainda devo',
+          cents: owed.cents,
           large: true,
-          caption: _caption(debt),
-          // O medidor é secundário e conta desde o começo (RN-541).
-          meter: debt.paidInstallments / debt.totalInstallments,
+          caption: _caption(debt, owed),
+          // O medidor é secundário e conta desde o começo (RN-541); só a
+          // parcelada tem começo e fim para medir.
+          meter: debt.informedBalance == null && debt.totalInstallments > 0
+              ? debt.paidInstallments / debt.totalInstallments
+              : null,
         ),
         const CajuiSectionTitle('Como está'),
-        ..._facts(debt, today),
+        ..._facts(debt),
         ...DebtPayoffSection.of(debt, today: today),
       ],
     );
   }
 
-  static String _caption(Debt debt) {
-    if (debt.isPaidOff) return 'Quitada. Fica no histórico.';
+  static String _caption(Debt debt, Money owed) {
+    if (owed.isZero) return 'Quitada. Fica no histórico.';
+    if (!debt.installmentAmount.isPositive) {
+      return 'Sem parcela por mês: o saldo fica até ser negociado.';
+    }
     final forecast = DateLabels.month(debt.payoffForecast);
     return 'No ritmo atual, quita em $forecast';
   }
 
-  List<Widget> _facts(Debt debt, LocalDate today) => [
+  List<Widget> _facts(Debt debt) => [
     CajuiListRow(
-      title: 'Parcela',
+      title: 'Por mês',
       subtitle: 'vence dia ${debt.dueDay} · ${DebtKindLabel.of(debt.kind)}',
       trailing: CajuiAmountText(debt.installmentAmount.cents),
     ),
-    CajuiListRow(
-      title: 'Já pago',
-      subtitle:
-          '${debt.paidInstallments} de ${debt.totalInstallments} parcelas',
-      trailing: CajuiAmountText(debt.paidSoFar.cents),
-    ),
+    if (debt.informedBalance == null)
+      CajuiListRow(
+        title: 'Já pago',
+        subtitle:
+            '${debt.paidInstallments} de ${debt.totalInstallments} parcelas',
+        trailing: CajuiAmountText(debt.paidSoFar.cents),
+      ),
+    if (debt.note case final note?)
+      CajuiListRow(title: 'Observação', subtitle: note),
   ];
-
-  /// Parcelamento de compra no cartão não tem botão de pagar: a parcela é
-  /// cobrada na fatura, e lançá-la de novo contaria duas vezes (RN-521).
-  Widget? _payButton(BuildContext context, Debt debt) {
-    if (debt.isPaidOff || debt.kind == DebtKind.cardInstallment) return null;
-    return CajuiButton(
-      label: 'Paguei a parcela deste mês',
-      expand: true,
-      onPressed: () => DebtPaymentPage.open(context, debt),
-    );
-  }
 }
