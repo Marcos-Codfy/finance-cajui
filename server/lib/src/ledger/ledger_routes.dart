@@ -1,17 +1,15 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
-import 'package:pointycastle/export.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
+import 'package:server/src/ledger/fingerprint.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-/// As rotas de categorias e de lançamentos, e a âncora do registro.
+/// As rotas do plano, dos lançamentos e dos estornos. O cadastro mora em
+/// `CatalogRoutes`, e o topo do registro em `HeadRoutes` (ADR-024).
 ///
 /// O caminho de toda escrita é o mesmo: ler o pedido com formato estrito,
 /// aplicar as regras do domínio, **gravar o evento** e só então atualizar o
@@ -31,11 +29,6 @@ final class LedgerRoutes {
 
   /// O roteador, montado em `/v1`.
   Router get router => Router()
-    ..get('/head', _head)
-    ..get('/categories', _listCategories)
-    ..post('/categories', _createCategory)
-    ..get('/cards', _listCards)
-    ..post('/cards', _createCard)
     ..get('/plan', _readPlan)
     ..post('/plan', _definePlan)
     ..get('/entries', _listEntries)
@@ -44,80 +37,6 @@ final class LedgerRoutes {
     ..delete('/entries/<id>', _cancelEntry)
     ..post('/entries/<id>/reversals', _reverseEntry)
     ..get('/reversals', _listReversals);
-
-  /// A âncora contra o corte do fim do registro (T-39): o app guarda o maior
-  /// `seq` que já viu, e estranha um servidor que sabe menos do que ele.
-  Response _head(Request request) =>
-      Responses.json({'seq': store.events.length});
-
-  Response _listCategories(Request request) => Responses.json({
-    'categories': [
-      for (final category in state.categories.values)
-        {
-          'id': category.id,
-          'name': category.name,
-          'block': category.block.name,
-          'groupId': category.groupId,
-          'voucherEligible': category.voucherEligible,
-        },
-    ],
-  });
-
-  Future<Response> _createCategory(Request request) async {
-    final json = await JsonBody.read(request);
-    final body = JsonReader(
-      json,
-      allowed: const {'id', 'name', 'block', 'groupId', 'voucherEligible'},
-    );
-    final name = body.string('name', maxLength: 40);
-    final refused = CategoryNamePolicy.check(name);
-    if (refused != null) return _refuse(request, refused);
-    final payload = {
-      'id': body.string('id', maxLength: 64),
-      'name': name,
-      'block': body.string('block', maxLength: 16),
-      'groupId': body.string('groupId', maxLength: 64),
-      'voucherEligible': body.boolean('voucherEligible', orElse: false),
-    };
-    LedgerState.categoryFrom(payload);
-    final event = await store.append(
-      id: 'category-${payload['id']}',
-      type: LedgerState.categoryCreated,
-      payload: payload,
-    );
-    state.apply(event);
-    return Responses.json({'id': payload['id']}, status: 201);
-  }
-
-  Response _listCards(Request request) => Responses.json({
-    'cards': [
-      for (final card in state.cards.values) CardCodec.encodeCard(card),
-    ],
-  });
-
-  /// O cartão como forma de pagamento, e **nada de número de cartão**: só
-  /// nome, dias e limite, que é o que a conta da fatura pede.
-  Future<Response> _createCard(Request request) async {
-    final json = await JsonBody.read(request);
-    final body = JsonReader(
-      json,
-      allowed: const {'id', 'name', 'closingDay', 'dueDay', 'creditLimitCents'},
-    );
-    final card = CardCodec.decodeCard({
-      'id': body.string('id', maxLength: 64),
-      'name': body.string('name', maxLength: 40),
-      'closingDay': body.integer('closingDay'),
-      'dueDay': body.integer('dueDay'),
-      'creditLimitCents': body.optionalInteger('creditLimitCents'),
-    });
-    final event = await store.append(
-      id: 'card-${card.id}',
-      type: LedgerState.cardDefined,
-      payload: CardCodec.encodeCard(card),
-    );
-    state.apply(event);
-    return Responses.json({'id': card.id}, status: 201);
-  }
 
   Response _readPlan(Request request) =>
       Responses.json(MonthSetupCodec.encode(state.plan));
@@ -134,7 +53,7 @@ final class LedgerRoutes {
     }
     final payload = MonthSetupCodec.encode(setup);
     final event = await store.append(
-      id: 'plan-${_fingerprint(payload)}',
+      id: 'plan-${Fingerprint.of(payload)}',
       type: LedgerState.planDefined,
       payload: payload,
     );
@@ -199,7 +118,7 @@ final class LedgerRoutes {
     }
     final payload = command.toJson();
     final event = await store.append(
-      id: 'entry-revised-$id-${_fingerprint(payload)}',
+      id: 'entry-revised-$id-${Fingerprint.of(payload)}',
       type: LedgerState.entryRevised,
       payload: payload,
     );
@@ -280,17 +199,6 @@ final class LedgerRoutes {
     );
     state.apply(event);
     return Responses.json({'id': id});
-  }
-
-  /// Oito caracteres do SHA-256 do conteúdo: o bastante para separar duas
-  /// correções e curto o bastante para caber num identificador legível.
-  static String _fingerprint(Map<String, Object?> payload) {
-    final bytes = utf8.encode(jsonEncode(payload));
-    final digest = SHA256Digest().process(Uint8List.fromList(bytes));
-    return digest
-        .take(4)
-        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
-        .join();
   }
 
   Response _refuse(Request request, Failure failure) {

@@ -95,7 +95,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   List<Widget> _firstTalk(ValueChanged<String> onAsk) => [
     const CajuiEmptyState(
-      title: 'Oi, eu sou o ${AssistantIdentity.name}',
+      title: AssistantIdentity.greeting,
       message:
           'Diga o que gastou e eu lanço. Pergunte, e eu respondo com os '
           'seus números na mão.',

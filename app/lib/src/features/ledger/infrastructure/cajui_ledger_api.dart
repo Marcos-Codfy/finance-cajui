@@ -21,25 +21,30 @@ final class CajuiLedgerApi implements LedgerUplink {
   Future<bool> canSendQuietly() async => _api.hasKey;
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCategories() async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/categories', token: token),
-    );
-    final list = outcome.body?['categories'] as List<Object?>? ?? const [];
-    return (
-      {for (final item in list) '${(item! as Map<String, Object?>)['id']}'},
-      outcome.failure?.code,
-    );
-  }
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories() =>
+      _versions('/v1/categories', 'categories');
 
   @override
-  Future<(Set<String>, ErrorCode?)> remoteCards() async {
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards() =>
+      _versions('/v1/cards', 'cards');
+
+  /// Os itens do cadastro em [path], cada um com a versão que o servidor
+  /// tem. Servidor anterior ao carimbo devolve sem ele, e a versão vale
+  /// como a mais velha — a daqui, carimbada, sobe por cima (ADR-024).
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> _versions(
+    String path,
+    String field,
+  ) async {
     final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/cards', token: token),
+      (token) => _api.send('GET', path, token: token),
     );
-    final list = outcome.body?['cards'] as List<Object?>? ?? const [];
+    final list = outcome.body?[field] as List<Object?>? ?? const [];
     return (
-      {for (final item in list) '${(item! as Map<String, Object?>)['id']}'},
+      {
+        for (final item in list)
+          if (item is Map)
+            '${item['id']}': CatalogVersion.of(item.cast<String, Object?>()),
+      },
       outcome.failure?.code,
     );
   }

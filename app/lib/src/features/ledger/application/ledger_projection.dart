@@ -36,9 +36,7 @@ abstract final class LedgerProjection {
       DebtInstallmentPaid() => _installmentPaid(book, event),
       // Cartão, dívida e fechamento: a versão mais recente toma o lugar da
       // anterior, que continua no registro.
-      CardDefined(:final card) => book.copyWith(
-        cards: [...book.cards.where((known) => known.id != card.id), card],
-      ),
+      CardDefined() => _cardDefined(book, event),
       DebtDefined(:final debt) => book.copyWith(
         debts: [...book.debts.where((known) => known.id != debt.id), debt],
       ),
@@ -61,6 +59,19 @@ abstract final class LedgerProjection {
         ),
         _ => book,
       };
+
+  /// A versão mais velha do cartão pelo carimbo não passa por cima da mais
+  /// nova (ADR-024): reler o registro, onde a versão do outro celular pode
+  /// ter sido gravada antes da daqui, chega ao mesmo cartão de antes.
+  static LedgerBook _cardDefined(LedgerBook book, CardDefined event) {
+    final card = event.card;
+    final current = book.trail.cardStamps[card.id];
+    if (EditStamp.isNewer(current, event.definedAt)) return book;
+    return book.copyWith(
+      cards: [...book.cards.where((known) => known.id != card.id), card],
+      trail: book.trail.stampingCard(card.id, event.definedAt),
+    );
+  }
 
   /// O fato já foi aceito quando aconteceu — aqui ou em outro aparelho — e
   /// não se recusa depois. Se os pagamentos passam do saldo, a conta mostra

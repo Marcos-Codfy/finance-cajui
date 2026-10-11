@@ -4,7 +4,6 @@ import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
-import 'package:cajui/src/features/ledger/application/sync_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// O ViewModel da conversa com o assistente (ADR-002).
@@ -36,22 +35,24 @@ class AssistantViewModel extends Notifier<AssistantState> {
   }
 
   /// O que o assistente gravou no servidor chega aqui: no celular, pela
-  /// descida; na consulta pela web, relendo o livro, que é o do servidor.
+  /// descida; na consulta pela web, relendo o livro, que é o do servidor —
+  /// no lugar, sem voltar ao "carregando".
   Future<void> _refreshLedger() async {
     if (ref.read(ledgerUplinkProvider).isPaired) {
       await _syncLedger();
       return;
     }
-    ref.invalidate(ledgerProvider);
+    await ref.read(ledgerProvider.notifier).reload();
   }
 
-  /// Sobe o que falta e traz o que o servidor tem. Falha aqui não
-  /// interrompe a pergunta: o assistente responde com o que o servidor já
-  /// tinha, e diz sozinho quando não tem número.
+  /// Sobe o que falta e traz o que o servidor tem, na mesma fila da
+  /// sincronização que acontece sozinha: duas ao mesmo tempo mandariam o
+  /// mesmo lançamento duas vezes. Falha aqui não interrompe a pergunta: o
+  /// assistente responde com o que o servidor já tinha.
   Future<void> _syncLedger() async {
     final book = ref.read(ledgerProvider).value;
     if (book == null) return;
-    await ref.read(ledgerSyncProvider).run(book);
+    await ref.read(ledgerProvider.notifier).quietSync.request(book);
   }
 
   /// Desfaz o que o assistente lançou: cancela aqui, e o cancelamento sobe

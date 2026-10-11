@@ -1,91 +1,39 @@
 package app.cajui.auth
 
-import androidx.fragment.app.FragmentActivity
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * A ponte até a chave do aparelho.
+ * A ponte até o nome do aparelho, pelo canal `app.cajui/device`.
  *
- * Três perguntas atravessam: *dá para confirmar quem sou neste aparelho?*,
- * *qual é a sua chave pública?* e *assine isto*. A chave privada não vem — e
- * nem poderia, porque não existe fora do Keystore. A digital também não: quem
- * a lê é o Android, que devolve só a assinatura pronta.
+ * Uma pergunta só atravessa: *qual é a sua chave pública?* Assinar, pedir
+ * a digital e apagar a chave saíram com a ADR-024 — quem entra no servidor
+ * é a chave da casa, e o Dart já não pedia nada disso.
  */
-class DeviceKeyChannel(
-    private val activity: FragmentActivity,
-    messenger: BinaryMessenger,
-) : MethodChannel.MethodCallHandler {
+class DeviceKeyChannel(messenger: BinaryMessenger) : MethodChannel.MethodCallHandler {
 
     private val key = DeviceKey()
 
     init {
-        BiometricGate.appContext = activity.applicationContext
         MethodChannel(messenger, "app.cajui/device").setMethodCallHandler(this)
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        try {
-            when (call.method) {
-                "canAuthenticate" -> result.success(key.canAuthenticate)
-                "publicKey" -> result.success(key.publicKey())
-                "sign" -> sign(call, result)
-                // Assina só se a janela do dia ainda estiver aberta, e nunca
-                // abre a caixa de diálogo: é o que deixa o envio automático
-                // acontecer sem interromper ninguém.
-                "signQuietly" -> result.success(
-                    key.trySign(call.argument<ByteArray>("message")!!),
-                )
-                "forget" -> result.success(key.forget())
-                else -> result.notImplemented()
-            }
-        } catch (failure: Exception) {
-            // A falha do Keystore fica no log do aparelho, que é o único
-            // lugar onde dá para diagnosticá-la — não há depurador no
-            // celular de quem usa. Só a exceção: nenhum dado da pessoa.
-            // Quem fala com ela é o catálogo, pelo código.
-            android.util.Log.w(TAG, "chave do aparelho recusou", failure)
-            result.error(codeFor(failure), failure::class.java.simpleName, null)
-        }
-    }
-
-    /**
-     * Assina, pedindo a digital **só quando o prazo do dia venceu**.
-     *
-     * Dentro da janela, a chave assina direto e ninguém é interrompido. Fora
-     * dela, o Android pergunta quem está ali e a assinatura sai em seguida.
-     * Desistir devolve vazio: a camada de cima entende como "não agora", e
-     * não como defeito.
-     */
-    private fun sign(call: MethodCall, result: MethodChannel.Result) {
-        val message = call.argument<ByteArray>("message")!!
-        val signed = key.trySign(message)
-        if (signed != null) {
-            result.success(signed)
+        if (call.method != "publicKey") {
+            result.notImplemented()
             return
         }
-        BiometricGate.unlock(activity) { confirmed ->
-            result.success(if (confirmed) key.trySign(message) else null)
+        try {
+            result.success(key.publicKey())
+        } catch (failure: Exception) {
+            // A falha do Keystore fica no log do aparelho, que é o único
+            // lugar onde dá para diagnosticá-la. Só a exceção: nenhum dado
+            // da pessoa. O Dart, sem a chave, fala com o servidor com um
+            // nome genérico — e sincroniza do mesmo jeito.
+            android.util.Log.w(TAG, "chave do aparelho recusou", failure)
+            result.error("E-APP-01", failure::class.java.simpleName, null)
         }
-    }
-
-    /**
-     * Três destinos, e nenhum chute.
-     *
-     * Chave invalidada porque a digital do aparelho mudou é caso à parte: o
-     * aparelho precisa se cadastrar de novo, e a chave velha não serve mais.
-     * `E-AUTH-01` diz "este aparelho não tem biometria configurada", então
-     * só sai quando **for verdade** — antes ele era o destino de qualquer
-     * falha, e o aparelho do dono, cheio de digital cadastrada, ouviu que
-     * não tinha nenhuma. O resto é defeito nosso, e se chama assim.
-     */
-    private fun codeFor(failure: Exception): String {
-        if (failure is android.security.keystore.KeyPermanentlyInvalidatedException) {
-            key.forget()
-            return "E-AUTH-03"
-        }
-        return if (key.canAuthenticate) "E-APP-01" else "E-AUTH-01"
     }
 
     private companion object {

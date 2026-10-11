@@ -66,14 +66,16 @@ abstract interface class LedgerUplink {
     ].join('|');
   }
 
-  /// As categorias que o servidor já conhece.
-  Future<(Set<String>, ErrorCode?)> remoteCategories();
+  /// As categorias que o servidor já conhece, com a versão de cada uma: é
+  /// por ela que a reagrupada numa versão nova do app sobe (ADR-024).
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCategories();
 
-  /// Os cartões que o servidor já conhece. Sem eles, compra parcelada é
-  /// recusada: o plano de parcelas é recalculado a partir do cartão.
-  Future<(Set<String>, ErrorCode?)> remoteCards();
+  /// Os cartões que o servidor já conhece, com a versão de cada um. Sem
+  /// eles, compra parcelada é recusada: o plano de parcelas é recalculado
+  /// a partir do cartão.
+  Future<(Map<String, CatalogVersion>, ErrorCode?)> remoteCards();
 
-  /// Cadastra o cartão no servidor.
+  /// Cadastra o cartão no servidor, ou manda a versão nova dele.
   Future<ErrorCode?> sendCard(Map<String, Object?> card);
 
   /// O que o servidor já tem do que entrou.
@@ -96,7 +98,7 @@ abstract interface class LedgerUplink {
   /// Os lançamentos que o servidor tem, e os que ele já cancelou.
   Future<(RemoteEntries, ErrorCode?)> remoteEntries();
 
-  /// Cadastra a categoria no servidor.
+  /// Cadastra a categoria no servidor, ou manda a versão nova dela.
   Future<ErrorCode?> sendCategory(Map<String, Object?> category);
 
   /// Manda um lançamento novo.

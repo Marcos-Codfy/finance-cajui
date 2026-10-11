@@ -16,7 +16,9 @@ import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_downlink.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/server_head.dart';
 import 'package:cajui/src/features/ledger/infrastructure/cajui_ledger_api.dart';
+import 'package:cajui/src/features/ledger/infrastructure/cajui_server_head.dart';
 import 'package:cajui/src/features/ledger/infrastructure/event_store_ledger_journal.dart';
 import 'package:cajui/src/features/ledger/infrastructure/ledger_event_codec.dart';
 import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
@@ -61,6 +63,8 @@ abstract final class Composition {
       ledgerDownlinkProvider.overrideWithValue(
         RemoteLedgerJournal(api, categoryOf: _defaultCategory),
       ),
+      // O topo do registro, que diz quando há o que descer (ADR-024).
+      serverHeadProvider.overrideWithValue(CajuiServerHead(api)),
       captureShelfProvider.overrideWithValue(EventStoreCaptureShelf(store)),
       _preferences(store, local: nativeCapture),
       ..._server(api, local: nativeCapture),

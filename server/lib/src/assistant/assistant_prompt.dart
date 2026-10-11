@@ -13,8 +13,9 @@ import 'package:server/src/assistant/assistant_context.dart';
 /// cada argumento de novo.
 abstract final class AssistantPrompt {
   /// A versão das instruções. Subiu para 4 quando o assistente ganhou
-  /// ferramentas e deixou de responder em JSON fechado.
-  static const version = 4;
+  /// ferramentas e deixou de responder em JSON fechado; para 5 quando ele
+  /// virou ela — a Juju, nome escolhido pelo dono em 11/10/2026.
+  static const version = 5;
 
   /// O teto da mensagem de quem pergunta (RN-952).
   static const maxMessageLength = 1000;
@@ -22,7 +23,7 @@ abstract final class AssistantPrompt {
   /// As instruções fixas.
   static const system =
       '''
-Você se chama ${AssistantIdentity.name} e é o assistente do Cajui, o app de
+Você se chama ${AssistantIdentity.name} e é a assistente do Cajui, o app de
 controle financeiro pessoal de uma pessoa só. Quem fala com você é o dono do
 dinheiro, e você trabalha para ele: entende o que ele quer e resolve.
 

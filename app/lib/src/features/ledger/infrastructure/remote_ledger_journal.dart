@@ -16,6 +16,12 @@ import 'package:domain/domain.dart';
 /// Só lê. `append` recusa por construção: a web é modo consulta, e isso não
 /// se garante escondendo botão (T-12, RN-906) — se alguém chamar, estoura
 /// aqui, e o teste pega.
+///
+/// A leitura é **inteira ou nenhuma**: se uma das partes não respondeu, o
+/// retrato inteiro é "não sei" (`null`). Com a web relendo a cada mudança
+/// feita no celular (ADR-024), um plano que falhasse no meio deixaria a
+/// tela sem plano até a próxima mudança — e a descida no celular trataria
+/// o cartão que não veio como cartão que não existe.
 final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
   /// Cria o livro remoto sobre [_api].
   const new(this._api, {required this._categoryOf});
@@ -29,25 +35,31 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
 
   @override
   Future<LedgerSnapshot?> snapshot() async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/entries', token: token),
-    );
-    final body = outcome.body;
+    final (body, cards) = await (_get('/v1/entries'), _cards()).wait;
     // Sem resposta não é "sem lançamentos": é "não sei". Quem for descer
     // não pode cancelar tudo por causa de uma queda de rede.
-    if (body == null) return null;
-    final cards = await _cards();
+    if (body == null || cards == null) return null;
     final entries = [
       for (final item in body['entries'] as List<Object?>? ?? const [])
         ?_entryOf(item, cards),
     ];
+    final events = await _events(cards, entries);
+    if (events == null) return null;
     return (
-      events: await _events(cards, entries),
+      events: events,
       cancelled: {
         for (final id in body['cancelledIds'] as List<Object?>? ?? const [])
           '$id',
       },
     );
+  }
+
+  /// O corpo da resposta a `GET` [path]; `null` quando não houve resposta.
+  Future<Map<String, Object?>?> _get(String path) async {
+    final outcome = await _api.authenticated(
+      (token) => _api.send('GET', path, token: token),
+    );
+    return outcome.body;
   }
 
   /// Os fatos na ordem em que o livro precisa deles. O plano, o que entrou
@@ -56,28 +68,36 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
   /// saldo pararia em zero, e sem o cartão a compra parcelada nem se
   /// reconstrói. O estorno vem **depois**, e precisa do original em mãos: é
   /// dele que sai o que ainda resta a estornar (RN-210).
-  Future<List<LedgerEvent>> _events(
-    Map<String, CreditCard> cards,
+  Future<List<LedgerEvent>?> _events(
+    Map<String, CardDefined> cards,
     List<Entry> entries,
-  ) async => [
-    ...await _plan(),
-    ...await _income(),
-    for (final card in cards.values)
-      CardDefined(id: 'card-remoto-${card.id}', card: card),
-    for (final entry in entries) EntryRecorded(entry),
-    ...await _reversals(entries),
-    ...await _facts(),
-  ];
+  ) async {
+    final (plan, income, reversals, facts) = await (
+      _plan(),
+      _income(),
+      _reversals(entries),
+      _facts(),
+    ).wait;
+    if (plan == null || income == null || reversals == null) return null;
+    if (facts == null) return null;
+    return [
+      ...plan,
+      ...income,
+      ...cards.values,
+      for (final entry in entries) EntryRecorded(entry),
+      ...reversals,
+      ...facts,
+    ];
+  }
 
   /// Os fatos que o servidor guarda sem fazer conta: fatura paga, dívida,
   /// parcela de dívida paga e mês fechado (ADR-019). Vêm por último — a
   /// parcela paga aponta para um lançamento. Fato que esta versão não lê
   /// é pulado, e não derruba os outros.
-  Future<List<LedgerEvent>> _facts() async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/facts', token: token),
-    );
-    final list = outcome.body?['facts'] as List<Object?>? ?? const [];
+  Future<List<LedgerEvent>?> _facts() async {
+    final body = await _get('/v1/facts');
+    if (body == null) return null;
+    final list = body['facts'] as List<Object?>? ?? const [];
     return [for (final item in list) ?_factOf(item)];
   }
 
@@ -96,34 +116,42 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
     }
   }
 
-  /// Os cartões, por identificador. Sem eles, toda compra parcelada era
+  /// Os cartões, por identificador, cada um com o carimbo da versão que o
+  /// servidor tem (ADR-024). Sem eles, toda compra parcelada era
   /// **silenciosamente pulada** na consulta: o plano de parcelas é
   /// recalculado a partir do cartão, e sem cartão não há de onde.
-  Future<Map<String, CreditCard>> _cards() async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/cards', token: token),
-    );
-    final lista = outcome.body?['cards'] as List<Object?>? ?? const [];
-    final cards = <String, CreditCard>{};
-    for (final item in lista) {
-      if (item is! Map) continue;
-      try {
-        final card = CardCodec.decodeCard(item.cast<String, Object?>());
-        cards[card.id] = card;
-      } on Object {
-        continue;
-      }
+  Future<Map<String, CardDefined>?> _cards() async {
+    final body = await _get('/v1/cards');
+    if (body == null) return null;
+    final cards = <String, CardDefined>{};
+    for (final item in body['cards'] as List<Object?>? ?? const []) {
+      final defined = _cardOf(item);
+      if (defined != null) cards[defined.card.id] = defined;
     }
     return cards;
   }
 
+  static CardDefined? _cardOf(Object? item) {
+    if (item is! Map) return null;
+    try {
+      final payload = item.cast<String, Object?>();
+      final card = CardCodec.decodeCard(payload);
+      return CardDefined(
+        id: 'card-remoto-${card.id}',
+        card: card,
+        definedAt: CatalogVersion.definedAtOf(payload),
+      );
+    } on Object {
+      return null;
+    }
+  }
+
   /// Os estornos que o servidor tem. Sem eles a consulta mostraria o gasto
   /// cheio de uma compra já devolvida (RN-209).
-  Future<List<LedgerEvent>> _reversals(List<Entry> entries) async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/reversals', token: token),
-    );
-    final lista = outcome.body?['reversals'] as List<Object?>? ?? const [];
+  Future<List<LedgerEvent>?> _reversals(List<Entry> entries) async {
+    final body = await _get('/v1/reversals');
+    if (body == null) return null;
+    final lista = body['reversals'] as List<Object?>? ?? const [];
     final porId = {for (final entry in entries) entry.id: entry};
     final feitos = <Reversal>[];
     for (final item in lista) {
@@ -144,12 +172,9 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
   /// O que entrou, como o servidor tem: os recebimentos e os acertos de
   /// saldo. O saldo em si não desce pronto — ele nasce da projeção, aqui,
   /// pelos mesmos fatos e pelas mesmas regras do aparelho.
-  Future<List<LedgerEvent>> _income() async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/income', token: token),
-    );
-    final body = outcome.body;
-    if (body == null) return const [];
+  Future<List<LedgerEvent>?> _income() async {
+    final body = await _get('/v1/income');
+    if (body == null) return null;
     return [
       for (final item in body['receipts'] as List<Object?>? ?? const [])
         if (item is Map)
@@ -168,12 +193,9 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
 
   /// Servidor que ainda não recebeu plano nenhum devolve um plano vazio, e
   /// aí não há fato a aplicar: o livro nasce sem plano, como no aparelho.
-  Future<List<LedgerEvent>> _plan() async {
-    final outcome = await _api.authenticated(
-      (token) => _api.send('GET', '/v1/plan', token: token),
-    );
-    final body = outcome.body;
-    if (body == null) return const [];
+  Future<List<LedgerEvent>?> _plan() async {
+    final body = await _get('/v1/plan');
+    if (body == null) return null;
     final setup = MonthSetupCodec.decode(body);
     // O identificador é fixo porque aqui só existe um plano: o que o
     // servidor tem agora. A consulta não guarda o histórico dele.
@@ -185,7 +207,7 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
   /// Lançamento que o app não consegue reconstruir — categoria que ele não
   /// conhece, formato de um servidor mais novo — é **pulado**, e não derruba
   /// a tela inteira. Ver um mês quase completo é melhor que ver um erro.
-  Entry? _entryOf(Object? item, Map<String, CreditCard> cards) {
+  Entry? _entryOf(Object? item, Map<String, CardDefined> cards) {
     if (item is! Map) return null;
     try {
       final pedido = CreateEntryRequest.fromJson(
@@ -194,7 +216,7 @@ final class RemoteLedgerJournal implements LedgerJournal, LedgerDownlink {
       return EntryCodec.toEntry(
         pedido,
         category: _categoryOf(pedido.categoryId),
-        cardOf: (id) => cards[id],
+        cardOf: (id) => cards[id]?.card,
         // O lançamento já foi aceito quando aconteceu: reconstruí-lo não
         // pode falhar por causa do relógio de quem está olhando.
         today: EntryCodec.parseDate(pedido.occurredOn).addDays(1),

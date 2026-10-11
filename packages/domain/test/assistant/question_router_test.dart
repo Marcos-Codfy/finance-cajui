@@ -62,21 +62,31 @@ void main() {
     });
 
     test('chamado pelo nome, entende a mesma pergunta', () {
-      // "Buriti, quanto sobrou?" é a mesma pergunta que "quanto sobrou?".
+      // "Juju, quanto sobrou?" é a mesma pergunta que "quanto sobrou?".
       // Sem tirar o vocativo, o nome atrapalharia quem o usa.
       expect(
-        QuestionRouter.of('Buriti, quanto dá para gastar nesta semana?'),
+        QuestionRouter.of('Juju, quanto dá para gastar nesta semana?'),
         QuestionIntent.weekLimit,
       );
       expect(
-        QuestionRouter.of('oi buriti, como o mês está fechando'),
+        QuestionRouter.of('oi juju, como o mês está fechando'),
         QuestionIntent.monthClosing,
       );
-      expect(AssistantIdentity.withoutVocative('Buriti, e aí?'), 'e aí?');
+      expect(
+        AssistantIdentity.withoutVocative('Juju, quanto sobrou?'),
+        'quanto sobrou?',
+      );
+      expect(AssistantIdentity.withoutVocative('Juju, e aí?'), 'e aí?');
+    });
+
+    test('a assistente se chama Juju, e se apresenta como "a Juju"', () {
+      expect(AssistantIdentity.name, 'Juju');
+      expect(AssistantIdentity.greeting, 'Oi, eu sou a Juju');
+      expect(AssistantIdentity.about, startsWith('Sou a Juju, a assistente'));
     });
 
     test('só o cumprimento é cumprimento, e não custa token', () {
-      for (final hello in ['oi', 'Oi!', 'Buriti', 'bom dia', 'oi buriti']) {
+      for (final hello in ['oi', 'Oi!', 'Juju', 'bom dia', 'oi juju']) {
         expect(
           QuestionRouter.of(hello),
           QuestionIntent.greeting,
@@ -92,8 +102,8 @@ void main() {
 
     test('o nome não come palavra que só começa igual', () {
       expect(
-        AssistantIdentity.withoutVocative('buritizal grande'),
-        'buritizal grande',
+        AssistantIdentity.withoutVocative('jujuba de morango'),
+        'jujuba de morango',
       );
     });
 

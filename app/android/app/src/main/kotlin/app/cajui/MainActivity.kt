@@ -6,7 +6,7 @@ import app.cajui.auth.DeviceKeyChannel
 import app.cajui.capture.FileIntake
 import app.cajui.capture.PhotoIntake
 import app.cajui.voice.SpeechChannel
-import io.flutter.embedding.android.FlutterFragmentActivity
+import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 
 /**
@@ -16,9 +16,10 @@ import io.flutter.embedding.engine.FlutterEngine
  * aparelho e o que foi escolhido no seletor de arquivos voltam por
  * `onActivityResult` e entram na mesma fila (ADR-017).
  */
-// `FlutterFragmentActivity`, e não `FlutterActivity`: a caixa de diálogo da
-// biometria é um fragmento, e só existe sobre uma atividade que os hospede.
-class MainActivity : FlutterFragmentActivity() {
+// `FlutterActivity` de novo (ADR-024): a `FlutterFragmentActivity` existia
+// para hospedar a caixa de diálogo da biometria, que saiu com a chave da
+// casa. Câmera, seletor de arquivos e ditado pedem só uma `Activity`.
+class MainActivity : FlutterActivity() {
 
     private var capture: CaptureChannel? = null
     private var speech: SpeechChannel? = null
@@ -49,7 +50,7 @@ class MainActivity : FlutterFragmentActivity() {
             FileIntake(this),
         )
         speech = SpeechChannel(this, messenger)
-        DeviceKeyChannel(this, messenger)
+        DeviceKeyChannel(messenger)
         capture?.handle(intent)
     }
 

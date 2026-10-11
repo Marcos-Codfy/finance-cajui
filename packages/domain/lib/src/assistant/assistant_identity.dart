@@ -1,25 +1,28 @@
-/// Quem é o assistente do Cajui.
+/// Quem é a assistente do Cajui.
 ///
-/// **Buriti** — a palmeira das veredas do Cerrado. O ditado do sertão é o
-/// resumo do trabalho dele: *onde tem buriti, tem água*. Ele é o sinal de
-/// que há reserva, e não o dono dela.
+/// **Juju** — nome escolhido pelo dono em 11/10/2026, no lugar de Buriti.
+/// Curto, de apelido, fácil de chamar no meio de uma frase com pressa:
+/// "Juju, quanto sobrou?".
 ///
 /// O nome mora **aqui e só aqui**: o app o usa para se apresentar e para
 /// entender quando é chamado, e o servidor o usa nas instruções da IA.
-/// Trocá-lo é mudar uma linha.
+/// Trocá-lo é mudar uma linha — e o artigo, em [greeting] e [about].
 abstract final class AssistantIdentity {
-  /// Como ele se chama.
-  static const name = 'Buriti';
+  /// Como ela se chama.
+  static const name = 'Juju';
 
-  /// Uma frase sobre o que ele é, para quando perguntarem.
+  /// Como ela se apresenta na primeira conversa.
+  static const greeting = 'Oi, eu sou a $name';
+
+  /// Uma frase sobre o que ela é, para quando perguntarem.
   static const about =
-      'Sou o $name, o assistente do Cajui. Olho os seus números e respondo '
+      'Sou a $name, a assistente do Cajui. Olho os seus números e respondo '
       'com a conta na mão — nunca com palpite de investimento, e nunca '
       'julgando o seu gasto.';
 
   /// A pergunta sem o chamado pelo nome.
   ///
-  /// "Buriti, quanto sobrou?" e "quanto sobrou?" são a mesma pergunta. Sem
+  /// "Juju, quanto sobrou?" e "quanto sobrou?" são a mesma pergunta. Sem
   /// tirar o vocativo, o nome atrapalharia justamente quem se deu ao
   /// trabalho de usá-lo.
   static String withoutVocative(String question) {
@@ -43,7 +46,7 @@ abstract final class AssistantIdentity {
   static String _dropPrefix(String text, String prefix) {
     if (!text.toLowerCase().startsWith(prefix.toLowerCase())) return text;
     final rest = text.substring(prefix.length);
-    // "buritiz" não é o nome; "buriti," e "buriti " são.
+    // "jujuba" não é o nome; "juju," e "juju " são.
     if (rest.isNotEmpty && RegExp('[a-zà-ú]').hasMatch(rest[0])) return text;
     return rest.replaceFirst(RegExp('^[,:;!?-]+'), '').trimLeft();
   }
