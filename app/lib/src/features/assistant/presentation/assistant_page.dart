@@ -1,15 +1,22 @@
+import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_composer.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_view_model.dart';
+import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// A conversa com o assistente: diga o que gastou e ele lança; pergunte e
-/// ele responde com os números do mês na mão (ADR-021).
+/// A conversa com a Juju, a tela principal do app (sugestão 3 do dono): diga
+/// o que gastou e ela lança; pergunte e ela responde com os números do mês
+/// na mão (ADR-021).
+///
+/// No alto, o "pode gastar" da semana e a câmera e a galeria: o mais comum
+/// do dia fica a um olhar e a um toque, sem trocar de aba.
 class AssistantPage extends ConsumerStatefulWidget {
   /// Cria a tela do assistente.
   const new({super.key});
@@ -65,8 +72,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Widget _talking(WidgetRef ref, AssistantTalking state) {
     final assistant = ref.read(assistantProvider.notifier);
     final pending = state.pending;
+    final paired = ref.read(ledgerUplinkProvider).isPaired;
     return CajuiScreen(
-      title: 'Assistente',
+      title: AssistantIdentity.name,
+      overline: _week(ref.watch(homeViewProvider)),
+      trailing: CaptureTools(readOnly: !paired),
       controller: _scroll,
       footer: AssistantComposer(
         enabled: !state.isWaiting,
@@ -76,21 +86,44 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       children: [
         if (state.exchanges.isEmpty && pending == null)
           ..._firstTalk(assistant.ask),
-        for (final (question, reply) in state.exchanges) ...[
-          CajuiChatBubble(question, fromUser: true),
-          AssistantReplyView(
-            reply: reply,
-            onRetry: assistant.retry,
-            onUndo: assistant.undo,
-            canUndo: ref.read(ledgerUplinkProvider).isPaired,
-          ),
-        ],
+        for (final (question, reply) in state.exchanges)
+          ..._exchange(question, reply, canUndo: paired),
         if (pending != null) ...[
           CajuiChatBubble(pending, fromUser: true),
           const CajuiChatBubble('', thinking: true),
         ],
       ],
     );
+  }
+
+  List<Widget> _exchange(
+    String question,
+    AssistantReply reply, {
+    required bool canUndo,
+  }) {
+    final assistant = ref.read(assistantProvider.notifier);
+    return [
+      CajuiChatBubble(question, fromUser: true),
+      AssistantReplyView(
+        reply: reply,
+        onRetry: assistant.retry,
+        onUndo: assistant.undo,
+        canUndo: canUndo,
+      ),
+    ];
+  }
+
+  /// A semana de relance, com as palavras do Início (RN-1011). Sem plano,
+  /// o que já saiu no mês (RN-1050).
+  static String? _week(HomeView? view) {
+    if (view == null) return null;
+    String brl(Money amount) => BrlFormatter.format(amount.cents);
+    if (!view.hasPlan) {
+      return 'Já saiu ${brl(view.budget.outOfPocket)} este mês';
+    }
+    final week = view.week;
+    if (week.over.isPositive) return 'A semana passou do limite';
+    return 'Pode gastar ${brl(week.left)} nesta semana';
   }
 
   List<Widget> _firstTalk(ValueChanged<String> onAsk) => [
