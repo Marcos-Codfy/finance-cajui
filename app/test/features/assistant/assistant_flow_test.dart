@@ -70,17 +70,15 @@ void main() {
   testWidgets('ADR-021 · toda pergunta vai ao servidor, inclusive a que o '
       'domínio saberia responder', (tester) async {
     final assistant = ScriptedAssistant(const [
-      AssistantAnswered(r'Sobram R$ 168,82 nesta semana.'),
+      AssistantAnswered(r'Sobram R$ 920,00 neste mês.'),
     ]);
     await _open(tester, assistant: assistant);
 
-    await tester.tap(
-      find.widgetWithText(CajuiChip, 'Quanto dá para gastar nesta semana?'),
-    );
+    await tester.tap(find.widgetWithText(CajuiChip, 'Quanto sobra neste mês?'));
     await _settle(tester);
 
-    expect(assistant.asked, ['Quanto dá para gastar nesta semana?']);
-    expect(find.text(r'Sobram R$ 168,82 nesta semana.'), findsOneWidget);
+    expect(assistant.asked, ['Quanto sobra neste mês?']);
+    expect(find.text(r'Sobram R$ 920,00 neste mês.'), findsOneWidget);
   });
 
   testWidgets('RN-946 · a tela espera, e a resposta só aparece inteira', (

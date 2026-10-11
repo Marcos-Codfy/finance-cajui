@@ -36,8 +36,8 @@ class HomeSnapshotStore(context: Context) {
     val caption: String get() = preferences.getString(CAPTION, null).orEmpty()
 
     /**
-     * Se o número ainda é desta semana. Na segunda, o da semana passada não
-     * vale mais, e mostrá-lo seria dizer um limite que já não existe.
+     * Se o número ainda é deste mês. No dia 1, o do mês passado não vale
+     * mais, e mostrá-lo seria dizer uma sobra que já não existe.
      * Datas em ISO comparam como texto.
      */
     fun isCurrent(today: Calendar = Calendar.getInstance()): Boolean {

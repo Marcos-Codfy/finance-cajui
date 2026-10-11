@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// O dia de hoje, que vira sozinho com o app aberto.
 ///
 /// O Android mantém o app vivo por dias. Lido uma vez, o dia ficava
-/// parado: o pote mostrava a semana passada, a Juju falava do domingo
-/// anterior e o widget expirava sem ser refeito. Agora o dia é conferido a
+/// parado: o Início mostrava o mês passado, a Juju falava de ontem e o
+/// widget expirava sem ser refeito. Agora o dia é conferido a
 /// cada minuto com o app aberto e quando ele volta à frente.
 class TodayController extends Notifier<LocalDate> {
   /// De quanto em quanto tempo o dia é conferido.

@@ -11,10 +11,10 @@ import app.cajui.MainActivity
 import app.cajui.R
 
 /**
- * O widget da tela inicial (ADR-025): quanto ainda dá para gastar na
- * semana, e a câmera e a galeria a um toque.
+ * O widget da tela inicial (ADR-025): o número do mês — a sobra, ou o que
+ * já saiu —, e a câmera e a galeria a um toque.
  *
- * O número é o último que o app publicou. Passada a semana a que ele se
+ * O número é o último que o app publicou. Passado o mês a que ele se
  * refere, o widget não o mostra: pede para abrir o app, que publica o novo.
  */
 class HomeWidget : AppWidgetProvider() {

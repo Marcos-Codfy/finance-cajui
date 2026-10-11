@@ -3,11 +3,11 @@
      sem exclamação, sem julgamento. As frases do lançamento automático vêm
      prontas do Dart; aqui fica só o que nasce sem Dart rodando. -->
 <resources>
-    <string name="home_widget_label">Cajui: quanto dá para gastar</string>
-    <string name="home_widget_description">Quanto ainda dá para gastar na semana, com a câmera e a galeria a um toque.</string>
-    <string name="home_widget_stale_label">Semana nova</string>
+    <string name="home_widget_label">Cajui: o mês</string>
+    <string name="home_widget_description">A sobra do mês, com a câmera e a galeria a um toque.</string>
+    <string name="home_widget_stale_label">Mês novo</string>
     <string name="home_widget_stale_amount">R$ —</string>
-    <string name="home_widget_stale_caption">Abra o Cajui para ver quanto dá para gastar.</string>
+    <string name="home_widget_stale_caption">Abra o Cajui para ver o mês.</string>
     <string name="home_widget_camera">Fotografar comprovante</string>
     <string name="home_widget_gallery">Escolher da galeria</string>
 

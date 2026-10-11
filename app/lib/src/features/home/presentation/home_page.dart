@@ -1,5 +1,4 @@
 import 'package:cajui/src/core/format/date_labels.dart';
-import 'package:cajui/src/core/motion/tilt_providers.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
@@ -20,8 +19,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// O Início: o mês da planilha de relance e as portas para o resto.
 ///
-/// Responde primeiro quanto dá para gastar nesta semana e se o mês fecha.
-/// Um aviso por vez, e só quando há o que fazer.
+/// Responde primeiro se o mês fecha — a sobra, ou quanto falta. Um aviso
+/// por vez, e só quando há o que fazer.
 class HomePage extends ConsumerWidget {
   /// Cria o Início.
   const new({super.key});
@@ -56,22 +55,16 @@ class HomePage extends ConsumerWidget {
     HomeView view,
   ) {
     final month = DateLabels.month(view.budget.month).split(' ').first;
-    final week = view.week;
     // O Início fica montado por baixo da conversa e das telas abertas por
-    // cima: só à vista ele lê o sensor e faz festa.
+    // cima: só à vista ele faz festa.
     final visible = TickerMode.valuesOf(context).enabled;
     return CajuiScreen(
       title: month[0].toUpperCase() + month.substring(1),
-      overline: 'Semana desde ${DateLabels.short(week.from)}',
       trailing: _tools(context, readOnly: state.readOnly),
       footer: state.readOnly ? null : _newEntry(context),
       children: [
         ..._notice(context, ref, state),
-        ...HomeCards.of(
-          view,
-          tilt: visible ? ref.watch(deviceTiltProvider) : null,
-          party: _party(ref, view, visible: visible),
-        ),
+        ...HomeCards.of(view, party: _party(ref, view, visible: visible)),
         const SizedBox(height: CajuiSpacing.xl),
         ...HomeLinks.of(context, view),
       ],
