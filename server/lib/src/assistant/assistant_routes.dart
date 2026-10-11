@@ -12,6 +12,7 @@ import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
+import 'package:server/src/ledger/household_facts.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -113,7 +114,12 @@ final class AssistantRoutes {
       context: _context,
       catalog: {..._catalog, if (readOnly) 'acesso': _consultOnly},
       tools: _tools(readOnly: readOnly),
+      householdNames: HouseholdFacts.namesIn(state),
     );
+    return _reply(request, outcome);
+  }
+
+  static Response _reply(Request request, AssistantOutcome outcome) {
     final (answer, error) = (outcome.answer, outcome.error);
     if (answer == null || error != null) {
       return Responses.error(
