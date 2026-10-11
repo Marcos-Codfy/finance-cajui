@@ -176,4 +176,20 @@ void main() {
       expect(uplink.sent, isEmpty);
     });
   });
+
+  group('ADR-024 · a conferência ao vivo só dá o topo por visto se desceu', () {
+    test('a volta que chega à descida diz que desceu', () async {
+      final quiet = QuietSync(LedgerSync(_FakeUplink()));
+
+      expect(await quiet.request(_book(['e1'])), isTrue);
+    });
+
+    test('a volta que cai antes da descida — rede no meio — diz que não '
+        'desceu, e a próxima conferência tenta de novo', () async {
+      final uplink = _FakeUplink()..refuse = ErrorCode.srv01;
+      final quiet = QuietSync(LedgerSync(uplink));
+
+      expect(await quiet.request(_book(['e1'])), isFalse);
+    });
+  });
 }

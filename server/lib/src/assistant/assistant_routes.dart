@@ -6,6 +6,8 @@ import 'package:server/src/assistant/assistant_prompt.dart';
 import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/assistant/assistant_tools.dart';
 import 'package:server/src/assistant/payment_choice.dart';
+import 'package:server/src/assistant/server_finances.dart';
+import 'package:server/src/assistant/sheet_numbers.dart';
 import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
@@ -47,9 +49,8 @@ final class AssistantRoutes {
     entries: state.entries,
     categories: state.categories,
     reversals: state.reversals.values,
-    plan: state.plan,
+    sheet: SheetNumbers.of(ServerFinances.of(state), clock.today()),
     received: state.receivedIn(clock.today().budgetMonth),
-    voucherBalance: state.voucherBalance,
   );
 
   /// O que a IA pode citar nas ferramentas: as categorias e os cartões
@@ -65,6 +66,17 @@ final class AssistantRoutes {
     ],
     'cartoes': [
       for (final card in state.cards.values) {'id': card.id, 'nome': card.name},
+    ],
+    // Os salários da planilha, para "recebi o salário da Bia" cair no da
+    // Bia (registrar_renda com salario_id).
+    'salarios': [
+      for (final salary in ServerFinances.of(state).plan.salaries)
+        {
+          'id': salary.id,
+          'nome': salary.name,
+          'esperado_centavos': salary.expectedAmount.cents,
+          'dia': salary.expectedDay,
+        },
     ],
     'formas_de_pagamento': PaymentChoice.options,
   };

@@ -16,15 +16,15 @@ import 'package:server/src/assistant/context_number_kind.dart';
 /// manda número para o chat.
 @immutable
 final class AssistantContext {
-  /// Monta o contexto do mês de [today] a partir dos lançamentos [entries].
+  /// Monta o contexto do mês de [today] a partir dos lançamentos [entries]
+  /// e dos números da planilha [sheet] (`SheetNumbers`).
   factory build({
     required LocalDate today,
     required Iterable<Entry> entries,
     required Map<String, Category> categories,
     Iterable<Reversal> reversals = const [],
-    MonthSetup plan = MonthSetup.empty,
+    Iterable<ContextNumber> sheet = const [],
     TenderAmounts received = TenderAmounts.zero,
-    Money voucherBalance = Money.zero,
   }) {
     final month = today.budgetMonth;
     return AssistantContext._(
@@ -38,8 +38,8 @@ final class AssistantContext {
           reversals,
         ))
           ..._byTender(label, month, amounts),
-        ..._planned(month, plan),
-        ..._received(month, received, voucherBalance),
+        ...sheet,
+        ..._byTender('O que entrou de fato', month, received),
       ]),
     );
   }
@@ -51,7 +51,9 @@ final class AssistantContext {
   });
 
   /// A versão do esquema. Campo desconhecido reprova o teste de esquema.
-  static const schema = 1;
+  /// Subiu para 2 com os números da planilha (ADR-023), no lugar do plano
+  /// antigo e do saldo do vale da operadora.
+  static const schema = 2;
 
   /// O dia de hoje, no fuso de negócio.
   final LocalDate today;
@@ -133,58 +135,6 @@ final class AssistantContext {
         amount: amount,
       );
     }
-  }
-
-  /// O que o mês **previa**, ao lado do que já aconteceu (RN-918).
-  ///
-  /// São quatro números, e não quarenta: o contexto cresce com a existência
-  /// do plano, não com o tamanho dele — quem tem trinta contas fixas manda o
-  /// mesmo tanto de texto que quem tem três.
-  static Iterable<ContextNumber> _planned(
-    BudgetMonth month,
-    MonthSetup plan,
-  ) sync* {
-    final ceiling = plan.variableBudgets.fold(
-      TenderAmounts.zero,
-      (total, budget) =>
-          total +
-          TenderAmounts.single(
-            // O teto de uma categoria que o vale paga é teto **de vale**:
-            // somar as duas moedas num teto só é o erro que a RN-111 proíbe.
-            budget.voucherEligible ? Tender.mealVoucher : Tender.cash,
-            budget.range.max,
-          ),
-    );
-    for (final (label, amounts) in [
-      ('Renda planejada', TenderAmounts(cash: plan.cashIncome)),
-      ('Contas fixas planejadas', TenderAmounts(cash: plan.fixedTotal)),
-      ('Parcelas previstas', TenderAmounts(cash: plan.debtInstallments)),
-      ('Teto dos gastos variáveis', ceiling),
-    ]) {
-      yield* _byTender(label, month, amounts, kind: ContextNumberKind.plan);
-    }
-  }
-
-  /// O que **entrou** e o que sobrou de vale.
-  ///
-  /// Os dois são fato, e não plano: o recebido vale no lugar do esperado no
-  /// mês em que foi recebido (RN-131), e o saldo do vale é o que existe
-  /// agora. O saldo não leva período porque não é do mês: ele passa inteiro
-  /// de um mês para o outro (RN-121).
-  static Iterable<ContextNumber> _received(
-    BudgetMonth month,
-    TenderAmounts received,
-    Money voucherBalance,
-  ) sync* {
-    yield* _byTender('Renda recebida', month, received);
-    if (voucherBalance.isZero) return;
-    yield ContextNumber(
-      id: '',
-      label: 'Saldo do vale hoje',
-      kind: ContextNumberKind.fact,
-      period: 'acumulado',
-      amount: voucherBalance,
-    );
   }
 
   /// Identificadores curtos e em sequência (`n1`, `n2`…): é por eles que a

@@ -9,6 +9,13 @@ import 'package:domain/domain.dart';
 /// `definedAt` vale. [decode] relê o que o próprio aparelho gravou, e por
 /// isso é tolerante; [read] lê o que chegou pela rede, campo a campo.
 abstract final class BudgetPlanCodec {
+  /// O maior nome de uma linha ou de um salário. A tela usa o mesmo teto: o
+  /// que passa dele seria recusado aqui, e a recusa prendia a subida.
+  static const int maxName = 40;
+
+  /// A maior observação de uma linha.
+  static const int maxNote = 80;
+
   /// O que gravar para [plan].
   static Map<String, Object?> encode(BudgetPlan plan) => {
     'definedAt': ?plan.definedAt?.toIso8601String(),
@@ -137,7 +144,7 @@ abstract final class BudgetPlanCodec {
     );
     return _salary(
       id: raw.string('id', maxLength: 64),
-      name: raw.string('name', maxLength: 40),
+      name: raw.string('name', maxLength: maxName),
       cents: _cents(raw.integer('amountCents'), 'amountCents').cents,
       payDay: _day(raw.integer('payDay')),
     );
@@ -162,12 +169,12 @@ abstract final class BudgetPlanCodec {
     final dueDay = raw.optionalInteger('dueDay');
     return BudgetLine.create(
       id: raw.string('id', maxLength: 64),
-      name: raw.string('name', maxLength: 40),
+      name: raw.string('name', maxLength: maxName),
       amount: _cents(raw.integer('amountCents'), 'amountCents'),
       group: group,
       categoryId: raw.string('categoryId', maxLength: 64),
       paymentMethodId: raw.optionalString('paymentMethodId', maxLength: 64),
-      note: raw.optionalString('note', maxLength: 80),
+      note: raw.optionalString('note', maxLength: maxNote),
       dueDay: dueDay == null ? null : _day(dueDay),
     ).valueOrNull!;
   }

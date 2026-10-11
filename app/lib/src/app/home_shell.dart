@@ -31,7 +31,10 @@ class HomeShell extends ConsumerWidget {
       children: [
         // A casca continua montada por baixo: as abas guardam a conversa e
         // a rolagem de quando o comprovante chegou.
-        ExcludeSemantics(excluding: capturing, child: _areas(context, ref)),
+        ExcludeSemantics(
+          excluding: capturing,
+          child: _areas(context, ref, capturing: capturing),
+        ),
         if (capturing)
           Positioned.fill(
             child: ColoredBox(
@@ -43,7 +46,11 @@ class HomeShell extends ConsumerWidget {
     );
   }
 
-  Widget _areas(BuildContext context, WidgetRef ref) {
+  Widget _areas(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool capturing,
+  }) {
     final current = ref.watch(homeTabProvider);
     // Com o teclado aberto, a barra sai: ela ocuparia a altura que falta
     // para ver o que se está escrevendo. Quem digita já escolheu onde está.
@@ -53,10 +60,7 @@ class HomeShell extends ConsumerWidget {
         Expanded(
           // Pilha, e não troca de widget: cada área guarda onde a rolagem
           // estava e o que foi digitado quando a pessoa vai e volta.
-          child: IndexedStack(
-            index: current.index,
-            children: [for (final tab in HomeTab.values) _page(tab)],
-          ),
+          child: _stack(current, capturing: capturing),
         ),
         if (!typing)
           CajuiNavBar(
@@ -69,6 +73,17 @@ class HomeShell extends ConsumerWidget {
       ],
     );
   }
+
+  /// As abas empilhadas. A escondida não fica com o relógio de quadros
+  /// ligado: o Início atrás da conversa lia o sensor e fazia a festa do mês
+  /// sem ninguém ver. O IndexedStack, sozinho, não desliga isso.
+  Widget _stack(HomeTab current, {required bool capturing}) => IndexedStack(
+    index: current.index,
+    children: [
+      for (final tab in HomeTab.values)
+        TickerMode(enabled: tab == current && !capturing, child: _page(tab)),
+    ],
+  );
 
   Widget _page(HomeTab tab) => switch (tab) {
     HomeTab.conversar => const AssistantPage(),

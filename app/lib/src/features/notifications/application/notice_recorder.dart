@@ -41,9 +41,32 @@ class NoticeRecorder {
     final id = entryIdOf(noticeId);
     if (_known(book, id) || _alreadyThere(book, reading)) return null;
     final method = NoticePaymentMethod.of(reading, book);
-    if (method == null || reading.isInstallment) return _ask(noticeId, reading);
+    if (method == null || reading.isInstallment || _cardBill(reading, book)) {
+      return _ask(noticeId, reading);
+    }
     return await _record(id, reading, book, method);
   }
+
+  /// Pix, transferência ou boleto para o banco de um cartão cadastrado é,
+  /// quase sempre, a fatura sendo paga de outro banco ("Pix de R$ 1.234,56
+  /// para NU PAGAMENTOS"). A fatura não é despesa (RN-1001): as compras
+  /// já contaram. Lançar sozinho contaria o mês em dobro; pede um toque, e
+  /// a conferência oferece "é pagamento de fatura".
+  static bool _cardBill(BankReading reading, LedgerBook book) {
+    final payee = reading.counterpart;
+    if (payee == null || !_paysSomeone.contains(reading.kind)) return false;
+    return book.cards.any(
+      (card) => BankApp.values.any(
+        (bank) => bank.namesCard(card.name) && bank.namesCard(payee),
+      ),
+    );
+  }
+
+  static const Set<MovementKind> _paysSomeone = {
+    MovementKind.pixSent,
+    MovementKind.transferSent,
+    MovementKind.boletoPaid,
+  };
 
   /// Já lançado, ou lançado e desfeito: desfazer é a palavra final.
   static bool _known(LedgerBook book, String id) =>

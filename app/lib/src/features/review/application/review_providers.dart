@@ -1,5 +1,5 @@
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/review/application/review_log.dart';
 import 'package:cajui/src/features/review/application/weekly_review.dart';
 import 'package:domain/domain.dart';
@@ -23,7 +23,7 @@ final reviewItemsProvider = Provider<List<Entry>>((ref) {
   return WeeklyReview.of(
     book.entries,
     reviewed: reviewed,
-    today: ref.watch(clockProvider).today(),
+    today: ref.watch(todayProvider),
   );
 });
 

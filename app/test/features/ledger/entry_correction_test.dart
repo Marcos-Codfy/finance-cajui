@@ -94,22 +94,17 @@ void main() {
       );
     });
 
-    test(
-      'RN-122 · correção que o vale não cobre é recusada, e nada muda',
-      () async {
-        final open = await recorded(
-          _draft(cents: 60000, category: 'groceries', method: _voucher),
-        );
+    test('RN-1019 · correção que passa do vale vale assim mesmo: o vale é o do '
+        'mês, e o excesso só deixa de ser coberto', () async {
+      final open = await recorded(
+        _draft(cents: 60000, category: 'groceries', method: _voucher),
+      );
 
-        final result = await ledger().correct(
-          open.copyWith(amountCents: 70000),
-        );
+      final result = await ledger().correct(open.copyWith(amountCents: 70000));
 
-        expect(result.failureOrNull, isA<VoucherBalanceExceeded>());
-        expect((await book()).entries.single.amount.cents, 60000);
-        expect((await book()).voucher.balance.cents, 5000);
-      },
-    );
+      expect(result.failureOrNull, isNull);
+      expect((await book()).entries.single.amount.cents, 70000);
+    });
   });
 
   group('cancelar (RN-208)', () {

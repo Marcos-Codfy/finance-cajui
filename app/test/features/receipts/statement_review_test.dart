@@ -100,12 +100,8 @@ void main() {
     ) async {
       final book = await _statement(tester, [
         _line('Padaria Central', 1500),
-        _line(
-          'Supermercado',
-          100000,
-          day: 4,
-          paidBy: PaymentMethodKind.mealVoucher,
-        ),
+        // Data no futuro: o domínio recusa compra que ainda não aconteceu.
+        _line('Supermercado', 100000, day: 28),
       ]);
       final entries = book().entries.length;
 

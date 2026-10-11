@@ -37,9 +37,7 @@ abstract final class LedgerProjection {
       // Cartão, dívida e fechamento: a versão mais recente toma o lugar da
       // anterior, que continua no registro.
       CardDefined() => _cardDefined(book, event),
-      DebtDefined(:final debt) => book.copyWith(
-        debts: [...book.debts.where((known) => known.id != debt.id), debt],
-      ),
+      DebtDefined(:final debt) => _debtDefined(book, debt),
       MonthClosed() ||
       BudgetDefined() ||
       DebtOrdered() => _planned(book, event),
@@ -59,6 +57,24 @@ abstract final class LedgerProjection {
         ),
         _ => book,
       };
+
+  /// A dívida nova toma o lugar da anterior **na mesma posição** — a fila
+  /// de quitação sem ordem decidida é a do cadastro (RN-1031) —, e a versão
+  /// mais velha pelo carimbo, chegando depois de outro aparelho, não passa
+  /// por cima da mais nova (ADR-024). Toda versão fica guardada para o mês
+  /// a mês (RN-1040).
+  static LedgerBook _debtDefined(LedgerBook book, Debt debt) {
+    final budget = book.budget.withDebtVersion(debt);
+    final current = book.debtOf(debt.id);
+    if (current != null && current.isNewerThan(debt)) {
+      return book.copyWith(budget: budget);
+    }
+    final at = book.debts.indexWhere((known) => known.id == debt.id);
+    return book.copyWith(
+      debts: at < 0 ? [...book.debts, debt] : ([...book.debts]..[at] = debt),
+      budget: budget,
+    );
+  }
 
   /// A versão mais velha do cartão pelo carimbo não passa por cima da mais
   /// nova (ADR-024): reler o registro, onde a versão do outro celular pode

@@ -6,6 +6,7 @@ import 'package:cajui/src/features/debts/presentation/debts_page.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
 /// As portas do Início para o resto do app, as mesmas abas da planilha:
@@ -60,9 +61,12 @@ abstract final class HomeLinks {
     ),
     _row(
       title: 'Dívidas',
-      subtitle: view.owed.isPositive
-          ? 'Ainda devo ${_brl(view.owed.cents)}'
-          : 'Nenhuma dívida cadastrada',
+      subtitle: switch (view) {
+        HomeView(owed: Money(isPositive: true)) =>
+          'Ainda devo ${_brl(view.owed.cents)}',
+        HomeView(hasDebts: true) => 'Tudo quitado',
+        _ => 'Nenhuma dívida cadastrada',
+      },
       open: () => DebtsPage.open(context),
     ),
     _row(

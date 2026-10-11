@@ -11,7 +11,7 @@ import 'package:cajui/src/features/home/presentation/month_celebration.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
-import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
 import 'package:cajui/src/features/settings/presentation/settings_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -60,7 +60,7 @@ class HomePage extends ConsumerWidget {
     return CajuiScreen(
       title: month[0].toUpperCase() + month.substring(1),
       overline: 'Semana desde ${DateLabels.short(week.from)}',
-      trailing: _tools(context, ref, readOnly: state.readOnly),
+      trailing: _tools(context, readOnly: state.readOnly),
       footer: state.readOnly ? null : _newEntry(context),
       children: [
         ..._notice(context, ref, state),
@@ -99,39 +99,16 @@ class HomePage extends ConsumerWidget {
 
   /// A câmera e a galeria no alto — fotografar ou escolher um comprovante é
   /// o caminho mais comum de um lançamento — e os ajustes.
-  Widget _tools(BuildContext context, WidgetRef ref, {required bool readOnly}) {
-    final capture = ref.watch(captureServiceProvider);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (!readOnly && capture.canPhotograph)
-          CajuiIconButton(
-            icon: CajuiIconData.camera,
-            semanticLabel: 'Fotografar comprovante',
-            onPressed: () => _open(context, capture.photograph),
-          ),
-        if (!readOnly && capture.canPickFiles)
-          CajuiIconButton(
-            icon: CajuiIconData.image,
-            semanticLabel: 'Escolher da galeria ou dos arquivos',
-            onPressed: () => _open(context, capture.pickFromDevice),
-          ),
-        CajuiIconButton(
-          icon: CajuiIconData.sliders,
-          semanticLabel: 'Ajustes',
-          onPressed: () => SettingsPage.open(context),
-        ),
-      ],
-    );
-  }
-
-  static Future<void> _open(
-    BuildContext context,
-    Future<bool> Function() open,
-  ) async {
-    final feedback = CajuiFeedbackScope.of(context);
-    if (!await open()) feedback.notice();
-  }
+  Widget _tools(BuildContext context, {required bool readOnly}) => CaptureTools(
+    readOnly: readOnly,
+    extra: [
+      CajuiIconButton(
+        icon: CajuiIconData.sliders,
+        semanticLabel: 'Ajustes',
+        onPressed: () => SettingsPage.open(context),
+      ),
+    ],
+  );
 
   /// O aviso que vem antes dos números — um só: comprovante esperando, ou a
   /// sugestão de contas depois de um mês sem plano (RN-1050).

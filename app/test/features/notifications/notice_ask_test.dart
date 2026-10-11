@@ -1,5 +1,6 @@
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/notifications/application/notice_announcement.dart';
 import 'package:cajui/src/features/notifications/application/notification_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture_route.dart';
@@ -7,6 +8,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/memory_ledger_journal.dart';
 import '../../support/test_scope.dart';
 import 'fake_notice_device.dart';
 
@@ -39,6 +41,41 @@ void main() {
           categoryByMerchantKind: DefaultCatalog.categoryByMerchantKind,
         ),
       );
+
+  test('RN-1001 · Pix para o banco de um cartão cadastrado é a fatura sendo '
+      'paga: pede um toque em vez de lançar despesa', () async {
+    container.dispose();
+    container = ProviderContainer(
+      overrides: [
+        ...testOverrides(
+          journal: MemoryLedgerJournal([
+            CardDefined(
+              id: 'card-fact',
+              card: CreditCard.create(
+                id: 'card-nu',
+                name: 'Nubank',
+                closingDay: 25,
+                dueDay: 5,
+              ).valueOrNull!,
+            ),
+          ]),
+        ),
+        bankNoticeDeviceProvider.overrideWithValue(device),
+      ],
+    );
+    device.push(
+      bankNotice(
+        'p1',
+        BankApp.itau,
+        r'Você enviou um Pix de R$ 1.234,56 para NU PAGAMENTOS S.A.',
+      ),
+    );
+
+    await drain();
+
+    expect((await container.read(ledgerProvider.future)).entries, isEmpty);
+    expect(device.announced.single, isA<AskAnnouncement>());
+  });
 
   test('RN-788 · Pix recebido não é lançado: pede um toque, e o toque abre '
       'a tela de recebimento', () async {

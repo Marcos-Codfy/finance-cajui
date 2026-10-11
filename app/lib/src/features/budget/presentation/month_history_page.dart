@@ -1,6 +1,6 @@
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -24,7 +24,7 @@ class MonthHistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final finances = ref.watch(financesProvider);
-    final month = ref.watch(clockProvider).today().budgetMonth;
+    final month = ref.watch(todayProvider).budgetMonth;
     final history = finances?.history(month) ?? const <MonthRecord>[];
     return CajuiScreen(
       title: 'Mês a mês',

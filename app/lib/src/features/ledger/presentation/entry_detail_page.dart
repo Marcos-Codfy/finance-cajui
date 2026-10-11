@@ -2,7 +2,7 @@ import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_detail_sections.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
@@ -51,7 +51,7 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
     final entry = book?.entryOf(widget.entryId);
     // Cancelado: não há mais o que mostrar, e a tela já está fechando.
     if (book == null || entry == null) return const SizedBox.shrink();
-    final today = ref.watch(clockProvider).today();
+    final today = ref.watch(todayProvider);
     final category = book.categoryOf(entry.categoryId).name;
     final day = DateLabels.day(entry.occurredOn, today: today);
     return CajuiScreen(

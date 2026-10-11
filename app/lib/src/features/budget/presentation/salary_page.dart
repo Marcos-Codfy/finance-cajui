@@ -1,3 +1,4 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -45,15 +46,22 @@ class _SalaryPageState extends ConsumerState<SalaryPage> {
     return day == null || day < 1 || day > 31 ? null : day;
   }
 
+  /// O identificador do salário novo. O primeiro de quem nunca teve renda
+  /// no plano herda o do app antigo, que gravava todo salário recebido com
+  /// ele (RN-131). Se esse salário já existiu — a "Renda" do plano antigo,
+  /// que a pessoa tirou —, o novo nasce com outro: herdar faria o recebido
+  /// de antes valer como salário de outra pessoa.
+  String _newId() {
+    final plans = ref.read(financesProvider)?.plans ?? const <BudgetPlan>[];
+    final used = plans.any(
+      (plan) => plan.salaries.any((s) => s.id == BudgetPlan.firstSalaryId),
+    );
+    return used ? ref.read(newIdProvider)() : BudgetPlan.firstSalaryId;
+  }
+
   Future<void> _save(BudgetPlan plan, int payDay) async {
     final salary = IncomeSource(
-      // A primeira renda guarda o identificador do plano antigo, para o
-      // salário já registrado como recebido continuar valendo (RN-131).
-      id:
-          widget.salary?.id ??
-          (plan.salaries.isEmpty
-              ? BudgetPlan.firstSalaryId
-              : ref.read(newIdProvider)()),
+      id: widget.salary?.id ?? _newId(),
       name: _name.text.trim(),
       tender: Tender.cash,
       expectedAmount: Money.fromCents(_cents),
@@ -86,6 +94,7 @@ class _SalaryPageState extends ConsumerState<SalaryPage> {
       label: 'De quem',
       controller: _name,
       hint: 'Meu salário, salário da esposa',
+      maxLength: BudgetPlanCodec.maxName,
       onChanged: (_) => setState(() {}),
     ),
     const SizedBox(height: CajuiSpacing.lg),

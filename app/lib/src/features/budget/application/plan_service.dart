@@ -1,3 +1,4 @@
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -18,14 +19,32 @@ class PlanService {
   final Ref ref;
 
   /// Salva [plan] como o plano em vigor.
-  Future<void> define(BudgetPlan plan) => ref
-      .read(ledgerProvider.notifier)
-      .append(BudgetDefined(plan.savedAt(ref.read(clockProvider).now())));
+  Future<void> define(BudgetPlan plan) async {
+    final book = await ref.read(ledgerProvider.future);
+    final known = BookFinances.of(book).plan.definedAt;
+    await ref
+        .read(ledgerProvider.notifier)
+        .append(BudgetDefined(plan.savedAt(_after(known))));
+  }
 
   /// Decide que as dívidas se quitam na ordem [ids].
-  Future<void> orderDebts(List<String> ids) => ref
-      .read(ledgerProvider.notifier)
-      .append(DebtOrdered(ids: ids, definedAt: ref.read(clockProvider).now()));
+  Future<void> orderDebts(List<String> ids) async {
+    final book = await ref.read(ledgerProvider.future);
+    final at = _after(book.budget.orderedAt);
+    await ref
+        .read(ledgerProvider.notifier)
+        .append(DebtOrdered(ids: ids, definedAt: at));
+  }
+
+  /// O carimbo de agora, ou logo depois de [known] se o relógio daqui
+  /// estiver atrás (ADR-024): quem muda depois de ver a mudança do outro
+  /// aparelho vence, mesmo com o relógio atrasado — senão a mudança sumia
+  /// da tela na hora.
+  DateTime _after(DateTime? known) {
+    final now = ref.read(clockProvider).now();
+    if (known == null || now.isAfter(known)) return now;
+    return known.add(const Duration(milliseconds: 1));
+  }
 }
 
 /// O caso de uso do plano.

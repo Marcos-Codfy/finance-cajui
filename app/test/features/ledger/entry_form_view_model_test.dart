@@ -76,38 +76,17 @@ void main() {
     expect(state().draft.secondCents, 5600);
   });
 
-  test('E-VOUCHER-01 · vale sem saldo para a compra: "Dividir o pagamento" '
-      'monta a divisão', () async {
-    await groceriesOnVoucher();
+  test(
+    'RN-1019 · compra no vale acima do saldo da operadora é lançada: na '
+    'planilha o vale é o do mês, e o excesso só deixa de ser coberto',
+    () async {
+      await groceriesOnVoucher();
 
-    await form().submit();
-    final problem = editing().problem!;
-    await form().resolve(problem.code, 0);
+      await form().submit();
 
-    expect(problem.code, ErrorCode.voucher01);
-    expect(problem.text.message, contains('O vale tem R\$${_nbsp}30,00'));
-    expect(state().draft.firstCents, 3000);
-    expect(editing().problem, isNull);
-  });
-
-  test('E-VOUCHER-01 · com o vale zerado, "Dividir o pagamento" pede outra '
-      'forma em vez de criar uma linha de zero', () async {
-    form().edit(
-      (d) => d.copyWith(
-        amountCents: 8600,
-        description: 'Mercado',
-        category: _book.categoryOf('groceries'),
-        method: _book.methodOf('voucher'),
-      ),
-    );
-
-    await form().submit();
-    await form().resolve(editing().problem!.code, 0);
-
-    expect(state().draft.method, isNull);
-    expect(state().draft.isSplit, isFalse);
-    expect(state().draft.amountCents, 8600);
-  });
+      expect(state(), isA<EntryFormSaved>());
+    },
+  );
 
   test('E-ENTRY-01 · 30 + 50 para 86: diz que faltam 6,00, e "Colocar o '
       'resto" fecha a conta', () async {

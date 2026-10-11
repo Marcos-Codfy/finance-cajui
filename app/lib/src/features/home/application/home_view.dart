@@ -1,7 +1,7 @@
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
@@ -19,6 +19,7 @@ final class HomeView {
     required this.owed,
     required this.hasPlan,
     required this.entriesThisMonth,
+    this.hasDebts = false,
     this.suggestion,
     this.cardsNearLimit = const [],
   });
@@ -32,6 +33,7 @@ final class HomeView {
       week: finances.weekOf(today),
       owed: finances.owedOn(today),
       hasPlan: !finances.plan.isEmpty,
+      hasDebts: finances.debts.isNotEmpty,
       entriesThisMonth: book.entries
           .where((entry) => entry.occurredOn.budgetMonth == month)
           .length,
@@ -59,6 +61,10 @@ final class HomeView {
   /// Se há plano: salários, contas, vale ou dízimo.
   final bool hasPlan;
 
+  /// Se há dívida cadastrada, mesmo quitada: "tudo quitado" não é "nenhuma
+  /// dívida".
+  final bool hasDebts;
+
   /// Quantos lançamentos o mês tem.
   final int entriesThisMonth;
 
@@ -74,5 +80,5 @@ final homeViewProvider = Provider<HomeView?>((ref) {
   final finances = ref.watch(financesProvider);
   final book = ref.watch(ledgerProvider).value;
   if (finances == null || book == null) return null;
-  return HomeView.of(finances, book, ref.watch(clockProvider).today());
+  return HomeView.of(finances, book, ref.watch(todayProvider));
 });

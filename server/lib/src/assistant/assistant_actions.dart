@@ -3,10 +3,12 @@ import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/assistant/assistant_action.dart';
 import 'package:server/src/assistant/payment_choice.dart';
+import 'package:server/src/assistant/salary_choice.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
 import 'package:server/src/assistant/tool_refusal.dart';
 import 'package:server/src/auth/secure_random.dart';
+import 'package:server/src/ledger/fingerprint.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 
 /// O que o assistente **escreve** no livro a pedido da pessoa (ADR-021):
@@ -88,13 +90,13 @@ final class AssistantActions {
   /// Registra a renda de [args]. Salário em dinheiro é a renda do mês, e
   /// substitui a esperada no plano (RN-131); o resto é entrada avulsa.
   Future<ToolOutcome> income(Map<String, Object?> args) async {
-    final receipt = _receiptOf(args);
+    final (receipt, salary) = _receiptOf(args);
     await _append(
       id: 'income-${receipt.id}',
       type: LedgerState.incomeReceived,
       payload: IncomeCodec.encode(receipt),
     );
-    final label = _incomeLabel(receipt);
+    final label = _incomeLabel(receipt, salary);
     return ToolOutcome.done(
       {
         'ok': true,
@@ -110,23 +112,84 @@ final class AssistantActions {
     );
   }
 
-  IncomeReceipt _receiptOf(Map<String, Object?> args) {
+  (IncomeReceipt, IncomeSource?) _receiptOf(Map<String, Object?> args) {
     final tender = ToolArgs.text(args, 'moeda') == 'vale'
         ? Tender.mealVoucher
         : Tender.cash;
-    final salary = (ToolArgs.text(args, 'tipo') ?? 'salario') == 'salario';
-    return IncomeReceipt(
+    final isSalary = (ToolArgs.text(args, 'tipo') ?? 'salario') == 'salario';
+    final amount = Money.fromCents(
+      ToolArgs.positiveCents(args, 'valor_centavos'),
+    );
+    final on = ToolArgs.date(args, 'data') ?? clock.today();
+    final salary = isSalary && tender == Tender.cash
+        ? SalaryChoice.of(
+            state,
+            amount: amount,
+            on: on,
+            requested: ToolArgs.text(args, 'salario_id'),
+          )
+        : null;
+    final receipt = IncomeReceipt(
       id: _newId('renda'),
-      sourceId: salary && tender == Tender.cash ? 'cash-income' : null,
+      sourceId: salary?.id,
       tender: tender,
-      amount: Money.fromCents(ToolArgs.positiveCents(args, 'valor_centavos')),
-      receivedOn: ToolArgs.date(args, 'data') ?? clock.today(),
+      amount: amount,
+      receivedOn: on,
+    );
+    return (receipt, salary);
+  }
+
+  /// Troca a categoria do lançamento de [args] (RN-208): uma correção, com
+  /// o original guardado no registro, que desce aos celulares como a de
+  /// qualquer aparelho.
+  Future<ToolOutcome> recategorize(Map<String, Object?> args) async {
+    final id = ToolArgs.required(args, 'id');
+    final entry =
+        state.entryOf(id) ??
+        (throw const ToolRefusal(
+          'não há lançamento vivo com esse id; liste os lançamentos',
+        ));
+    final category = _category(args);
+    final revised = _revised(entry, category.id);
+    // As mesmas regras de qualquer correção: o vale continua pagando só
+    // comida, e o que recusa volta ao modelo com o motivo.
+    _checked(revised);
+    final payload = revised.toJson();
+    await _append(
+      id: 'entry-revised-$id-${Fingerprint.of(payload)}',
+      type: LedgerState.entryRevised,
+      payload: payload,
+    );
+    return ToolOutcome.done({
+      'ok': true,
+      'id': id,
+      'descricao': entry.description,
+      'categoria': category.name,
+    });
+  }
+
+  /// O mesmo lançamento na categoria [categoryId], carimbado agora: a
+  /// correção mais nova vence (BL-062).
+  CreateEntryRequest _revised(Entry entry, String categoryId) {
+    final before = EntryCodec.fromEntry(entry);
+    return CreateEntryRequest(
+      id: before.id,
+      description: before.description,
+      amountCents: before.amountCents,
+      occurredOn: before.occurredOn,
+      categoryId: categoryId,
+      paymentLines: before.paymentLines,
+      isExceptional: before.isExceptional,
+      installments: before.installments,
+      installmentAmountCents: before.installmentAmountCents,
+      origin: before.origin,
+      revisedAt: clock.now(),
     );
   }
 
-  static String _incomeLabel(IncomeReceipt receipt) {
+  static String _incomeLabel(IncomeReceipt receipt, IncomeSource? salary) {
     if (receipt.tender == Tender.mealVoucher) return 'Crédito do vale';
-    return receipt.sourceId == null ? 'Entrada avulsa' : 'Salário';
+    return salary == null ? 'Dinheiro extra' : 'Salário · ${salary.name}';
   }
 
   CreateEntryRequest _requestFor(

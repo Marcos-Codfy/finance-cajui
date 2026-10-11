@@ -73,7 +73,8 @@ void main() {
       expect(noPix, isNull);
     });
 
-    test('RN-122 · pôr mais no vale continua sendo recusado sem saldo', () {
+    test('RN-1019 · pôr mais no vale não é recusado: na planilha o vale é o '
+        'do mês, e o que passa dele só deixa de ser coberto', () {
       final book = _overdrawn();
 
       final refusal = CorrectionGuard.refusalOf(
@@ -82,7 +83,7 @@ void main() {
         _entry('a', cents: 9000),
       );
 
-      expect(refusal, isA<VoucherBalanceExceeded>());
+      expect(refusal, isNull);
     });
   });
 }

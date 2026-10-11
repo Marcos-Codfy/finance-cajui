@@ -13,6 +13,16 @@ import 'package:domain/src/money/money.dart';
 /// atrasada, o rotativo —, o saldo cai uma parcela a cada vencimento
 /// depois do dia em que foi informado, e nunca fica negativo.
 abstract final class DebtCalendar {
+  /// [debt] como está ao fim de [day]: na parcelada, com as parcelas pagas
+  /// que o calendário já venceu. É o que a tela usa em "já pago", no
+  /// medidor e na simulação de quitar antes (RN-541).
+  static Debt asOf(Debt debt, LocalDate day) {
+    if (debt.informedBalance != null) return debt;
+    final due = _installmentsDueBy(debt, day);
+    if (due <= debt.paidInstallments) return debt;
+    return debt.withPaidInstallments(due);
+  }
+
   /// Quanto ainda se deve de [debt] ao fim de [day].
   static Money outstandingOn(Debt debt, LocalDate day) {
     final balance = debt.informedBalance;
@@ -36,24 +46,35 @@ abstract final class DebtCalendar {
     return before < installment ? before : installment;
   }
 
-  /// Quanto ainda se deve ao fim de [month], somando as dívidas e as
-  /// parcelas de cartão que vencem depois dele.
+  /// Quanto ainda se devia ao fim de [month] — a linha do "Mês a mês"
+  /// (RN-1032) —, somando as dívidas e as parcelas de cartão que vencem
+  /// depois dele.
   static Money owedAtEndOf(
     BudgetMonth month, {
     required Iterable<Debt> debts,
     Iterable<Entry> entries = const [],
+  }) => owedOn(month.lastDay, debts: debts, entries: entries);
+
+  /// Quanto ainda se deve ao fim de [day]: o saldo de cada dívida nesse dia
+  /// e as parcelas de cartão dos meses seguintes. A compra feita depois de
+  /// [day] não conta: em agosto ninguém devia a TV de outubro.
+  static Money owedOn(
+    LocalDate day, {
+    required Iterable<Debt> debts,
+    Iterable<Entry> entries = const [],
   }) {
-    final last = month.lastDay;
     final fromDebts = debts.fold(
       Money.zero,
-      (sum, debt) => sum + outstandingOn(debt, last),
+      (sum, debt) => sum + outstandingOn(debt, day),
     );
-    final fromCards = entries.fold(
-      Money.zero,
-      (sum, entry) =>
-          sum +
-          (entry.installmentPlan?.committedFrom(month.next) ?? Money.zero),
-    );
+    final next = day.budgetMonth.next;
+    final fromCards = entries
+        .where((entry) => !entry.occurredOn.isAfter(day))
+        .fold(
+          Money.zero,
+          (sum, entry) =>
+              sum + (entry.installmentPlan?.committedFrom(next) ?? Money.zero),
+        );
     return fromDebts + fromCards;
   }
 

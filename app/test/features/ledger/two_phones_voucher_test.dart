@@ -73,8 +73,8 @@ void main() {
       expect(onB.voucher, onA.voucher);
     });
 
-    test('a descoberto, o celular não aceita gasto novo no vale '
-        '(RN-122)', () async {
+    test('a descoberto, o celular aceita gasto novo no vale: o vale da '
+        'planilha é o do mês (RN-1019)', () async {
       await credit(a, 10000);
       await TwoPhones.sync(a);
       await TwoPhones.sync(b);
@@ -84,11 +84,11 @@ void main() {
       await TwoPhones.sync(b);
 
       final book = await b.read(ledgerProvider.future);
-      final refused = await b
+      final recorded = await b
           .read(ledgerProvider.notifier)
           .record(TwoPhones.draft(book, cents: 100, method: 'voucher'));
 
-      expect(refused.failureOrNull, isA<VoucherBalanceExceeded>());
+      expect(recorded.failureOrNull, isNull);
     });
   });
 }

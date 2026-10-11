@@ -6,7 +6,7 @@ import 'package:cajui/src/features/budget/presentation/week_effect_line.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
@@ -198,7 +198,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       _gap,
       DateSection(
         selected: draft.occurredOn,
-        today: ref.watch(clockProvider).today(),
+        today: ref.watch(todayProvider),
         onChanged: (day) => _form.edit((d) => d.copyWith(occurredOn: day)),
       ),
     ];
@@ -250,7 +250,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
       voucherOfMonth:
           ref
               .watch(financesProvider)
-              ?.voucherIn(ref.watch(clockProvider).today().budgetMonth) ??
+              ?.voucherIn(ref.watch(todayProvider).budgetMonth) ??
           Money.zero,
       revision: _revision,
       lineError: draft.amountCents > 0 ? fieldError : null,

@@ -45,6 +45,7 @@ final class AssistantTools {
     AssistantToolCatalog.recordExpense => _actions.record(call.arguments),
     AssistantToolCatalog.cancelEntry => _actions.cancel(call.arguments),
     AssistantToolCatalog.recordIncome => _actions.income(call.arguments),
+    AssistantToolCatalog.recategorize => _actions.recategorize(call.arguments),
     AssistantToolCatalog.listEntries => _list(call.arguments),
     _ => Future.value(
       ToolOutcome.failed('ferramenta desconhecida: ${call.name}'),

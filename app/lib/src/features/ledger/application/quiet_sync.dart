@@ -46,6 +46,7 @@ final class QuietSync {
   final LedgerSync _sync;
   Future<void>? _running;
   LedgerBook? _queued;
+  SyncOutcome? _last;
 
   /// Pede que [book] suba, quando der.
   ///
@@ -66,9 +67,13 @@ final class QuietSync {
   /// ao assistente, a conferência ao vivo (ADR-024). Passa pela mesma fila
   /// de [schedule]: continua havendo **uma** sincronização por vez, e duas
   /// ao mesmo tempo mandariam o mesmo lançamento duas vezes.
-  Future<void> request(LedgerBook book) {
+  ///
+  /// Diz se a última volta desceu o que o servidor tinha: sem rede, ou com
+  /// a descida quebrada, `false` — e quem pediu tenta de novo depois.
+  Future<bool> request(LedgerBook book) async {
     schedule(book);
-    return settled;
+    await settled;
+    return _last?.pulled ?? false;
   }
 
   /// Espera o que estiver no ar acabar, inclusive o que ficou na fila.
@@ -80,8 +85,9 @@ final class QuietSync {
 
   Future<void> _run(LedgerBook book) async {
     try {
+      _last = null;
       if (!await _sync.uplink.canSendQuietly()) return;
-      await _sync.run(book);
+      _last = await _sync.run(book);
     } on Object {
       // Sem rede, sem servidor, sessão vencida no meio: nada disso é assunto
       // de quem acabou de lançar.

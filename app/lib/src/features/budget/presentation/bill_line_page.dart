@@ -1,3 +1,4 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/bill_line_choices.dart';
@@ -95,6 +96,7 @@ class _BillLinePageState extends ConsumerState<BillLinePage> {
       label: 'O que é',
       controller: _name,
       hint: 'Aluguel, Claude, Uber',
+      maxLength: BudgetPlanCodec.maxName,
       onChanged: (_) => setState(() {}),
     ),
     const SizedBox(height: CajuiSpacing.lg),
@@ -111,7 +113,11 @@ class _BillLinePageState extends ConsumerState<BillLinePage> {
     }),
     ...choices.payments(_method, (id) => setState(() => _method = id)),
     const SizedBox(height: CajuiSpacing.lg),
-    CajuiTextField(label: 'Observação', controller: _note),
+    CajuiTextField(
+      label: 'Observação',
+      controller: _note,
+      maxLength: BudgetPlanCodec.maxNote,
+    ),
   ];
 
   Widget _footer(BudgetPlan plan, String? category) {

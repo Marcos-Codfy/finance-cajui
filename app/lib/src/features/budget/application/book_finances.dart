@@ -22,10 +22,27 @@ abstract final class BookFinances {
     reversals: book.reversals,
     receipts: book.receipts,
     debts: book.debts,
+    debtVersions: _versions(book),
     debtOrder: book.debtOrder,
     // O pagamento de parcela ligado à dívida já conta pela dívida.
     excluded: book.debtPayments.keys.toSet(),
   );
+
+  /// As versões das dívidas, com a mais nova de cada trocada pela do livro:
+  /// é ela que soma as parcelas pagas que o modelo antigo registrava.
+  static List<Debt> _versions(LedgerBook book) {
+    final versions = book.budget.debtVersions;
+    final newest = {
+      for (final debt in DebtVersions.of(versions).current) debt.id: debt,
+    };
+    return [
+      for (final version in versions)
+        if (identical(version, newest[version.id]))
+          book.debtOf(version.id) ?? version
+        else
+          version,
+    ];
+  }
 
   static String _nameOf(LedgerBook book, String categoryId) =>
       book.categories

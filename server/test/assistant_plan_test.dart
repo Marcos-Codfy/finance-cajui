@@ -40,8 +40,8 @@ String _reply(String text) => text;
 
 void main() {
   group('BL-049 · o plano do mês no contexto do assistente', () {
-    test('entra com natureza "plan", e o teto do que o vale paga não vira '
-        'teto em dinheiro (RN-111)', () async {
+    test('RN-1010 · entra com os números da planilha: o que entra, o que '
+        'sai, a sobra e o que dá para gastar por semana', () async {
       final client = SequencedChatClient([_reply('Certo.')]);
       final (server, token) = await _server(client);
       await server.call('POST', '/v1/plan', body: planBody(), token: token);
@@ -50,13 +50,20 @@ void main() {
       final sent = client.calls.single.system;
 
       expect(sent, contains('"kind":"plan"'));
-      expect(sent, contains('Renda planejada, em dinheiro'));
+      expect(sent, contains('O que entra no mês, em dinheiro'));
       expect(sent, contains('"cents":320000'));
-      expect(sent, contains('Contas fixas planejadas, em dinheiro'));
+      expect(sent, contains('Contas fixas do mês'));
       expect(sent, contains('"cents":120000'));
-      // A faixa do mercado é elegível ao vale: o teto sai "no vale".
-      expect(sent, contains('Teto dos gastos variáveis, no vale'));
-      expect(sent, isNot(contains('Teto dos gastos variáveis, em dinheiro')));
+      // 1.200 de fixas + 600 de mercado (o maior entre previsto e gasto) +
+      // 450 de parcelas = 2.250 saindo; sobram 950.
+      expect(sent, contains('Total que sai no mês'));
+      expect(sent, contains('"cents":225000'));
+      expect(sent, contains('Sobra do mês'));
+      expect(sent, contains('"cents":95000'));
+      // (3.200 − 1.200 − 450) ÷ 4 = 387,50.
+      expect(sent, contains('Pode gastar por semana'));
+      expect(sent, contains('"cents":38750'));
+      expect(sent, isNot(contains('Renda planejada')));
     });
 
     test('RN-912 · o contexto não cresce com o tamanho do plano: trinta '
@@ -86,41 +93,36 @@ void main() {
       await _ask(server, token, 'Quanto ainda posso gastar?');
       final sent = client.calls.single.system;
 
-      expect('"kind":"plan"'.allMatches(sent), hasLength(4));
+      expect('Contas fixas do mês'.allMatches(sent), hasLength(1));
       expect(sent, isNot(contains('Conta 7')));
       // Trinta contas de R$ 10,00 viram um número só, de R$ 300,00.
       expect(sent, contains('"cents":30000'));
     });
 
-    test(
-      'BL-060 · o saldo do vale e a renda recebida entram como fato, e o '
-      'saldo não leva mês: ele passa inteiro para o seguinte (RN-121)',
-      () async {
-        final client = SequencedChatClient([_reply('Certo.')]);
-        final (server, token) = await _server(client);
-        await server.call(
-          'POST',
-          '/v1/income',
-          body: const {
-            'id': 'r1',
-            'sourceId': 'vale',
-            'tender': 'mealVoucher',
-            'amountCents': 50000,
-            'receivedOn': '2026-09-05',
-          },
-          token: token,
-        );
+    test('BL-060 · o crédito do vale que entrou vai como fato, separado do '
+        'dinheiro (RN-111)', () async {
+      final client = SequencedChatClient([_reply('Certo.')]);
+      final (server, token) = await _server(client);
+      await server.call(
+        'POST',
+        '/v1/income',
+        body: const {
+          'id': 'r1',
+          'sourceId': 'vale',
+          'tender': 'mealVoucher',
+          'amountCents': 50000,
+          'receivedOn': '2026-09-05',
+        },
+        token: token,
+      );
 
-        await _ask(server, token, 'Quanto ainda tenho de vale?');
-        final sent = client.calls.single.system;
+      await _ask(server, token, 'Quanto ainda tenho de vale?');
+      final sent = client.calls.single.system;
 
-        // R$ 500,00 de crédito menos os R$ 30,00 que o mercado pagou no vale.
-        expect(sent, contains('Saldo do vale hoje'));
-        expect(sent, contains('"cents":47000'));
-        expect(sent, contains('"period":"acumulado"'));
-        expect(sent, contains('Renda recebida, no vale'));
-      },
-    );
+      expect(sent, contains('O que entrou de fato, no vale'));
+      expect(sent, contains('"cents":50000'));
+      expect(sent, isNot(contains('O que entrou de fato, em dinheiro')));
+    });
 
     test('RN-209 · depois de uma devolução, o contexto para de contar o '
         'gasto cheio', () async {

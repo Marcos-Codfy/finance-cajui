@@ -5,6 +5,7 @@ import 'package:domain/src/budget/month_record.dart';
 import 'package:domain/src/budget/plan_suggestion.dart';
 import 'package:domain/src/budget/week_allowance.dart';
 import 'package:domain/src/calendar/budget_month.dart';
+import 'package:domain/src/calendar/business_time.dart';
 import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/card/card_month_usage.dart';
 import 'package:domain/src/card/credit_card.dart';
@@ -12,6 +13,7 @@ import 'package:domain/src/debts/debt.dart';
 import 'package:domain/src/debts/debt_calendar.dart';
 import 'package:domain/src/debts/debt_order.dart';
 import 'package:domain/src/debts/debt_schedule.dart';
+import 'package:domain/src/debts/debt_versions.dart';
 import 'package:domain/src/income/income_receipt.dart';
 import 'package:domain/src/income/income_source.dart';
 import 'package:domain/src/income/month_income.dart';
@@ -37,6 +39,7 @@ final class Finances {
     this.reversals = const [],
     this.receipts = const [],
     this.debts = const [],
+    this.debtVersions = const [],
     this.debtOrder = const [],
     this.excluded = const {},
   });
@@ -56,8 +59,15 @@ final class Finances {
   /// As rendas recebidas.
   final List<IncomeReceipt> receipts;
 
-  /// As dívidas cadastradas.
+  /// As dívidas cadastradas, na versão de agora.
   final List<Debt> debts;
+
+  /// Todas as versões das dívidas, na ordem em que foram gravadas. Sem elas,
+  /// vale [debts] para todo mês.
+  final List<Debt> debtVersions;
+
+  DebtVersions get _versions =>
+      DebtVersions.of(debtVersions.isEmpty ? debts : debtVersions);
 
   /// A ordem de quitação, em identificadores.
   final List<String> debtOrder;
@@ -79,7 +89,9 @@ final class Finances {
   /// mês anterior a todo plano usa o primeiro, para o histórico não começar
   /// vazio só porque o plano veio depois dos lançamentos.
   BudgetPlan planFor(BudgetMonth month) {
-    final end = DateTime.utc(month.next.year, month.next.month);
+    // O fim do mês no fuso de negócio: o plano salvo às 22h do dia 31 ainda
+    // é deste mês, embora em UTC já seja o dia 1.
+    final end = BusinessTime.startOf(month.next);
     final before = plans.where((plan) {
       final at = plan.definedAt;
       return at == null || at.isBefore(end);
@@ -136,7 +148,11 @@ final class Finances {
     ),
     cashIncome: cashIncomeIn(month),
     voucher: voucherIn(month),
-    debtInstallments: DebtSchedule.dueIn(month, debts: debts, entries: entries),
+    debtInstallments: DebtSchedule.dueIn(
+      month,
+      debts: _versions.forMonth(month),
+      entries: entries,
+    ),
   );
 
   /// A semana de [today].
@@ -145,6 +161,7 @@ final class Finances {
     today: today,
     entries: entries,
     categories: categories,
+    reversals: reversals,
     excluded: excluded,
   );
 
@@ -153,7 +170,11 @@ final class Finances {
     month: month,
     cameIn: cashIncomeIn(month),
     wentOut: budgetFor(month).outOfPocket,
-    stillOwed: DebtCalendar.owedAtEndOf(month, debts: debts, entries: entries),
+    stillOwed: DebtCalendar.owedAtEndOf(
+      month,
+      debts: _versions.on(month.lastDay),
+      entries: entries,
+    ),
   );
 
   /// O "Mês a mês", do primeiro mês com algum fato até [until], o mais
@@ -178,13 +199,16 @@ final class Finances {
 
   /// As dívidas que ainda têm saldo, na ordem de quitação.
   List<Debt> openDebtsOn(LocalDate day) => DebtOrder.apply(
-    debts.where((debt) => DebtCalendar.outstandingOn(debt, day).isPositive),
+    _versions
+        .on(day)
+        .where((debt) => DebtCalendar.outstandingOn(debt, day).isPositive),
     debtOrder,
   );
 
-  /// Quanto ainda se deve no fim de [day]: dívidas e parcelas de cartão.
+  /// Quanto ainda se deve no fim de [day]: o saldo das dívidas nesse dia —
+  /// o mesmo de cada linha da lista — e as parcelas de cartão a vencer.
   Money owedOn(LocalDate day) =>
-      DebtCalendar.owedAtEndOf(day.budgetMonth, debts: debts, entries: entries);
+      DebtCalendar.owedOn(day, debts: _versions.on(day), entries: entries);
 
   /// O uso de [card] em [month]; nulo sem limite informado.
   CardMonthUsage? cardUsage(CreditCard card, BudgetMonth month) =>
@@ -196,5 +220,6 @@ final class Finances {
     entries: entries,
     categories: categories,
     today: today,
+    reversals: reversals,
   );
 }

@@ -3,7 +3,7 @@ import 'package:cajui/src/core/errors/open_failure.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
@@ -64,7 +64,7 @@ final class EntriesReady extends EntriesState {
 /// O estado da tela de lançamentos, derivado do livro e do dia de hoje. É o
 /// ViewModel desta tela: ela não tem ação própria além de abrir outras.
 final entriesStateProvider = Provider<EntriesState>((ref) {
-  final today = ref.watch(clockProvider).today();
+  final today = ref.watch(todayProvider);
   return switch (ref.watch(ledgerProvider)) {
     AsyncData(value: final book) => EntriesReady(
       month: today.budgetMonth,

@@ -1,6 +1,7 @@
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -37,8 +38,10 @@ class _IncomePageState extends ConsumerState<IncomePage> {
   late Tender _tender = widget.tender;
   late LocalDate _receivedOn = ref.read(clockProvider).today();
   int _cents = 0;
-  // Começa no primeiro salário, que é o caso mais comum; nulo é avulsa.
-  late String? _salaryId = _salaries.firstOrNull?.id;
+  // Começa em "dinheiro extra": a tela abre pelo botão do extra, e o
+  // salário é um toque. Começar num salário trocava o esperado dele pelo
+  // extra, e o que entra no mês caía em vez de subir (RN-1006).
+  String? _salaryId;
   bool _saving = false;
 
   List<IncomeSource> get _salaries =>
@@ -83,7 +86,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
         gap,
         DateSection(
           selected: _receivedOn,
-          today: ref.watch(clockProvider).today(),
+          today: ref.watch(todayProvider),
           onChanged: (day) => setState(() => _receivedOn = day),
         ),
       ],

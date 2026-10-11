@@ -5,6 +5,7 @@ import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/block.dart';
 import 'package:domain/src/ledger/category.dart';
 import 'package:domain/src/ledger/entry.dart';
+import 'package:domain/src/ledger/reversal.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:meta/meta.dart';
 
@@ -31,13 +32,14 @@ final class PlanSuggestion {
     required Iterable<Entry> entries,
     required Map<String, Category> categories,
     required LocalDate today,
+    Iterable<Reversal> reversals = const [],
   }) {
     if (plan.lines.isNotEmpty || entries.isEmpty) return null;
     final first = entries
         .map((entry) => entry.occurredOn)
         .reduce((a, b) => a.isBefore(b) ? a : b);
     if (first.daysUntil(today) < daysOfUse) return null;
-    final spent = _lastMonth(entries, today);
+    final spent = _lastMonth(entries, reversals, today);
     final lines = [
       for (final MapEntry(key: id, value: amount) in spent.entries)
         ?_line(categories[id], id, amount),
@@ -47,17 +49,26 @@ final class PlanSuggestion {
 
   static Map<String, Money> _lastMonth(
     Iterable<Entry> entries,
+    Iterable<Reversal> reversals,
     LocalDate today,
   ) {
     final from = today.addDays(-daysOfUse);
+    bool inWindow(LocalDate on) => on.isAfter(from) && !on.isAfter(today);
     final spent = <String, Money>{};
+    final categoryOf = <String, String>{};
     for (final entry in entries) {
-      final on = entry.occurredOn;
-      if (!on.isAfter(from) || on.isAfter(today)) continue;
-      final amounts = entry.spentIn(on.budgetMonth);
+      categoryOf[entry.id] = entry.categoryId;
+      if (!inWindow(entry.occurredOn)) continue;
+      final amounts = entry.spentIn(entry.occurredOn.budgetMonth);
       final id = entry.categoryId;
       spent[id] =
           (spent[id] ?? Money.zero) + amounts.cash + amounts.mealVoucher;
+    }
+    // A compra devolvida não vira conta sugerida (RN-209).
+    for (final reversal in reversals.where((r) => inWindow(r.occurredOn))) {
+      final id = categoryOf[reversal.entryId];
+      if (id == null) continue;
+      spent[id] = (spent[id] ?? Money.zero) - reversal.line.amount;
     }
     return spent;
   }

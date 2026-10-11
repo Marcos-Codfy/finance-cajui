@@ -187,7 +187,8 @@ void main() {
       expect(line['id'], 'e1');
     });
 
-    test('"caiu o salário" registra a renda do mês em dinheiro', () async {
+    test('"caiu o salário" sem salário na planilha entra como dinheiro '
+        'extra: o dinheiro entrou, e não há esperado para trocar', () async {
       final client = ToolChatClient([
         _calls([
           _call('registrar_renda', {'valor_centavos': 320000}),
@@ -204,7 +205,8 @@ void main() {
       expect(action['kind'], 'income');
       expect(receipt['amountCents'], 320000);
       expect(receipt['tender'], 'cash');
-      expect(receipt['sourceId'], 'cash-income');
+      expect(receipt['sourceId'], isNull);
+      expect(action['label'], 'Dinheiro extra');
     });
 
     test('modelo que só pede ferramenta perde as ferramentas na última '

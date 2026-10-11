@@ -21,15 +21,18 @@ class ReviewViewModel extends Notifier<ReviewState> {
     return ReviewPending(items: items, categories: _choices(book));
   }
 
-  /// As categorias de gasto do dia a dia, menos Outros — que é o que se
-  /// está tirando. Fixos e dívidas ficam de fora: não chegam pela
-  /// notificação de uma compra.
+  /// As categorias de gasto do dia a dia e as assinaturas, menos Outros —
+  /// que é o que se está tirando. A assinatura chega pela notificação como
+  /// qualquer compra ("Netflix R$ 39,90"), e tirá-la do dia a dia a tira
+  /// do limite da semana (RN-1003). Fixos e dívidas ficam de fora.
   static List<Category> _choices(LedgerBook book) => [
     for (final category in book.categories)
-      if (category.block == Block.variable &&
+      if (_reviewable.contains(category.block) &&
           category.id != DraftDefaults.fallbackCategoryId)
         category,
   ];
+
+  static const Set<Block> _reviewable = {Block.variable, Block.subscription};
 
   /// Põe [entry] em [category]. É uma correção como outra qualquer
   /// (RN-208): o original fica no registro. Tocar na categoria que ele já
