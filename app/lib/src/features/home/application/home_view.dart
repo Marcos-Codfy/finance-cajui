@@ -19,6 +19,7 @@ final class HomeView {
     required this.owed,
     required this.hasPlan,
     required this.entriesThisMonth,
+    this.voucherBalance = Money.zero,
     this.hasDebts = false,
     this.suggestion,
     this.cardsNearLimit = const [],
@@ -32,6 +33,7 @@ final class HomeView {
       budget: finances.budgetFor(month),
       week: finances.weekOf(today),
       owed: finances.owedOn(today),
+      voucherBalance: book.voucher.balance,
       hasPlan: !finances.plan.isEmpty,
       hasDebts: finances.debts.isNotEmpty,
       entriesThisMonth: book.entries
@@ -57,6 +59,9 @@ final class HomeView {
 
   /// Quanto ainda se deve, somando dívidas e parcelas de cartão.
   final Money owed;
+
+  /// O saldo do vale, pelo que está lançado (RN-123).
+  final Money voucherBalance;
 
   /// Se há plano: salários, contas, vale ou dízimo.
   final bool hasPlan;
