@@ -1,6 +1,7 @@
 import 'package:cajui/src/features/budget/presentation/month_history_page.dart';
 import 'package:cajui/src/features/budget/presentation/month_page.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
+import 'package:cajui/src/features/budget/presentation/voucher_page.dart';
 import 'package:cajui/src/features/cards/presentation/cards_page.dart';
 import 'package:cajui/src/features/debts/presentation/debts_page.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
@@ -47,7 +48,22 @@ abstract final class HomeLinks {
         subtitle: 'O que entra, o que sai todo mês e o dízimo',
         open: () => MyBillsPage.open(context),
       ),
+      ?_voucher(context, view),
     ];
+  }
+
+  /// O vale só aparece para quem tem vale: no plano, ou com saldo.
+  static Widget? _voucher(BuildContext context, HomeView view) {
+    if (!view.budget.voucher.isPositive && !view.voucherBalance.isPositive) {
+      return null;
+    }
+    return _row(
+      title: 'Vale',
+      subtitle:
+          'Saldo de ${_brl(view.voucherBalance.cents)} · conferir com a '
+          'operadora',
+      open: () => VoucherPage.open(context),
+    );
   }
 
   /// Os cartões, as dívidas e o mês a mês.
