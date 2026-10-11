@@ -43,7 +43,6 @@ export 'src/components/field/cajui_option_list.dart';
 export 'src/components/field/cajui_select_field.dart';
 export 'src/components/field/cajui_text_field.dart';
 export 'src/components/field/cents_input_formatter.dart';
-export 'src/components/gauge/cajui_water_gauge.dart';
 export 'src/components/glow/cajui_glow.dart';
 export 'src/components/list/cajui_list_row.dart';
 export 'src/components/meter/cajui_meter.dart';

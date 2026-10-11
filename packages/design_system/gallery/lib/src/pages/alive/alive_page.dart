@@ -5,7 +5,6 @@ import 'package:gallery/src/pages/alive/glow_section.dart';
 import 'package:gallery/src/pages/alive/numbers_section.dart';
 import 'package:gallery/src/pages/alive/seed_leaf_section.dart';
 import 'package:gallery/src/pages/alive/streaming_section.dart';
-import 'package:gallery/src/pages/alive/water_section.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 
 /// Os efeitos vivos: o que faz o app parecer de verdade sem atrapalhar o uso.
@@ -36,11 +35,10 @@ class _AlivePageState extends State<AlivePage> {
     return GalleryPage(
       title: 'Efeitos vivos',
       lead:
-          'Água que balança, cartão que inclina, número que rola e voa, '
+          'Cartão que inclina, número que rola e voa, '
           'semente que cai. Tudo respeita o movimento reduzido do sistema, '
           'assenta sozinho e nunca fica no caminho de quem usa.',
       sections: [
-        WaterSection(tilt: _tilt),
         CardSection(tilt: _tilt),
         const NumbersSection(),
         const SeedLeafSection(),

@@ -16,7 +16,6 @@ class DataColors {
     required this.debt,
     required this.voucher,
     required this.track,
-    required this.water,
   });
 
   /// Bloco de fixos.
@@ -34,12 +33,6 @@ class DataColors {
   /// O trilho vazio de uma barra ou medidor.
   final Color track;
 
-  /// O que ainda dá para gastar, como água no pote (`CajuiWaterGauge`).
-  ///
-  /// É o azul da informação, e não o verde da sobra: o pote mede o que resta,
-  /// e água que baixa não é bronca — é só o nível.
-  final Color water;
-
   /// Dados no tema claro.
   static const light = DataColors(
     fixed: CajuiPalette.inkSoft,
@@ -49,7 +42,6 @@ class DataColors {
     // Areia funda, e não o tom mais escuro: só com ela o cajuí do medidor
     // chega a 3:1 contra o trilho (3,09:1; com sandMuted dava 2,79:1).
     track: CajuiPalette.sandDeep,
-    water: CajuiPalette.sky,
   );
 
   /// Dados no tema escuro.
@@ -59,6 +51,5 @@ class DataColors {
     debt: CajuiPalette.clayLight,
     voucher: CajuiPalette.veredaLight,
     track: CajuiPalette.nightHigh,
-    water: CajuiPalette.skyLight,
   );
 }

@@ -41,7 +41,7 @@ Os papéis, agrupados como em `CajuiColors`. Valores e contraste de cada um: pá
 | `intent` | `positive` · `notice` · `danger` · `info` · `achievement` (cada um com `Subtle`) | O sentido de um aviso ou de um número |
 | `border` | `subtle` · `field` · `strong` · `focusRing` · `focusGap` | Limites e foco |
 | `brand` | `accent` · `gold` · `sheen` | O cajuí e o capim dourado, em detalhe; `sheen` é a luz que bate em superfície 3D (o brilho do cartão), sempre translúcida e, sob texto, no máximo `BrandColors.sheenOverText` (12%) |
-| `data` | `fixed` · `variable` · `debt` · `voucher` · `track` · `water` | Os três blocos de despesa e o vale, nos medidores; `water` é a água do pote do "pode gastar" |
+| `data` | `fixed` · `variable` · `debt` · `voucher` · `track` | Os três blocos de despesa e o vale, nos medidores. A `water`, do pote do "pode gastar", saiu com ele em 11/10/2026 |
 | — | `shortfall` · `shortfallSubtle` | A falta do mês; resolve pelo `ShortfallStyle` em vigor |
 
 Regras:
