@@ -36,7 +36,7 @@ O código de pareamento antigo pedia um celular com o app para gerá-lo. O dono 
 5. **A tela de entrada aceita os dois:** seis dígitos viram código, com ou sem o espaço do meio, e o resto é a chave da casa.
    - O código que não serviu mostra o `E-AUTH-04`, do catálogo.
    - Sem rede, com o limite de taxa ou com o servidor fora, a frase é a do caso (`E-NET-01`, `E-RATE-01`, `E-SRV-01`), para a pessoa não achar que o autenticador está errado.
-   - Na consulta, Ajustes não mostra a "Chave da casa": o que o navegador guarda pode ser a sessão do código, e não a chave.
+   - Na consulta, Ajustes não mostra a "Chave da casa": o que o navegador guarda pode ser a sessão do código, e não a chave. No lugar dela fica o "Sair", que a tela de entrada promete e que até aqui não existia na web.
 
 ## Consequências
 
