@@ -6,6 +6,7 @@ import 'package:cajui/src/features/assistant/presentation/assistant_view_model.d
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
+import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -110,6 +111,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         onRetry: assistant.retry,
         onUndo: assistant.undo,
         canUndo: canUndo,
+        // Só o celular tem conferência: a web é consulta (ADR-013).
+        onCapture: canUndo && SpokenExpense.looksLikeExpense(question)
+            ? () => ref
+                  .read(captureProvider.notifier)
+                  .startText(SpokenExpense.asReceipt(question))
+            : null,
       ),
     ];
   }

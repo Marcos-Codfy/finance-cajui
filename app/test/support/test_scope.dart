@@ -64,21 +64,27 @@ List<Override> testOverrides({
   LedgerDownlink? downlink,
   HouseholdKeyStore? householdKey,
   ServerHead? head,
+  SpeechInput? speech,
   String idPrefix = 'id',
 }) {
-  var next = 0;
   return [
     soundPlayerProvider.overrideWithValue(player ?? MutePlayer()),
     ledgerJournalProvider.overrideWithValue(journal ?? MemoryLedgerJournal()),
     clockProvider.overrideWithValue(clock ?? FixedClock(today ?? testToday)),
-    newIdProvider.overrideWithValue(() => '$idPrefix-${next++}'),
+    newIdProvider.overrideWithValue(_ids(idPrefix)),
     ..._capture(inbox, reader, captureStore),
     assistantGatewayProvider.overrideWithValue(
       assistant ?? const _SilentGateway(),
     ),
     ..._server(uplink, downlink, head),
-    ..._extras(preferences, householdKey),
+    ..._extras(preferences, householdKey, speech),
   ];
+}
+
+/// Identificadores em sequência: `id-0`, `id-1`…
+String Function() _ids(String prefix) {
+  var next = 0;
+  return () => '$prefix-${next++}';
 }
 
 /// O servidor: o teste roda como celular — é lá que se lança —, e o livro
@@ -124,12 +130,13 @@ List<Override> _capture(
 List<Override> _extras(
   PreferencesStore? preferences,
   HouseholdKeyStore? householdKey,
+  SpeechInput? speech,
 ) => [
   preferencesStoreProvider.overrideWithValue(
     preferences ?? const NoPreferencesStore(),
   ),
   householdKeyProvider.overrideWithValue(householdKey ?? FakeHouseholdKey()),
-  speechInputProvider.overrideWithValue(const NoSpeechInput()),
+  speechInputProvider.overrideWithValue(speech ?? const NoSpeechInput()),
 ];
 
 /// Uma subida que diz "este aparelho tem livro próprio": é o celular. Não
