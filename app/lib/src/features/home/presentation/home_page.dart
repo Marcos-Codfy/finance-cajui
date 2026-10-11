@@ -58,13 +58,19 @@ class HomePage extends ConsumerWidget {
     // O Início fica montado por baixo da conversa e das telas abertas por
     // cima: só à vista ele faz festa.
     final visible = TickerMode.valuesOf(context).enabled;
+    // A rolagem em profundidade e o travelling de câmera na entrada (pedido
+    // do dono: "3d scrolling com animações cinematográficas"). A chave é o
+    // mês: a entrada roda de novo quando ele vira, e não a cada lançamento.
     return CajuiScreen(
       title: month[0].toUpperCase() + month.substring(1),
       trailing: _tools(context, readOnly: state.readOnly),
       footer: state.readOnly ? null : _newEntry(context),
+      depth: true,
+      cinematic: true,
+      replayKey: view.budget.month,
       children: [
         ..._notice(context, ref, state),
-        ...HomeCards.of(view, party: _party(ref, view, visible: visible)),
+        HomeCards.of(view, party: _party(ref, view, visible: visible)),
         const SizedBox(height: CajuiSpacing.xl),
         ...HomeLinks.of(context, view),
       ],

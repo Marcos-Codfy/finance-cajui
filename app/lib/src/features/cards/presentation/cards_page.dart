@@ -40,6 +40,8 @@ class CardsPage extends ConsumerWidget {
       footer: ref.watch(ledgerUplinkProvider).isPaired
           ? _register(context)
           : null,
+      depth: true,
+      cinematic: true,
       children: [
         if (cards.isEmpty) _noCardsYet,
         for (final card in cards)
@@ -47,13 +49,32 @@ class CardsPage extends ConsumerWidget {
             alert,
             const SizedBox(height: CajuiSpacing.md),
           ],
-        for (final card in cards) ...[
-          ?_plastic(card, usageOf(card), tilt),
-          _row(context, card, usageOf(card)),
-        ],
+        if (cards.isNotEmpty) _wallet(context, cards, usageOf, tilt),
       ],
     );
   }
+
+  /// Os cartões numa carteira 3D (ADR-028): saem do maço ao abrir a tela,
+  /// param no alto ao rolar e abrem em leque ao puxar além do topo. Cada um
+  /// leva junto a sua linha de uso, para o número não se separar dele.
+  Widget _wallet(
+    BuildContext context,
+    List<CreditCard> cards,
+    CardMonthUsage? Function(CreditCard card) usageOf,
+    CajuiTilt? tilt,
+  ) => CajuiWalletStack(
+    children: [
+      for (final card in cards)
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ?_plastic(card, usageOf(card), tilt),
+            _row(context, card, usageOf(card)),
+          ],
+        ),
+    ],
+  );
 
   static Widget _register(BuildContext context) => CajuiButton(
     label: 'Cadastrar cartão',

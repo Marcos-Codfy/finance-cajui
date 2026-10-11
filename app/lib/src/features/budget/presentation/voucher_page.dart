@@ -65,6 +65,9 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
       title: 'Vale',
       overline: DateLabels.month(view.budget.month),
       onBack: back,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       footer: paired ? _footer() : null,
       children: [
         ..._numbers(view, book.voucher.balance),

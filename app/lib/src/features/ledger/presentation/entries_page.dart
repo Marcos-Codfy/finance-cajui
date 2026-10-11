@@ -35,6 +35,9 @@ class EntriesPage extends ConsumerWidget {
       title: 'Lançamentos',
       overline: state is EntriesReady ? DateLabels.month(state.month) : null,
       onBack: Navigator.of(context).maybePop,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       footer: _footer(context, ref, state),
       children: switch (state) {
         EntriesLoading() => _loading,

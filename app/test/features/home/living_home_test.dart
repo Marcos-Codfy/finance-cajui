@@ -53,8 +53,17 @@ Future<void> _openHome(WidgetTester tester, List<LedgerEvent> events) async {
   await settleAfterTap(tester);
 }
 
-CajuiGlow _glow(WidgetTester tester) =>
-    tester.widget<CajuiGlow>(find.byType(CajuiGlow));
+/// O brilho do cartão do resultado do mês. Cada cartão do carrossel tem o
+/// seu, e só o da sobra se acende.
+CajuiGlow _glow(WidgetTester tester) => tester.widget<CajuiGlow>(
+  find.descendant(
+    of: find.ancestor(
+      of: find.textContaining(RegExp('^(Sobra de|Faltam para fechar)')),
+      matching: find.byType(CajuiStatCard),
+    ),
+    matching: find.byType(CajuiGlow),
+  ),
+);
 
 void main() {
   group('MonthCelebration · a festa do mês no verde é uma vez por mês', () {

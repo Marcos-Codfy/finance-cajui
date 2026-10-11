@@ -74,10 +74,12 @@ class HomeShell extends ConsumerWidget {
     );
   }
 
-  /// As abas empilhadas. A escondida não fica com o relógio de quadros
-  /// ligado: o Início atrás da conversa lia o sensor e fazia a festa do mês
-  /// sem ninguém ver. O IndexedStack, sozinho, não desliga isso.
-  Widget _stack(HomeTab current, {required bool capturing}) => IndexedStack(
+  /// As abas empilhadas, e a troca entre elas é a câmera orbitando de uma
+  /// para a outra (`CajuiOrbitStack`), que guarda o estado das duas como o
+  /// `IndexedStack` guardava. A escondida não fica com o relógio de quadros
+  /// ligado: o Início atrás da conversa fazia a festa do mês sem ninguém
+  /// ver.
+  Widget _stack(HomeTab current, {required bool capturing}) => CajuiOrbitStack(
     index: current.index,
     children: [
       for (final tab in HomeTab.values)

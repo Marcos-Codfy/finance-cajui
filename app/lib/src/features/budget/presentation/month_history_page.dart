@@ -30,6 +30,9 @@ class MonthHistoryPage extends ConsumerWidget {
       title: 'Mês a mês',
       overline: 'Meta: sobrar dinheiro três meses seguidos',
       onBack: Navigator.of(context).pop,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       children: [
         if (history.isEmpty)
           const CajuiEmptyState(

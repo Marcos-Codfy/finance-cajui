@@ -37,6 +37,9 @@ class MonthPage extends ConsumerWidget {
       title: 'Meu mês',
       overline: DateLabels.month(budget.month),
       onBack: back,
+      // A rolagem em profundidade e a entrada de câmera (ADR-028).
+      depth: true,
+      cinematic: true,
       footer: _export(ref, budget.month),
       children: [
         ?_headline(budget),
