@@ -5,6 +5,7 @@ import 'package:cajui/src/features/auth/application/household_key_presence.dart'
 import 'package:cajui/src/features/auth/presentation/key_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/sync_on_resume.dart';
+import 'package:cajui/src/features/notifications/presentation/notifications_host.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +50,6 @@ class CajuiApp extends ConsumerWidget {
   static Widget _home(WidgetRef ref) {
     final consulta = !ref.watch(ledgerUplinkProvider).isPaired;
     if (consulta && !ref.watch(hasHouseholdKeyProvider)) return const KeyPage();
-    return const SyncOnResume(child: HomeShell());
+    return const SyncOnResume(child: NotificationsHost(child: HomeShell()));
   }
 }

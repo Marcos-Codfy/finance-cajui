@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O widget da tela inicial (ADR-025): o rótulo, o número em destaque, a
+     frase de baixo e os dois atalhos. Só o que o RemoteViews sabe desenhar:
+     LinearLayout, TextView e ImageButton. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/home_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/home_widget_background"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/home_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/home_widget_stale_label"
+            android:textColor="@color/cajui_widget_text_muted"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/home_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:text="@string/home_widget_stale_amount"
+            android:textColor="@color/cajui_widget_text"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/home_caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:text="@string/home_widget_stale_caption"
+            android:textColor="@color/cajui_widget_text_muted"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/home_camera"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/home_widget_button"
+            android:contentDescription="@string/home_widget_camera"
+            android:src="@drawable/ic_widget_camera" />
+
+        <ImageButton
+            android:id="@+id/home_gallery"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/home_widget_button"
+            android:contentDescription="@string/home_widget_gallery"
+            android:src="@drawable/ic_widget_gallery" />
+    </LinearLayout>
+</LinearLayout>

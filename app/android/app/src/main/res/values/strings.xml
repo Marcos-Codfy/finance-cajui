@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O que o Cajui escreve fora do Flutter (ADR-025), no tom do guia de voz:
+     sem exclamação, sem julgamento. As frases do lançamento automático vêm
+     prontas do Dart; aqui fica só o que nasce sem Dart rodando. -->
+<resources>
+    <string name="home_widget_label">Cajui: quanto dá para gastar</string>
+    <string name="home_widget_description">Quanto ainda dá para gastar na semana, com a câmera e a galeria a um toque.</string>
+    <string name="home_widget_stale_label">Semana nova</string>
+    <string name="home_widget_stale_amount">R$ —</string>
+    <string name="home_widget_stale_caption">Abra o Cajui para ver quanto dá para gastar.</string>
+    <string name="home_widget_camera">Fotografar comprovante</string>
+    <string name="home_widget_gallery">Escolher da galeria</string>
+
+    <string name="channel_auto">Lançamentos automáticos</string>
+    <string name="channel_review">Revisão da semana</string>
+    <string name="notice_undo">Desfazer</string>
+    <string name="notice_locked_title">O Cajui anotou uma movimentação</string>
+    <string name="review_title">Revisão da semana</string>
+    <plurals name="review_text">
+        <item quantity="one">%d gasto da semana ficou para conferir. Confere em 1 minuto?</item>
+        <item quantity="other">%d gastos da semana ficaram para conferir. Confere em 1 minuto?</item>
+    </plurals>
+    <string name="notice_listener_label">Lançar pelas notificações do banco</string>
+</resources>

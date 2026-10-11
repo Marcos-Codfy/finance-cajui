@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- As cores do que o Cajui desenha fora do Flutter: o widget da tela
+     inicial e a cor das notificações (ADR-025). São as mesmas do design
+     system (`cajui_palette.dart`), tema claro; o escuro está em
+     `values-night`. Quem muda a paleta lá muda aqui junto. -->
+<resources>
+    <!-- paper -->
+    <color name="cajui_widget_surface">#FFFFFFFF</color>
+    <!-- ink -->
+    <color name="cajui_widget_text">#FF2A1D17</color>
+    <!-- inkSoft -->
+    <color name="cajui_widget_text_muted">#FF5F4E44</color>
+    <!-- cajuiStrong -->
+    <color name="cajui_accent">#FFB93D17</color>
+    <!-- paper, sobre o cajuiStrong -->
+    <color name="cajui_on_accent">#FFFFFFFF</color>
+</resources>
