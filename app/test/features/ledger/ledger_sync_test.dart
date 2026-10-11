@@ -85,8 +85,12 @@ void main() {
     test('o que falta sobe, e o que já está lá não sobe de novo', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
 
-      final (sent: first, received: _, error: _) = await sync.run(book);
-      final (sent: second, received: _, error: _) = await sync.run(book);
+      final (sent: first, received: _, error: _, pulled: _) = await sync.run(
+        book,
+      );
+      final (sent: second, received: _, error: _, pulled: _) = await sync.run(
+        book,
+      );
 
       expect(first, 1);
       expect(second, 0, reason: 'a segunda subida não tem o que mandar');
@@ -98,7 +102,7 @@ void main() {
       () async {
         await sync.run(_bookOf([_entry('e1', 'Padaria', 850)]));
 
-        final (:sent, received: _, error: _) = await sync.run(
+        final (:sent, received: _, error: _, pulled: _) = await sync.run(
           _bookOf([_entry('e1', 'Padaria', 900)]),
         );
 
@@ -127,7 +131,7 @@ void main() {
       uplink.entries['e1'] = 'corrigido-no-outro';
       uplink.revisedOnServer['e1'] = DateTime.utc(2026, 9, 22, 12);
 
-      final (:sent, received: _, error: _) = await sync.run(
+      final (:sent, received: _, error: _, pulled: _) = await sync.run(
         _bookOf([_entry('e1', 'Padaria', 850)]),
       );
 
@@ -142,7 +146,7 @@ void main() {
         uplink.entries['e1'] = 'corrigido-no-outro';
         uplink.revisedOnServer['e1'] = DateTime.utc(2026, 9, 22, 12);
 
-        final (:sent, received: _, error: _) = await sync.run(
+        final (:sent, received: _, error: _, pulled: _) = await sync.run(
           _bookOf([
             _entry(
               'e1',
@@ -174,7 +178,7 @@ void main() {
         _bookOf([_entry('e1', 'Padaria', 850), _entry('e2', 'Feira', 2000)]),
       );
 
-      final (:sent, received: _, error: _) = await sync.run(
+      final (:sent, received: _, error: _, pulled: _) = await sync.run(
         _bookOf([_entry('e1', 'Padaria', 850)], cancelled: {'e2'}),
       );
 
@@ -190,7 +194,7 @@ void main() {
       final teimoso = _RefusingOne('e2');
       final sync = LedgerSync(teimoso);
 
-      final (:sent, received: _, :error) = await sync.run(
+      final (:sent, received: _, :error, pulled: _) = await sync.run(
         _bookOf([
           _entry('e1', 'Padaria', 850),
           _entry('e2', 'Fogão', 96000),
@@ -233,8 +237,9 @@ void main() {
         ],
       );
 
-      final (sent: _, received: _, :error) = await LedgerSync(teimoso)
-          .run(book);
+      final (sent: _, received: _, :error, pulled: _) = await LedgerSync(
+        teimoso,
+      ).run(book);
 
       expect(error, ErrorCode.req01, reason: 'a recusa é relatada');
       expect(teimoso.facts, contains('divida'));
@@ -244,8 +249,9 @@ void main() {
     test('aparelho sem cadastro não tenta subir nada', () async {
       final book = _bookOf([_entry('e1', 'Padaria', 850)]);
 
-      final (:sent, received: _, :error) = await LedgerSync(_UnpairedUplink())
-          .run(book);
+      final (:sent, received: _, :error, pulled: _) = await LedgerSync(
+        _UnpairedUplink(),
+      ).run(book);
 
       expect(sent, 0);
       expect(error, ErrorCode.auth03);

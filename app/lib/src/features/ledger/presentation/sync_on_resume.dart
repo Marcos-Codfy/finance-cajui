@@ -58,8 +58,7 @@ class _SyncOnResumeState extends ConsumerState<SyncOnResume> {
     if (!mounted) return false;
     final ledger = ref.read(ledgerProvider.notifier);
     if (!_onPhone) return await ledger.reload();
-    await ledger.quietSync.request(book);
-    return true;
+    return await ledger.quietSync.request(book);
   }
 
   @override

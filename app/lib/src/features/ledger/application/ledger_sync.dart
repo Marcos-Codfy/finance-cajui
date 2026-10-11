@@ -8,7 +8,7 @@ import 'package:domain/domain.dart';
 
 /// O resultado de uma sincronização: o que subiu, o que desceu e a primeira
 /// recusa, se houve.
-typedef SyncOutcome = ({int sent, int received, ErrorCode? error});
+typedef SyncOutcome = ({int sent, int received, ErrorCode? error, bool pulled});
 
 /// Leva o livro do aparelho ao servidor, para o assistente ter com que
 /// responder (RN-781, RN-915) — e traz de volta o que outro aparelho fez.
@@ -39,30 +39,42 @@ final class LedgerSync {
   /// tudo o que este aparelho tem já está no servidor quando a descida
   /// compara — e o que o servidor cancelou é cancelado aqui em vez de voltar.
   Future<SyncOutcome> run(LedgerBook book) async {
-    if (!uplink.isPaired) {
-      return (sent: 0, received: 0, error: ErrorCode.auth03);
-    }
+    if (!uplink.isPaired) return _stopped(ErrorCode.auth03);
     final cadastro = await _sendCategories(book) ?? await _sendCards(book);
-    if (cadastro != null) return (sent: 0, received: 0, error: cadastro);
+    if (cadastro != null) return _stopped(cadastro);
     final (remote, failure) = await uplink.remoteEntries();
-    if (failure != null) return (sent: 0, received: 0, error: failure);
+    if (failure != null) return _stopped(failure);
     final (sent, refused) = await _sendEntries(book, remote);
-    // Cada etapa sobe o que pode, e uma recusa não cala as seguintes: um
-    // fato que o servidor não aceita prendia, para sempre e em silêncio,
-    // as dívidas, os planos e os recebimentos que vinham depois dele. Fica
-    // o primeiro erro, para a tela saber que algo não subiu.
+    final error = refused ?? await _sendRest(book);
+    // A descida acontece mesmo com recusa na subida: o que o outro aparelho
+    // fez não depende do que este não conseguiu mandar.
+    final (received, broken) = await _pull(book);
+    return (
+      sent: sent,
+      received: received,
+      error: error ?? broken,
+      // Se a descida aconteceu: a conferência ao vivo só dá o topo por
+      // visto quando o que mudou lá de fato chegou aqui.
+      pulled: broken == null,
+    );
+  }
+
+  /// Parou antes de descer.
+  static SyncOutcome _stopped(ErrorCode error) =>
+      (sent: 0, received: 0, error: error, pulled: false);
+
+  /// Estornos, fatos, plano e recebimentos. Cada etapa sobe o que pode, e
+  /// uma recusa não cala as seguintes: um fato que o servidor não aceita
+  /// prendia, para sempre e em silêncio, as dívidas, os planos e os
+  /// recebimentos que vinham depois dele. Fica o primeiro erro.
+  Future<ErrorCode?> _sendRest(LedgerBook book) async {
     final errors = [
-      refused,
       await _sendReversals(book),
       await _sendFacts(book),
       await _sendPlan(book),
       await _sendIncome(book),
     ];
-    final error = errors.nonNulls.firstOrNull;
-    // A descida acontece mesmo com recusa na subida: o que o outro aparelho
-    // fez não depende do que este não conseguiu mandar.
-    final (received, broken) = await _pull(book);
-    return (sent: sent, received: received, error: error ?? broken);
+    return errors.nonNulls.firstOrNull;
   }
 
   /// A descida não pode derrubar quem a chamou: resposta que o app não lê,
