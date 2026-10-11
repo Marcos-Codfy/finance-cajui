@@ -11,7 +11,7 @@ import 'package:domain/src/assistant/question_intent.dart';
 abstract final class QuestionRouter {
   /// A intenção de [question], ou [QuestionIntent.unknown].
   ///
-  /// O chamado pelo nome sai antes de qualquer coisa: "Buriti, quanto
+  /// O chamado pelo nome sai antes de qualquer coisa: "Juju, quanto
   /// sobrou?" é a mesma pergunta que "quanto sobrou?".
   static QuestionIntent of(String question) {
     if (AssistantIdentity.isGreeting(question)) return QuestionIntent.greeting;
