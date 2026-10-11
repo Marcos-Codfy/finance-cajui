@@ -4,6 +4,7 @@ import 'package:cajui/src/features/auth/application/household_key_store.dart';
 import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/notifications/presentation/bank_notifications_row.dart';
+import 'package:cajui/src/features/reminders/presentation/due_reminders_row.dart';
 import 'package:cajui/src/features/settings/presentation/household_names_row.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
@@ -33,6 +34,7 @@ class SettingsPage extends ConsumerWidget {
         ..._cadastros(context, ref),
         const BankNotificationsRow(),
         const HouseholdNamesRow(),
+        const DueRemindersRow(),
         ..._appearance(ref),
         ..._feedback(ref),
       ],

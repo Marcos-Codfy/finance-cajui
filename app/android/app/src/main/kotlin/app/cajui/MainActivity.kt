@@ -11,6 +11,8 @@ import app.cajui.notifications.BackgroundEngine
 import app.cajui.notifications.NoticeChannel
 import app.cajui.notifications.NoticeRouter
 import app.cajui.notifications.NotificationAccess
+import app.cajui.reminders.ReminderChannel
+import app.cajui.reminders.ReminderPoster
 import app.cajui.voice.SpeechChannel
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -72,6 +74,7 @@ class MainActivity : FlutterActivity() {
         val channel = MethodChannel(messenger, NoticeChannel.NAME)
         NoticeChannel(applicationContext, channel, this)
         HomeChannel(applicationContext, messenger)
+        ReminderChannel(applicationContext, messenger, this)
         MethodChannel(messenger, BackgroundEngine.BACKGROUND_CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "waitIdle") {
                 NoticeRouter.whenIdle { result.success(null) }
@@ -122,6 +125,9 @@ class MainActivity : FlutterActivity() {
             ACTION_PHOTO -> photos.start()
             ACTION_PICK -> files.start()
             ACTION_REVIEW -> NoticeRouter.requestRoute(REVIEW_ROUTE, appIsRunning)
+            // O lembrete de vencimento abre a tela do assunto (RN-1087).
+            ReminderPoster.ACTION_OPEN -> ReminderPoster.routeOf(intent)
+                ?.let { NoticeRouter.requestRoute(it, appIsRunning) }
         }
     }
 

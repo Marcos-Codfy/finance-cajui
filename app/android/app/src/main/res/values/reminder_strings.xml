@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O canal dos lembretes de vencimento (RN-1081). Os textos de cada
+     lembrete vêm prontos do Dart; aqui fica só o nome do canal, que aparece
+     nos ajustes de notificação do Android. Arquivo próprio para não mexer
+     nas frases do widget e do aviso de domingo. -->
+<resources>
+    <string name="channel_reminders">Contas a vencer</string>
+    <string name="channel_reminders_description">Dois dias antes e no dia do vencimento de contas, parcelas e faturas, às 9h.</string>
+</resources>

@@ -186,12 +186,14 @@ A falta realizada (R$ 102) é menor que a projetada no dia 3 (R$ 142) porque os 
 
 ## Lembretes de vencimento
 
-| Situação | Texto na tela | Tela bloqueada |
-|---|---|---|
-| Fixo, dois dias antes, mês com sobra | "Aluguel de R$ 1.100,00 vence quinta, 10. Pelo que está lançado, o mês continua com sobra de R$ 558,00." | Igual |
-| Fatura, mês com sobra | "Fatura do cartão final 4821: R$ 640,00, vence segunda, 5. Esse valor já está contado em setembro; é a reserva da fatura." | Igual |
-| Parcela, mês com falta | "Parcela 5 de 12 do empréstimo, R$ 212,00, vence terça, 15. Pelo que está lançado, faltam R$ 142,00 para fechar setembro. `Ver os ajustes`" | "Parcela do empréstimo vence terça, 15." |
-| No dia | "O aluguel vence hoje." | Igual |
+| Situação | Título | Texto | Tela bloqueada |
+|---|---|---|---|
+| Conta, dois dias antes, mês com sobra | "Aluguel vence quinta, 10" | "R$ 1.100,00. Pelo que está lançado, setembro continua com sobra de R$ 558,00 depois de pagar." | "Uma conta vence quinta, 10" |
+| Fatura, mês com sobra | "Cartão final 4821: fatura vence segunda, 5" | "R$ 640,00. As compras já contam no mês em que foram feitas. Pelo que está lançado, outubro continua com sobra de R$ 412,00 depois de pagar." | "Uma fatura vence segunda, 5" |
+| Parcela, mês com falta | "Empréstimo: parcela vence terça, 15" | "Parcela 5 de 12, R$ 212,00. Pelo que está lançado, depois de pagar faltam R$ 142,00 para fechar setembro. Dá para rever em Minhas dívidas." | "Uma parcela vence terça, 15" |
+| No dia | "Aluguel vence hoje" | O mesmo texto | "Uma conta vence hoje" |
+
+Na tela bloqueada, o texto é sempre "Desbloqueie para ver o valor." (RN-1085). As regras de cada caso — o que tem lembrete, quando chega, o que conta como pago — estão nas RN-1080 a RN-1088.
 
 Todo valor de "sobra depois de pagar" é **estimativa**: o app não conhece o saldo da conta, só o que foi lançado, e diz isso ("pelo que está lançado") (RN-841). O motivo é medido: no Brasil, lembrete de fatura sem contexto reduziu multa por atraso e **aumentou** tarifa de cheque especial (Medina2021).
 

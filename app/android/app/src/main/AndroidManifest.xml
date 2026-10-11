@@ -97,6 +97,21 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
             </intent-filter>
         </receiver>
+        <!-- Os lembretes de vencimento (RN-1081): o alarme do próximo, e
+             marcar de novo depois de reiniciar o celular ou atualizar o
+             app. O primeiro só o próprio Cajui chama; o segundo, só o
+             sistema. -->
+        <receiver
+            android:name=".reminders.ReminderAlarmReceiver"
+            android:exported="false"/>
+        <receiver
+            android:name=".reminders.ReminderBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
         <!-- O widget da tela inicial: quanto dá para gastar na semana, e a
              câmera e a galeria a um toque. -->
         <receiver

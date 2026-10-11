@@ -60,6 +60,7 @@ Arquitetura limpa, organizada por feature, em quatro camadas — `domain`, `appl
 | [026](adr/ADR-026-ux-viva.md) | UX viva: o pote de água, os cartões 3D, os números que rolam e voam, a semente e a folha, o brilho do mês no verde, as barras do mês a mês e a resposta palavra por palavra; os efeitos no design system, o sensor de inclinação no app | aceita |
 | [027](adr/ADR-027-codigo-do-autenticador.md) | A web entra com o código de seis dígitos do Google Authenticator (TOTP), gerado também por um script no PC; sessão de consulta de 30 dias, gravada só pelo hash; trava de cinco tentativas | aceita |
 | [028](adr/ADR-028-rolagem-3d-e-entrada-cinematografica.md) | Rolagem 3D, carrossel 3D, entrada cinematográfica e pilha de carteira: perspectiva por matriz aplicada na pintura, uma câmera só, plano onde se lê; o desfoque da entrada como exceção nomeada ao orçamento | proposta |
+| [029](adr/ADR-029-lembretes-de-vencimento.md) | Lembretes de vencimento: o domínio escreve o lembrete pronto (dia, texto, versão da tela bloqueada, assunto) e o aparelho só marca o alarme e mostra; o pago não lembra | aceita |
 
 As 16 foram aceitas em 2026-09-20, no checkpoint da Fase 4. Toda ADR nasce como *proposta* e vira *aceita* num checkpoint. Decisão que mudar depois ganha ADR nova, que substitui a antiga — a antiga não é apagada.
 
