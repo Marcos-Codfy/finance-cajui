@@ -16,7 +16,8 @@ abstract final class DeviceFacts {
     DebtInstallmentPaid() ||
     MonthClosed() ||
     BudgetDefined() ||
-    DebtOrdered() => true,
+    DebtOrdered() ||
+    HouseholdNamed() => true,
     _ => false,
   };
 
@@ -42,12 +43,18 @@ abstract final class DeviceFacts {
       type: DeviceFact.monthClosed,
       payload: MonthCloseCodec.encode(close),
     ),
-    BudgetDefined() || DebtOrdered() => _budget(event),
+    BudgetDefined() || DebtOrdered() || HouseholdNamed() => _budget(event),
     _ => null,
   };
 
-  /// O plano da planilha e a ordem das dívidas (ADR-023).
+  /// O plano da planilha, a ordem das dívidas (ADR-023) e os nomes da casa
+  /// (RN-1070).
   static DeviceFact? _budget(LedgerEvent event) => switch (event) {
+    HouseholdNamed(:final names) => DeviceFact(
+      id: event.id,
+      type: DeviceFact.householdNamed,
+      payload: HouseholdCodec.encode(names),
+    ),
     BudgetDefined(:final plan) => DeviceFact(
       id: event.id,
       type: DeviceFact.budgetDefined,
@@ -77,6 +84,9 @@ abstract final class DeviceFacts {
       BudgetPlanCodec.decode(fact.payload),
     ),
     DeviceFact.debtOrdered => _ordering(fact.payload),
+    DeviceFact.householdNamed => HouseholdNamed(
+      HouseholdCodec.decode(fact.payload),
+    ),
     _ => null,
   };
 

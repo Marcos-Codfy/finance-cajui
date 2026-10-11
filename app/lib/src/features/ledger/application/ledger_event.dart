@@ -212,6 +212,19 @@ final class DebtOrdered extends LedgerEvent {
   final DateTime definedAt;
 }
 
+/// Os nomes da casa foram definidos (RN-1070). Vale a lista mais nova
+/// inteira, pelo carimbo — o mesmo desenho da ordem das dívidas —, e ela
+/// atravessa os aparelhos: o motor das notificações, em segundo plano,
+/// precisa dela nos dois celulares.
+final class HouseholdNamed extends LedgerEvent {
+  /// Registra a lista [names], que precisa ter `definedAt`.
+  new(this.names)
+    : super(id: 'household-${names.definedAt!.toUtc().toIso8601String()}');
+
+  /// Os nomes.
+  final HouseholdNames names;
+}
+
 /// Um mês foi fechado, ou teve o fechamento revisado (RN-440 e RN-441).
 /// Só é lido: o mês a mês agora é calculado (ADR-023).
 ///
