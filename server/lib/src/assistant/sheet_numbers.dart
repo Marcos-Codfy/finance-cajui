@@ -3,8 +3,9 @@ import 'package:server/src/assistant/context_number.dart';
 import 'package:server/src/assistant/context_number_kind.dart';
 
 /// Os números da planilha do dono (ADR-023) no contexto da Juju: o que
-/// entra, o que sai por grupo, quanto o vale cobre, se sobra ou falta, o que
-/// dá para gastar na semana e quanto ainda se deve.
+/// entra, o que sai por grupo, quanto o vale cobre, se sobra ou falta e
+/// quanto ainda se deve. O "pode gastar por semana" saiu em 11/10/2026, a
+/// pedido do dono.
 ///
 /// São os mesmos do Início e do Meu mês, feitos pelo domínio (RN-915). O
 /// contexto cresce com a existência do plano, não com o tamanho dele: trinta
@@ -17,8 +18,6 @@ abstract final class SheetNumbers {
     final budget = finances.budgetFor(today.budgetMonth);
     return [
       if (!finances.plan.isEmpty) ..._month(budget),
-      if (!finances.plan.isEmpty)
-        ..._week(finances.weekOf(today), budget.weeklyVoucher),
       if (owed.isPositive)
         _number('Quanto ainda devo, com as parcelas de cartão', owed, '$today'),
     ];
@@ -51,37 +50,6 @@ abstract final class SheetNumbers {
             period,
             kind: _projection,
           );
-  }
-
-  /// A semana nas duas moedas juntas, como o pote — e à parte quanto disso
-  /// é vale (RN-1015): sem esse número, "quanto ainda posso gastar de Uber"
-  /// saía com uma parte que só compra comida.
-  static Iterable<ContextNumber> _week(
-    WeekAllowance week,
-    Money voucher,
-  ) sync* {
-    final period = 'semana de ${week.from} a ${week.until}';
-    yield _number(
-      'Pode gastar por semana (dinheiro e vale juntos)',
-      week.limit,
-      period,
-      kind: ContextNumberKind.plan,
-    );
-    if (voucher.isPositive) {
-      yield _number(
-        'Parte do limite da semana que é vale (só compra comida)',
-        voucher,
-        period,
-        kind: ContextNumberKind.plan,
-      );
-    }
-    yield _number('Já gasto nesta semana', week.spent, period);
-    yield _number(
-      'Ainda dá para gastar nesta semana',
-      week.left,
-      period,
-      kind: _projection,
-    );
   }
 
   static const ContextNumberKind _projection = ContextNumberKind.projection;
