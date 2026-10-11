@@ -130,7 +130,7 @@ Vagos de propósito (RNF-SEC-18): não revelam se o aparelho existe, se o token 
 | `E-AUTH-01` | Biometria indisponível no aparelho | app | Este aparelho não tem biometria configurada. O Cajui usa a biometria do Android para proteger seus dados. | Abrir as configurações do Android |
 | `E-AUTH-02` | Biometria não reconhecida | app | Não reconheci. | Tentar de novo |
 | `E-AUTH-03` | Sessão, aparelho ou pino recusado | api 401 · 403 | Não foi possível confirmar este aparelho. Seus dados continuam protegidos no servidor. | Entrar de novo |
-| `E-AUTH-04` | Código de pareamento vencido, usado ou errado | api 401 | Este código não serve mais. Gere outro no app do celular, em Ajustes › Aparelhos com acesso. | Digitar outro código |
+| `E-AUTH-04` | Código do autenticador errado, já usado ou com a entrada em espera (ADR-027) | api 401 | Esse código não serviu. Abra o autenticador e digite o do Cajui que está na tela agora. Depois de cinco tentativas, a entrada espera quinze minutos. | Digitar outro código |
 
 ## Limite, dados e aparelho
 
