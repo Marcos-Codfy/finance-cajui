@@ -32,6 +32,10 @@ enum GalleryDestination {
   /// Aviso, vazio, esqueleto, carregando e ícone-herói.
   states('Estados', GalleryGroup.components),
 
+  /// Pote de água, cartão em 3D, número que voa, semente e folha, brilho,
+  /// mês a mês e resposta palavra por palavra.
+  alive('Efeitos vivos', GalleryGroup.components),
+
   /// O painel, em todos os estados.
   dashboard('Painel', GalleryGroup.screens),
 

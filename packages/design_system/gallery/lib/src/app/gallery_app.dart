@@ -104,7 +104,8 @@ class _Themed extends StatelessWidget {
             style: theme.typography.body.copyWith(
               color: theme.colors.text.primary,
             ),
-            child: child,
+            // Acima do navegador, para o número voar entre telas.
+            child: CajuiHeroScope(child: child),
           ),
         ),
       ),

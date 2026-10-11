@@ -28,7 +28,7 @@ O menu tem cinco grupos:
 | Grupo | O que mostra |
 |---|---|
 | Fundação | Cores por papel, tabela de contraste calculada ao vivo, escala tipográfica, espaço, raio e sombra |
-| Componentes | Ação, conteúdo, campos e estados — cada componente em todos os estados, com o nome do estado escrito |
+| Componentes | Ação, conteúdo, campos, estados e efeitos vivos — cada componente em todos os estados, com o nome do estado escrito |
 | Telas | Painel, captura, fatura, fechamento, dívidas e assistente, em cada estado da [matriz de telas](../spec/use-cases.md#telas-e-seus-estados): 62 estados ao todo |
 | Decisões | O que ainda espera escolha, com as opções lado a lado — hoje, a falta do mês em barro × em vermelho |
 | Sentidos | Mesa de som (ouvir cada som) e mesa de movimento (curvas, durações e os três níveis de qualidade) |
@@ -42,7 +42,8 @@ Os chips "Tema escuro" e "Som" valem para a gallery inteira: qualquer estado pod
 | Todo par de cor usado passa na WCAG 2.2 AA, nos dois temas | `test/accessibility/contrast_audit_test.dart` — a mesma lista de pares alimenta a página Contraste |
 | Todo controle tem alvo de 48, foco visível, nome para leitor de tela e funciona por teclado | `test/components/*_test.dart`, sobre a base `CajuiPressable` |
 | Rótulo longo e fonte ampliada não estouram a tela | Teste do chip e teste de fumaça da gallery em 390 × 844 |
-| Movimento reduzido é respeitado | `test/motion/motion_test.dart` |
+| Movimento reduzido é respeitado | `test/motion/motion_test.dart`, `test/motion/number_motion_test.dart` e o teste de cada efeito vivo |
+| Nada se move em laço: a física assenta sozinha | `test/motion/spring_physics_test.dart` |
 | O som nasce desligado, e não existe som de erro | `test/sound/sound_feedback_test.dart` |
 | Toda página e todo estado de tela abrem sem erro | `gallery/test/gallery_smoke_test.dart` |
 | Arquivo ≤ 300 linhas, função ≤ 30, aninhamento ≤ 3 | `tool/` (verificador próprio) |

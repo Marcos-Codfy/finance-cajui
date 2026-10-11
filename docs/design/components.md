@@ -46,7 +46,8 @@ Um componente novo que se toca **não reimplementa** nada disso.
 | `CajuiAmountText` | Todo valor em dinheiro | Tons `neutral` · `muted` · `positive` · `shortfall` · `accent`. Algarismos tabulares; sinal de menos tipográfico; espaço não separável entre `R$` e o número. O tom diz o **papel** do número, não se ele é bom ou ruim |
 | `CajuiCard` | Agrupar | Padrão · rebaixado (`sunken`) · tocável. Tocável exige nome para o leitor de tela |
 | `CajuiListRow` | Lançamento, parcela, item de ajuste | **Título é o que foi comprado; subtítulo, por onde foi pago** — a regra central do produto, na estrutura do componente |
-| `CajuiMeter` | Parte de um todo | Um dos dois únicos gráficos do app (RN-862). Exige o número equivalente em texto. Passar do limite enche a barra e troca para a cor da falta, sem alarme |
+| `CajuiMeter` | Parte de um todo | Gráfico de progresso (RN-862). Exige o número equivalente em texto. Passar do limite enche a barra e troca para a cor da falta, sem alarme |
+| `CajuiRollingAmount` | Valor em reais que rola até o número certo | É `CajuiAmountText` dentro de `CajuiCountUp`. Com `from: 0`, rola desde o zero ao aparecer — um número por tela, no máximo. O leitor de tela ouve só o valor final, uma vez |
 | `CajuiStatCard` | Um número do painel: o que mede, o valor e quanto do todo já tomou | Nasceu na gallery e foi promovido quando o painel do app precisou dele. Sem valor, mostra um travessão — nunca zero (RN-604). Não existe cartão "vermelho": o tom é o papel do número, e a frase de apoio diz o que fazer com ele. A barra exige a frase, que é o mesmo dado em texto |
 | `CajuiChatBubble` | Uma fala da conversa com o assistente | Quem fala se distingue pelo lado, pela cor **e** pelo nome lido ("Você:", "Cajui:"). Na espera, três pontos que respiram, e o leitor de tela ouve "Cajui está respondendo" — não um balão vazio. Promovido da gallery quando o assistente do app precisou dele |
 | `CajuiConfidenceIndicator` | Quanto a leitura do comprovante confia na categoria | Três níveis, sempre com a frase: alta · "Fiquei entre estas" · "Não consegui identificar". Confiança baixa vira pergunta, não palpite |
@@ -81,10 +82,30 @@ Todos sobre `CajuiFieldFrame`, que dá o rótulo sempre visível (fora do campo,
 | Componente | Para quê |
 |---|---|
 | `CajuiEntrance` | Entrada em cascata de itens de lista; o atraso de cada item vem do índice |
-| `CajuiCountUp` | O número conta do valor antigo ao novo |
+| `CajuiCountUp` | O número conta do valor antigo ao novo. Com `from`, conta também ao aparecer |
+| `CajuiHeroNumber` | O número que voa entre telas: mesma `tag` no Início e no detalhe. A cópia que voa é parada (nada conta no ar); em `reduced` não há voo |
+| `CajuiHeroScope` | Liga o voo num app sem Material. Já vem dentro do `CajuiAppSurface`; a gallery o põe no próprio `builder` |
 | `CajuiIcon` + `CajuiIconData` | 19 ícones de traço, desenhados como caminhos vetoriais: recibo, câmera, cartão, carteira, vale, dívida, calendário, gráfico, conversa, compartilhar, som, visto, fechar, mais, avançar, voltar, ajustes, informação, sem rede |
 
-Os dois efeitos consultam o nível de movimento do tema e aparecem prontos em `reduced`. A revisão deles contra a WCAG 2.2.2 (conteúdo que se move sozinho) é o item BL-024.
+Os efeitos consultam o nível de movimento do tema e aparecem prontos em `reduced`. A revisão deles contra a WCAG 2.2.2 (conteúdo que se move sozinho) é o item BL-024.
+
+## Efeitos vivos
+
+Pedidos do dono em 11/10/2026, para o app ficar simples e gostoso de usar. Na gallery, página **Componentes › Efeitos vivos**. Todos seguem as mesmas três regras: **respeitam o movimento reduzido** (viram uma versão parada e completa), **assentam sozinhos** — nada em laço (RNF-A11Y-08) — e **nunca disputam o dedo** com o que a pessoa quer fazer.
+
+A inclinação do aparelho entra de fora, como `CajuiTilt` (um `ValueListenable<Offset>` de -1 a 1): o design system não lê sensor nem tem plugin. Quem alimenta é o app, a partir do acelerômetro; sem fonte, os componentes ficam parados e continuam completos.
+
+| Componente | Para quê | Regras |
+|---|---|---|
+| `CajuiWaterGauge` | "Pode gastar esta semana" como um pote de água | Esvazia conforme a fração; balança com mola (`CajuiSprings.slosh`) quando o celular inclina e assenta em uns 2 s — o relógio de quadros dorme em seguida. Ao lado, rótulo, valor (rolando desde o zero) e frase: é gráfico de progresso, e o leitor de tela ouve os três. Água é sempre cor de água (`data.water`); valor negativo só troca o tom do número para o da falta. Em `reduced`: nível certo, superfície reta, sem inclinação |
+| `CajuiCreditCard3D` | O cartão de crédito que inclina e vira | Perspectiva com o sensor e com o **arrasto de lado** (o de cima para baixo continua rolando a tela). O brilho (`brand.sheen`, no máximo 12%, por baixo do texto) anda ao contrário da inclinação. Um toque vira e mostra em uso, livre, a barra e o percentual; a barra muda de tom na metade (cajuí) e nos 80% (cor da falta), e a frase descreve o fato — "Metade do limite já está em uso" — sem alarme. Nunca fala em "gasto": cartão é forma de pagamento. Um botão só para o leitor de tela, com o lado à mostra por extenso. Com fonte grande, o cartão cresce em vez de cortar. Em `reduced`: reto, brilho parado, virar é fusão curta |
+| `CajuiGlow` | O brilho do mês que fecha no verde | Quando `active` passa a verdadeiro, o halo cresce, faíscas de capim dourado sobem **uma vez** (600 ms) e tudo assenta num halo calmo. Quando falta, nada acontece. `celebrateOnAppear` só quando a boa notícia é nova. Fora de `full`, o halo só aparece. O halo é feito de anéis, não de desfoque, para valer também em `lite`. É enfeite: a boa notícia tem de estar dita em texto no bloco |
+| `CajuiBarChart` + `CajuiChartBar` | Mês a mês: o que sobrou ou faltou | Barras crescem com mola (`CajuiSprings.grow`) a partir da linha do zero, em cascata. Sobra no tom da sobra, falta no tom **neutro** (`data.fixed`), nunca vermelho. Um toque escolhe o mês; o destaque mostra o valor rolando. Cada barra é botão com "Março: sobrou R$ 312,00", e o escolhido é anunciado como selecionado; ele também se marca pelo peso do nome e por um traço, não só por cor. Coluna mínima de 48: com mês demais, rola de lado começando pelo mais novo |
+| `CajuiStreamingText` | A resposta do assistente aparecendo palavra por palavra | Palavras que faltam já ocupam o lugar, transparentes: nada pula de linha. Passo de `CajuiDurations.wordStep` (45 ms), com teto de `streamCap` (4 s) para qualquer tamanho; um toque mostra tudo. Em `reduced`, nasce pronta. O leitor de tela recebe o texto inteiro desde o começo. Se o texto crescer pelo fim, o que já apareceu fica. No balão: `CajuiChatBubble(streamed: true)` |
+
+Som e toque novos: `feedback.entrySaved()` (semente caindo na cuia) e `feedback.undone()` (folha que vai e volta), os dois com o pulso leve de tecla. Quem lança ou desfaz põe o botão sob um `CajuiFeedbackScope` silencioso, para o som de toque não abafar a semente — a gallery mostra o jeito.
+
+**Ponto em aberto.** O `CajuiBarChart` não é parte-todo nem progresso, e a letra da RN-862 só admite esses dois. Ele entrou por decisão do dono (11/10/2026) e cumpre a outra metade da regra — todo valor tem o equivalente em texto —, mas a regra precisa ser revista na especificação.
 
 ## Regras de composição
 

@@ -40,8 +40,8 @@ Os papéis, agrupados como em `CajuiColors`. Valores e contraste de cada um: pá
 | `action` | `primary` · `secondary` (cada um com `Hover` e `Pressed`) · `disabled` | Tudo o que se toca |
 | `intent` | `positive` · `notice` · `danger` · `info` · `achievement` (cada um com `Subtle`) | O sentido de um aviso ou de um número |
 | `border` | `subtle` · `field` · `strong` · `focusRing` · `focusGap` | Limites e foco |
-| `brand` | `accent` · `gold` | O cajuí e o capim dourado, em detalhe |
-| `data` | `fixed` · `variable` · `debt` · `voucher` · `track` | Os três blocos de despesa e o vale, nos medidores |
+| `brand` | `accent` · `gold` · `sheen` | O cajuí e o capim dourado, em detalhe; `sheen` é a luz que bate em superfície 3D (o brilho do cartão), sempre translúcida e, sob texto, no máximo `BrandColors.sheenOverText` (12%) |
+| `data` | `fixed` · `variable` · `debt` · `voucher` · `track` · `water` | Os três blocos de despesa e o vale, nos medidores; `water` é a água do pote do "pode gastar" |
 | — | `shortfall` · `shortfallSubtle` | A falta do mês; resolve pelo `ShortfallStyle` em vigor |
 
 Regras:
@@ -85,14 +85,22 @@ Escalas curtas de propósito: com poucos degraus, duas telas feitas em dias dife
 | `slowest` | 600 ms | O teto: nada passa disso |
 | `stagger` | 35 ms | Diferença entre itens de uma cascata |
 | `reducedFade` | 120 ms | A fusão que substitui tudo no nível reduzido |
+| `wordStep` | 45 ms | O passo entre palavras de uma resposta que vai aparecendo |
+| `streamCap` | 4 s | O máximo para uma resposta aparecer inteira, qualquer que seja o tamanho (abaixo dos 5 s da WCAG 2.2.2) |
 | `CajuiCurves.spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Toque: ultrapassa e volta |
 | `enter` · `exit` · `standard` | curvas de desaceleração, aceleração e padrão | Entrar, sair, mover |
+| `CajuiSprings.slosh` | mola pouco amortecida (razão 0,24) | Água balançando: vai e volta e assenta em ~2 s |
+| `CajuiSprings.level` | ultrapassagem de ~4% | O nível da água subindo ou baixando |
+| `CajuiSprings.tilt` | perto do crítico (razão 0,85) | Cartão seguindo a mão ou o sensor, sem tremer |
+| `CajuiSprings.grow` | ultrapassagem de ~10% | Barra do gráfico crescendo |
 
 O **nível de movimento** (`MotionLevel`) é parte do tema: `full` libera tudo; `lite` mantém mola e corta o decorativo; `reduced` troca todo percurso por uma fusão curta. Quem decide é o `MotionLevelResolver`: primeiro o sistema (movimento reduzido), depois a medição de quadros no aparelho, por último a preferência. Um componente nunca pergunta "posso animar?" por conta própria — pergunta ao tema.
 
 ## Som e toque
 
-`CajuiSound` nomeia cada som pelo que ele **significa** (`saved`, `notice`), como os tokens de cor. Os componentes não tocam som: avisam o `CajuiFeedback` do que aconteceu (`tap`, `toggle`, `open`, `saved`, `notice`, `achievement`), e a implementação em vigor decide som e vibração juntos.
+`CajuiSound` nomeia cada som pelo que ele **significa** (`saved`, `notice`), como os tokens de cor. Os componentes não tocam som: avisam o `CajuiFeedback` do que aconteceu (`tap`, `toggle`, `open`, `saved`, `notice`, `achievement`, `entrySaved`, `undone`), e a implementação em vigor decide som e vibração juntos.
+
+`entrySaved` (semente caindo na cuia) e `undone` (folha que vai e volta) são confirmações com o pulso leve de tecla: lançar se repete o dia inteiro, e um tranco médio a cada lançamento cansaria. Como todos, são sintetizados por `tool/sound/build_sounds.py`; a receita de cada arquivo está em `packages/design_system/assets/CREDITS.md`.
 
 - O som **nasce desligado** (`SoundSettings`), com três famílias que ligam separadas: toques, confirmações, ambiente.
 - A velocidade varia até ±3% a cada disparo: o mesmo som nunca toca igual duas vezes seguidas.

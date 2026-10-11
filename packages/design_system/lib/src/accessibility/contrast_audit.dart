@@ -1,5 +1,6 @@
 import 'package:design_system/src/accessibility/contrast_pair.dart';
 import 'package:design_system/src/accessibility/contrast_requirement.dart';
+import 'package:design_system/src/tokens/semantic/brand_colors.dart';
 import 'package:design_system/src/tokens/semantic/cajui_colors.dart';
 import 'package:flutter/painting.dart';
 
@@ -16,6 +17,7 @@ abstract final class ContrastAudit {
     ..._intents(colors),
     ..._componentEdges(colors),
     ..._dataMarks(colors),
+    ..._creditCard(colors),
   ];
 
   static Map<String, Color> _surfaces(CajuiColors c) => {
@@ -120,6 +122,8 @@ abstract final class ContrastAudit {
       'data.variable': c.data.variable,
       'data.debt': c.data.debt,
       'data.voucher': c.data.voucher,
+      // A água do pote, contra o fundo do próprio pote (o trilho).
+      'data.water': c.data.water,
       'brand.accent': c.brand.accent,
     },
     {
@@ -128,6 +132,35 @@ abstract final class ContrastAudit {
       'data.track': c.data.track,
     },
     ContrastRequirement.largeTextOrComponent,
+  );
+
+  /// O cartão em 3D, no ponto em que o brilho está mais forte: na frente, o
+  /// texto sobre o gradiente de ação; no verso, os textos sobre a superfície
+  /// de cartão.
+  static List<ContrastPair> _creditCard(CajuiColors c) => [
+    ..._cross(
+      {'text.onAction': c.text.onAction},
+      {
+        'action.primary + brand.sheen': _lit(c, c.action.primary),
+        'action.primaryPressed + brand.sheen': _lit(c, c.action.primaryPressed),
+      },
+      ContrastRequirement.text,
+    ),
+    ..._cross(
+      {
+        'text.primary': c.text.primary,
+        'text.muted': c.text.muted,
+        'intent.positive': c.intent.positive,
+      },
+      {'surface.elevated + brand.sheen': _lit(c, c.surface.elevated)},
+      ContrastRequirement.text,
+    ),
+  ];
+
+  /// [base] com o brilho no ponto mais forte por cima.
+  static Color _lit(CajuiColors c, Color base) => Color.alphaBlend(
+    c.brand.sheen.withValues(alpha: BrandColors.sheenOverText),
+    base,
   );
 
   static List<ContrastPair> _cross(

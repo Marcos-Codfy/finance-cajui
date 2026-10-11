@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/alive/alive_page.dart';
 import 'package:gallery/src/pages/components/action_page.dart';
 import 'package:gallery/src/pages/components/content_page.dart';
 import 'package:gallery/src/pages/components/field_page.dart';
@@ -133,6 +134,7 @@ class _GalleryShellState extends State<GalleryShell> {
           GalleryDestination.content => const ContentPage(),
           GalleryDestination.fields => const FieldPage(),
           GalleryDestination.states => const StatePage(),
+          GalleryDestination.alive => const AlivePage(),
           GalleryDestination.dashboard => const DashboardPage(),
           GalleryDestination.capture => const CapturePage(),
           GalleryDestination.statement => const StatementPage(),
