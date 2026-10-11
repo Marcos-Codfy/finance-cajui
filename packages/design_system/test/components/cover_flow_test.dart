@@ -257,4 +257,20 @@ void main() {
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     });
   });
+
+  testWidgets('o toque no centro do segundo ponto leva à página 2, mesmo com '
+      'a pílula da primeira alargando a fileira', (tester) async {
+    final pages = <int>[];
+    await tester.pumpWidget(_flow(onPage: pages.add));
+    await tester.pumpAndSettle();
+    final box = tester.getRect(find.byType(CoverFlowIndicator));
+    // 4 pontos: 3 de 6 px, a pílula de 20 px e 3 vãos de 8 px = 62 px. Na
+    // primeira página, o segundo ponto começa 28 px depois do início.
+    final start = box.left + (box.width - 62) / 2;
+
+    await tester.tapAt(Offset(start + 28 + 3, box.center.dy));
+    await tester.pumpAndSettle();
+
+    expect(pages, [1]);
+  });
 }
