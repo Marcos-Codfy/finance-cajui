@@ -1,5 +1,6 @@
 import 'package:design_system/src/feedback/cajui_feedback.dart';
 import 'package:design_system/src/feedback/cajui_feedback_scope.dart';
+import 'package:design_system/src/motion/cajui_hero_scope.dart';
 import 'package:design_system/src/motion/motion_level.dart';
 import 'package:design_system/src/motion/motion_level_resolver.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
@@ -12,6 +13,9 @@ import 'package:flutter/widgets.dart';
 ///
 /// Existe para o app não repetir esta montagem — e, sobretudo, para não
 /// precisar escolher cor de fundo nem estilo de texto por conta própria.
+///
+/// Traz também o `CajuiHeroScope`: posta no `builder` do app, acima do
+/// navegador, a superfície é o lugar certo para o número voar entre telas.
 class CajuiAppSurface extends StatelessWidget {
   /// Monta o chão com o tema [theme] e o retorno [feedback].
   const new({
@@ -69,7 +73,7 @@ class CajuiAppSurface extends StatelessWidget {
             style: theme.typography.body.copyWith(
               color: theme.colors.text.primary,
             ),
-            child: child,
+            child: CajuiHeroScope(child: child),
           ),
         ),
       ),
