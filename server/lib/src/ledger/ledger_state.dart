@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
+import 'package:server/src/ledger/catalog_state.dart';
 
 /// As categorias e os lançamentos, reconstruídos a partir dos eventos.
 ///
@@ -54,8 +55,7 @@ final class LedgerState {
   /// o assistente respondia com um número que o aparelho já sabia errado.
   static const entryReversed = 'entry.reversed';
 
-  final Map<String, Category> _categories = {};
-  final Map<String, CreditCard> _cards = {};
+  final CatalogState _catalog = CatalogState();
   final List<Entry> _entries = [];
   final Set<String> _cancelled = {};
   final Map<String, IncomeReceipt> _receipts = {};
@@ -63,12 +63,21 @@ final class LedgerState {
   final Map<String, Reversal> _reversals = {};
   final Map<String, DeviceFact> _facts = {};
   MonthSetup _plan = MonthSetup.empty;
+  int _ledgerSeq = 0;
+
+  /// O `seq` do último evento que mexeu no livro (ADR-024). É o que os
+  /// aparelhos perguntam a cada 20 segundos: mudou, eles descem; não mudou,
+  /// não gastam mais nada. Uso da IA não conta — não muda número nenhum.
+  int get ledgerSeq => _ledgerSeq;
+
+  /// O cadastro com a versão de cada item: categorias e cartões.
+  CatalogState get catalog => _catalog;
 
   /// As categorias, por identificador.
-  Map<String, Category> get categories => Map.unmodifiable(_categories);
+  Map<String, Category> get categories => _catalog.categories;
 
   /// Os cartões cadastrados, por identificador.
-  Map<String, CreditCard> get cards => Map.unmodifiable(_cards);
+  Map<String, CreditCard> get cards => _catalog.cards;
 
   /// Os lançamentos, na ordem em que entraram.
   List<Entry> get entries => List.unmodifiable(_entries);
@@ -154,13 +163,21 @@ final class LedgerState {
   /// Aplica um evento ao estado. Tipo desconhecido é ignorado: um servidor
   /// mais velho consegue subir sobre um registro mais novo.
   void apply(StoredEvent event) {
+    if (!_project(event)) return;
+    // O maior, e não o último: o registro devolve o evento **antigo** quando
+    // a chave se repete, e reaplicá-lo não pode fazer o topo andar para trás.
+    if (event.seq > _ledgerSeq) _ledgerSeq = event.seq;
+  }
+
+  /// Leva o evento à projeção, e diz se ele é do livro. Uso da IA, os
+  /// aparelhos cadastrados do jeito antigo (`device.*`, de antes da
+  /// ADR-020) e tipo que esta versão não conhece passam reto.
+  bool _project(StoredEvent event) {
     switch (event.type) {
       case categoryCreated:
-        final category = categoryFrom(event.payload);
-        _categories[category.id] = category;
+        _catalog.applyCategory(event.payload);
       case cardDefined:
-        final card = CardCodec.decodeCard(event.payload);
-        _cards[card.id] = card;
+        _catalog.applyCard(event.payload);
       case planDefined:
         // O plano mais novo pelo carimbo vence, e não o que chegou por
         // último: dois celulares sincronizam em horas diferentes, e o que
@@ -177,7 +194,10 @@ final class LedgerState {
       case final type when DeviceFact.types.contains(type):
         final id = '${event.payload['id']}';
         _facts.putIfAbsent(id, () => _factOf(event));
+      default:
+        return false;
     }
+    return true;
   }
 
   /// O fato do aparelho como foi gravado: o evento leva o identificador e
@@ -232,15 +252,6 @@ final class LedgerState {
     _entries[at] = entry;
   }
 
-  /// A categoria descrita por [json].
-  static Category categoryFrom(Map<String, Object?> json) => Category(
-    id: json['id']! as String,
-    name: json['name']! as String,
-    block: EntryCodec.named(Block.values, json['block']! as String),
-    groupId: json['groupId']! as String,
-    voucherEligible: json['voucherEligible'] as bool? ?? false,
-  );
-
   /// O evento já foi aceito quando aconteceu; reaplicá-lo não pode falhar por
   /// causa do relógio. Por isso "hoje", aqui, é o dia seguinte ao do evento.
   Entry _replayed(StoredEvent event) {
@@ -257,13 +268,13 @@ final class LedgerState {
   }) {
     return EntryCodec.toEntry(
       request,
-      category: _categories[request.categoryId]!,
+      category: categories[request.categoryId]!,
       today: today,
       // Sem isto, toda compra parcelada é recusada: as datas das parcelas
       // são **recalculadas** a partir do cartão (RN-311), e sem o cartão
       // não há de onde recalcular. O valor da parcela é aceito só depois
       // de conferido pelo codec (BL-063).
-      cardOf: (id) => _cards[id],
+      cardOf: (id) => cards[id],
     );
   }
 

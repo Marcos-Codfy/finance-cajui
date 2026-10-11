@@ -9,7 +9,9 @@ import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/http/cors.dart';
 import 'package:server/src/http/middlewares.dart';
 import 'package:server/src/http/rate_limiter.dart';
+import 'package:server/src/ledger/catalog_routes.dart';
 import 'package:server/src/ledger/fact_routes.dart';
+import 'package:server/src/ledger/head_routes.dart';
 import 'package:server/src/ledger/income_routes.dart';
 import 'package:server/src/ledger/ledger_routes.dart';
 import 'package:server/src/ledger/ledger_state.dart';
@@ -75,6 +77,17 @@ final class App {
   final RateLimiter _limiter;
   final LedgerRoutes _ledger;
 
+  late final HeadRoutes _head = HeadRoutes(
+    store: _ledger.store,
+    state: _ledger.state,
+  );
+
+  late final CatalogRoutes _catalog = CatalogRoutes(
+    store: _ledger.store,
+    state: _ledger.state,
+    clock: _clock,
+  );
+
   late final IncomeRoutes _income = IncomeRoutes(
     store: _ledger.store,
     state: _ledger.state,
@@ -123,6 +136,8 @@ final class App {
       ..get('/health', _health)
       ..mount('/v1/receipts', _receipts.router.call)
       ..mount('/v1/assistant', _assistant.router.call)
+      ..mount('/v1', _head.router.call)
+      ..mount('/v1', _catalog.router.call)
       ..mount('/v1', _income.router.call)
       ..mount('/v1', _facts.router.call)
       ..mount('/v1', _ledger.router.call);
