@@ -36,6 +36,18 @@ enum GalleryDestination {
   /// mês a mês e resposta palavra por palavra.
   alive('Efeitos vivos', GalleryGroup.components),
 
+  /// A rolagem que curva nas bordas como a face de um tambor.
+  depthScroll('Rolagem em profundidade', GalleryGroup.depth),
+
+  /// Os números do mês num carrossel 3D.
+  coverFlow('Carrossel 3D', GalleryGroup.depth),
+
+  /// O travelling de câmera ao abrir a tela.
+  cinematic('Entrada cinematográfica', GalleryGroup.depth),
+
+  /// Os cartões que saem do maço e se empilham ao rolar.
+  wallet('Pilha de carteira', GalleryGroup.depth),
+
   /// O painel, em todos os estados.
   dashboard('Painel', GalleryGroup.screens),
 
