@@ -20,47 +20,6 @@ CreditCard _cardWithLimit(int? cents) => CreditCard.create(
 ).valueOrNull!;
 
 void main() {
-  group('RN-1018 · a semana', () {
-    test('o dia a dia desde segunda, nas duas moedas, contra o limite', () {
-      final week = household(
-        entries: [
-          spend(5000, category: 'transport', on: LocalDate(2026, 10, 19)),
-          spend(
-            8000,
-            id: 'e2',
-            category: 'groceries',
-            on: LocalDate(2026, 10, 20),
-          ),
-          spend(
-            9000,
-            id: 'e3',
-            category: 'transport',
-            on: LocalDate(2026, 10, 18),
-          ),
-          spend(
-            100000,
-            id: 'e4',
-            category: 'rent',
-            on: LocalDate(2026, 10, 19),
-          ),
-        ],
-      ).weekOf(householdToday);
-
-      expect(week.from, LocalDate(2026, 10, 19));
-      expect(week.limit, _brl(505));
-      expect(week.spent, _brl(130));
-      expect(week.left, _brl(375));
-      expect(week.leftPercent, 74);
-    });
-
-    test('a semana que começa no mês anterior conta a partir do dia 1', () {
-      expect(
-        WeekAllowance.startOf(LocalDate(2026, 10, 2)),
-        LocalDate(2026, 10, 1),
-      );
-    });
-  });
-
   group('RN-1020 · o cartão no mês', () {
     test('usado, sobra e os avisos de 50% e 80%, pelos centavos', () {
       CardMonthUsage usage(int cents) => CardMonthUsage.of(

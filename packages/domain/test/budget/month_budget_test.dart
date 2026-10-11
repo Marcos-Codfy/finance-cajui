@@ -23,15 +23,7 @@ void main() {
       expect(month.result, _brl(920));
       expect(month.closes, isTrue);
       expect(month.shortfall, Money.zero);
-      expect(month.weeklyLimit, _brl(505));
       expect(month.spentPercent, 72);
-    });
-
-    test('RN-1015 · o limite da semana vezes quatro é a sobra mais o dia a '
-        'dia', () {
-      final month = household().budgetFor(october);
-
-      expect(month.weeklyLimit * 4, month.result + month.dayToDay);
     });
 
     test('RN-1014 · quando falta: o mês não fecha, e "já está gasto" passa '
@@ -45,7 +37,6 @@ void main() {
       expect(month.result, _brl(-250));
       expect(month.closes, isFalse);
       expect(month.shortfall, _brl(250));
-      expect(month.weeklyLimit, _brl(212.50));
       expect(month.spentPercent, 113);
     });
 
@@ -70,27 +61,6 @@ void main() {
 
       expect(month.voucherCovered, _brl(800));
       expect(month.outOfPocket, _brl(100));
-    });
-
-    test('RN-1015 · o limite da semana nunca é negativo', () {
-      final month = MonthBudget.of(
-        month: october,
-        plan: BudgetPlan.empty,
-        categories: householdCategories,
-        spent: {'rent': _brl(3000)},
-        cashIncome: _brl(1000),
-        voucher: Money.zero,
-        debtInstallments: Money.zero,
-      );
-
-      expect(month.weeklyLimit, Money.zero);
-      expect(month.weeklyVoucher, Money.zero);
-    });
-
-    test('RN-111 · a parte do limite que é vale aparece separada', () {
-      final month = household().budgetFor(october);
-
-      expect(month.weeklyVoucher, _brl(125));
     });
   });
 

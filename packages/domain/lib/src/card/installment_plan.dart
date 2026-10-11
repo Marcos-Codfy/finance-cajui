@@ -10,8 +10,8 @@ import 'package:meta/meta.dart';
 ///
 /// A parcela *k* conta no mês em que vence a fatura que a cobra; a primeira
 /// vem na fatura do ciclo da compra. O parcelamento entra no orçamento como
-/// **compromisso do bloco de dívidas**: não consome o variável nem o limite
-/// da semana em que a compra foi feita (RN-312).
+/// **compromisso do bloco de dívidas**: não consome o variável do mês em que
+/// a compra foi feita (RN-312).
 @immutable
 final class InstallmentPlan {
   /// O parcelamento de [principal] em [count] vezes, para uma compra feita em
