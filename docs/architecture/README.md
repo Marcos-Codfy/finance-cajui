@@ -54,6 +54,7 @@ Arquitetura limpa, organizada por feature, em quatro camadas — `domain`, `appl
 | [020](adr/ADR-020-chave-da-casa.md) | A chave da casa: um segredo só, compilado no APK e digitado uma vez na web; sincronização a cada gravação, sem cadastro de aparelho | aceita · substitui a 008 e parte da 013 |
 | [021](adr/ADR-021-assistente-que-age.md) | O assistente age: ferramentas no lugar do roteiro; resposta em texto livre; Desfazer ao lado do que lançou | aceita · substitui em parte a 010 |
 | [022](adr/ADR-022-a-ia-le-a-foto.md) | A IA lê a foto do comprovante junto do texto do celular; as regras bastam no cupom de mercado; a junção é campo a campo | aceita · substitui em parte a 007 |
+| [023](adr/ADR-023-meu-mes.md) | Meu mês: o modelo da planilha do dono — quatro grupos, "Minhas contas", o maior entre previsto e gasto, dívida pelo calendário, mês a mês calculado | aceita · substitui as faixas e o fechamento manual |
 
 As 16 foram aceitas em 2026-09-20, no checkpoint da Fase 4. Toda ADR nasce como *proposta* e vira *aceita* num checkpoint. Decisão que mudar depois ganha ADR nova, que substitui a antiga — a antiga não é apagada.
 
