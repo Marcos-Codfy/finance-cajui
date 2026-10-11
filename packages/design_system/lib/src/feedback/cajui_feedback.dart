@@ -29,4 +29,7 @@ abstract interface class CajuiFeedback {
 
   /// Algo foi desfeito a pedido de quem usa: a folha.
   void undone();
+
+  /// Um carrossel encaixou numa página nova: a palha roçando.
+  void pageTurned();
 }
