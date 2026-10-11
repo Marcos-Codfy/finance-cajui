@@ -1,3 +1,4 @@
+import 'package:api_contract/src/budget_plan_codec.dart';
 import 'package:api_contract/src/card_codec.dart';
 import 'package:api_contract/src/debt_codec.dart';
 import 'package:api_contract/src/json_reader.dart';
@@ -46,8 +47,15 @@ final class DeviceFact {
   /// O tipo do fato "parcela de dívida paga".
   static const debtInstallmentPaid = 'debt.installment-paid';
 
-  /// O tipo do fato "mês fechado".
+  /// O tipo do fato "mês fechado". Só é lido: o mês a mês agora é
+  /// calculado (ADR-023), e ninguém mais o grava.
   static const monthClosed = 'month.closed';
+
+  /// O tipo do fato "plano da planilha definido" (ADR-023).
+  static const budgetDefined = 'budget.defined';
+
+  /// O tipo do fato "ordem de quitação das dívidas" (RN-1031).
+  static const debtOrdered = 'debt.ordered';
 
   /// Os tipos que o servidor aceita guardar assim, e só eles.
   static const Set<String> types = {
@@ -55,6 +63,8 @@ final class DeviceFact {
     debtDefined,
     debtInstallmentPaid,
     monthClosed,
+    budgetDefined,
+    debtOrdered,
   };
 
   /// O identificador do fato: o mesmo do registro do aparelho que o gravou.
@@ -82,6 +92,10 @@ final class DeviceFact {
         debtDefined => DebtCodec.encodeDebt(DebtCodec.decodeDebt(payload)),
         debtInstallmentPaid => DebtCodec.encodePayment(
           DebtCodec.decodePayment(payload),
+        ),
+        budgetDefined => BudgetPlanCodec.encode(BudgetPlanCodec.read(payload)),
+        debtOrdered => DebtCodec.encodeOrdering(
+          DebtCodec.decodeOrdering(payload),
         ),
         _ => _close(payload),
       };

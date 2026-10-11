@@ -4,6 +4,7 @@
 library;
 
 export 'src/api_error.dart';
+export 'src/budget_plan_codec.dart';
 export 'src/card_codec.dart';
 export 'src/create_entry_request.dart';
 export 'src/debt_codec.dart';
