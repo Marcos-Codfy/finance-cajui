@@ -116,6 +116,12 @@ abstract final class AssistantToolCatalog {
             'enum': ['salario', 'avulsa'],
             'description': 'Salário é a renda do mês; o resto é avulsa.',
           },
+          'salario_id': {
+            'type': 'string',
+            'description':
+                'De quem é o salário: o id de um dos salários do cadastro. '
+                'Mande quando a casa tem mais de um e a pessoa disse de quem.',
+          },
           'data': {
             'type': 'string',
             'description': 'AAAA-MM-DD. Omita para hoje.',

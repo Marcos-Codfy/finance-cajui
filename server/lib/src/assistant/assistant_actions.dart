@@ -3,7 +3,7 @@ import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/assistant/assistant_action.dart';
 import 'package:server/src/assistant/payment_choice.dart';
-import 'package:server/src/assistant/server_finances.dart';
+import 'package:server/src/assistant/salary_choice.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
 import 'package:server/src/assistant/tool_refusal.dart';
@@ -90,13 +90,13 @@ final class AssistantActions {
   /// Registra a renda de [args]. Salário em dinheiro é a renda do mês, e
   /// substitui a esperada no plano (RN-131); o resto é entrada avulsa.
   Future<ToolOutcome> income(Map<String, Object?> args) async {
-    final receipt = _receiptOf(args);
+    final (receipt, salary) = _receiptOf(args);
     await _append(
       id: 'income-${receipt.id}',
       type: LedgerState.incomeReceived,
       payload: IncomeCodec.encode(receipt),
     );
-    final label = _incomeLabel(receipt);
+    final label = _incomeLabel(receipt, salary);
     return ToolOutcome.done(
       {
         'ok': true,
@@ -112,33 +112,31 @@ final class AssistantActions {
     );
   }
 
-  IncomeReceipt _receiptOf(Map<String, Object?> args) {
+  (IncomeReceipt, IncomeSource?) _receiptOf(Map<String, Object?> args) {
     final tender = ToolArgs.text(args, 'moeda') == 'vale'
         ? Tender.mealVoucher
         : Tender.cash;
-    final salary = (ToolArgs.text(args, 'tipo') ?? 'salario') == 'salario';
+    final isSalary = (ToolArgs.text(args, 'tipo') ?? 'salario') == 'salario';
     final amount = Money.fromCents(
       ToolArgs.positiveCents(args, 'valor_centavos'),
     );
     final on = ToolArgs.date(args, 'data') ?? clock.today();
-    return IncomeReceipt(
+    final salary = isSalary && tender == Tender.cash
+        ? SalaryChoice.of(
+            state,
+            amount: amount,
+            on: on,
+            requested: ToolArgs.text(args, 'salario_id'),
+          )
+        : null;
+    final receipt = IncomeReceipt(
       id: _newId('renda'),
-      sourceId: salary && tender == Tender.cash ? _salaryId(amount, on) : null,
+      sourceId: salary?.id,
       tender: tender,
       amount: amount,
       receivedOn: on,
     );
-  }
-
-  /// O salário de quem é: o da planilha com que o valor e o dia se parecem
-  /// (RN-758), ou o primeiro. Com dois salários na casa, "recebi 1.500"
-  /// fica no salário certo, e não no do outro.
-  String _salaryId(Money amount, LocalDate on) {
-    final finances = ServerFinances.of(state);
-    final salaries = finances.planFor(on.budgetMonth).salaries;
-    return finances.salaryLike(amount, on)?.id ??
-        salaries.firstOrNull?.id ??
-        BudgetPlan.firstSalaryId;
+    return (receipt, salary);
   }
 
   /// Troca a categoria do lançamento de [args] (RN-208): uma correção, com
@@ -189,9 +187,9 @@ final class AssistantActions {
     );
   }
 
-  static String _incomeLabel(IncomeReceipt receipt) {
+  static String _incomeLabel(IncomeReceipt receipt, IncomeSource? salary) {
     if (receipt.tender == Tender.mealVoucher) return 'Crédito do vale';
-    return receipt.sourceId == null ? 'Entrada avulsa' : 'Salário';
+    return salary == null ? 'Dinheiro extra' : 'Salário · ${salary.name}';
   }
 
   CreateEntryRequest _requestFor(

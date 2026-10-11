@@ -8,8 +8,9 @@ import 'package:meta/meta.dart';
 /// A renda de um mês, por moeda.
 ///
 /// Para cada fonte ativa vale o **esperado**, até que o recebimento do mês
-/// seja registrado; aí vale o **recebido** (RN-131). Entradas avulsas somam
-/// só no mês em que ocorreram (RN-133). Dinheiro e vale ficam em totais
+/// seja registrado; aí vale o **recebido** (RN-131). Entradas avulsas — e o
+/// recebido de uma fonte que o mês não tem — somam só no mês em que
+/// ocorreram (RN-133). Dinheiro e vale ficam em totais
 /// separados, como tudo no Cajui (RN-111).
 @immutable
 final class MonthIncome {
@@ -22,11 +23,20 @@ final class MonthIncome {
     final ofMonth = receipts
         .where((receipt) => month.contains(receipt.receivedOn))
         .toList();
+    final active = [...sources.where((s) => s.isActiveIn(month))];
+    final known = {for (final source in active) source.id};
     var total = TenderAmounts.zero;
-    for (final source in sources.where((s) => s.isActiveIn(month))) {
+    for (final source in active) {
       total += TenderAmounts.single(source.tender, _amountOf(source, ofMonth));
     }
-    for (final receipt in ofMonth.where((receipt) => receipt.isOneOff)) {
+    // O recebido de uma fonte que o plano do mês não tem conta como entrada
+    // avulsa: o dinheiro entrou de fato. Sem isso, o salário gravado como
+    // "cash-income" num plano sem renda, ou de alguém que saiu da planilha,
+    // sumia do que entra.
+    final extras = ofMonth.where(
+      (receipt) => receipt.isOneOff || !known.contains(receipt.sourceId),
+    );
+    for (final receipt in extras) {
       total += TenderAmounts.single(receipt.tender, receipt.amount);
     }
     return MonthIncome._(month, total);

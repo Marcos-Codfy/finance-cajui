@@ -67,6 +67,17 @@ final class AssistantRoutes {
     'cartoes': [
       for (final card in state.cards.values) {'id': card.id, 'nome': card.name},
     ],
+    // Os salários da planilha, para "recebi o salário da Bia" cair no da
+    // Bia (registrar_renda com salario_id).
+    'salarios': [
+      for (final salary in ServerFinances.of(state).plan.salaries)
+        {
+          'id': salary.id,
+          'nome': salary.name,
+          'esperado_centavos': salary.expectedAmount.cents,
+          'dia': salary.expectedDay,
+        },
+    ],
     'formas_de_pagamento': PaymentChoice.options,
   };
 
