@@ -168,7 +168,7 @@ O final do cartão é lido pelo classificador por regras **antes** da redação 
 
 | ID | Regra | Exemplo ou teste | Origem |
 |---|---|---|---|
-| RN-1091 | A fala que **conta um gasto** — verbo de gasto (gastei, paguei, comprei, lança, anota) e um valor, sem ser pergunta — vira lançamento. Com rede, o ditado na conversa vai direto para a Juju, que lança e mostra o Desfazer (ADR-021). Sem rede, ou com a IA fora do ar, a resposta de falha oferece "Lançar pela conferência": a mesma frase abre a conferência do comprovante, lida pelo leitor do aparelho (RN-744, RN-782), que funciona sem rede (RN-780) | "gastei 40 no mercado no Pix" sem rede → conferência com R$ 40,00 e Pix; "quanto gastei em outubro?" → não oferece | BL-050 · decisão 2026-10-11 |
+| RN-1091 | A fala que **conta um gasto** — verbo de gasto (gastei, paguei, comprei, lança, anota) e um valor, sem ser pergunta — vira lançamento. Com rede, o ditado na conversa vai direto para a Juju, que lança e mostra o Desfazer (ADR-021). Sem rede, ou com a IA fora do ar, a resposta de falha oferece "Lançar pela conferência": a mesma frase abre a conferência do comprovante, lida pelo leitor do aparelho (RN-744, RN-782), que funciona sem rede (RN-780). O valor dito é o número colado a "R$" ou seguido de "reais"; senão, o primeiro que não seja dia, hora ou data. Frase com parcela ("2x", "3 vezes", "parcelado") não tem valor seguro, e a conferência pergunta | "gastei 40 no mercado no Pix" sem rede → conferência com R$ 40,00 e Pix; "quanto gastei em outubro?" → não oferece; "dia 5 paguei 120 de luz" → R$ 120,00; "paguei 2x 50" → sem valor | BL-050 · decisão 2026-10-11 |
 
 ## Notificações do banco
 

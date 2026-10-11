@@ -13,11 +13,12 @@ import '../../support/home_navigation.dart';
 import '../../support/scripted_assistant.dart';
 import '../../support/test_scope.dart';
 
-/// Um reconhecedor que "ouve" sempre a mesma frase.
+/// Um reconhecedor que "ouve" sempre a mesma frase — ou nada, com `null`:
+/// a pessoa desistiu, ou ninguém falou.
 final class _Hears implements SpeechInput {
   const new(this.phrase);
 
-  final String phrase;
+  final String? phrase;
 
   @override
   Future<bool> isAvailable() async => true;
@@ -28,8 +29,9 @@ final class _Hears implements SpeechInput {
 
 Future<ProviderContainer> _talk(
   WidgetTester tester, {
-  required String said,
+  required String? said,
   required ScriptedAssistant juju,
+  String draft = '',
 }) async {
   tester.view.physicalSize = const Size(390, 1800);
   tester.view.devicePixelRatio = 1;
@@ -41,6 +43,10 @@ Future<ProviderContainer> _talk(
     ),
   );
   await settleAfterTap(tester);
+  if (draft.isNotEmpty) {
+    await tester.enterText(find.byType(EditableText).last, draft);
+    await tester.pump();
+  }
   await tester.tap(find.bySemanticsLabel('Ditar a pergunta'));
   await settleAfterTap(tester);
   return ProviderScope.containerOf(tester.element(find.byType(CajuiApp)));
@@ -85,5 +91,15 @@ void main() {
     await _talk(tester, said: 'quanto gastei em outubro?', juju: juju);
 
     expect(find.text('Lançar pela conferência'), findsNothing);
+  });
+
+  testWidgets('BL-050 · ditado cancelado não manda nada, nem o rascunho que '
+      'estava no campo', (tester) async {
+    final juju = ScriptedAssistant([const AssistantAnswered('Certo.')]);
+
+    await _talk(tester, said: null, juju: juju, draft: 'gastei 3');
+
+    expect(juju.asked, isEmpty);
+    expect(find.text('gastei 3'), findsOneWidget);
   });
 }
