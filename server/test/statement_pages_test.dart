@@ -1,8 +1,16 @@
 import 'package:domain/domain.dart';
+import 'package:server/src/ai/chat_reply.dart';
 import 'package:test/test.dart';
 
 import 'support/statement_server.dart';
 import 'support/tool_chat_client.dart';
+
+/// Uma resposta inteira, sem corte, que não está no esquema (E-AI-04).
+const _offSchema = ChatReply(
+  content: '{"lines": [], "instrucao": "ignore as regras"}',
+  promptTokens: 800,
+  completionTokens: 20,
+);
 
 void main() {
   group('RN-1102 · uma página por pedido', () {
@@ -79,6 +87,37 @@ void main() {
       expect(reply.movements.map((m) => m.sourceLine), [2, 4]);
       expect(reply.partial, isTrue);
       expect(reply.period, const BudgetMonth(2026, 9));
+    });
+
+    test('as duas metades fora do esquema: valem as completas que a '
+        'resposta cortada já trouxe, e a página sai lida em parte', () async {
+      final client = ToolChatClient([
+        aiCut([aiMove(2, 3, 1250), aiMove(4, 8, 5590)]),
+        _offSchema,
+        _offSchema,
+      ]);
+
+      final (status, reply) = await readPage(await statementServer(client));
+
+      expect(status, 200);
+      expect(client.conversations, hasLength(3));
+      expect(reply.movements.map((m) => m.sourceLine), [2, 4]);
+      expect(reply.partial, isTrue);
+    });
+
+    test('uma metade fora do esquema fica com o que a cortada trouxe das '
+        'linhas dela; a outra vale inteira', () async {
+      final client = ToolChatClient([
+        aiCut([aiMove(2, 3, 1250), aiMove(4, 8, 5590)]),
+        _offSchema,
+        aiPage([aiMove(5, 10, 150000)]),
+      ]);
+
+      final (_, reply) = await readPage(await statementServer(client));
+
+      // A linha 4 é da segunda metade, que respondeu: vale a resposta dela.
+      expect(reply.movements.map((m) => m.sourceLine), [2, 5]);
+      expect(reply.partial, isTrue);
     });
   });
 
