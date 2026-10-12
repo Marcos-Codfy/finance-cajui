@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/alive/alive_page.dart';
 import 'package:gallery/src/pages/components/action_page.dart';
 import 'package:gallery/src/pages/components/content_page.dart';
+import 'package:gallery/src/pages/components/conversation_page.dart';
 import 'package:gallery/src/pages/components/field_page.dart';
 import 'package:gallery/src/pages/components/state_page.dart';
 import 'package:gallery/src/pages/depth/camera_page.dart';
@@ -37,6 +38,7 @@ Widget galleryPageOf(GalleryDestination destination) => switch (destination) {
   GalleryDestination.content => const ContentPage(),
   GalleryDestination.fields => const FieldPage(),
   GalleryDestination.states => const StatePage(),
+  GalleryDestination.conversation => const ConversationPage(),
   GalleryDestination.alive => const AlivePage(),
   GalleryDestination.depthScroll => const DepthScrollPage(),
   GalleryDestination.coverFlow => const CoverFlowPage(),

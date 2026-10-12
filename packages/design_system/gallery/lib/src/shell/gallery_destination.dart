@@ -32,6 +32,9 @@ enum GalleryDestination {
   /// Aviso, vazio, esqueleto, carregando e ícone-herói.
   states('Estados', GalleryGroup.components),
 
+  /// A fala comum e a fala que pede resposta, com botões ou opções.
+  conversation('Conversa', GalleryGroup.components),
+
   /// Cartão em 3D, número que rola e voa, semente e folha, brilho, mês a
   /// mês e resposta palavra por palavra.
   alive('Efeitos vivos', GalleryGroup.components),
