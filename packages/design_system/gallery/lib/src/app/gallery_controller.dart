@@ -38,11 +38,15 @@ class GalleryController extends ChangeNotifier {
   };
 
   /// Alterna entre o tema claro e o escuro.
-  void toggleBrightness() {
-    _brightness = switch (_brightness) {
-      Brightness.light => Brightness.dark,
-      Brightness.dark => Brightness.light,
-    };
+  void toggleBrightness() => useBrightness(switch (_brightness) {
+    Brightness.light => Brightness.dark,
+    Brightness.dark => Brightness.light,
+  });
+
+  /// Usa o tema [brightness].
+  void useBrightness(Brightness brightness) {
+    if (brightness == _brightness) return;
+    _brightness = brightness;
     notifyListeners();
   }
 

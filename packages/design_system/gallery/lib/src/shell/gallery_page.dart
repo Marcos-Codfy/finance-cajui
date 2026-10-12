@@ -96,7 +96,10 @@ class GalleryPage extends StatelessWidget {
   static String _whereIs(GalleryDestination current) {
     final siblings = GalleryDestination.inGroup(current.group).toList();
     final position = siblings.indexOf(current) + 1;
-    return '${current.group.title} · $position de ${siblings.length}'
-        .toUpperCase();
+    // Grupo de uma página só não precisa de "1 de 1".
+    final where = siblings.length == 1
+        ? current.group.title
+        : '${current.group.title} · $position de ${siblings.length}';
+    return where.toUpperCase();
   }
 }

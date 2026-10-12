@@ -1,41 +1,82 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/app/gallery_location.dart';
+import 'package:gallery/src/app/gallery_scope.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
+import 'package:gallery/src/shell/gallery_masthead.dart';
 import 'package:gallery/src/shell/gallery_nav.dart';
-import 'package:gallery/src/shell/gallery_pager.dart';
-import 'package:gallery/src/shell/gallery_pages.dart';
-import 'package:gallery/src/shell/gallery_toolbar.dart';
+import 'package:gallery/src/shell/gallery_panel.dart';
+import 'package:gallery/src/shell/gallery_settings.dart';
+import 'package:gallery/src/shell/gallery_stage.dart';
+import 'package:gallery/src/shell/gallery_top_bar.dart';
 
-/// A casca da gallery: menu, controles e a página aberta.
+/// Os painéis que se abrem por cima da página.
+enum _Panel { pages, settings }
+
+/// A casca da gallery: menu, ajustes e a página aberta.
 ///
-/// Em tela larga o menu fica ao lado; em tela estreita vira uma fileira de
-/// chips no topo. A gallery roda no navegador e no aparelho, e nos dois
-/// precisa dar para chegar a qualquer página com um toque.
+/// Em tela larga o menu fica ao lado, com os ajustes no pé. Em tela
+/// estreita, o alto diz onde se está e abre o menu e os ajustes em painéis.
+/// Nos dois, o mesmo menu agrupado, e qualquer página fica a dois toques.
 class GalleryShell extends StatefulWidget {
-  /// Cria a casca.
-  const new({super.key});
+  /// Cria a casca com a página de [location] aberta.
+  const new({required this.location, required this.onOpen, super.key});
+
+  /// A página aberta.
+  final GalleryLocation location;
+
+  /// Abre outra página.
+  final GalleryOpen onOpen;
 
   @override
   State<GalleryShell> createState() => _GalleryShellState();
 }
 
 class _GalleryShellState extends State<GalleryShell> {
-  GalleryDestination _selected = GalleryDestination.values.first;
+  _Panel? _panel;
 
   /// A partir desta largura o menu cabe ao lado sem apertar o conteúdo.
   static const double _wideFrom = 840;
   static const double _navWidth = 272;
+  static const double _settingsWidth = 360;
 
-  void _select(GalleryDestination destination) =>
-      setState(() => _selected = destination);
+  GalleryDestination get _page => widget.location.page;
+
+  void _open(GalleryDestination page) {
+    setState(() => _panel = null);
+    widget.onOpen(page);
+  }
+
+  void _show(_Panel panel) => setState(() => _panel = panel);
+
+  void _close() => setState(() => _panel = null);
 
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= _wideFrom;
-    return SafeArea(
-      child: wide ? _wideLayout(context) : _narrowLayout(context),
+    // O nome da aba acompanha a página: com várias abertas, dá para achar.
+    return Title(
+      title: '${_page.title} · Cajui design system',
+      color: CajuiTheme.of(context).colors.action.primary,
+      child: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (wide) _wideLayout(context) else _narrowLayout(),
+            _overlay(context, wide: wide),
+          ],
+        ),
+      ),
     );
   }
+
+  Widget _stage() => GalleryStage(
+    location: widget.location,
+    onOpen: (page, {state}) {
+      setState(() => _panel = null);
+      widget.onOpen(page, state: state);
+    },
+  );
 
   Widget _wideLayout(BuildContext context) {
     return Row(
@@ -44,135 +85,132 @@ class _GalleryShellState extends State<GalleryShell> {
         SizedBox(
           width: _navWidth,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _Masthead(),
+              const GalleryMasthead(),
               Expanded(
-                child: GalleryNav(selected: _selected, onSelect: _select),
+                child: GalleryNav(selected: _page, onSelect: _open),
               ),
-              const Padding(
-                padding: EdgeInsets.all(CajuiSpacing.xxl),
-                child: GalleryToolbar(),
-              ),
+              _SettingsButton(onPressed: () => _show(_Panel.settings)),
             ],
           ),
         ),
         const _Rule(vertical: true),
-        Expanded(child: _page(context)),
+        Expanded(child: _stage()),
       ],
     );
   }
 
-  Widget _narrowLayout(BuildContext context) {
+  Widget _narrowLayout() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _Masthead(),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: CajuiSpacing.xxl),
-          child: GalleryToolbar(),
+        GalleryTopBar(
+          page: _page,
+          onPages: () => _show(_Panel.pages),
+          onSettings: () => _show(_Panel.settings),
         ),
-        _chips(),
         const _Rule(vertical: false),
-        Expanded(child: _page(context)),
+        Expanded(child: _stage()),
       ],
     );
   }
 
-  Widget _chips() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(
-        horizontal: CajuiSpacing.xxl,
-        vertical: CajuiSpacing.md,
-      ),
-      child: Row(
-        spacing: CajuiSpacing.sm,
-        children: [
-          for (final destination in GalleryDestination.values)
-            CajuiChip(
-              label: destination.title,
-              selected: destination == _selected,
-              onSelected: (_) => _select(destination),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// A troca de página é uma passagem, como a troca de tela do app
-  /// (`CameraMove`): a página que sai some na primeira metade, e a nova só
-  /// aparece na segunda. A fusão de antes mostrava as duas, uma através da
-  /// outra — o mesmo defeito que o dono apontou no app.
-  ///
-  /// Cada página leva o seu próprio [GalleryPager]: a que sai continua
-  /// mostrando o rodapé dela enquanto se apaga, sem trocar de texto no meio.
-  Widget _page(BuildContext context) {
+  Widget _overlay(BuildContext context, {required bool wide}) {
     final reduced = CajuiTheme.of(context).motionLevel == MotionLevel.reduced;
     return AnimatedSwitcher(
-      duration: reduced ? CajuiDurations.reducedFade : CajuiDurations.base,
-      transitionBuilder: _handOver,
-      layoutBuilder: _pinnedToTop,
-      child: KeyedSubtree(
-        key: ValueKey(_selected),
-        child: GalleryPager(
-          current: _selected,
-          onSelect: _select,
-          child: galleryPageOf(_selected),
+      duration: reduced ? CajuiDurations.reducedFade : CajuiDurations.fast,
+      child: switch (_panel) {
+        null => const SizedBox.shrink(),
+        _Panel.pages => GalleryPanel(
+          key: const ValueKey(_Panel.pages),
+          title: 'Páginas',
+          fill: true,
+          onClose: _close,
+          child: GalleryNav(selected: _page, onSelect: _open),
         ),
-      ),
+        _Panel.settings => _settings(wide: wide),
+      },
     );
   }
+
+  Widget _settings({required bool wide}) => GalleryPanel(
+    key: const ValueKey(_Panel.settings),
+    title: 'Ajustes',
+    width: wide ? _settingsWidth : null,
+    onClose: _close,
+    child: const SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        CajuiSpacing.xl,
+        0,
+        CajuiSpacing.xl,
+        CajuiSpacing.xl,
+      ),
+      child: GallerySettings(),
+    ),
+  );
 }
 
-/// A que chega anda de 0 a 1; a que sai, de 1 a 0. Com o intervalo na
-/// metade de cima, cada uma só aparece enquanto a outra está apagada.
-Widget _handOver(Widget child, Animation<double> animation) => FadeTransition(
-  opacity: CurvedAnimation(parent: animation, curve: const Interval(0.5, 1)),
-  child: child,
-);
+/// O pé do menu do computador: os ajustes em vigor, numa linha, e o toque
+/// que abre o painel.
+class _SettingsButton extends StatelessWidget {
+  const new({required this.onPressed});
 
-/// Toda página ocupa a área inteira e começa no alto. O arranjo padrão do
-/// `AnimatedSwitcher` centraliza: página mais curta que a janela boiava no
-/// meio, e o título mudava de altura a cada troca.
-Widget _pinnedToTop(Widget? current, List<Widget> previous) => Stack(
-  fit: StackFit.expand,
-  alignment: Alignment.topLeft,
-  children: [...previous, ?current],
-);
+  final VoidCallback onPressed;
 
-class _Masthead extends StatelessWidget {
-  const new();
+  static const _radius = BorderRadius.all(CajuiRadius.md);
 
   @override
   Widget build(BuildContext context) {
-    final theme = CajuiTheme.of(context);
+    final summary = GallerySettings.summaryOf(GalleryScope.of(context));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        CajuiSpacing.xxl,
-        CajuiSpacing.xxl,
-        CajuiSpacing.xxl,
-        CajuiSpacing.md,
+      padding: const EdgeInsets.all(CajuiSpacing.lg),
+      child: CajuiPressable(
+        onPressed: onPressed,
+        radius: _radius,
+        semanticLabel: 'Ajustes: $summary',
+        builder: (context, states) => _face(context, states, summary),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  Widget _face(BuildContext context, Set<WidgetState> states, String summary) {
+    final theme = CajuiTheme.of(context);
+    final hovered = states.contains(WidgetState.hovered);
+    return Container(
+      padding: const EdgeInsets.all(CajuiSpacing.md),
+      decoration: BoxDecoration(
+        color: hovered ? theme.colors.surface.sunken : null,
+        borderRadius: _radius,
+        border: Border.all(color: theme.colors.border.subtle),
+      ),
+      child: Row(
+        spacing: CajuiSpacing.md,
         children: [
-          Text(
-            'Cajui',
-            style: theme.typography.headline.copyWith(
-              color: theme.colors.text.primary,
-            ),
-          ),
-          Text(
-            'Design system · sample navegável',
-            style: theme.typography.caption.copyWith(
-              color: theme.colors.text.faint,
-            ),
-          ),
+          CajuiIcon(CajuiIconData.sliders, color: theme.colors.text.muted),
+          Expanded(child: _words(theme, summary)),
         ],
       ),
     );
   }
+
+  Widget _words(CajuiThemeData theme, String summary) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Ajustes',
+        style: theme.typography.label.copyWith(
+          color: theme.colors.text.primary,
+        ),
+      ),
+      Text(
+        summary,
+        style: theme.typography.caption.copyWith(
+          color: theme.colors.text.faint,
+        ),
+      ),
+    ],
+  );
 }
 
 class _Rule extends StatelessWidget {
