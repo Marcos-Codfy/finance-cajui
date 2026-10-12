@@ -43,7 +43,7 @@ void main() {
 
   testWidgets('cada estado de cada tela abre sem erro', (tester) async {
     await openGallery(tester);
-    final screens = GalleryDestination.inGroup(GalleryGroup.screens);
+    final screens = GalleryDestination.inGroup(GalleryGroup.app);
 
     for (final destination in screens) {
       await goTo(tester, destination);
@@ -81,14 +81,15 @@ void main() {
     expect(player.played, [CajuiSound.tap]);
   });
 
-  testWidgets('o chip de tema troca o tema da gallery inteira', (tester) async {
+  testWidgets('o ajuste de tema troca o tema da gallery inteira', (
+    tester,
+  ) async {
     await openGallery(tester);
     Brightness brightness() =>
         CajuiTheme.of(tester.element(find.text('Cajui'))).colors.brightness;
 
     expect(brightness(), Brightness.light);
-    await tester.tap(find.text('Tema escuro'));
-    await settle(tester);
+    await useSetting(tester, 'Escuro');
 
     expect(brightness(), Brightness.dark);
   });

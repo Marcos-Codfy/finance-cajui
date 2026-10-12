@@ -5,6 +5,7 @@ import 'package:gallery/src/app/gallery_app.dart';
 import 'package:gallery/src/pages/screens/shared/phone_frame.dart';
 import 'package:gallery/src/pages/screens/shared/screen_state_page.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
+import 'package:gallery/src/shell/gallery_nav.dart';
 
 /// Tocador mudo que anota o que foi pedido: o teste não tem áudio, mas
 /// precisa saber que som cada toque pediu.
@@ -50,11 +51,37 @@ Future<MutePlayer> openGallery(
   return player;
 }
 
-/// Vai até [page] pelo menu.
+/// Vai até [page] pelo menu: o do lado, no computador, ou o que o botão
+/// "Páginas" abre, no celular.
+///
+/// Procura o nome só dentro do menu: o mesmo nome aparece no título da
+/// página e no rodapé de anterior e próxima.
 Future<void> goTo(WidgetTester tester, GalleryDestination page) async {
-  final item = find.text(page.title).first;
+  final pages = find.widgetWithText(CajuiButton, 'Páginas');
+  if (pages.evaluate().isNotEmpty) {
+    await tester.tap(pages);
+    await settle(tester);
+  }
+  final item = find.descendant(
+    of: find.byType(GalleryNav),
+    matching: find.text(page.title),
+  );
   await tester.ensureVisible(item);
   await tester.tap(item);
+  await settle(tester);
+}
+
+/// Abre o painel de ajustes, toca em [choice] e fecha o painel.
+Future<void> useSetting(WidgetTester tester, String choice) async {
+  // "Ajustes:" com dois-pontos: o botão de ajustes do Início, dentro do
+  // aparelho, chama-se só "Ajustes".
+  await tester.tap(find.bySemanticsLabel(RegExp('^Ajustes:')).first);
+  await settle(tester);
+  final chip = find.widgetWithText(CajuiChip, choice);
+  await tester.ensureVisible(chip);
+  await tester.tap(chip);
+  await settle(tester);
+  await tester.tap(find.bySemanticsLabel('Fechar Ajustes'));
   await settle(tester);
 }
 

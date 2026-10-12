@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gallery/src/app/gallery_app.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
 
+import 'support/gallery_harness.dart' show goTo, useSetting;
+
 /// Tocador mudo que anota o que foi pedido.
 class _MutePlayer implements SoundPlayer {
   final List<CajuiSound> played = [];
@@ -34,8 +36,7 @@ Future<_MutePlayer> _openAlive(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(GalleryApp(player: player));
-  await tester.tap(find.text(GalleryDestination.alive.title).first);
-  await _settle(tester);
+  await goTo(tester, GalleryDestination.alive);
   return player;
 }
 
@@ -52,8 +53,7 @@ void main() {
     tester,
   ) async {
     final player = await _openAlive(tester);
-    await tester.tap(find.text('Som'));
-    await _settle(tester);
+    await useSetting(tester, 'Som nas interações');
     // Ligar o som já toca a chave subindo; o que interessa vem depois.
     player.played.clear();
 

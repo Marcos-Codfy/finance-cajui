@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gallery/src/app/gallery_app.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
+import 'package:gallery/src/shell/gallery_nav.dart';
 
 /// Tocador mudo: o teste não tem dispositivo de áudio.
 class _MutePlayer implements SoundPlayer {
@@ -24,9 +25,14 @@ Future<void> _open(WidgetTester tester, GalleryDestination page) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(GalleryApp(player: _MutePlayer()));
-  final chip = find.text(page.title).first;
-  await tester.ensureVisible(chip);
-  await tester.tap(chip);
+  await tester.tap(find.widgetWithText(CajuiButton, 'Páginas'));
+  await tester.pumpAndSettle();
+  final item = find.descendant(
+    of: find.byType(GalleryNav),
+    matching: find.text(page.title),
+  );
+  await tester.ensureVisible(item);
+  await tester.tap(item);
   await tester.pumpAndSettle();
 }
 
