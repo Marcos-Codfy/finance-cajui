@@ -52,7 +52,7 @@ abstract final class ColorRoles {
   static ColorRoleGroup _action(CajuiColors c) => (
     title: 'Ação',
     note:
-        'Mudar `action.primary` muda todos os botões principais do app, '
+        'Mudar action.primary muda todos os botões principais do app, '
         'num lugar só.',
     roles: {
       'action.primary': c.action.primary,
@@ -115,7 +115,7 @@ abstract final class ColorRoles {
     title: 'Falta do mês',
     note:
         'Um papel só, com duas versões em avaliação. O componente pede '
-        '`colors.shortfall` e não sabe qual está em vigor.',
+        'colors.shortfall e não sabe qual está em vigor.',
     roles: {'shortfall': c.shortfall, 'shortfallSubtle': c.shortfallSubtle},
   );
 }

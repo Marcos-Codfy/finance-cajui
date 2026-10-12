@@ -164,7 +164,7 @@ class StatementPage extends StatelessWidget {
 
   static ScreenVariant _overpaid() => _variant(
     'Pago a mais',
-    'RN-344: aceito com aviso; a diferença alimenta a busca da RN-332.',
+    'RN-344: aceito com aviso, e a diferença vira busca.',
     [
       _notice(
         CajuiNoticeIntent.info,

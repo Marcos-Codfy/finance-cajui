@@ -20,10 +20,8 @@ class CapturePage extends StatelessWidget {
   /// O papel da tela no app.
   static const lead =
       'O fluxo mais importante do app: um comprovante fotografado ou '
-      'compartilhado de qualquer lugar vira lançamento. Cupom de papel '
-      'entra pela câmera (ADR-017), arquivo entra pelo compartilhamento, '
-      'e daí em diante o caminho é o mesmo. Cada coisa que pode dar '
-      'errado tem o seu próprio texto e a sua própria saída.';
+      'compartilhado de qualquer lugar vira lançamento, e cada coisa que '
+      'pode dar errado tem o seu próprio texto e a sua própria saída.';
 
   /// A página abre em "Confirmando", a tela mais completa do fluxo. O
   /// primeiro estado, "Fotografando", é quase só a câmera, e quem chegava

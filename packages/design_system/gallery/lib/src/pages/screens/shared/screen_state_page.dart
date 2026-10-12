@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/screens/shared/phone_frame.dart';
 import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
+import 'package:gallery/src/pages/screens/shared/variant_note.dart';
 import 'package:gallery/src/pages/screens/shared/variant_slug.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_pager.dart';
@@ -109,7 +110,7 @@ class _ScreenStatePageState extends State<ScreenStatePage> {
             children: [
               _selector(),
               const SizedBox(height: CajuiSpacing.lg),
-              _note(context, '${_index + 1} de $_count · ${_variant.note}'),
+              _note(context, position: '${_index + 1} de $_count · '),
             ],
           ),
         ),
@@ -128,7 +129,7 @@ class _ScreenStatePageState extends State<ScreenStatePage> {
         const SizedBox(height: CajuiSpacing.lg),
         _phone(),
         const SizedBox(height: CajuiSpacing.lg),
-        _note(context, _variant.note),
+        _note(context),
       ],
     );
   }
@@ -208,11 +209,30 @@ class _ScreenStatePageState extends State<ScreenStatePage> {
     );
   }
 
-  Widget _note(BuildContext context, String text) {
+  /// A nota do estado, em frase limpa; a regra da especificação, se houver,
+  /// numa linha à parte e mais apagada (`splitRule`).
+  Widget _note(BuildContext context, {String position = ''}) {
     final theme = CajuiTheme.of(context);
-    return Text(
-      text,
-      style: theme.typography.caption.copyWith(color: theme.colors.text.muted),
+    final note = splitRule(_variant.note);
+    final rule = note.rule;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: CajuiSpacing.xs,
+      children: [
+        Text(
+          '$position${note.text}',
+          style: theme.typography.caption.copyWith(
+            color: theme.colors.text.muted,
+          ),
+        ),
+        if (rule != null)
+          Text(
+            'Na especificação: $rule',
+            style: theme.typography.caption.copyWith(
+              color: theme.colors.text.faint,
+            ),
+          ),
+      ],
     );
   }
 }

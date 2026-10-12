@@ -19,9 +19,8 @@ class ShortfallComparePage extends StatelessWidget {
     ShortfallStyle.calm: (
       'Barro',
       'Tom de terra, o mesmo peso visual da sobra. A ênfase vai para o que '
-          'dá para fazer. Segue a decisão D-UX-22 da pesquisa: falta é fato '
-          'e distância a percorrer, nunca bronca — quem se sente julgado '
-          'para de olhar.',
+          'dá para fazer: falta é fato e distância a percorrer, nunca '
+          'bronca — quem se sente julgado para de olhar.',
     ),
     ShortfallStyle.alarm: (
       'Vermelho',
@@ -36,7 +35,7 @@ class ShortfallComparePage extends StatelessWidget {
       title: 'Cor da falta',
       lead:
           'Uma decisão em aberto: como o Cajui pinta o mês que não fechou. '
-          'Só o token `shortfall` muda entre as duas telas — texto, '
+          'Só o token shortfall muda entre as duas telas — texto, '
           'tamanho e ordem são os mesmos. Vale conferir também no tema '
           'escuro.',
       sections: [
