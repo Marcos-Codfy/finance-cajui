@@ -23,9 +23,11 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-1%2C584-2E7D32)
+![Tests](https://img.shields.io/badge/tests-1%2C594-2E7D32)
 ![Domain coverage](https://img.shields.io/badge/domain-92.8%25-2E7D32)
 ![Cost](https://img.shields.io/badge/fixed%20cost-R%24%200.00-B33A16)
+
+**[See the design system gallery live](https://cajui-teal.vercel.app/gallery/)**
 
 [Specification](docs/spec) · [Decisions (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
 [Security](docs/security) · [Operations](docs/ops/runbook.md) · [Progress](PROGRESS.md)
@@ -61,7 +63,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
   discipline.
 - **Privacy:** what goes to the AI leaves the phone with people's names, tax IDs and account numbers masked. The AI's
   answer is treated as untrusted input: every amount it returns must be written in the document.
-- **Engineering:** clean architecture with the layers locked by a custom checker, 1,584 tests named after the rule
+- **Engineering:** clean architecture with the layers locked by a custom checker, 1,594 tests named after the rule
   they prove, 85% to 95% coverage per package, 30 ADRs and a GitHub Actions pipeline.
 
 ## Visuals
@@ -78,7 +80,13 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 
 <p align="center">
   <img src="docs/media/design-system.png" width="960" alt="The design system gallery in the browser: foundation, components, depth, screens and senses in the menu, and the Conversation page with Juju's message, the user's message and a message with a list of purchases and buttons." />
-  <br /><sub>The design system gallery: every component, state and screen of the app, browsable, with sound and a dark theme.</sub>
+  <br /><sub>The design system gallery: every component, state and screen of the app, browsable, with sound and a dark
+  theme · <a href="https://cajui-teal.vercel.app/gallery/">see it live</a> · <a href="packages/design_system">its README</a></sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/design-system/widget-chegada.webp" width="260" alt="The glass widget on the home screen, over an aurora of light, with the month's leftover and two shortcuts; tapping the number opens the app growing out of the widget, and the Home numbers arrive through the glass." />
+  <br /><sub>The glass widget and the arrival in the app, recorded in the gallery with made-up numbers.</sub>
 </p>
 
 ## Behind the scenes
@@ -146,7 +154,7 @@ device before a step is closed.
   prompt injection.
 
 <details>
-<summary><b>4 more challenges: sync, a custom checker, screen transitions and sound</b></summary>
+<summary><b>5 more challenges: sync, a custom checker, screen transitions, sound and the glass widget</b></summary>
 
 ### 5. Two phones, one ledger
 
@@ -163,7 +171,7 @@ device before a step is closed.
 - **Solution:** a custom checker built on `package:analyzer` ([`tool/code_metrics`](tool/code_metrics)) runs on
   pre-commit and in the pipeline. It rejects imports that point outward across layers, files over 300 lines, functions
   over 30, more than 3 levels of nesting, two public types in one file, and colors written by hand on a screen.
-- **Result:** 994 files checked on every commit, no limit broken. Changing the color of every button is one token.
+- **Result:** 1,007 files checked on every commit, no limit broken. Changing the color of every button is one token.
 
 ### 7. The screen transition that mixed two screens
 
@@ -176,11 +184,27 @@ device before a step is closed.
 
 ### 8. One sound per control family
 
-- **Problem:** the chosen sounds came as MP3, with leading silence and different loudness.
-- **Solution:** they were processed in the browser with the Web Audio API: leading silence cut, a 2 ms fade-in, a
-  cosine fade-out and matched loudness. The origin and license of each file are in
-  [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
-- **Result:** action buttons, cards, keys, switches and chips each have their own sound, as a design system token.
+- **Problem:** the chosen sounds came as MP3, with leading silence and different loudness. On the phone, even at full
+  volume, they almost vanished: a phone speaker barely plays below 300–400 Hz, and the button click had 99% of its
+  energy between 150 and 300 Hz.
+- **Solution:** leading silence cut, a 2 ms fade-in and a cosine fade-out; then a custom mastering tool
+  ([`level_sounds.py`](tool/sound/level_sounds.py)) creates harmonics from the lows (the ear rebuilds the note), cuts
+  the sub-bass and gently saturates each family up to its target, measured the way the phone plays it (ITU-R BS.1770
+  K-weighting). The origin and license of each file are in [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
+- **Result:** action buttons, cards, keys, switches and chips each have their own sound, as a design system token, and
+  a test fails any sound that drops back below what the speaker can play.
+
+### 9. A glass widget that Android won't let you blur
+
+- **Problem:** the home screen widget should look like glass, but an Android widget is drawn by another process
+  (`RemoteViews`): no wallpaper blur, no shader, no animation of its own.
+- **Solution:** the aurora is only diffuse light, in layers of radial gradients, and the glass is a translucent veil
+  with a rim of light: it looks frosted because what is behind it has no edges anymore. The widget's root is marked as
+  `@android:id/background`, so Android 12+ opens the app growing out of it. In the app, the `widget` route plays the
+  arrival ([`CajuiGlassArrival`](packages/design_system/lib/src/motion/cajui_glass_arrival.dart)): the Home numbers
+  come through the glass, with the aurora lit behind them.
+- **Result:** the same composition exists as design system components (`CajuiAurora`, `CajuiGlassPanel`, `CajuiOrb`),
+  and the gallery shows the whole gesture, from the tap on the widget to the arrival.
 
 </details>
 
@@ -194,7 +218,7 @@ device before a step is closed.
 | Server            | Dart + Shelf, compiled to a single executable, on an Oracle VM with Caddy (TLS) and systemd     |
 | Data              | Event log encrypted with AES-256-GCM and chained with SHA-256, daily backup                     |
 | AI                | DeepSeek (`deepseek-flash`) with tools: record, cancel, list, register income, read statements  |
-| Design system     | Own package with tokens, components, 3D motion and sounds; browsable gallery                    |
+| Design system     | Own package with tokens, components, glass, 3D motion and sounds; gallery published on Vercel   |
 | Quality           | `very_good_analysis`, custom checker, per-package coverage floors, secret scanning              |
 | Pipeline          | GitHub Actions, Conventional Commits, Vercel for the web                                        |
 
@@ -275,17 +299,17 @@ statement, [020](docs/architecture/adr/ADR-020-chave-da-casa.md) access, and
 
 | Item              | Status                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Tests             | **1,584**: app 487 · domain 491 · server 222 · design system 207 · contract 93 · gallery 33 · persistence 25 · checker 26 |
+| Tests             | **1,594**: app 489 · domain 491 · server 222 · design system 213 · contract 93 · gallery 35 · persistence 25 · checker 26 |
 | Coverage          | contract 94.7% · domain 92.8% · persistence 91.5% · server 90.7% · design system 87.7% · app 85.1%       |
 | Rule ↔ test       | Every rule has a number (`RN-xxx`) and a test with the same number. A numeric example in the spec becomes a test, to the cent |
 | Texts             | Every error a person reads comes from a catalog of 46 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
 | Voice             | Banned terms ("déficit", "estourou", exclamation marks) are rejected by a test across every sentence in the app |
 | Analyzer          | `very_good_analysis`, zero warnings                                                                       |
-| Custom checker    | 994 files, no limit broken                                                                                |
+| Custom checker    | 1,007 files, no limit broken                                                                                |
 | Accessibility     | Lighthouse 100 on the web; semantics on from the root; the screen reader says who is speaking in the chat |
 
-**By the numbers:** 93 thousand lines of Dart in 991 files (31 thousand of them tests), 2.6 thousand of Kotlin, 420
-business rules, 114 non-functional requirements, 30 ADRs and 103 pull requests.
+**By the numbers:** 95 thousand lines of Dart in 1,009 files (31 thousand of them tests), 2.7 thousand of Kotlin, 420
+business rules, 114 non-functional requirements, 30 ADRs and 107 pull requests.
 
 ## What went wrong
 
@@ -385,7 +409,8 @@ scripts/                  APK, deploy, backup, keys
 - **Server:** every push to `main` builds the executable in the pipeline; `servidor-atualizar.ps1` ships it to the VM,
   installs the systemd service, Caddy and the daily backup, and checks that it answers over the internet with TLS.
   Running it again changes nothing. Step by step in the [runbook](docs/ops/runbook.md).
-- **Web:** Vercel publishes `main`.
+- **Web:** Vercel publishes `main`: the read-only web at the root and the design system gallery at `/gallery/`, both
+  built by [`scripts/web.sh`](scripts/web.sh).
 - **App:** the APK is built and installed over USB, with the household key compiled in.
 
 ## Roadmap
@@ -400,8 +425,8 @@ scripts/                  APK, deploy, backup, keys
 - [x] Due-date reminders, widget, monthly spreadsheet and 3D motion
 - [ ] Check the reading against real statements from each bank
 - [ ] Several files from the same share in a single reading
+- [x] Publish the design system gallery ([live](https://cajui-teal.vercel.app/gallery/))
 - [ ] Read the PDF's text layer, besides the OCR
-- [ ] Publish the design system gallery
 
 ## Credits
 

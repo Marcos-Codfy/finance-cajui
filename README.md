@@ -23,9 +23,11 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-1.584-2E7D32)
+![Testes](https://img.shields.io/badge/testes-1.594-2E7D32)
 ![Cobertura do domínio](https://img.shields.io/badge/domínio-92,8%25-2E7D32)
 ![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
+
+**[Ver a gallery do design system ao vivo](https://cajui-teal.vercel.app/gallery/)**
 
 [Especificação](docs/spec) · [Decisões (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
 [Segurança](docs/security) · [Operação](docs/ops/runbook.md) · [Progresso](PROGRESS.md)
@@ -57,7 +59,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
   não por disciplina.
 - **Privacidade:** o que vai para a IA sai do celular com nome de pessoa, CPF e conta mascarados. A resposta da IA é
   tratada como entrada não confiável: todo valor que ela devolve precisa estar escrito no documento.
-- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.584 testes nomeados pela
+- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.594 testes nomeados pela
   regra que provam, cobertura de 85% a 95% por pacote, 30 ADRs e esteira no GitHub Actions.
 
 ## Visual
@@ -74,7 +76,13 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 
 <p align="center">
   <img src="docs/media/design-system.png" width="960" alt="A gallery do design system no navegador: menu de fundação, componentes, profundidade, telas e sentidos, e a página Conversa com a fala da Juju, a fala de quem usa e uma fala com lista de compras e botões." />
-  <br /><sub>A gallery do design system: cada componente, estado e tela do app, navegável, com som e tema escuro.</sub>
+  <br /><sub>A gallery do design system: cada componente, estado e tela do app, navegável, com som e tema escuro ·
+  <a href="https://cajui-teal.vercel.app/gallery/">ver ao vivo</a> · <a href="packages/design_system">o README dela</a></sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/design-system/widget-chegada.webp" width="260" alt="O widget de vidro na tela inicial, sobre uma aurora de luz, com a sobra do mês e dois atalhos; o toque no número abre o app crescendo de dentro do widget, e os números do Início chegam atravessando o vidro." />
+  <br /><sub>O widget de vidro e a chegada no app, gravados na gallery com números inventados.</sub>
 </p>
 
 ## Bastidores
@@ -142,7 +150,7 @@ antes de fechar o passo.
   maliciosos que tenta injeção de prompt.
 
 <details>
-<summary><b>Mais 4 desafios: sincronização, verificador próprio, troca de tela e som</b></summary>
+<summary><b>Mais 5 desafios: sincronização, verificador próprio, troca de tela, som e o widget de vidro</b></summary>
 
 ### 5. Dois celulares, um livro
 
@@ -160,7 +168,7 @@ antes de fechar o passo.
   roda no pre-commit e na esteira. Ele reprova import de fora para dentro das camadas, arquivo com mais de 300
   linhas, função com mais de 30, mais de 3 níveis de bloco, dois tipos públicos no mesmo arquivo e cor escrita à mão
   numa tela.
-- **Resultado:** 994 arquivos conferidos a cada commit, nenhum limite estourado. Trocar a cor de todos os botões é
+- **Resultado:** 1.007 arquivos conferidos a cada commit, nenhum limite estourado. Trocar a cor de todos os botões é
   mudar um token.
 
 ### 7. A troca de tela que misturava duas telas
@@ -174,11 +182,27 @@ antes de fechar o passo.
 
 ### 8. Um som por família de controle
 
-- **Problema:** os sons escolhidos vinham em MP3, com silêncio no começo e volumes diferentes.
-- **Solução:** o tratamento foi feito no próprio navegador, pela Web Audio API: corte do silêncio, entrada de 2 ms,
-  saída em cosseno e volume igualado. A origem e a licença de cada arquivo estão em
-  [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
-- **Resultado:** botão de ação, cartão, tecla, chave e chip têm cada um o seu som, como token do design system.
+- **Problema:** os sons escolhidos vinham em MP3, com silêncio no começo e volumes diferentes. No celular, mesmo no
+  volume máximo, quase sumiam: o alto-falante de um telefone quase não toca abaixo de 300–400 Hz, e o clique do botão
+  tinha 99% da energia entre 150 e 300 Hz.
+- **Solução:** corte do silêncio, entrada de 2 ms e saída em cosseno; depois, um masterizador próprio
+  ([`level_sounds.py`](tool/sound/level_sounds.py)) gera harmônicos dos graves (o ouvido reconstrói a nota), corta o
+  subgrave e satura de leve até o alvo de cada família, medido como o celular ouve (ponderação K da ITU-R BS.1770). A
+  origem e a licença de cada arquivo estão em [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
+- **Resultado:** botão de ação, cartão, tecla, chave e chip têm cada um o seu som, como token do design system, e um
+  teste reprova o som que voltar a ficar baixo demais para o alto-falante.
+
+### 9. Um widget de vidro que o Android não deixa desfocar
+
+- **Problema:** o widget da tela inicial devia ter cara de vidro, mas um widget Android é desenhado por outro processo
+  (`RemoteViews`): não há desfoque do papel de parede, sombreador nem animação própria.
+- **Solução:** a aurora é só luz difusa, em camadas de gradiente radial, e o vidro é um véu translúcido com borda de
+  luz: parece fosco porque o que está atrás já não tem contorno. A raiz do widget é marcada como
+  `@android:id/background`, e o Android 12+ abre o app crescendo de dentro dele. No app, a rota `widget` toca a
+  chegada ([`CajuiGlassArrival`](packages/design_system/lib/src/motion/cajui_glass_arrival.dart)): os números do
+  Início atravessam o vidro, com a aurora acesa atrás.
+- **Resultado:** a mesma composição existe em componentes do design system (`CajuiAurora`, `CajuiGlassPanel`,
+  `CajuiOrb`), e a gallery mostra o gesto inteiro, do toque no widget à chegada.
 
 </details>
 
@@ -192,7 +216,7 @@ antes de fechar o passo.
 | Servidor          | Dart + Shelf, compilado em executável único, numa VM da Oracle com Caddy (TLS) e systemd               |
 | Dados             | Registro de eventos cifrado com AES-256-GCM e encadeado por SHA-256, backup diário                     |
 | IA                | DeepSeek (`deepseek-flash`) com ferramentas: lançar, cancelar, listar, registrar renda, ler extrato     |
-| Design system     | Pacote próprio com tokens, componentes, movimento 3D e sons; gallery navegável                         |
+| Design system     | Pacote próprio com tokens, componentes, vidro, movimento 3D e sons; gallery publicada na Vercel        |
 | Qualidade         | `very_good_analysis`, verificador próprio, cobertura com piso por pacote, varredura de segredos        |
 | Esteira           | GitHub Actions, Conventional Commits, Vercel para a web                                                |
 
@@ -274,17 +298,17 @@ extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso,
 
 | Item                | Situação                                                                                                  |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Testes              | **1.584**: app 487 · domínio 491 · servidor 222 · design system 207 · contrato 93 · gallery 33 · persistência 25 · verificador 26 |
+| Testes              | **1.594**: app 489 · domínio 491 · servidor 222 · design system 213 · contrato 93 · gallery 35 · persistência 25 · verificador 26 |
 | Cobertura           | contrato 94,7% · domínio 92,8% · persistência 91,5% · servidor 90,7% · design system 87,7% · app 85,1%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
 | Textos              | Todo erro que a pessoa lê vem de um catálogo de 46 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
 | Voz                 | Termos proibidos ("déficit", "estourou", exclamação) são reprovados por teste em todas as frases do app |
 | Analisador          | `very_good_analysis`, zero aviso                                                                          |
-| Verificador próprio | 994 arquivos, nenhum limite estourado                                                                     |
+| Verificador próprio | 1.007 arquivos, nenhum limite estourado                                                                     |
 | Acessibilidade      | Lighthouse 100 na web; semântica ligada desde a raiz; o leitor de tela diz quem fala na conversa         |
 
-**Em números:** 93 mil linhas de Dart em 991 arquivos (31 mil delas de teste), 2,6 mil de Kotlin, 420 regras de
-negócio, 114 requisitos não funcionais, 30 ADRs e 103 pull requests.
+**Em números:** 95 mil linhas de Dart em 1.009 arquivos (31 mil delas de teste), 2,7 mil de Kotlin, 420 regras de
+negócio, 114 requisitos não funcionais, 30 ADRs e 107 pull requests.
 
 ## O que deu errado
 
@@ -383,7 +407,8 @@ scripts/                  APK, deploy, backup, chaves
 - **Servidor:** cada push na `main` compila o executável na esteira; `servidor-atualizar.ps1` o leva à VM, instala o
   serviço do systemd, o Caddy e o backup diário, e confere se responde pela internet com TLS. Rodar de novo não muda
   nada. O passo a passo está no [runbook](docs/ops/runbook.md).
-- **Web:** a Vercel publica a `main`.
+- **Web:** a Vercel publica a `main`: a web de consulta na raiz e a gallery do design system em `/gallery/`, as duas
+  compiladas pelo [`scripts/web.sh`](scripts/web.sh).
 - **App:** o APK de uso é gerado e instalado por cabo, com a chave da casa compilada.
 
 ## Roadmap
@@ -398,8 +423,8 @@ scripts/                  APK, deploy, backup, chaves
 - [x] Lembretes de vencimento, widget, planilha do mês e movimento 3D
 - [ ] Conferir a leitura com extratos reais de cada banco
 - [ ] Vários arquivos do mesmo compartilhamento numa leitura só
+- [x] Publicar a gallery do design system ([ao vivo](https://cajui-teal.vercel.app/gallery/))
 - [ ] Ler a camada de texto do PDF, além do OCR
-- [ ] Publicar a gallery do design system
 
 ## Créditos
 

@@ -122,6 +122,21 @@ Todos usam a mesma lente (`CajuiDepth.perspective`) e a mesma geometria: **a sup
 
 O `CajuiScreen` liga os dois efeitos de tela sem montagem à mão: `depth: true` troca a lista pela `CajuiDepthScroll` (com `backdrop`), e `cinematic: true` faz do alto e de cada filho uma tomada, com `replayKey` para rodar de novo. Para tela de painel; em formulário o efeito só atrapalha.
 
+## Vidro
+
+Pedido do dono em 12/10/2026: o widget da tela inicial "mais surrealista, com glassmorfismo", e um efeito ao abrir o app por ele. Na gallery, página **Telas › Widget**, com o gesto inteiro: o widget na tela inicial, o app crescendo de dentro dele e a chegada no Início.
+
+O widget Android é desenhado por outro processo (`RemoteViews`): não desfoca o papel de parede, não tem sombreador nem animação própria. Por isso o vidro **não desfoca nada**, nem na réplica: a aurora já é difusa, e o véu sobre ela parece fosco sem desfoque. Os desenháveis do Android (`home_widget_aurora.xml`, `home_widget_glass.xml`, `home_widget_orb.xml`) usam os mesmos valores dos componentes.
+
+| Componente | Para quê | Regras |
+|---|---|---|
+| `CajuiAurora` | O fundo do widget: a aurora do Cerrado à noite | O céu de `brand.auroraSky` com as três luzes de `brand.aurora` — cajuí no alto à esquerda, capim dourado à direita, vereda embaixo —, todas sem contorno. Sempre noite, nos dois temas |
+| `CajuiGlassPanel` | O vidro sobre a aurora | Véu branco translúcido, borda de luz e o reflexo no alto. `round: true` é o botão de vidro. Texto sobre ele em `brand.sheen` |
+| `CajuiOrb` + `CajuiOrbTone` | A esfera de luz que flutua fora do painel | `fruit` (do dourado ao terracota) ou `vereda`. Enfeite puro: sem nome para o leitor de tela |
+| `CajuiGlassArrival` | A chegada no app pelo widget | Roda quando `arrival` muda para um valor diferente de zero, uma vez. O bloco chega coberto pelo véu, a 0,9 do tamanho, com a aurora acesa atrás; o véu se desfaz, o bloco assenta com `CajuiCurves.settle`, a aurora se apaga e a faixa de luz cruza uma vez, com o pop do card. Cabe em `slowest` (600 ms). A forma da árvore não muda, para o carrossel não perder a página. `lite`: sem aurora nem luz. `reduced`: só o véu se desfaz, em 120 ms |
+
+No app, o toque no saldo ou no fundo do widget abre a rota `widget` (`MainActivity.ACTION_WIDGET`): o app volta ao Início, fecha o que estiver aberto por cima e soma um ao `widgetArrivalProvider`, que a `CajuiGlassArrival` em volta dos números escuta. A raiz do widget é `@android:id/background`, e é isso que deixa o Android 12+ abrir o app crescendo de dentro dele. Os dois atalhos (câmera e galeria) continuam abrindo a captura, sem a chegada.
+
 ## Regras de composição
 
 1. **Uma tela, uma pergunta.** O número-manchete responde a ela; o resto apoia.
