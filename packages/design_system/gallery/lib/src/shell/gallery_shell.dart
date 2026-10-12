@@ -51,9 +51,20 @@ class _GalleryShellState extends State<GalleryShell> {
 
   void _close() => setState(() => _panel = null);
 
+  /// A página trocou por fora do painel — Voltar do navegador, endereço
+  /// editado —: o painel fecha, em vez de ficar aberto sobre outra página.
+  @override
+  void didUpdateWidget(GalleryShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.location.page != widget.location.page) _panel = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= _wideFrom;
+    // Na tela larga o menu já está ao lado: o painel de páginas não faz
+    // sentido e fecha se a janela crescer com ele aberto.
+    final panel = wide && _panel == _Panel.pages ? null : _panel;
     // O nome da aba acompanha a página: com várias abertas, dá para achar.
     return Title(
       title: '${_page.title} · Cajui design system',
@@ -62,8 +73,13 @@ class _GalleryShellState extends State<GalleryShell> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (wide) _wideLayout(context) else _narrowLayout(),
-            _overlay(context, wide: wide),
+            // Com um painel aberto, o Tab fica nele: o que está atrás do véu
+            // não recebe foco.
+            ExcludeFocus(
+              excluding: panel != null,
+              child: wide ? _wideLayout(context) : _narrowLayout(),
+            ),
+            _overlay(context, panel, wide: wide),
           ],
         ),
       ),
@@ -116,11 +132,11 @@ class _GalleryShellState extends State<GalleryShell> {
     );
   }
 
-  Widget _overlay(BuildContext context, {required bool wide}) {
+  Widget _overlay(BuildContext context, _Panel? panel, {required bool wide}) {
     final reduced = CajuiTheme.of(context).motionLevel == MotionLevel.reduced;
     return AnimatedSwitcher(
       duration: reduced ? CajuiDurations.reducedFade : CajuiDurations.fast,
-      child: switch (_panel) {
+      child: switch (panel) {
         null => const SizedBox.shrink(),
         _Panel.pages => GalleryPanel(
           key: const ValueKey(_Panel.pages),

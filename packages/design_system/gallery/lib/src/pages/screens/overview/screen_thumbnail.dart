@@ -84,7 +84,12 @@ class _ScreenThumbnailState extends State<ScreenThumbnail> {
         boxShadow: lifted ? CajuiShadows.floating : CajuiShadows.raised,
       ),
       child: RepaintBoundary(
-        child: IgnorePointer(child: ExcludeSemantics(child: _still(context))),
+        // A tela pequena não recebe toque, leitor de tela nem foco: sem o
+        // ExcludeFocus, o Tab entrava nos botões e campos de cada miniatura,
+        // e o Enter acionava o botão de dentro em vez de abrir a tela.
+        child: IgnorePointer(
+          child: ExcludeSemantics(child: ExcludeFocus(child: _still(context))),
+        ),
       ),
     );
   }

@@ -67,8 +67,10 @@ class _TouchFamiliesState extends State<TouchFamilies> {
     return CajuiCard(
       onPressed: _nothing,
       semanticLabel: 'Sobra de outubro',
+      // Esticado até a largura do exemplar, como os cartões de Valores e
+      // cartões: o tocável não encolhe dentro da caixa.
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             'Sobra de outubro',

@@ -4,7 +4,12 @@ import 'package:gallery/src/shell/gallery_destination.dart';
 import 'package:gallery/src/shell/gallery_group.dart';
 
 /// O menu lateral da gallery: os grupos e, dentro de cada um, as páginas.
-class GalleryNav extends StatelessWidget {
+///
+/// O menu é mais alto que a janela, e a página aberta pode estar abaixo da
+/// dobra — quem chega por um link, pelo "Próxima" ou pelo Voltar não via
+/// onde estava. Por isso ele rola até a página aberta ao aparecer e a cada
+/// troca.
+class GalleryNav extends StatefulWidget {
   /// Cria o menu com a página [selected] marcada.
   const new({required this.selected, required this.onSelect, super.key});
 
@@ -13,6 +18,33 @@ class GalleryNav extends StatelessWidget {
 
   /// Chamado quando outra página é escolhida.
   final ValueChanged<GalleryDestination> onSelect;
+
+  @override
+  State<GalleryNav> createState() => _GalleryNavState();
+}
+
+class _GalleryNavState extends State<GalleryNav> {
+  final GlobalKey _selectedKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _reveal();
+  }
+
+  @override
+  void didUpdateWidget(GalleryNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selected != widget.selected) _reveal();
+  }
+
+  /// Traz a página aberta para a vista, a um terço do alto, depois do
+  /// quadro — antes dele, o item ainda não tem posição.
+  void _reveal() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    final item = _selectedKey.currentContext;
+    if (!mounted || item == null) return;
+    Scrollable.ensureVisible(item, alignment: 0.3);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +67,10 @@ class GalleryNav extends StatelessWidget {
     _GroupTitle(group.title),
     for (final destination in GalleryDestination.inGroup(group))
       _NavItem(
+        key: destination == widget.selected ? _selectedKey : null,
         destination: destination,
-        selected: destination == selected,
-        onPressed: () => onSelect(destination),
+        selected: destination == widget.selected,
+        onPressed: () => widget.onSelect(destination),
       ),
     const SizedBox(height: CajuiSpacing.lg),
   ];
@@ -73,6 +106,7 @@ class _NavItem extends StatelessWidget {
     required this.destination,
     required this.selected,
     required this.onPressed,
+    super.key,
   });
 
   final GalleryDestination destination;

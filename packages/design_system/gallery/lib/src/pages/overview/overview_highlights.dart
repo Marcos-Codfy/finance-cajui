@@ -46,23 +46,33 @@ class OverviewHighlights extends StatelessWidget {
 
   static const double _cardWidth = 296;
 
+  /// Quando não cabem dois lado a lado, cada cartão ocupa a coluna inteira:
+  /// com a largura fixa, no celular sobrava uma faixa vazia à direita.
   @override
   Widget build(BuildContext context) {
     final pager = GalleryPager.maybeOf(context);
-    return Wrap(
-      spacing: CajuiSpacing.lg,
-      runSpacing: CajuiSpacing.lg,
-      children: [
-        for (final (page, title, line) in _all)
-          SizedBox(
-            width: _cardWidth,
-            child: _Highlight(
-              title: title,
-              line: line,
-              onPressed: pager == null ? null : () => pager.onOpen(page),
-            ),
-          ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final room = constraints.maxWidth;
+        final width = room < 2 * _cardWidth + CajuiSpacing.lg
+            ? room
+            : _cardWidth;
+        return Wrap(
+          spacing: CajuiSpacing.lg,
+          runSpacing: CajuiSpacing.lg,
+          children: [
+            for (final (page, title, line) in _all)
+              SizedBox(
+                width: width,
+                child: _Highlight(
+                  title: title,
+                  line: line,
+                  onPressed: pager == null ? null : () => pager.onOpen(page),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
