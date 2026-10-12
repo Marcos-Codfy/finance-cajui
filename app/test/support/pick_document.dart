@@ -5,6 +5,8 @@ import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/receipts/application/read_outcome.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_state.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_view_model.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,9 +72,19 @@ Widget _app(
       }),
     ),
     receiptClassifierProvider.overrideWithValue(ReadsAs(proposal)),
+    // Uma conversa de extrato já aberta: estes testes conferem as telas da
+    // captura — a lista do extrato inclusive (RN-707), que é para onde vai o
+    // segundo extrato quando a Juju já conversa sobre outro (RN-1100). O
+    // caminho pela Juju tem testes próprios.
+    statementTalkProvider.overrideWith(_TalkAlreadyOpen.new),
   ],
   child: const CajuiApp(),
 );
+
+final class _TalkAlreadyOpen extends StatementTalkViewModel {
+  @override
+  StatementTalkState build() => const StatementTalkReading();
+}
 
 /// Abre o app com o plano de exemplo, escolhe um documento da galeria que
 /// a leitura entende como [proposal], e devolve a caixa de entrada e com o
