@@ -17,7 +17,12 @@ class CoverFlowPage extends StatefulWidget {
 }
 
 class _CoverFlowPageState extends State<CoverFlowPage> {
-  static const _titles = ['Sobra do mês', 'O que entra', 'O que sai', 'Vale'];
+  static const _titles = [
+    'Sobra de outubro',
+    'O que entra',
+    'O que sai do bolso',
+    'Vale do mês',
+  ];
 
   int _page = 0;
 

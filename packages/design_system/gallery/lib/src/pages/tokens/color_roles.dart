@@ -97,8 +97,8 @@ abstract final class ColorRoles {
   static ColorRoleGroup _brandAndData(CajuiColors c) => (
     title: 'Marca e dados',
     note:
-        'As cores dos três blocos de despesa e do vale, nos gráficos; a água '
-        'do pote; e a luz que bate no cartão em 3D.',
+        'As cores dos três blocos de despesa e do vale, nos gráficos; o '
+        'trilho dos medidores; e a luz que bate no cartão em 3D.',
     roles: {
       'brand.accent': c.brand.accent,
       'brand.gold': c.brand.gold,

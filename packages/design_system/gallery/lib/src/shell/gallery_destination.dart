@@ -32,8 +32,8 @@ enum GalleryDestination {
   /// Aviso, vazio, esqueleto, carregando e ícone-herói.
   states('Estados', GalleryGroup.components),
 
-  /// Pote de água, cartão em 3D, número que voa, semente e folha, brilho,
-  /// mês a mês e resposta palavra por palavra.
+  /// Cartão em 3D, número que rola e voa, semente e folha, brilho, mês a
+  /// mês e resposta palavra por palavra.
   alive('Efeitos vivos', GalleryGroup.components),
 
   /// A rolagem que curva nas bordas como a face de um tambor.

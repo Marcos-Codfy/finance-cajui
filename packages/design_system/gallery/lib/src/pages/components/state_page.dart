@@ -55,7 +55,7 @@ class _StatePageState extends State<StatePage> {
     _notice(
       CajuiNoticeIntent.positive,
       'Lançamento salvo.',
-      'Já entrou no limite desta semana.',
+      'Já conta no Meu mês de outubro.',
     ),
   ];
 
@@ -152,7 +152,7 @@ class _StatePageState extends State<StatePage> {
       width: _wide,
       child: CajuiEmptyState(
         illustration: const CajuiHeroFruit(size: 120),
-        title: 'Nenhum lançamento em setembro',
+        title: 'Nenhum lançamento em outubro',
         message:
             'Compartilhe um comprovante de qualquer app, ou anote à mão. '
             'Leva uns dez segundos.',

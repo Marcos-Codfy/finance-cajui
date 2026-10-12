@@ -1,55 +1,23 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/screens/home/home_numbers.dart';
 
 /// Um mês de mentira, mas verossímil, para os efeitos de profundidade:
 /// outubro de alguém que recebe salário e um freela, paga aluguel e usa o
 /// vale no mercado.
 ///
-/// As contas fecham: sai o que as contas somam, e a sobra é o que entra
-/// menos o que sai. O vale aparece à parte, como outra moeda, e nunca entra
-/// em total nenhum (RN-111).
+/// É o mesmo mês do Início da gallery ([HomeNumbers]): quem passa de uma
+/// página para a outra vê os mesmos números, como no app. O vale aparece à
+/// parte, como outra moeda, e nunca entra em total nenhum (RN-111).
 abstract final class MonthSample {
-  /// O que entrou: salário de R$ 5.200,00 e um freela de R$ 1.250,00.
-  static const int income = 645000;
+  /// Os quatro números do mês, um por página do carrossel, como no Início.
+  static List<Widget> numbers() => HomeNumbers.closing();
 
-  /// O que saiu no mês.
-  static const int spent = 516550;
-
-  /// O saldo do vale-alimentação.
-  static const int voucher = 74230;
-
-  /// Os quatro números do mês, um por página do carrossel.
-  static List<Widget> numbers() => const [
-    CajuiStatCard(
-      label: 'Sobra do mês',
-      cents: income - spent,
-      tone: CajuiAmountTone.positive,
-      large: true,
-      caption: 'Entrou mais do que saiu. Outubro fecha em 20 dias',
-    ),
-    CajuiStatCard(
-      label: 'O que entra',
-      cents: income,
-      caption: 'Salário e um freela de design',
-    ),
-    CajuiStatCard(
-      label: 'O que sai',
-      cents: spent,
-      caption: 'Contas fixas, mercado e o dia a dia',
-    ),
-    CajuiStatCard(
-      label: 'Vale',
-      cents: voucher,
-      sunken: true,
-      caption: 'Outra moeda: só mercado e restaurante',
-    ),
-  ];
-
-  /// As contas fixas do mês.
+  /// As contas fixas do mês, com o dízimo de 10% do que entra.
   static const List<(String, String, int)> bills = [
-    ('Aluguel', 'vence dia 5', 145000),
-    ('Condomínio', 'vence dia 10', 42000),
-    ('Luz', 'vence dia 12', 18640),
+    ('Aluguel', 'vence dia 5', 110000),
+    ('Dízimo', 'dia 10', 42000),
+    ('Luz', 'vence dia 12', 14230),
     ('Internet', 'vence dia 15', 9990),
     ('Plano do celular', 'vence dia 20', 4990),
   ];
