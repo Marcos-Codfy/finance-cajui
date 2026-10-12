@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/app/gallery_address.dart';
 import 'package:gallery/src/app/gallery_controller.dart';
 import 'package:gallery/src/app/gallery_location.dart';
 import 'package:gallery/src/app/gallery_route_parser.dart';
@@ -32,7 +33,7 @@ class _GalleryAppState extends State<GalleryApp> {
 
   /// O endereço do navegador: de onde vem a página ao abrir, e para onde vai
   /// cada troca de página.
-  final _address = PlatformRouteInformationProvider(
+  final _address = GalleryAddress(
     initialRouteInformation: RouteInformation(
       uri: Uri.parse(
         WidgetsBinding.instance.platformDispatcher.defaultRouteName,

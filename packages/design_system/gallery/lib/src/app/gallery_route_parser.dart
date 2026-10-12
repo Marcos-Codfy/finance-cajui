@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/app/gallery_location.dart';
+import 'package:gallery/src/pages/screens/overview/screen_catalog.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
 
 /// Traduz o endereço em página, e a página em endereço.
@@ -38,9 +39,13 @@ class GalleryRouteParser extends RouteInformationParser<GalleryLocation> {
     final slugs = uri.pathSegments.where((segment) => segment.isNotEmpty);
     final page = slugs.isEmpty ? null : GalleryDestination.bySlug(slugs.first);
     final state = uri.queryParameters[stateKey];
+    final known =
+        page != null &&
+        state != null &&
+        ScreenCatalog.hasState(page.name, state);
     return (
       page: page ?? GalleryDestination.values.first,
-      state: page == null || state == null || state.isEmpty ? null : state,
+      state: known ? state : null,
     );
   }
 }

@@ -18,7 +18,7 @@ class ColorsPage extends StatelessWidget {
       title: 'Cores',
       lead:
           'O app nunca pede um tom; pede um papel. Os valores abaixo são os '
-          'do tema em vigor — troque o tema na barra para ver o outro.',
+          'do tema em vigor — troque o tema em Ajustes para ver o outro.',
       sections: [
         for (final group in ColorRoles.groupsOf(colors))
           GallerySection(

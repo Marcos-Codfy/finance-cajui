@@ -4,6 +4,7 @@ import 'package:gallery/src/pages/screens/closing/closing_page.dart';
 import 'package:gallery/src/pages/screens/debts/debts_page.dart';
 import 'package:gallery/src/pages/screens/home/home_page.dart';
 import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
+import 'package:gallery/src/pages/screens/shared/variant_slug.dart';
 import 'package:gallery/src/pages/screens/statement/statement_page.dart';
 import 'package:gallery/src/pages/screens/widget/home_widget_page.dart';
 
@@ -43,4 +44,16 @@ abstract final class ScreenCatalog {
       variants: AssistantPage.variants,
     ),
   ];
+
+  /// Se a tela [id] tem o estado [state] (`sem-rede`). O endereço só guarda
+  /// estado que existe: nome errado ou página sem estados viram o estado de
+  /// sempre, e o endereço é corrigido em vez de propagar o erro.
+  static bool hasState(String id, String state) {
+    for (final screen in screens) {
+      if (screen.id == id) {
+        return variantIndexOf(screen.variants(), state) != null;
+      }
+    }
+    return false;
+  }
 }
