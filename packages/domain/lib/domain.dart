@@ -124,6 +124,7 @@ export 'src/statements/statement_line_key.dart';
 export 'src/statements/statement_line_keys.dart';
 export 'src/statements/statement_line_resolver.dart';
 export 'src/statements/statement_question.dart';
+export 'src/statements/statement_shape.dart';
 export 'src/statements/statement_words.dart';
 export 'src/statements/transfer_line.dart';
 export 'src/voice/voice_guide.dart';

@@ -210,9 +210,12 @@ abstract final class StatementWords {
     required int total,
     List<int> failed = const [],
     List<int> partial = const [],
+    int beyond = 0,
   }) {
     final notes = [
       if (read < total) 'Li as páginas 1 a $read de $total.',
+      if (beyond > 0)
+        'Passou de 400 movimentações: as últimas $beyond ficaram de fora.',
       ?_pagesNote(failed, 'não deu para ler', 'não deram para ler'),
       ?_pagesNote(partial, 'foi lida em parte', 'foram lidas em parte'),
     ];

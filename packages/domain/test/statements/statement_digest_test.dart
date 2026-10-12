@@ -174,6 +174,10 @@ void main() {
   test('RN-1101 a RN-1103 · as páginas que ficaram de fora são ditas', () {
     expect(StatementWords.pages(read: 7, total: 7), isNull);
     expect(
+      StatementWords.pages(read: 7, total: 7, beyond: 12),
+      'Passou de 400 movimentações: as últimas 12 ficaram de fora.',
+    );
+    expect(
       StatementWords.pages(read: 20, total: 24, failed: [4, 6], partial: [2]),
       'Li as páginas 1 a 20 de 24. As páginas 4 e 6 não deram para ler. '
       'A página 2 foi lida em parte.',
