@@ -17,6 +17,7 @@ class CajuiChatBubble extends StatelessWidget {
     this.fromUser = false,
     this.thinking = false,
     this.streamed = false,
+    this.speaker = 'Cajui',
     super.key,
   });
 
@@ -34,13 +35,16 @@ class CajuiChatBubble extends StatelessWidget {
   /// ao reabrir a conversa, o histórico aparece pronto.
   final bool streamed;
 
+  /// O nome que o leitor de tela diz antes da fala do assistente.
+  final String speaker;
+
   static const double _maxWidth = 290;
 
   /// O que o leitor de tela diz. Na espera não há texto, então o balão diz
   /// o que está acontecendo — senão ele anunciaria um "Cajui:" vazio.
   String get _spokenLabel {
-    if (thinking) return 'Cajui está respondendo';
-    return fromUser ? 'Você: $text' : 'Cajui: $text';
+    if (thinking) return '$speaker está respondendo';
+    return fromUser ? 'Você: $text' : '$speaker: $text';
   }
 
   @override
@@ -73,7 +77,7 @@ class CajuiChatBubble extends StatelessWidget {
     if (thinking) {
       return CajuiLoadingDots(
         color: theme.colors.text.muted,
-        semanticLabel: 'Cajui está respondendo',
+        semanticLabel: '$speaker está respondendo',
       );
     }
     final style = theme.typography.body.copyWith(

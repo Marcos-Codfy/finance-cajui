@@ -28,6 +28,7 @@ export 'src/components/carousel/cajui_cover_flow.dart';
 export 'src/components/chart/cajui_bar_chart.dart';
 export 'src/components/chart/cajui_chart_bar.dart';
 export 'src/components/chat/cajui_chat_bubble.dart';
+export 'src/components/chat/cajui_chat_prompt.dart';
 export 'src/components/chip/cajui_chip.dart';
 export 'src/components/confidence/cajui_confidence_indicator.dart';
 export 'src/components/confidence/cajui_confidence_level.dart';
