@@ -17,6 +17,7 @@ Blocos de centena, para uma área crescer sem renumerar as outras. Número nunca
 | RN-701 a RN-799 | Captura e classificação | [capture-and-classification.md](capture-and-classification.md) |
 | RN-801 a RN-899 | Retorno periódico | [feedback.md](feedback.md) |
 | RN-901 a RN-999 | Assistente e privacidade | [assistant-and-privacy.md](assistant-and-privacy.md) |
+| RN-1100 a RN-1199 | Extrato pela Juju | [statement-conversation.md](statement-conversation.md) |
 
 ## Formato
 

@@ -28,4 +28,13 @@ enum MerchantKind {
 
   /// Posto de combustível.
   fuel,
+
+  /// Pedido por aplicativo de entrega: iFood, Rappi (RN-1108).
+  delivery,
+
+  /// Corrida por aplicativo: Uber, 99 (RN-1108).
+  rideHailing,
+
+  /// Assinatura de vídeo e música: Netflix, Spotify (RN-1108).
+  streaming,
 }
