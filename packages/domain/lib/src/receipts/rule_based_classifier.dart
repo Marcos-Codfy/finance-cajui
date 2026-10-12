@@ -63,7 +63,10 @@ final class RuleBasedClassifier implements ReceiptClassifier {
     String? merchant,
   ) {
     if (merchant == null) return const ProposedField.unread();
-    final learned = request.learnedRules[PossibleDuplicate.normalize(merchant)];
+    final key = PossibleDuplicate.normalize(merchant);
+    // A regra de pessoa vale aqui como qualquer outra: o que ela não pode é
+    // sair do celular (RN-1107), e esta classificação não sai.
+    final learned = request.learnedRules[key] ?? request.personalRules[key];
     if (learned != null && request.categoryById(learned) != null) {
       return ProposedField.resolved(learned, source: FieldSource.learnedRule);
     }

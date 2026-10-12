@@ -110,6 +110,7 @@ export 'src/shared/failure.dart';
 export 'src/shared/result.dart';
 export 'src/statements/learned_answer.dart';
 export 'src/statements/learned_answers.dart';
+export 'src/statements/learned_rules.dart';
 export 'src/statements/line_doubt.dart';
 export 'src/statements/line_treatment.dart';
 export 'src/statements/merchant_brand.dart';
