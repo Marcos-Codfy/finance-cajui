@@ -32,13 +32,31 @@ class StatementFooter extends ConsumerWidget {
           onPressed: ready == 0 ? null : model.launch,
         ),
         const SizedBox(height: CajuiSpacing.sm),
-        CajuiButton(
+        _secondary(model),
+      ],
+    );
+  }
+
+  /// "Descartar" tira o extrato de "Para conferir" sem gravar nada: sem
+  /// ele, um extrato que não tem o que lançar ficava lá para sempre.
+  static Widget _secondary(StatementTalkViewModel model) => Row(
+    children: [
+      Expanded(
+        child: CajuiButton(
           label: 'Conferir depois',
           variant: CajuiButtonVariant.ghost,
           expand: true,
           onPressed: model.close,
         ),
-      ],
-    );
-  }
+      ),
+      Expanded(
+        child: CajuiButton(
+          label: 'Descartar',
+          variant: CajuiButtonVariant.ghost,
+          expand: true,
+          onPressed: model.discard,
+        ),
+      ),
+    ],
+  );
 }

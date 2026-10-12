@@ -5,9 +5,9 @@ import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// As falas da Juju que pedem resposta na conversa do extrato: o bloco a
-/// conferir, a dúvida com as opções, e o fim, com o desfazer (RN-1113,
-/// RN-1114, RN-1119). As palavras vêm do domínio (`StatementWords`).
+/// A fala da Juju que pede resposta no passo atual da conversa do extrato:
+/// o cartão, as parcelas, o bloco, a dúvida, o que já estava e o convite a
+/// lançar (RN-1111 a RN-1115). As palavras vêm do domínio.
 abstract final class StatementPrompts {
   /// A fala do passo em que [talk] está.
   static Widget current(
@@ -15,6 +15,13 @@ abstract final class StatementPrompts {
     StatementTalkViewModel model,
     Map<String, Category> categories,
   ) => switch (StatementStep.of(talk)) {
+    CardStep(:final cards) => _juju(
+      StatementWords.whichCard,
+      options: [for (final card in cards) card.name],
+      onOption: (name) =>
+          model.chooseCard(cards.firstWhere((card) => card.name == name)),
+    ),
+    InstallmentStep() => _installments(talk, model),
     BlockStep(:final block) => _block(talk, model, block, categories),
     QuestionStep(:final question) => _question(
       talk,
@@ -22,11 +29,50 @@ abstract final class StatementPrompts {
       question,
       categories,
     ),
-    ReadyStep() => CajuiChatPrompt(
-      StatementWords.ready(talk.digest.ready.length),
-      speaker: AssistantIdentity.name,
-    ),
+    AlreadyStep() => _already(talk, model),
+    ReadyStep() => _juju(StatementWords.ready(talk.digest.ready.length)),
   };
+
+  static Widget _juju(
+    String text, {
+    List<CajuiPromptRow> rows = const [],
+    List<CajuiPromptAction> actions = const [],
+    List<String> options = const [],
+    ValueChanged<String>? onOption,
+  }) => CajuiChatPrompt(
+    text,
+    speaker: AssistantIdentity.name,
+    rows: rows,
+    actions: actions,
+    options: options,
+    onOption: onOption,
+  );
+
+  /// As parcelas de outros meses, de uma vez (RN-1111).
+  static Widget _installments(
+    StatementTalkOpen talk,
+    StatementTalkViewModel model,
+  ) {
+    const key = 'parcelas';
+    final open = talk.expanded.contains(key);
+    return _juju(
+      StatementWords.installments(talk.digest),
+      rows: open ? _rows(talk, talk.digest.installments) : const [],
+      actions: [
+        (
+          label: 'Lançar',
+          onPressed: () => model.installments(launch: true),
+          primary: true,
+        ),
+        _lines(model, key, open: open),
+        (
+          label: 'Não lançar',
+          onPressed: () => model.installments(launch: false),
+          primary: false,
+        ),
+      ],
+    );
+  }
 
   /// "Mercado — 12 compras… Confere?", com as linhas quando abertas.
   static Widget _block(
@@ -35,17 +81,16 @@ abstract final class StatementPrompts {
     StatementBlock block,
     Map<String, Category> categories,
   ) {
-    final category = block.categoryId;
+    final key = block.categoryId;
     final said = StatementWords.block(
       block,
-      categories[category]?.name ?? 'Outros',
+      categories[key]?.name ?? 'Outros',
       talk.lines,
     );
-    final open = talk.expanded.contains(category);
-    return CajuiChatPrompt(
+    final open = talk.expanded.contains(key);
+    return _juju(
       said,
-      speaker: AssistantIdentity.name,
-      rows: open ? _rows(talk, block) : const [],
+      rows: open ? _rows(talk, block.lines) : const [],
       actions: _blockActions(model, block, said, open: open),
     );
   }
@@ -56,33 +101,60 @@ abstract final class StatementPrompts {
     StatementBlock block,
     String said, {
     required bool open,
-  }) {
-    final category = block.categoryId;
-    return [
-      (
-        label: 'Confere',
-        onPressed: () => model.confirm(category, said),
-        primary: true,
-      ),
-      (
-        label: open ? 'Esconder as linhas' : 'Ver as linhas',
-        onPressed: () => model.toggleLines(category),
-        primary: false,
-      ),
-      (
-        label: 'Corrigir',
-        onPressed: () => model.correct(block, said),
-        primary: false,
-      ),
-    ];
+  }) => [
+    (
+      label: 'Confere',
+      onPressed: () => model.confirm(block, said),
+      primary: true,
+    ),
+    _lines(model, block.categoryId, open: open),
+    (
+      label: 'Corrigir',
+      onPressed: () => model.correct(block, said),
+      primary: false,
+    ),
+  ];
+
+  /// O que já estava no Cajui: confere, ou inclui mesmo assim (RN-1112).
+  static Widget _already(StatementTalkOpen talk, StatementTalkViewModel model) {
+    const key = '';
+    final open = talk.expanded.contains(key);
+    final there = talk.digest.alreadyThere.toList()..sort();
+    return _juju(
+      StatementWords.already(there.length),
+      rows: open ? _rows(talk, there) : const [],
+      actions: [
+        (
+          label: 'Confere',
+          onPressed: () => model.already(include: false),
+          primary: true,
+        ),
+        _lines(model, key, open: open),
+        (
+          label: 'Incluir todas',
+          onPressed: () => model.already(include: true),
+          primary: false,
+        ),
+      ],
+    );
   }
 
-  /// "05/10 · Assaí · R$ 412,30", do maior para o menor.
+  static CajuiPromptAction _lines(
+    StatementTalkViewModel model,
+    String key, {
+    required bool open,
+  }) => (
+    label: open ? 'Esconder as linhas' : 'Ver as linhas',
+    onPressed: () => model.toggleLines(key),
+    primary: false,
+  );
+
+  /// "05/10 · Assaí · R$ 412,30".
   static List<CajuiPromptRow> _rows(
     StatementTalkOpen talk,
-    StatementBlock block,
+    Iterable<int> lines,
   ) => [
-    for (final i in block.lines)
+    for (final i in lines)
       (
         label: StatementWords.row(talk.lines[i]),
         value: StatementWords.amount(talk.lines[i]),
@@ -98,9 +170,8 @@ abstract final class StatementPrompts {
     final index = question.line;
     final said = StatementWords.question(question, talk.lines[index]);
     return switch (question) {
-      KindQuestion(:final options) => CajuiChatPrompt(
+      KindQuestion(:final options) => _juju(
         said,
-        speaker: AssistantIdentity.name,
         options: [
           for (final option in options) StatementWords.treatment(option),
         ],
@@ -130,9 +201,8 @@ abstract final class StatementPrompts {
     final offered = all
         ? categories.values.toList()
         : [for (final id in asked.candidates) ?categories[id]];
-    return CajuiChatPrompt(
+    return _juju(
       asked.said,
-      speaker: AssistantIdentity.name,
       options: [
         for (final category in offered) category.name,
         if (!all) _other,
@@ -152,18 +222,4 @@ abstract final class StatementPrompts {
 
   static const _other = 'Outra';
   static const _skip = 'Não lançar';
-
-  /// O fim: as recusas, quando há, o desfazer e o "Pronto".
-  static Widget done(StatementTalkDone done, StatementTalkViewModel model) {
-    final recorded = done.outcome.entries.length + done.outcome.incomes.length;
-    return CajuiChatPrompt(
-      done.refusals.isEmpty ? 'Fica assim?' : done.refusals.join('\n'),
-      speaker: AssistantIdentity.name,
-      actions: [
-        (label: 'Pronto', onPressed: model.close, primary: true),
-        if (!done.undone && recorded > 0)
-          (label: 'Desfazer tudo', onPressed: model.undo, primary: false),
-      ],
-    );
-  }
 }

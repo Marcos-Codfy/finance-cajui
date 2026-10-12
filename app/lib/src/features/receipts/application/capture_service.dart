@@ -74,6 +74,7 @@ class CaptureService {
   /// do cache, sem pagar de novo. Sem isso, a foto que só a IA conseguiu ler
   /// voltava em branco.
   Future<Capture> reopen(PendingCapture pending) async {
+    if (StatementShape.looksLike(pending.text)) return statementOf(pending);
     final path = pending.filePath;
     if (path == null) return await _classify(pending);
     final read = await ref
@@ -99,6 +100,9 @@ class CaptureService {
     if (unreadable && clean.images.isEmpty) {
       return const CaptureRefused(ErrorCode.capt01);
     }
+    if (StatementShape.looksLike(clean.text)) {
+      return CaptureProposed(statementOf(clean));
+    }
     final capture = await _classify(clean);
     // O celular não leu, e a IA também não achou valor: aí não há o que
     // conferir, e a saída é a mesma de sempre — outra foto, ou digitar.
@@ -107,6 +111,24 @@ class CaptureService {
     }
     return CaptureProposed(capture);
   }
+
+  /// A captura de um extrato reconhecido no celular (RN-1100): não passa
+  /// pela leitura de comprovante, que o cortaria em 8.000 caracteres e o
+  /// mandaria à IA sem a máscara da ADR-030. Vai inteiro para a conversa
+  /// com a Juju, que o lê página a página.
+  static Capture statementOf(PendingCapture source) => Capture(
+    source: source,
+    proposal: const EntryProposal(
+      documentKind: ProposedField.resolved(
+        DocumentKind.statement,
+        source: FieldSource.fixedRule,
+      ),
+      amount: ProposedField.unread(),
+      occurredOn: ProposedField.unread(),
+      category: ProposedField.unread(),
+      paymentKind: ProposedField.unread(),
+    ),
+  );
 
   /// Menos que isso, lido de uma foto, não é comprovante: é ruído de foto
   /// escura.

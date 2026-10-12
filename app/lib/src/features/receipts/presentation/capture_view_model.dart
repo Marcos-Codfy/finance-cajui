@@ -6,12 +6,12 @@ import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/application/capture_outcome.dart';
+import 'package:cajui/src/features/receipts/application/capture_route.dart';
 import 'package:cajui/src/features/receipts/application/capture_service.dart';
 import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
-import 'package:cajui/src/features/statements/presentation/statement_talk_state.dart';
 import 'package:cajui/src/features/statements/presentation/statement_talk_view_model.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,12 +86,10 @@ class CaptureViewModel extends Notifier<CaptureState> {
   }
 
   /// O extrato vai para a conversa da Juju (RN-1100), e não para a tela de
-  /// lista — a não ser que outra conversa de extrato esteja aberta: aí ele
-  /// cai na lista de sempre, em vez de interromper a que está no meio.
-  bool _talks(Capture capture) =>
-      capture.proposal.isStatement &&
-      capture.source.filePath != null &&
-      ref.read(statementTalkProvider) is StatementTalkIdle;
+  /// lista. Com outra conversa aberta, ele espera a vez na fila da Juju.
+  static bool _talks(Capture capture) =>
+      capture.proposal.documentKind.value == DocumentKind.statement ||
+      CaptureRoute.of(capture.proposal) == CaptureRoute.statement;
 
   /// Guarda a captura em "Para conferir" — se o app fechar no meio da
   /// conversa, nada se perde — e entrega o extrato à Juju. A captura só

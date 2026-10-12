@@ -1,6 +1,6 @@
-import 'package:api_contract/api_contract.dart';
-import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/statements/presentation/statement_endings.dart';
 import 'package:cajui/src/features/statements/presentation/statement_prompts.dart';
 import 'package:cajui/src/features/statements/presentation/statement_talk_state.dart';
 import 'package:cajui/src/features/statements/presentation/statement_talk_view_model.dart';
@@ -21,9 +21,10 @@ class StatementThread extends ConsumerWidget {
     final model = ref.read(statementTalkProvider.notifier);
     final categories =
         ref.watch(ledgerProvider).value?.categoriesById ?? const {};
+    final month = ref.read(clockProvider).today().budgetMonth;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: _children(state, model, categories),
+      children: _children(state, model, categories, month),
     );
   }
 
@@ -31,12 +32,11 @@ class StatementThread extends ConsumerWidget {
     StatementTalkState state,
     StatementTalkViewModel model,
     Map<String, Category> categories,
+    BudgetMonth month,
   ) => switch (state) {
     StatementTalkIdle() => const [],
     StatementTalkReading(:final page, :final of) => [
-      _juju(
-        of == 0 ? StatementWords.opening : StatementWords.reading(page, of),
-      ),
+      StatementEndings.reading(page, of, model),
     ],
     StatementTalkOpen() => [
       ..._history(state.history),
@@ -48,18 +48,12 @@ class StatementThread extends ConsumerWidget {
     ],
     StatementTalkDone() => [
       ..._history(state.history),
-      StatementPrompts.done(state, model),
+      StatementEndings.done(state, model),
     ],
-    StatementTalkFailed(:final code) => [_failed(code, model)],
+    StatementTalkFailed() => [
+      StatementEndings.failed(state, model, month: month),
+    ],
   };
-
-  /// A leitura não deu: o texto do catálogo, e fechar.
-  static Widget _failed(ErrorCode code, StatementTalkViewModel model) =>
-      CajuiChatPrompt(
-        ErrorTexts.of(code).message,
-        speaker: AssistantIdentity.name,
-        actions: [(label: 'Fechar', onPressed: model.close, primary: true)],
-      );
 
   static Widget _juju(String text) =>
       CajuiChatBubble(text, speaker: AssistantIdentity.name);

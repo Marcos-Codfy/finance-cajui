@@ -9,7 +9,6 @@ import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:cajui/src/features/receipts/presentation/income_capture_page.dart';
 import 'package:cajui/src/features/receipts/presentation/not_an_expense_page.dart';
-import 'package:cajui/src/features/receipts/presentation/statement_review_page.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,10 +39,12 @@ class CapturePage extends ConsumerWidget {
         ? CaptureRoute.expense
         : CaptureRoute.of(capture.proposal);
     return switch (route) {
-      CaptureRoute.statement => StatementReviewPage(key: key, capture: capture),
       CaptureRoute.income => IncomeCapturePage(key: key, capture: capture),
       CaptureRoute.notAnExpense => NotAnExpensePage(key: key, capture: capture),
-      CaptureRoute.expense => CaptureConfirmPage(
+      // O extrato nunca chega aqui: vai para a conversa com a Juju antes
+      // (RN-1100). Se chegasse, a conferência de despesa com "Descartar" é
+      // a saída segura.
+      CaptureRoute.expense || CaptureRoute.statement => CaptureConfirmPage(
         key: key,
         capture: capture,
         waiting: state.waiting,
