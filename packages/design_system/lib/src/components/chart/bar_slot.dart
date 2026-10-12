@@ -1,5 +1,6 @@
 import 'package:design_system/src/components/chart/cajui_chart_bar.dart';
 import 'package:design_system/src/interaction/cajui_pressable.dart';
+import 'package:design_system/src/interaction/cajui_touch.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_radius.dart';
@@ -58,6 +59,7 @@ class BarSlot extends StatelessWidget {
     final up = bar.cents >= 0;
     return CajuiPressable(
       onPressed: onPressed,
+      touch: CajuiTouch.card,
       semanticLabel: bar.spoken,
       selected: selected,
       radius: const BorderRadius.all(CajuiRadius.sm),

@@ -1,6 +1,7 @@
 import 'package:design_system/src/icons/cajui_icon.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
 import 'package:design_system/src/interaction/cajui_pressable.dart';
+import 'package:design_system/src/interaction/cajui_touch.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_radius.dart';
@@ -47,6 +48,7 @@ class CajuiOptionList<T> extends StatelessWidget {
     final isSelected = option == selected;
     return CajuiPressable(
       onPressed: () => onSelected(option),
+      touch: CajuiTouch.card,
       // Escolhido entre os irmãos, e não "ligado": o leitor de tela anuncia
       // um item de lista selecionado, não uma chave.
       selected: isSelected,

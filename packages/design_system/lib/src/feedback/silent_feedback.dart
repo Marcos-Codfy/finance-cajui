@@ -10,6 +10,12 @@ class SilentFeedback implements CajuiFeedback {
   void tap() {}
 
   @override
+  void cardTapped() {}
+
+  @override
+  void keyTyped() {}
+
+  @override
   void toggle({required bool on}) {}
 
   @override

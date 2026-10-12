@@ -42,6 +42,12 @@ class RecordingFeedback implements CajuiFeedback {
   void tap() => calls.add('tap');
 
   @override
+  void cardTapped() => calls.add('cardTapped');
+
+  @override
+  void keyTyped() => calls.add('keyTyped');
+
+  @override
   void toggle({required bool on}) => calls.add('toggle:$on');
 
   @override

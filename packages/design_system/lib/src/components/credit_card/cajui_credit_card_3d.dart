@@ -6,6 +6,7 @@ import 'package:design_system/src/components/credit_card/card_tilt_motion.dart';
 import 'package:design_system/src/components/credit_card/credit_card_back.dart';
 import 'package:design_system/src/components/credit_card/credit_card_front.dart';
 import 'package:design_system/src/interaction/cajui_pressable.dart';
+import 'package:design_system/src/interaction/cajui_touch.dart';
 import 'package:design_system/src/motion/cajui_tilt.dart';
 import 'package:design_system/src/motion/frame_clock.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
@@ -167,6 +168,7 @@ class _CajuiCreditCard3DState extends State<CajuiCreditCard3D>
       child: LayoutBuilder(
         builder: (context, constraints) => CajuiPressable(
           onPressed: _toggle,
+          touch: CajuiTouch.card,
           semanticLabel: spoken,
           radius: CreditCardFront.radius,
           builder: (context, _) => _card(constraints.maxWidth, usage),

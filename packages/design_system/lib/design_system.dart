@@ -68,6 +68,7 @@ export 'src/icons/cajui_icon_data.dart';
 export 'src/illustrations/cajui_hero_fruit.dart';
 export 'src/illustrations/hero_fruit_painter.dart';
 export 'src/interaction/cajui_pressable.dart';
+export 'src/interaction/cajui_touch.dart';
 export 'src/interaction/focus_ring.dart';
 export 'src/motion/cajui_cinematic_entrance.dart';
 export 'src/motion/cajui_cinematic_shot.dart';
