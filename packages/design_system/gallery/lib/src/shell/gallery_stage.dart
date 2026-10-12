@@ -1,12 +1,8 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/app/gallery_location.dart';
-import 'package:gallery/src/shell/gallery_destination.dart';
 import 'package:gallery/src/shell/gallery_pager.dart';
 import 'package:gallery/src/shell/gallery_pages.dart';
-
-/// Abre uma página e, numa tela do app, o estado dela.
-typedef GalleryOpen = void Function(GalleryDestination page, {String? state});
 
 /// A área da página aberta.
 ///
@@ -37,12 +33,19 @@ class GalleryStage extends StatelessWidget {
         key: ValueKey(location.page),
         child: GalleryPager(
           current: location.page,
-          onSelect: onOpen,
-          child: galleryPageOf(location.page),
+          onOpen: onOpen,
+          onState: (state) => _follow(context, state),
+          child: galleryPageOf(location.page, state: location.state),
         ),
       ),
     );
   }
+
+  /// O endereço acompanha o estado escolhido na tela, trocando o endereço
+  /// em vigor em vez de criar outro: o Voltar do navegador volta para a
+  /// página de antes, e não para cada estado tocado.
+  void _follow(BuildContext context, String state) =>
+      Router.neglect(context, () => onOpen(location.page, state: state));
 }
 
 /// A que chega anda de 0 a 1; a que sai, de 1 a 0. Com o intervalo na

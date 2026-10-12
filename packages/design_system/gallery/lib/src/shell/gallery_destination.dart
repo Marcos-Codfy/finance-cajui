@@ -9,6 +9,9 @@ enum GalleryDestination {
   /// O que é o Cajui, por onde começar e os números.
   overview('Visão geral', GalleryGroup.start, 'visao-geral'),
 
+  /// Todas as telas do app, em todos os estados, lado a lado.
+  screenStates('Estados das telas', GalleryGroup.app, 'estados-das-telas'),
+
   /// O Início, em todos os estados.
   home('Início', GalleryGroup.app, 'inicio'),
 

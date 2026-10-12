@@ -6,3 +6,6 @@ import 'package:gallery/src/shell/gallery_destination.dart';
 /// mandar a alguém o link de uma tela num estado só, e o Voltar do
 /// navegador volta para a página de antes.
 typedef GalleryLocation = ({GalleryDestination page, String? state});
+
+/// Abre uma página e, numa tela do app, o estado dela.
+typedef GalleryOpen = void Function(GalleryDestination page, {String? state});

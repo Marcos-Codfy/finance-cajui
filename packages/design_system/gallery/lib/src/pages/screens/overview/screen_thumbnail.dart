@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/screens/shared/phone_frame.dart';
@@ -48,26 +46,6 @@ class ScreenThumbnail extends StatefulWidget {
 }
 
 class _ScreenThumbnailState extends State<ScreenThumbnail> {
-  /// Os relógios da tela ficam ligados só o bastante para a entrada
-  /// assentar. Desligados desde o começo, a entrada cinematográfica do
-  /// Início nem começaria, e a miniatura mostraria a tela vazia.
-  late final Timer _freeze;
-  bool _frozen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _freeze = Timer(CajuiDurations.slowest, () {
-      if (mounted) setState(() => _frozen = true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _freeze.cancel();
-    super.dispose();
-  }
-
   static bool _lifted(Set<WidgetState> states) =>
       states.contains(WidgetState.hovered) ||
       states.contains(WidgetState.focused);
@@ -111,23 +89,25 @@ class _ScreenThumbnailState extends State<ScreenThumbnail> {
     );
   }
 
-  /// O retrato da tela. No movimento reduzido tudo nasce no quadro final
-  /// — a resposta da Juju inteira, o número já contado, o esqueleto
-  /// parado —, e depois os relógios param: numa vitrine com dezenas de
-  /// telas, nenhuma pode ficar respirando em laço nem gastando quadro.
+  /// O retrato da tela, no movimento reduzido: tudo nasce no quadro final
+  /// — a resposta da Juju inteira, o número já contado — e nada respira
+  /// em laço (o esqueleto e os três pontos ficam parados), então numa
+  /// vitrine com dezenas de telas nenhuma fica gastando quadro.
+  ///
+  /// Os relógios não são desligados: desligá-los por tempo (600 ms)
+  /// congelava a entrada do Início no meio quando o navegador demorava a
+  /// montar a página, e a miniatura saía vazia. A entrada reduzida dura
+  /// 120 ms e para sozinha.
   Widget _still(BuildContext context) {
     final theme = CajuiTheme.of(context);
-    return TickerMode(
-      enabled: !_frozen,
-      // O mesmo número aparece em várias miniaturas; sem isto, um voo
-      // entre telas acharia vários heróis com o mesmo nome.
-      child: HeroMode(
-        enabled: false,
-        child: CajuiTheme(
-          data: theme.withMotionLevel(MotionLevel.reduced),
-          child: FittedBox(
-            child: PhoneFrame(child: Builder(builder: widget.variant.builder)),
-          ),
+    // O mesmo número aparece em várias miniaturas; sem isto, um voo entre
+    // telas acharia vários heróis com o mesmo nome.
+    return HeroMode(
+      enabled: false,
+      child: CajuiTheme(
+        data: theme.withMotionLevel(MotionLevel.reduced),
+        child: FittedBox(
+          child: PhoneFrame(child: Builder(builder: widget.variant.builder)),
         ),
       ),
     );

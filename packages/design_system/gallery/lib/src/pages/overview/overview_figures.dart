@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/screens/overview/screen_catalog.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
 
 /// Os números da porta de entrada, contados do código, e não escritos à mão:
@@ -13,8 +14,13 @@ class OverviewFigures extends StatelessWidget {
     final colors = CajuiTheme.of(context).colors;
     final pairs = ContrastAudit.pairsFor(colors);
     final passing = pairs.where((pair) => pair.passes).length;
+    final states = ScreenCatalog.screens.fold(
+      0,
+      (sum, screen) => sum + screen.variants().length,
+    );
     final figures = [
       ('${GalleryDestination.values.length}', 'páginas navegáveis'),
+      ('$states', 'estados de tela, lado a lado'),
       ('$passing de ${pairs.length}', 'pares de cor no contraste AA'),
       ('${CajuiSound.values.length}', 'sons, cada um com um papel'),
       ('${MotionLevel.values.length}', 'níveis de movimento'),

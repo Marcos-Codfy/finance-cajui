@@ -13,7 +13,7 @@ class OverviewHighlights extends StatelessWidget {
 
   static const List<(GalleryDestination, String, String)> _all = [
     (
-      GalleryDestination.home,
+      GalleryDestination.screenStates,
       'O app em todos os estados',
       'Com dados, carregando, sem rede, primeiro uso — tela por tela.',
     ),
@@ -59,7 +59,7 @@ class OverviewHighlights extends StatelessWidget {
             child: _Highlight(
               title: title,
               line: line,
-              onPressed: pager == null ? null : () => pager.onSelect(page),
+              onPressed: pager == null ? null : () => pager.onOpen(page),
             ),
           ),
       ],

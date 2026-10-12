@@ -2,7 +2,9 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/screens/shared/phone_frame.dart';
 import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
+import 'package:gallery/src/pages/screens/shared/variant_slug.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
+import 'package:gallery/src/shell/gallery_pager.dart';
 
 /// A página de uma tela de estado: o aparelho e o seletor de estados.
 ///
@@ -69,7 +71,13 @@ class _ScreenStatePageState extends State<ScreenStatePage> {
 
   int get _count => widget.variants.length;
 
-  void _show(int index) => setState(() => _index = index);
+  /// Mostra o estado [index] e avisa a casca, para o endereço acompanhar
+  /// (`?estado=sem-rede`): o link copiado abre a tela no mesmo estado.
+  void _show(int index) {
+    setState(() => _index = index);
+    GalleryPager.maybeOf(context)?.onState
+        ?.call(variantSlug(widget.variants[index].label));
+  }
 
   @override
   Widget build(BuildContext context) {

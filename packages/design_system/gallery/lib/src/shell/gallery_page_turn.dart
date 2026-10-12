@@ -40,7 +40,7 @@ class GalleryPageTurn extends StatelessWidget {
       ? const SizedBox.shrink()
       : _Turn(
           destination: destination,
-          onSelect: pager.onSelect,
+          onSelect: pager.onOpen,
           forward: forward,
         );
 }
