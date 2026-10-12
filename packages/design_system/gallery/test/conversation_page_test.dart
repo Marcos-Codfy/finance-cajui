@@ -12,8 +12,8 @@ void main() {
 
     expect(find.byType(CajuiChatBubble), findsWidgets);
     expect(find.byType(CajuiChatPrompt), findsNWidgets(5));
-    expect(find.text('e mais 5'), findsOneWidget);
-    expect(find.text('Desfazer'), findsOneWidget);
+    expect(find.text('Desfazer tudo'), findsOneWidget);
+    expect(find.textContaining('Posto Ipê, Uber e 99'), findsOneWidget);
   });
 
   testWidgets('escolhida a opção, a pergunta perde os chips e a resposta '

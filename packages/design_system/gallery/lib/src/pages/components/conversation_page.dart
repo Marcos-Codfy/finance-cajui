@@ -77,7 +77,7 @@ class _ConversationPageState extends State<ConversationPage> {
       children: [
         _specimen('Com botões', _done()),
         _specimen('Com lista e botões', _transport()),
-        _specimen('Com lista cortada', _installments()),
+        _specimen('Parcelas de outros meses', _installments()),
         _specimen(
           'Já respondida',
           CajuiChatPrompt(StatementSample.market, speaker: _juju),
@@ -98,38 +98,47 @@ class _ConversationPageState extends State<ConversationPage> {
   ];
 
   Widget _done() => CajuiChatPrompt(
-    StatementSample.done(58),
+    StatementSample.settle,
     speaker: _juju,
-    actions: [_action('Desfazer')],
+    actions: [_action('Pronto', primary: true), _action('Desfazer tudo')],
   );
 
-  /// Um bloco com as linhas abertas: o nome encolhe com reticências, o
-  /// valor nunca — é ele que se confere.
+  /// Um bloco com as linhas abertas, do maior valor para o menor, como o
+  /// app ordena: o nome encolhe com reticências, o valor nunca — é ele que
+  /// se confere.
   Widget _transport() => CajuiChatPrompt(
-    'Transporte — 5 compras, ${_brl(9640)}: Uber, 99 e Posto Ipê. Confere?',
+    'Transporte — 5 compras, ${_brl(9640)}: Posto Ipê, Uber e 99. Confere?',
     speaker: _juju,
     rows: _rows(const [
-      ('02/10 · Uber', 1890),
-      ('06/10 · 99', 1240),
       ('11/10 · Posto Ipê', 4000),
+      ('02/10 · Uber', 1890),
       ('17/10 · Uber', 1460),
+      ('06/10 · 99', 1240),
       ('24/10 · 99', 1050),
     ]),
-    actions: [_action('Confere', primary: true), _action('Corrigir')],
+    actions: [
+      _action('Confere', primary: true),
+      _action('Esconder as linhas'),
+      _action('Corrigir'),
+    ],
   );
 
-  /// RN-1111: as parcelas de compras de outros meses, numa pergunta só.
+  /// RN-1111: as parcelas de compras de outros meses, numa pergunta só,
+  /// com as linhas abertas.
   Widget _installments() => CajuiChatPrompt(
-    '8 parcelas de compras de outros meses, ${_brl(64000)} — lanço como '
+    '3 parcelas de compras de outros meses, ${_brl(26990)} — lanço como '
     'gasto deste mês?',
     speaker: _juju,
     rows: _rows(const [
-      ('Magazine Cerrado · 2 de 10', 12000),
-      ('Ótica Visão · 4 de 6', 8500),
-      ('Loja Ipê · 3 de 5', 6490),
+      ('03/10 · Magazine Cerrado', 12000),
+      ('11/10 · Ótica Visão', 8500),
+      ('22/10 · Loja Ipê', 6490),
     ]),
-    more: 'e mais 5',
-    actions: [_action('Lançar', primary: true), _action('Não lançar')],
+    actions: [
+      _action('Lançar', primary: true),
+      _action('Esconder as linhas'),
+      _action('Não lançar'),
+    ],
   );
 
   Widget _answers() {

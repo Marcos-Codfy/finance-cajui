@@ -69,8 +69,8 @@ class AssistantPage extends StatelessWidget {
   static final _launched = ScreenVariant(
     label: 'Extrato lançado',
     note:
-        'RN-1118 e RN-1119: o lote gravado, com o "Desfazer" de tudo num '
-        'toque ao lado.',
+        'RN-1118 e RN-1119: o lote gravado e o "Fica assim?", com "Pronto" '
+        'e o "Desfazer tudo" num toque.',
     builder: (_) => const StatementTalk(launched: true),
   );
 
@@ -180,13 +180,20 @@ class AssistantPage extends StatelessWidget {
   static ScreenVariant _reading() => _variant(
     'Extrato: lendo',
     'RN-1100 a RN-1102: o extrato compartilhado do banco abre aqui, e é '
-        'lido uma página por vez, com a página dita.',
+        'lido uma página por vez, com a página dita e o "Parar" à mão.',
     const [
       ChatBubble(StatementSample.file, fromUser: true),
-      ChatBubble(StatementSample.reading, speaker: _juju),
+      CajuiChatPrompt(
+        StatementSample.reading,
+        speaker: _juju,
+        actions: [(label: 'Parar', onPressed: _stay, primary: false)],
+      ),
     ],
     canAsk: false,
   );
+
+  /// Na vitrine, "Parar" não tem leitura para parar.
+  static void _stay() {}
 }
 
 /// O que ela lançou, com o "Desfazer" ao lado: um toque, sem pergunta.

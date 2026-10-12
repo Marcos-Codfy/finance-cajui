@@ -88,19 +88,25 @@ void main() {
       await openGallery(tester, page: GalleryDestination.assistant);
       await pickVariant(tester, 'Extrato pela Juju');
       expect(
-        find.textContaining('Mercado — 12 compras', skipOffstage: false),
+        find.textContaining('Assaí, Atacadão, Carrefour', skipOffstage: false),
         findsOneWidget,
       );
       expect(find.text('Pode lançar (57)'), findsOneWidget);
 
       await tapVisible(tester, anywhere('Ver as linhas'));
       expect(anywhere('02/10 · Assaí'), findsOneWidget);
-      expect(anywhere('Ver as linhas'), findsNothing);
+      expect(anywhere('Esconder as linhas'), findsOneWidget);
 
       await tapVisible(tester, anywhere('Confere'));
       await tapVisible(tester, chipAnywhere('Alguém da casa'));
       await tapVisible(tester, chipAnywhere('Padaria'));
       expect(find.text('Pode lançar (58)'), findsOneWidget);
+      // O "Confere" do que já estava; o primeiro virou fala de quem usa.
+      await tapVisible(tester, anywhere('Confere').last);
+      expect(
+        anywhere('Tudo conferido: 58 lançamentos prontos para entrar.'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Pode lançar (58)'));
       await settle(tester);
@@ -109,29 +115,43 @@ void main() {
         findsOneWidget,
       );
 
-      await tapVisible(tester, anywhere('Desfazer'));
+      await tapVisible(tester, anywhere('Desfazer tudo'));
       expect(anywhere('Desfiz os 58 lançamentos.'), findsOneWidget);
-      expect(anywhere('Desfazer'), findsNothing);
+      expect(anywhere('Desfazer tudo'), findsNothing);
+      expect(find.text('Pode lançar (58)'), findsOneWidget);
     });
 
-    testWidgets('RN-1115 conferir depois não lança nada', (tester) async {
+    testWidgets('RN-1114 o Pix que vira gasto ganha a pergunta da categoria '
+        'dele', (tester) async {
       await openGallery(tester, page: GalleryDestination.assistant);
       await pickVariant(tester, 'Extrato pela Juju');
 
-      await tester.tap(find.text('Conferir depois'));
-      // A conversa desce até a fala nova depois do quadro: espera assentar.
-      await tester.pumpAndSettle();
+      await tapVisible(tester, anywhere('Confere'));
+      await tapVisible(tester, chipAnywhere('É um gasto'));
+      expect(find.text('Pode lançar (57)'), findsOneWidget);
+      await tapVisible(tester, chipAnywhere('Transporte'));
+      await tapVisible(tester, chipAnywhere('Padaria'));
 
-      expect(
-        find.textContaining('Nada foi lançado', skipOffstage: false),
-        findsOneWidget,
-      );
-      expect(anywhere('Confere'), findsNothing);
-      expect(anywhere('Pode lançar (57)'), findsNothing);
-      expect(anywhere('Conferir depois'), findsNothing);
+      expect(find.text('Pode lançar (59)'), findsOneWidget);
     });
 
-    testWidgets('o extrato lançado abre no fim, com o Desfazer à vista', (
+    testWidgets('RN-1115 conferir depois não lança nada e fecha a conversa', (
+      tester,
+    ) async {
+      await openGallery(tester, page: GalleryDestination.assistant);
+      await pickVariant(tester, 'Extrato pela Juju');
+      await tapVisible(tester, anywhere('Confere'));
+      await tapVisible(tester, chipAnywhere('Alguém da casa'));
+
+      await tester.tap(find.text('Conferir depois'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Lancei', skipOffstage: false), findsNothing);
+      expect(chipAnywhere('Alguém da casa'), findsNothing);
+      expect(find.text('Pode lançar (57)'), findsOneWidget);
+    });
+
+    testWidgets('o extrato lançado abre no fim, com o Desfazer tudo à vista', (
       tester,
     ) async {
       await openGallery(tester, page: GalleryDestination.assistant);
@@ -142,8 +162,9 @@ void main() {
         find.textContaining('Lancei 58 lançamentos.', skipOffstage: false),
         findsOneWidget,
       );
-      // Abriu no fim: o Desfazer está à vista, sem rolar.
-      expect(find.text('Desfazer'), findsOneWidget);
+      // Abriu no fim: o "Desfazer tudo" está à vista, sem rolar.
+      expect(find.text('Desfazer tudo'), findsOneWidget);
+      expect(find.text('Pronto'), findsOneWidget);
     });
   });
 }

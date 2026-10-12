@@ -6,24 +6,15 @@ import 'package:gallery/src/shell/gallery_group.dart';
 
 import 'support/gallery_harness.dart';
 
-/// As frases do limite semanal, que saiu do app em 11/10/2026 a pedido do
-/// dono (BL-103). A gallery é a vitrine do app: mostrar uma tela que não
-/// existe mais é mentir para quem a olha.
-const _weekly = [
-  'por semana',
-  'esta semana',
-  'nesta semana',
-  'limite da semana',
-  'semana partida',
-];
+/// A raiz "semana" como começo de palavra — "semana", "semanal",
+/// "semanas" —, em qualquer caixa. O limite semanal saiu do app em
+/// 11/10/2026 a pedido do dono (BL-103), e a gallery é a vitrine do app:
+/// mostrar uma tela que não existe mais é mentir para quem a olha. Procurar
+/// a raiz, e não frases, prende também o "Limite semanal" que uma lista de
+/// frases deixaria passar.
+final _weekly = RegExp('(^|[^a-zà-ú])semana', caseSensitive: false);
 
-String? _weeklyIn(String text) {
-  final lower = text.toLowerCase();
-  for (final phrase in _weekly) {
-    if (lower.contains(phrase)) return phrase;
-  }
-  return null;
-}
+String? _weeklyIn(String text) => _weekly.firstMatch(text)?.group(0);
 
 void _expectNoWeek(WidgetTester tester, String where) {
   for (final text in treeTexts(tester)) {

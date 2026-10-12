@@ -7,15 +7,14 @@ import 'package:gallery/src/pages/screens/assistant/juju_composer.dart';
 import 'package:gallery/src/pages/screens/assistant/juju_screen.dart';
 import 'package:gallery/src/pages/screens/assistant/statement_sample.dart';
 
-/// Como a conversa do extrato termina.
-enum _End { open, later, launched, undone }
-
 /// O extrato conferido com a Juju, de verdade: os botões respondem, a
 /// conversa anda e o "Pode lançar" conta o que entra (RN-1112 a RN-1119).
 ///
 /// É interativa de propósito. Numa tela parada, cada fala já respondida
 /// apareceria com os botões ainda à vista, o que no app nunca acontece: a
 /// fala respondida perde os botões, e a resposta vira uma fala de quem usa.
+/// A ordem é a do app: o bloco, as dúvidas, o que já estava e o convite a
+/// lançar.
 class StatementTalk extends StatefulWidget {
   /// Cria a conversa; com [launched], ela já abre no fim, com tudo
   /// respondido e lançado.
@@ -32,19 +31,32 @@ class _StatementTalkState extends State<StatementTalk> {
   late bool _checked = widget.launched;
   bool _linesOpen = false;
   late String? _kind = widget.launched ? 'Alguém da casa' : null;
+  String? _pixCategory;
   late String? _category = widget.launched ? 'Padaria' : null;
-  late _End _end = widget.launched ? _End.launched : _End.open;
+  late bool? _included = widget.launched ? false : null;
+  bool _alreadyOpen = false;
+  late bool _launched = widget.launched;
 
-  bool get _open => _end == _End.open;
-
-  /// O que entra no lote: os gastos certos e as entradas, mais a linha cuja
-  /// categoria foi respondida e o Pix, se ele virou gasto.
-  int get _count =>
-      StatementSample.sureCount +
-      (_category == null ? 0 : 1) +
-      (_kind == StatementSample.expense ? 1 : 0);
+  /// O que a Juju disse em lançamentos já desfeitos.
+  final List<String> _history = [];
 
   final _scroll = ScrollController();
+
+  static bool _counts(String? answer) =>
+      answer != null && answer != StatementSample.skip;
+
+  /// O que entra no lote: os gastos certos e as entradas, a linha cuja
+  /// categoria foi respondida, o Pix se ele virou gasto com categoria, e as
+  /// que já estavam, se a pessoa pediu para incluir.
+  int get _count =>
+      StatementSample.sureCount +
+      (_counts(_category) ? 1 : 0) +
+      (_kind == StatementSample.expense && _counts(_pixCategory) ? 1 : 0) +
+      (_included ?? false ? StatementSample.alreadyCount : 0);
+
+  bool get _pixDone =>
+      _kind != null &&
+      (_kind != StatementSample.expense || _pixCategory != null);
 
   @override
   void initState() {
@@ -91,132 +103,190 @@ class _StatementTalkState extends State<StatementTalk> {
     }
   }
 
+  /// No app, "Pronto", "Conferir depois" e "Descartar" fecham a conversa,
+  /// e a Juju volta ao campo de pergunta. Aqui ela recomeça, para poder ser
+  /// vista de novo.
+  void _restart() => _update(() {
+    _checked = _linesOpen = _alreadyOpen = _launched = false;
+    _kind = _pixCategory = _category = null;
+    _included = null;
+    _history.clear();
+  });
+
   @override
   Widget build(BuildContext context) {
     return JujuScreen(
       controller: _scroll,
-      footer: _open ? _launch() : const JujuComposer(),
+      footer: _launched ? const JujuComposer() : _footer(),
       children: [
         const ChatBubble(StatementSample.file, fromUser: true),
         ChatBubble(StatementSample.summary, speaker: JujuScreen.speaker),
         _market(),
         ..._questions(),
-        ..._ending(),
+        ..._closing(),
       ],
     );
   }
 
-  /// O bloco Mercado. "Ver as linhas" e "Corrigir" abrem as compras na
-  /// própria fala; "Confere" passa para as dúvidas.
+  bool get _live => !_launched;
+
+  /// "Ver as linhas" vira "Esconder as linhas" com a lista aberta.
+  CajuiPromptAction _lines(bool open, VoidCallback flip) => (
+    label: open ? 'Esconder as linhas' : 'Ver as linhas',
+    onPressed: () => _update(flip),
+    primary: false,
+  );
+
+  /// O bloco Mercado. "Corrigir" abre as compras na própria fala: é nelas
+  /// que se troca a categoria ou se tira uma compra do lote.
   Widget _market() => CajuiChatPrompt(
     StatementSample.market,
     speaker: JujuScreen.speaker,
     rows: _linesOpen ? StatementSample.marketRows : const [],
-    actions: _open && !_checked ? _marketActions : const [],
+    actions: _live && !_checked
+        ? [
+            (
+              label: 'Confere',
+              onPressed: () => _update(() => _checked = true),
+              primary: true,
+            ),
+            _lines(_linesOpen, () => _linesOpen = !_linesOpen),
+            (
+              label: 'Corrigir',
+              onPressed: () => _update(() => _linesOpen = true),
+              primary: false,
+            ),
+          ]
+        : const [],
   );
 
-  /// Corrigir também abre as linhas: é nelas que se troca a categoria ou se
-  /// tira uma compra do lote. Abertas, "Ver as linhas" sai de cena.
-  List<CajuiPromptAction> get _marketActions => [
-    (
-      label: 'Confere',
-      onPressed: () => _update(() => _checked = true),
-      primary: true,
-    ),
-    if (!_linesOpen)
-      (label: 'Ver as linhas', onPressed: _openLines, primary: false),
-    (label: 'Corrigir', onPressed: _openLines, primary: false),
+  /// As dúvidas, uma de cada vez, depois dos blocos. O Pix que vira gasto
+  /// ganha a pergunta da categoria dele antes da próxima dúvida.
+  List<Widget> _questions() => [
+    if (_checked) ...[
+      const ChatBubble('Confere', fromUser: true),
+      ..._ask(StatementSample.kindQuestion, StatementSample.kinds, _kind, (
+        answer,
+      ) {
+        _kind = answer;
+      }),
+    ],
+    if (_kind == StatementSample.expense)
+      ..._ask(
+        StatementSample.pixQuestion,
+        StatementSample.pixCategories,
+        _pixCategory,
+        (answer) => _pixCategory = answer,
+      ),
+    if (_pixDone)
+      ..._ask(
+        StatementSample.categoryQuestion,
+        StatementSample.categories,
+        _category,
+        (answer) => _category = answer,
+      ),
   ];
 
-  void _openLines() => _update(() => _linesOpen = true);
-
-  /// As dúvidas, uma de cada vez, depois dos blocos. Responder vira uma
-  /// fala de quem usa, e a próxima pergunta aparece.
-  List<Widget> _questions() {
-    final kind = _kind;
-    final category = _category;
+  List<Widget> _ask(
+    String question,
+    List<String> options,
+    String? answer,
+    ValueChanged<String> pick,
+  ) {
+    final live = _live && answer == null;
     return [
-      if (_checked) ...[
-        const ChatBubble('Confere', fromUser: true),
-        _ask(
-          StatementSample.kindQuestion,
-          StatementSample.kinds,
-          current: kind == null,
-          onPick: (answer) => _update(() => _kind = answer),
-        ),
-      ],
-      if (kind != null) ...[
-        ChatBubble(kind, fromUser: true),
-        _ask(
-          StatementSample.categoryQuestion,
-          StatementSample.categories,
-          current: category == null,
-          onPick: (answer) => _update(() => _category = answer),
-        ),
-      ],
-      if (category != null) ChatBubble(category, fromUser: true),
+      CajuiChatPrompt(
+        question,
+        speaker: JujuScreen.speaker,
+        options: live ? options : const [],
+        onOption: live ? (choice) => _update(() => pick(choice)) : null,
+      ),
+      if (answer != null) ChatBubble(answer, fromUser: true),
     ];
   }
 
-  Widget _ask(
-    String question,
-    List<String> options, {
-    required bool current,
-    required ValueChanged<String> onPick,
-  }) {
-    final live = current && _open;
-    return CajuiChatPrompt(
-      question,
-      speaker: JujuScreen.speaker,
-      options: live ? options : const [],
-      onOption: live ? onPick : null,
-    );
+  /// O que já estava, o "tudo conferido", os lançamentos desfeitos e o
+  /// fim, com "Pronto" e "Desfazer tudo".
+  List<Widget> _closing() {
+    final included = _included;
+    return [
+      if (_category != null) _already(),
+      if (included != null) ...[
+        ChatBubble(included ? 'Incluir todas' : 'Confere', fromUser: true),
+        ChatBubble(StatementSample.ready(_count), speaker: JujuScreen.speaker),
+      ],
+      for (final said in _history)
+        ChatBubble(said, speaker: JujuScreen.speaker),
+      if (_launched) ...[
+        ChatBubble(StatementSample.done(_count), speaker: JujuScreen.speaker),
+        CajuiChatPrompt(
+          StatementSample.settle,
+          speaker: JujuScreen.speaker,
+          actions: [
+            (label: 'Pronto', onPressed: _restart, primary: true),
+            (label: 'Desfazer tudo', onPressed: _undo, primary: false),
+          ],
+        ),
+      ],
+    ];
   }
 
-  /// O fim: guardado para depois, lançado com o "Desfazer" ao lado, ou
-  /// desfeito.
-  List<Widget> _ending() => switch (_end) {
-    _End.open => const [],
-    _End.later => const [
-      ChatBubble(StatementSample.later, speaker: JujuScreen.speaker),
-    ],
-    _End.launched => [_done(canUndo: true)],
-    _End.undone => [
-      _done(canUndo: false),
-      ChatBubble(StatementSample.undone(_count), speaker: JujuScreen.speaker),
-    ],
-  };
-
-  Widget _done({required bool canUndo}) => CajuiChatPrompt(
-    StatementSample.done(_count),
+  Widget _already() => CajuiChatPrompt(
+    StatementSample.already,
     speaker: JujuScreen.speaker,
-    actions: [
-      if (canUndo)
-        (
-          label: 'Desfazer',
-          onPressed: () => _update(() => _end = _End.undone),
-          primary: false,
-        ),
-    ],
+    rows: _alreadyOpen ? StatementSample.alreadyRows : const [],
+    actions: _live && _included == null
+        ? [
+            (
+              label: 'Confere',
+              onPressed: () => _update(() => _included = false),
+              primary: true,
+            ),
+            _lines(_alreadyOpen, () => _alreadyOpen = !_alreadyOpen),
+            (
+              label: 'Incluir todas',
+              onPressed: () => _update(() => _included = true),
+              primary: false,
+            ),
+          ]
+        : const [],
   );
 
-  /// O pé da conversa: nada é gravado antes do "Pode lançar", e "Conferir
-  /// depois" guarda a leitura sem gravar (RN-1115).
-  Widget _launch() => Column(
+  /// Desfeito, a conversa volta a ficar aberta, com o "Pode lançar" de novo
+  /// (RN-1119).
+  void _undo() => _update(() {
+    _history.addAll([
+      StatementSample.done(_count),
+      StatementSample.undone(_count),
+    ]);
+    _launched = false;
+  });
+
+  /// O pé da conversa, como o do app: "Pode lançar" sempre à mão, e
+  /// "Conferir depois" e "Descartar" lado a lado (RN-1115).
+  Widget _footer() => Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       CajuiButton(
         label: StatementSample.launch(_count),
+        icon: CajuiIconData.check,
         expand: true,
-        onPressed: () => _update(() => _end = _End.launched),
+        onPressed: () => _update(() => _launched = true),
       ),
       const SizedBox(height: CajuiSpacing.sm),
-      CajuiButton(
-        label: 'Conferir depois',
-        variant: CajuiButtonVariant.secondary,
-        expand: true,
-        onPressed: () => _update(() => _end = _End.later),
+      Row(
+        children: [
+          for (final label in const ['Conferir depois', 'Descartar'])
+            Expanded(
+              child: CajuiButton(
+                label: label,
+                variant: CajuiButtonVariant.ghost,
+                expand: true,
+                onPressed: _restart,
+              ),
+            ),
+        ],
       ),
     ],
   );
