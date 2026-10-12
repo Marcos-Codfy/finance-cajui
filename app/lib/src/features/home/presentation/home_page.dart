@@ -2,6 +2,7 @@ import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
+import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home/presentation/home_cards.dart';
 import 'package:cajui/src/features/home/presentation/home_links.dart';
@@ -72,10 +73,21 @@ class HomePage extends ConsumerWidget {
         ..._notice(context, ref, state),
         HomeCards.of(view, party: _party(ref, view, visible: visible)),
         const SizedBox(height: CajuiSpacing.xl),
-        ...HomeLinks.of(context, view),
+        ..._links(context, ref, view),
       ],
     );
   }
+
+  /// As portas do Início, com a planilha do mês que o Início abre.
+  static List<Widget> _links(
+    BuildContext context,
+    WidgetRef ref,
+    HomeView view,
+  ) => HomeLinks.of(
+    context,
+    view,
+    export: () => ref.read(exportMonthProvider).call(view.budget.month),
+  );
 
   static Widget _newEntry(BuildContext context) => CajuiButton(
     label: 'Novo lançamento',
