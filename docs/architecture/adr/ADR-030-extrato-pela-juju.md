@@ -43,10 +43,12 @@ Além disso:
    - A mais nova vence, como nos nomes da casa.
    - Os eventos antigos `capture.rule-learned` migram para ele.
 5. **Entrada desfeita** é um fato novo, `income.cancelled`, de ponta a ponta: o livro do celular, o contrato e o servidor, que o desconta nos números da Juju (RN-1120).
-6. **O id da linha gravada** é a chave pelo conteúdo mais o número da tentativa:
-   - a chave que já está gravada e ativa não entra de novo;
-   - a que foi desfeita passa para a próxima tentativa.
-   Ler de novo é idempotente, e lançar de novo depois de desfazer funciona (RN-1119).
+6. **O id da linha gravada** é a chave pelo conteúdo mais o carimbo daquele lançamento (`chave~carimbo`):
+   - se algum id ativo no livro começa pela chave, a linha "já estava" e não entra de novo;
+   - a desfeita sai do livro, e o próximo lançamento a grava com outro carimbo — um id que nunca foi desfeito em lugar nenhum.
+   Ler de novo é idempotente, e lançar de novo depois de desfazer funciona (RN-1119). A chave sai do texto que o banco escreveu, e não da descrição da IA, que muda entre leituras.
+7. **O extrato se reconhece no celular** (`StatementShape`, domínio), pelo texto lido: várias linhas que começam com a data e trazem valor. Ele vai direto para a conversa, sem passar pela leitura de comprovante, que o cortava em 8.000 caracteres e o mandava à IA sem a máscara. A tela de lista da RN-707 saiu: nenhum caminho chegava mais a ela.
+8. **"Já está no Cajui" é casamento um a um** (`StatementMatches`, app): valor igual, até dois dias de diferença e uma palavra do lugar em comum quando os dois lados têm nome. A parcela de uma compra parcelada já lançada casa pelo plano do cartão (mesmo número de vezes, parcela do mesmo valor). Fica no app porque precisa do livro; a conta de cada linha continua no domínio.
 
 ## Alternativas descartadas
 
