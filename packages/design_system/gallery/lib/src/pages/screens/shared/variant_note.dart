@@ -13,9 +13,7 @@ const _code = r'(?:RN|ADR|D-UX|E-[A-Z]+)-\d+';
 
 /// Um ou mais códigos no começo, ligados por "a", "e" ou vírgula, seguidos
 /// de dois-pontos ou de ponto médio.
-final _leading = RegExp(
-  '^($_code(?:(?:,| a| e) $_code)*)\\s*[:·]\\s*',
-);
+final _leading = RegExp('^($_code(?:(?:,| a| e) $_code)*)\\s*[:·]\\s*');
 
 /// Um código entre parênteses no meio da frase: "(RN-441)".
 final _inline = RegExp('\\s*\\(($_code)\\)');

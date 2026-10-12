@@ -163,7 +163,7 @@ class AssistantPage extends StatelessWidget {
   static ScreenVariant _failed(String label, String code, CajuiNotice notice) =>
       _variant(
         label,
-        '$code, do catálogo de erros, no contexto do assistente.',
+        '$code: o texto do catálogo de erros, no contexto do assistente.',
         [
           const ChatBubble(_spoken, fromUser: true),
           notice,

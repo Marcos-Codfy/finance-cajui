@@ -18,9 +18,8 @@ class HomeWidgetPage extends StatelessWidget {
   /// O papel da tela no app.
   static const lead =
       'A sobra do mês na tela inicial, num painel de vidro sobre a aurora '
-      'do Cerrado à noite, com duas esferas de luz flutuando por fora. '
-      'Tocar no número abre o Cajui crescendo de dentro do widget, e os '
-      'números do Início chegam atravessando o vidro.';
+      'do Cerrado à noite. Tocar no número abre o Cajui de dentro do '
+      'widget.';
 
   @override
   Widget build(BuildContext context) {
