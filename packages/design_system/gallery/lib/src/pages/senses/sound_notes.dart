@@ -3,26 +3,37 @@ import 'package:design_system/design_system.dart';
 /// A nota de um som na mesa: de que é feito, onde toca e quanto dura.
 typedef SoundNote = ({String timbre, String use, int milliseconds});
 
-/// O que a mesa de som diz de cada som. A duração é a do arquivo gerado por
-/// `tool/sound/build_sounds.py`; o teste da gallery confere que nenhum som
-/// ficou sem nota.
+/// O que a mesa de som diz de cada som. A duração é a do arquivo: os de
+/// toque vêm de gravações tratadas, e os outros de
+/// `tool/sound/build_sounds.py` (origem de cada um em `assets/CREDITS.md`).
+/// O teste da gallery confere que nenhum som ficou sem nota.
 abstract final class SoundNotes {
   /// A nota de cada som.
   static const Map<CajuiSound, SoundNote> all = {
     CajuiSound.tap: (
-      timbre: 'Batida leve em madeira oca',
-      use: 'Todo toque em botão, chip, cartão e linha',
+      timbre: 'Clique moderno, com cauda curta',
+      use: 'Toque em botão de ação',
+      milliseconds: 300,
+    ),
+    CajuiSound.card: (
+      timbre: 'Pop mínimo',
+      use: 'Toque em card, linha de lista, opção e barra de gráfico',
       milliseconds: 70,
     ),
+    CajuiSound.key: (
+      timbre: 'Tique curto e baixo',
+      use: 'Cada tecla digitada num campo',
+      milliseconds: 24,
+    ),
     CajuiSound.toggleOn: (
-      timbre: 'Duas notas de madeira, subindo',
-      use: 'Chave ligada',
-      milliseconds: 155,
+      timbre: 'Dois toques curtos, brilhantes',
+      use: 'Chave ou chip ligado',
+      milliseconds: 230,
     ),
     CajuiSound.toggleOff: (
-      timbre: 'As mesmas duas notas, descendo',
-      use: 'Chave desligada',
-      milliseconds: 155,
+      timbre: 'Os mesmos dois toques, mais graves',
+      use: 'Chave ou chip desligado',
+      milliseconds: 274,
     ),
     CajuiSound.open: (
       timbre: 'Papel deslizando',
@@ -31,7 +42,7 @@ abstract final class SoundNotes {
     ),
     CajuiSound.swipe: (
       timbre: 'Palha roçando',
-      use: 'Deslizar para dispensar ou trocar de semana',
+      use: 'Carrossel que encaixa numa página nova',
       milliseconds: 140,
     ),
     CajuiSound.receiptIn: (
