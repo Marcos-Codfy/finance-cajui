@@ -243,6 +243,18 @@ class LedgerController extends AsyncNotifier<LedgerBook> with LedgerReload {
     await _commit(await future, event);
   }
 
+  /// Como [append], mas o fato nasce **na fila**, do livro em vigor: [make]
+  /// o monta, ou devolve `null` quando não há o que gravar. É para o fato
+  /// que depende do que já está no livro, que, montado fora, perderia o que
+  /// a gravação anterior acabou de pôr. Devolve o que gravou.
+  Future<LedgerEvent?> appendFrom(LedgerEvent? Function(LedgerBook) make) =>
+      _queue.run(() async {
+        final book = state.value ?? await future;
+        final event = make(book);
+        if (event != null) await _write(book, event, quietly: false);
+        return event;
+      });
+
   /// Um fato de cada vez (ver [SerialQueue]): dois entrelaçados apagariam
   /// um ao outro da tela.
   Future<void> _commit(

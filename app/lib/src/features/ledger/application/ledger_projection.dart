@@ -42,7 +42,24 @@ abstract final class LedgerProjection {
       BudgetDefined() ||
       DebtOrdered() ||
       HouseholdNamed() => _planned(book, event),
+      IncomeCancelled(:final receiptId) => _incomeCancelled(book, receiptId),
+      // A resposta lembrada já ficou guardada com os fatos, e é deles que o
+      // livro tira a memória (`LedgerBook.learnedAnswers`).
+      AnswerLearned() => book,
     };
+  }
+
+  /// O recebimento desfeito sai de toda conta, e o crédito do vale que ele
+  /// trouxe sai do saldo (RN-1120). O desfazer já ficou guardado com os
+  /// fatos: o recebimento que chegar depois dele não entra.
+  static LedgerBook _incomeCancelled(LedgerBook book, String receiptId) {
+    final receipt = book.receipts.where((r) => r.id == receiptId).firstOrNull;
+    if (receipt == null) return book;
+    final onVoucher = receipt.tender == Tender.mealVoucher;
+    return book.copyWith(
+      receipts: [...book.receipts.where((r) => r.id != receiptId)],
+      voucher: onVoucher ? book.voucher.settle(receipt.amount) : book.voucher,
+    );
   }
 
   /// O plano da planilha, a ordem das dívidas (ADR-023) e os nomes da casa
@@ -173,6 +190,7 @@ abstract final class LedgerProjection {
 
   static LedgerBook _received(LedgerBook book, IncomeReceipt receipt) {
     if (book.receipts.any((known) => known.id == receipt.id)) return book;
+    if (book.cancelledReceiptIds.contains(receipt.id)) return book;
     final onVoucher = receipt.tender == Tender.mealVoucher;
     return book.copyWith(
       receipts: [...book.receipts, receipt],

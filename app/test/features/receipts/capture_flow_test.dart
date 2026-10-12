@@ -60,7 +60,9 @@ void main() {
     await _settle(tester);
 
     expect(find.text('Conferir comprovante'), findsNothing);
-    expect(await journal.readAll(), hasLength(1));
+    // Um lançamento só. A categoria confirmada fica lembrada num fato à
+    // parte (RN-1116), que não é lançamento.
+    expect((await journal.readAll()).whereType<EntryRecorded>(), hasLength(1));
   });
 
   testWidgets('RN-221 · o mesmo comprovante duas vezes avisa, e não bloqueia', (
@@ -123,9 +125,8 @@ void main() {
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    final recorded = (await journal.readAll()).single;
-    expect(recorded, isA<EntryRecorded>());
-    expect((recorded as EntryRecorded).entry.occurredOn, testToday);
+    final recorded = (await journal.readAll()).whereType<EntryRecorded>();
+    expect(recorded.single.entry.occurredOn, testToday);
   });
 
   test('T-07 · o texto do comprovante guardado para depois não fica em claro '

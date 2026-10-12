@@ -42,6 +42,12 @@ abstract final class TransferLine {
     return null;
   }
 
+  /// Se [name] tem cara de nome de gente, pela mesma conferência de
+  /// [personIn]. Serve a quem só guardou o nome, sem a linha em volta: a
+  /// regra antiga do comprovante (RN-763) não dizia se era Pix para alguém,
+  /// e mesmo assim não pode virar exemplo para a IA (RN-1107).
+  static bool isPersonName(String name) => _isPerson(name);
+
   /// Onde [word] aparece como palavra inteira em [text], ou -1.
   static int _wordAt(String text, String word) {
     var at = text.indexOf(word);

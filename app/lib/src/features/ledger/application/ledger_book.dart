@@ -46,7 +46,8 @@ final class LedgerBook {
   /// As faturas já pagas.
   final List<Settlement> settlements;
 
-  /// As rendas já recebidas, nas duas moedas.
+  /// As rendas já recebidas, nas duas moedas. A desfeita não está aqui
+  /// (RN-1120): sai do mês, da renda, da planilha e do Início de uma vez.
   final List<IncomeReceipt> receipts;
 
   /// Os acertos de saldo do vale já feitos (RN-123). Ficam guardados, e
@@ -90,6 +91,28 @@ final class LedgerBook {
 
   /// Os identificadores de [facts].
   Set<String> get factIds => trail.factIds;
+
+  /// Os recebimentos desfeitos, aqui ou no outro celular (RN-1120). Saem
+  /// dos fatos, e não de [receipts]: o recebimento que descer depois do
+  /// desfazer não pode voltar a valer.
+  Set<String> get cancelledReceiptIds => {
+    for (final fact in facts)
+      if (fact is IncomeCancelled) fact.receiptId,
+  };
+
+  /// Todas as respostas lembradas, na ordem em que chegaram (RN-1116).
+  ///
+  /// Saem dos fatos, todas, e não só as em vigor: a mais nova vence venha
+  /// na ordem que vier, e guardando só as em vigor uma resposta velha do
+  /// outro celular, chegando depois de um "esquecer", voltaria a valer.
+  List<LearnedAnswer> get answerHistory => [
+    for (final fact in facts)
+      if (fact is AnswerLearned) fact.answer,
+  ];
+
+  /// As respostas lembradas em vigor: a mais nova de cada chave, venha do
+  /// celular que vier, sem as esquecidas. A conta é do domínio.
+  LearnedAnswers get learnedAnswers => LearnedAnswers.of(answerHistory);
 
   /// A conta do vale, com o saldo em vigor.
   final VoucherAccount voucher;

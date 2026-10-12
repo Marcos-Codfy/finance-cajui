@@ -23,6 +23,7 @@ final class ClassificationRequest {
     required this.categories,
     required this.today,
     this.learnedRules = const {},
+    this.personalRules = const {},
     this.categoryByMerchantKind = const {},
     this.householdNames = const [],
     this.images = const [],
@@ -39,7 +40,14 @@ final class ClassificationRequest {
   final LocalDate today;
 
   /// As regras aprendidas: estabelecimento normalizado → categoria (RN-763).
+  /// São também os exemplos que vão para a IA (RN-769): por isso aqui nunca
+  /// entra regra que fala de pessoa (RN-1107).
   final Map<String, String> learnedRules;
+
+  /// As regras aprendidas que falam de pessoa — "Pix para João P Silva é
+  /// Serviços". Valem nas regras do celular, como [learnedRules], e nunca
+  /// saem dele: nenhum classificador as manda adiante (RN-1107).
+  final Map<String, String> personalRules;
 
   /// Que categoria cada ramo de estabelecimento significa neste cadastro.
   ///
@@ -65,6 +73,7 @@ final class ClassificationRequest {
     categories: categories,
     today: today,
     learnedRules: learnedRules,
+    personalRules: personalRules,
     categoryByMerchantKind: categoryByMerchantKind,
     householdNames: householdNames,
   );
