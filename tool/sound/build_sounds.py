@@ -1,9 +1,14 @@
 """Sintetiza os sons de interface do Cajui.
 
-Todos os sons nascem aqui, de seno e ruído filtrado, sem amostra de
-terceiros: não há licença externa a cumprir e qualquer pessoa reproduz os
-arquivos rodando o script. A semente do gerador é fixa, então a saída é
-idêntica a cada execução.
+Os sons sintetizados nascem aqui, de seno e ruído filtrado, sem amostra de
+terceiros. A semente do gerador é fixa, então a saída é idêntica a cada
+execução.
+
+Os sons de toque — botão, card, tecla, chave e chip — vêm de gravações
+escolhidas pelo dono (ver assets/CREDITS.md) e não são escritos por este
+script: estão em `RECORDED`. Os sintetizados deles continuam sendo gerados
+e descartados, porque o ruído é um só para todos, e tirá-los da lista
+mudaria o ruído de todos os que vêm depois.
 
 O caráter segue docs/brand/motion-and-sound.md: curto, baixo, sem agudo
 áspero, com timbre de material do Cerrado — madeira, semente, água, papel.
@@ -21,6 +26,8 @@ import wave
 from pathlib import Path
 
 RATE = 44_100
+# Sons que vêm de gravação (assets/CREDITS.md): o script não os sobrescreve.
+RECORDED = {"tap", "toggle_on", "toggle_off"}
 # O pico do arquivo. Quem decide o quanto o som aparece é o volume do app
 # (`SoundSettings.volume`), e não o arquivo: gravar baixo demais só tira
 # alcance — no aparelho, com 0,22 o som sumia fora do volume máximo.
@@ -165,6 +172,8 @@ def write_wav(path: Path, samples: list[float]) -> None:
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for name, samples in build(random.Random(2026)).items():
+        if name in RECORDED:
+            continue
         ready = finish(samples)
         write_wav(OUT_DIR / f"{name}.wav", ready)
         print(f"ok  {name}.wav  {len(ready) / RATE * 1000:.0f} ms")

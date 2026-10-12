@@ -1,4 +1,5 @@
 import 'package:design_system/src/feedback/cajui_feedback_scope.dart';
+import 'package:design_system/src/interaction/cajui_touch.dart';
 import 'package:design_system/src/interaction/focus_ring.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/tokens/primitives/cajui_curves.dart';
@@ -30,6 +31,7 @@ class CajuiPressable extends StatefulWidget {
     this.selected,
     this.busy = false,
     this.autofocus = false,
+    this.touch = CajuiTouch.action,
     super.key,
   }) : assert(
          toggled == null || selected == null,
@@ -64,6 +66,10 @@ class CajuiPressable extends StatefulWidget {
   /// Se recebe o foco ao aparecer.
   final bool autofocus;
 
+  /// Que tipo de toque é, para o som: o clique do botão ou o pop do card.
+  /// Chave e chip ([toggled]) soam como chave, seja qual for.
+  final CajuiTouch touch;
+
   @override
   State<CajuiPressable> createState() => _CajuiPressableState();
 }
@@ -88,7 +94,14 @@ class _CajuiPressableState extends State<CajuiPressable> {
     // isso ficava muda ao ligar e só soava ao desligar. Feito primeiro o
     // que a pessoa pediu, o som já sai obedecendo à escolha nova.
     widget.onPressed!();
-    toggled == null ? feedback.tap() : feedback.toggle(on: !toggled);
+    switch ((toggled, widget.touch)) {
+      case (final bool on, _):
+        feedback.toggle(on: !on);
+      case (null, CajuiTouch.card):
+        feedback.cardTapped();
+      case (null, CajuiTouch.action):
+        feedback.tap();
+    }
   }
 
   Set<WidgetState> get _visibleStates => {

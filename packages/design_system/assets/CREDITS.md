@@ -4,15 +4,38 @@ Tudo o que o pacote empacota tem a origem registrada aqui antes de entrar no rep
 
 ## Sons (`sounds/`)
 
-Todos os doze sons são **sintetizados pelo próprio projeto**, sem nenhuma amostra de terceiros: não há licença externa a cumprir. Quem gera é `tool/sound/build_sounds.py`, só com a biblioteca padrão do Python (`wave`, `math`, `random`, `struct`). A semente do gerador é fixa (2026), então rodar o script de novo reproduz os mesmos arquivos, byte a byte.
+Há duas origens: os sons de toque são **gravações escolhidas pelo dono** (11/10/2026), e o resto é **sintetizado pelo próprio projeto**.
 
-Tratamento comum a todos: filtro passa-baixa em 5,2 kHz (tira a aspereza do agudo), fade de 4 ms nas pontas (sem estalo), saturação macia por tangente hiperbólica e pico normalizado em 0,95. Mono, 16 bits, 44,1 kHz.
+### Gravados — os sons de toque
+
+O dono escolheu um som para cada família de controle: botões de ação, cards, teclas, e chaves e chips. Os quatro vêm do [Pixabay](https://pixabay.com/sound-effects/), sob a [Pixabay Content License](https://pixabay.com/service/license/). Ela permite usar e modificar, inclusive em uso comercial, sem exigir crédito; o crédito vai aqui mesmo assim. O que ela proíbe é distribuir o arquivo **sozinho**, como som avulso. Por isso o repositório não guarda os MP3 originais, só o resultado tratado, como parte do app.
+
+| Arquivo | Token | Origem (autor no Pixabay · código) | Tratamento | Duração |
+|---|---|---|---|---|
+| `tap.wav` | `CajuiSound.tap` | "Modern Button Click", freesoundeffects · 291234 | Corte em 300 ms com saída de 140 ms; +14,9 dB (o original vinha a −18,5 dBFS) | 300 ms |
+| `card.wav` | `card` | "Minimal Pop Click UI 2", floraphonic · 198302 | Corte em 70 ms com saída de 25 ms | 70 ms |
+| `key.wav` | `key` | "ImmersiveControl Button Click Sound", denielcz · 463065 | Corte do clique, pico em −6 dBFS: a tecla soa a cada letra e fica mais baixa que os outros | 24 ms |
+| `toggle_on.wav` | `toggleOn` | "New Notification 040", universfield · 493469 | Começo em 131 ms (o original abre com silêncio), corte em 230 ms com saída de 70 ms; +5,1 dB | 230 ms |
+| `toggle_off.wav` | `toggleOff` | O mesmo de `toggle_on.wav`, reamostrado a 0,84: mais grave, para desligar soar diferente de ligar | 274 ms |
+
+O endereço de cada um é `https://pixabay.com/sound-effects/<nome>-<código>/`, com o nome e o código do arquivo baixado.
+
+Tratamento comum aos quatro:
+- o silêncio do começo sai, incluindo os ~25 ms que todo MP3 traz do codificador; o som começa em 2 ms, porque atraso no toque se sente;
+- entrada de 2 ms e saída em cosseno, sem estalo;
+- volume nivelado pelo ataque (o RMS dos primeiros 50 ms) com os sintetizados, a −8,85 dBFS, com o pico limitado em −0,4 dBFS;
+- mono, 16 bits, 44,1 kHz, como os outros.
+
+O tratamento foi feito decodificando os MP3 pela Web Audio API do navegador, porque esta máquina não tem ffmpeg. Para refazer, basta seguir os números da tabela.
+
+### Sintetizados — os outros nove
+
+Gerados por `tool/sound/build_sounds.py`, só com a biblioteca padrão do Python (`wave`, `math`, `random`, `struct`). A semente do gerador é fixa (2026), então rodar o script de novo reproduz os mesmos arquivos, byte a byte. O script não sobrescreve os gravados (lista `RECORDED`).
+
+Tratamento comum: filtro passa-baixa em 5,2 kHz (tira a aspereza do agudo), fade de 4 ms nas pontas (sem estalo), saturação macia por tangente hiperbólica e pico normalizado em 0,95. Mono, 16 bits, 44,1 kHz.
 
 | Arquivo | Token | Como foi feito | Duração |
 |---|---|---|---|
-| `tap.wav` | `CajuiSound.tap` | Batida de madeira em 720 Hz com um sopro curto de grão | 70 ms |
-| `toggle_on.wav` | `toggleOn` | Duas batidas de madeira, 520 Hz e depois 780 Hz | 155 ms |
-| `toggle_off.wav` | `toggleOff` | As mesmas duas, em ordem inversa | 155 ms |
 | `open.wav` | `open` | Ruído filtrado em 2,4 kHz, decaindo devagar: papel deslizando | 180 ms |
 | `swipe.wav` | `swipe` | Ruído filtrado em 3,2 kHz, mais curto: palha | 140 ms |
 | `receipt_in.wav` | `receiptIn` | Ruído de papel e uma madeira baixa, de leve | 130 ms |
@@ -23,9 +46,9 @@ Tratamento comum a todos: filtro passa-baixa em 5,2 kHz (tira a aspereza do agud
 | `entry_saved.wav` | `entrySaved` | **Semente caindo na cuia**: estalo de grão com madeira em 560 Hz e dois quiques cada vez menores e mais próximos (85 ms e 140 ms depois, a 42% e 18% da força), sobre a ressonância grave da cuia em 330 Hz | 260 ms |
 | `undone.wav` | `undone` | **Folha roçando**: ruído filtrado duas vezes em 2,6 kHz, com envelope que cresce e some (seno elevado a 1,5) e tremor de 23 Hz, terminando numa madeira de 294 Hz quase sem força | 210 ms |
 
-Os dois últimos foram acrescentados no fim da lista do script de propósito: o gerador de ruído é um só, e um som novo no meio mudaria o ruído de todos os que vêm depois. Depois de gerar, os dez arquivos antigos continuaram idênticos.
+Até 11/10/2026, `tap`, `toggle_on` e `toggle_off` também eram sintetizados (madeira em 720 Hz; duas madeiras, 520 e 780 Hz). O script ainda os calcula e descarta, porque o ruído é um só: tirá-los da lista mudaria o ruído de todos os que vêm depois.
 
-Se um som gravado vier a substituir um sintetizado, só entra material em domínio público (CC0) ou gravado para o projeto, registrado nesta tabela com autor, endereço de origem e licença.
+Som novo só entra com a origem registrada nesta página: sintetizado aqui, gravado para o projeto, ou de banco com licença que permita usar dentro do app — com autor, código e licença.
 
 ## Fontes (`fonts/`)
 

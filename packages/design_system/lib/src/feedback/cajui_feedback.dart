@@ -5,8 +5,15 @@
 /// e se o aparelho está no silencioso é a implementação — o que deixa o som
 /// desligado por padrão sem nenhum componente precisar saber disso.
 abstract interface class CajuiFeedback {
-  /// Toque num controle.
+  /// Toque num botão de ação.
   void tap();
+
+  /// Toque num card, numa linha de lista ou numa opção: o pop, mais leve que
+  /// o clique do botão.
+  void cardTapped();
+
+  /// Uma tecla digitada num campo do Cajui.
+  void keyTyped();
 
   /// Uma chave mudou de posição.
   void toggle({required bool on});
@@ -21,7 +28,7 @@ abstract interface class CajuiFeedback {
   /// erro no Cajui.
   void notice();
 
-  /// Uma conquista: dívida quitada, semanas seguidas dentro do limite.
+  /// Uma conquista: dívida quitada, o mês que fechou com sobra.
   void achievement();
 
   /// Um lançamento acabou de entrar: a semente caindo.

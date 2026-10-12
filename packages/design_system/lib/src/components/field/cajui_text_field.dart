@@ -1,4 +1,5 @@
 import 'package:design_system/src/components/field/cajui_field_frame.dart';
+import 'package:design_system/src/feedback/cajui_feedback_scope.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:flutter/material.dart'
     show InputDecoration, Material, MaterialType, TextField;
@@ -124,6 +125,13 @@ class _CajuiTextFieldState extends State<CajuiTextField> {
     );
   }
 
+  /// Cada tecla soa (`CajuiFeedback.keyTyped`). O `onChanged` do campo só
+  /// dispara no que a pessoa digita: texto posto pelo app não faz som.
+  void _changed(String text) {
+    CajuiFeedbackScope.of(context).keyTyped();
+    widget.onChanged?.call(text);
+  }
+
   Widget _input(BuildContext context) {
     final theme = CajuiTheme.of(context);
     final colors = theme.colors;
@@ -135,7 +143,7 @@ class _CajuiTextFieldState extends State<CajuiTextField> {
         controller: widget.controller,
         focusNode: _focus,
         enabled: widget.enabled,
-        onChanged: widget.onChanged,
+        onChanged: _changed,
         onSubmitted: widget.onSubmitted,
         textInputAction: widget.textInputAction,
         keyboardType: widget.keyboardType,

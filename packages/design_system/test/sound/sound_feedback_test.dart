@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/services.dart';
@@ -158,6 +159,45 @@ void main() {
       expect(haptics, hasLength(2));
     });
 
+    test('cada família de toque tem o seu arquivo: botão, card, tecla e '
+        'chave', () {
+      final player = _RecordingPlayer();
+      SoundAndHapticFeedback(
+          player: player,
+          settings: const SoundSettings(soundEnabled: true),
+        )
+        ..tap()
+        ..cardTapped()
+        ..keyTyped()
+        ..toggle(on: true)
+        ..toggle(on: false);
+
+      expect(player.played.map((play) => play.$1), [
+        CajuiSound.tap,
+        CajuiSound.card,
+        CajuiSound.key,
+        CajuiSound.toggleOn,
+        CajuiSound.toggleOff,
+      ]);
+      // A tecla não vibra: o teclado do telefone já vibra a cada letra.
+      expect(haptics, hasLength(4));
+    });
+
+    test('card e tecla são toques: desligar a família os cala', () {
+      final player = _RecordingPlayer();
+      SoundAndHapticFeedback(
+          player: player,
+          settings: const SoundSettings(
+            soundEnabled: true,
+            categories: {SoundCategory.confirmations, SoundCategory.ambient},
+          ),
+        )
+        ..cardTapped()
+        ..keyTyped();
+
+      expect(player.played, isEmpty);
+    });
+
     test('resposta tátil desligada não vibra', () {
       SoundAndHapticFeedback(
         player: _RecordingPlayer(),
@@ -191,5 +231,35 @@ void main() {
         expect(file.lengthSync(), lessThan(60 * 1024), reason: sound.asset);
       }
     });
+
+    test('todo arquivo é mono, 16 bits, 44,1 kHz; o de toque começa a soar nos '
+        'primeiros 5 ms — som atrasado em relação ao dedo é pior que nenhum —, '
+        'e os outros em 10', () {
+      for (final sound in CajuiSound.values) {
+        final bytes = File(
+          sound.asset.replaceFirst('packages/design_system/', ''),
+        ).readAsBytesSync().buffer.asByteData();
+
+        expect(bytes.getUint16(22, Endian.little), 1, reason: sound.asset);
+        expect(bytes.getUint32(24, Endian.little), 44100, reason: sound.asset);
+        expect(bytes.getUint16(34, Endian.little), 16, reason: sound.asset);
+        // A folha do desfazer cresce de propósito: não responde ao dedo,
+        // que já ouviu o clique do botão.
+        final limit = sound.category == SoundCategory.touches ? 5 : 10;
+        expect(_onsetMs(bytes), lessThan(limit), reason: sound.asset);
+      }
+    });
   });
+}
+
+/// Onde o som começa, em milissegundos: a primeira amostra acima de 3% do
+/// pico. Os dados vêm depois do cabeçalho de 44 bytes, em 16 bits.
+double _onsetMs(ByteData wav) {
+  final samples = [
+    for (var at = 44; at + 1 < wav.lengthInBytes; at += 2)
+      wav.getInt16(at, Endian.little).abs(),
+  ];
+  final peak = samples.reduce((a, b) => a > b ? a : b);
+  final first = samples.indexWhere((sample) => sample > peak * 0.03);
+  return first / 44.1;
 }
