@@ -118,8 +118,11 @@ Textos de [sharing-flow.md](sharing-flow.md#os-estados-da-tela), agora definitiv
 | `E-AI-02` | O serviço de IA limitou as requisições | api 429 | Muitas perguntas em pouco tempo. O serviço de IA pediu uma pausa; dá para perguntar de novo em {segundos} segundos. | (aguarda a contagem) |
 | `E-AI-03` | Teto mensal de tokens atingido (RNF-AI-04) | api 403 | O uso da IA chegou ao teto de {mês}. A classificação segue pelas regras locais, e a conversa volta no dia 1º. | Rever o teto · Ver o consumo |
 | `E-AI-04` | Resposta da IA fora do esquema | api 200, com aviso | A classificação automática devolveu algo que não deu para aproveitar. Usei as regras locais — confira a categoria antes de lançar. | Lançar · Conferir depois |
+| `E-AI-05` | Li só parte desta página do extrato (RN-1103) | api 200, com aviso | Li só parte da página {página}. As movimentações que vieram inteiras estão no resumo; o resto dessa página dá para conferir no extrato e lançar à mão. | Seguir com o resumo · Lançar à mão |
 
 `E-AI-04` não derruba a requisição: o backend descarta a resposta, classifica pelas regras e responde 200 com `warnings: ["E-AI-04"]`. Saída de IA é entrada não confiável; nunca chega à tela sem passar pelo esquema.
+
+`E-AI-05` também não derruba a leitura: a página com resposta cortada duas vezes vem com as movimentações completas e `partial: true` (RN-1103), e o resumo do extrato diz qual página foi lida em parte. Na leitura do extrato, a resposta da IA fora do esquema volta como `E-AI-04` com status 502, para o celular tentar a página de novo (RN-1102).
 
 ## Segurança
 

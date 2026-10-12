@@ -93,6 +93,9 @@ enum ErrorCode {
   /// Resposta da IA fora do esquema.
   ai04('E-AI-04', ErrorClass.ai, 200),
 
+  /// Li só parte desta página do extrato (RN-1103).
+  ai05('E-AI-05', ErrorClass.ai, 200),
+
   /// Biometria indisponível no aparelho.
   auth01('E-AUTH-01', ErrorClass.security, null),
 
