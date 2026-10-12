@@ -1,90 +1,421 @@
+<div align="center">
+
+<sub>**Português** · [English](README.en.md)</sub>
+
+<img src="docs/brand/assets/app-icon.svg" width="88" alt="Ícone do Cajui: o cajuí, fruto do Cerrado, em terracota." />
+
 # Cajui
 
-App pessoal de controle financeiro, feito do zero: especificação, domínio em Dart puro, app Android em Flutter, servidor próprio numa VM, esteira de qualidade e deploy. Usuário único. Custo fixo **R$ 0,00 por mês**.
+**O dinheiro da casa, numa conversa.**
 
-> O nome é do **cajuí** (*Anacardium humile*), o cajuzinho rasteiro do Cerrado tocantinense, que rebrota depois do fogo.
+App de finanças pessoais para Android, com uma assistente que lança o que você diz, lê o extrato que você
+compartilha do app do banco e pergunta só o que não sabe. Feito do zero: especificação, domínio em Dart puro, app em
+Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **R$ 0,00 por mês**.
+
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/extrato-pela-juju.png" />
+  <img src="docs/media/demo.webp" width="320" alt="Demonstração do Cajui em 45 segundos, com dados fictícios: um extrato compartilhado abre na conversa com a Juju, que resume 12 movimentações; o bloco Mercado é conferido com as linhas abertas, os blocos seguintes são confirmados, a padaria ganha categoria, o Pix para uma pessoa vira 'Alguém da casa' e 9 lançamentos entram de uma vez. Depois a câmera vai para o Início, o carrossel 3D mostra a sobra, o que entra e o que sai do bolso, o Meu mês abre e a carteira de cartões aparece." />
+</picture>
+
+<sub>Gravado no app de verdade, rodando com uma casa inventada. Nenhum número é de alguém.</sub>
+
+![CI](https://github.com/Marcos-Codfy/cajui/actions/workflows/ci.yml/badge.svg)
+![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
+![Testes](https://img.shields.io/badge/testes-1.584-2E7D32)
+![Cobertura do domínio](https://img.shields.io/badge/domínio-92,8%25-2E7D32)
+![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
+
+[Especificação](docs/spec) · [Decisões (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
+[Segurança](docs/security) · [Operação](docs/ops/runbook.md) · [Progresso](PROGRESS.md)
+
+</div>
 
 ---
 
-## O problema
+**Para quem avalia:** [Em 30 segundos](#em-30-segundos) · [Visual](#visual) · [Bastidores](#bastidores) ·
+[Desafios que resolvi](#desafios-que-resolvi) · [Stack](#stack) · [Arquitetura](#arquitetura) ·
+[Segurança e privacidade](#segurança-e-privacidade) · [Qualidade](#qualidade) · [O que deu errado](#o-que-deu-errado)<br />
+**Para quem desenvolve:** [Começando](#começando) · [Scripts](#scripts) · [Estrutura](#estrutura-do-projeto) ·
+[Deploy](#deploy) · [Roadmap](#roadmap)
 
-Substituir uma planilha que funcionava — mas só funcionava porque alguém a alimentava à mão. O app automatiza a mesma lógica, com dois conceitos que quase nenhum app de finanças acerta:
+## Em 30 segundos
 
-- **Cartão de crédito é forma de pagamento, nunca despesa.** A compra conta no mês em que foi feita; a fatura é uma visão calculada, nunca um lançamento. Compra parcelada não mexe no orçamento variável: ela vira compromisso do bloco de dívidas, parcela a parcela.
-- **Vale alimentação é outra moeda.** Nunca se soma ao dinheiro. Não existe, em lugar nenhum do código, um total que junte os dois — é garantido pelo compilador, e não por disciplina.
+- **Meu papel:** projeto pessoal, do zero e sozinho. Escrevi a especificação (420 regras de negócio numeradas), o
+  domínio, o app, a parte nativa em Kotlin, o servidor, o design system com a marca, a infraestrutura e a esteira.
+- **O que é:** o app que substituiu a planilha de finanças da minha casa. Dois celulares Android usam o mesmo livro,
+  sincronizado ao vivo, e uma página web serve para consultar.
+- **O diferencial:**
+  - a **Juju** lança o gasto que você diz ("gastei 35 no mercado") e responde com os seus números;
+  - ela **lê o extrato** que você compartilha do app do banco, página a página, e confere com você por blocos antes
+    de gravar qualquer coisa;
+  - a **notificação do banco** de uma compra aprovada vira lançamento sozinha, com "Desfazer"; dinheiro que entrou
+    pede um toque. O **comprovante** (foto, print ou PDF) vira proposta pronta para confirmar.
+- **Os dois conceitos que quase todo app de finanças erra:** cartão de crédito é forma de pagamento, nunca despesa;
+  e vale-alimentação é outra moeda, que nunca se soma ao dinheiro. Os dois são garantidos pelos tipos do domínio, e
+  não por disciplina.
+- **Privacidade:** o que vai para a IA sai do celular com nome de pessoa, CPF e conta mascarados. A resposta da IA é
+  tratada como entrada não confiável: todo valor que ela devolve precisa estar escrito no documento.
+- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.584 testes nomeados pela
+  regra que provam, cobertura de 85% a 95% por pacote, 30 ADRs e esteira no GitHub Actions.
 
-E um diferencial de uso: **compartilhar um comprovante de qualquer app do Android** → OCR no próprio aparelho → classificação → confirmação. Ou fotografar o cupom de papel direto do app.
+## Visual
 
-## Como está montado
+<p align="center">
+  <img src="docs/media/extrato-pela-juju.png" width="960" alt="Três telas da conversa com a Juju: o resumo do extrato e o bloco Mercado com Confere, Ver as linhas e Corrigir; a pergunta sobre um Pix para uma pessoa, com as opções É um gasto, Alguém da casa, Conta minha e Não lançar; e o fim, com 9 lançamentos gravados e os botões Pronto e Desfazer tudo." />
+  <br /><sub>O extrato pela Juju: resumo, blocos por categoria, dúvidas uma a uma e o lote inteiro com "Desfazer tudo".</sub>
+</p>
 
+<p align="center">
+  <img src="docs/media/o-mes-na-mao.png" width="960" alt="Três telas: o Início, com o carrossel 3D da sobra do mês e a lista Seu dinheiro; o Meu mês, com o que entra em dinheiro e no vale, separados, e o que sai por grupo; e a carteira de cartões de crédito." />
+  <br /><sub>O Início com o carrossel 3D, o Meu mês com dinheiro e vale sempre separados, e a carteira de cartões.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/design-system.png" width="960" alt="A gallery do design system no navegador: menu de fundação, componentes, profundidade, telas e sentidos, e a página Conversa com a fala da Juju, a fala de quem usa e uma fala com lista de compras e botões." />
+  <br /><sub>A gallery do design system: cada componente, estado e tela do app, navegável, com som e tema escuro.</sub>
+</p>
+
+## Bastidores
+
+O Cajui começou como substituto de uma planilha que funcionava, mas só funcionava porque alguém a alimentava à mão.
+A primeira versão seguia a planilha ao pé da letra, e o veredito de quem usava foi direto: "ficou chato de usar". Daí
+saiu a virada do projeto: menos telas, uma assistente que conversa e lança, e o celular trabalhando sozinho (a
+notificação do banco vira lançamento; o comprovante compartilhado vira proposta pronta para um toque).
+
+A IA entra onde ajuda, nunca onde decide. Quem faz conta é o domínio, em Dart puro, e o mesmo código roda no celular e
+no servidor. A IA lê texto e foto e devolve dado estruturado, que o domínio confere. Na conversa do extrato, nenhuma
+frase da Juju passa pelo modelo: o app monta cada uma a partir dos números do domínio, e por isso o que ela diz é
+sempre o que a tela mostra.
+
+O detalhe de que mais gosto é o teste no celular de verdade. O extrato passou em centenas de testes, e o primeiro PDF
+compartilhado no aparelho mostrou um restaurante com o valor do mercado. Era o OCR devolvendo a tabela por colunas
+([desafio 2](#2-a-tabela-que-o-ocr-desmonta)). Desde então, toda tela nova é conferida no navegador e no aparelho
+antes de fechar o passo.
+
+## Desafios que resolvi
+
+### 1. O extrato inteiro numa conversa, sem lançar nada em dobro
+
+- **Problema:** um extrato mensal tem dezenas de linhas, e a leitura antiga parava em 30. Ler de novo, compartilhar
+  duas vezes ou desfazer e relançar não podia duplicar nada.
+- **Solução:** o celular lê página por página (`POST /v1/statements/read-part`), e a IA só lê. A conversa é montada
+  pelo app ([`StatementDigest`](packages/domain/lib/src/statements/statement_digest.dart),
+  [`StatementWords`](packages/domain/lib/src/statements/statement_words.dart)). Cada linha gravada leva uma chave
+  feita do conteúdo, e não da posição ([`StatementLineKey`](packages/domain/lib/src/statements/statement_line_key.dart)),
+  mais o carimbo do lançamento. "Já está no Cajui" é casamento um a um, por valor, dia e nome
+  ([`StatementMatches`](app/lib/src/features/statements/application/statement_matches.dart)).
+- **Resultado:** ler o mesmo extrato de novo mostra "já estava no Cajui"; duas compras iguais na mesma padaria
+  continuam sendo duas; e "Desfazer tudo" seguido de "Pode lançar" grava de novo, com ids que nunca foram desfeitos.
+
+### 2. A tabela que o OCR desmonta
+
+- **Problema:** no primeiro teste no aparelho, a linha "Restaurante Sabor" saiu com o valor do mercado. O ML Kit
+  devolve o texto por blocos, e numa página em forma de tabela cada coluna vira um bloco. Além disso, o OCR às vezes
+  quebra o número ("+3.120,,00", "-32, 80"), e o servidor descartava a linha sem dizer nada.
+- **Solução:** o lado nativo remonta cada página em linhas pela altura dos pedaços
+  ([`TextRows.kt`](app/android/app/src/main/kotlin/app/cajui/capture/TextRows.kt)); o domínio conserta o número que o
+  OCR quebrou ([`OcrLine`](packages/domain/lib/src/statements/ocr_line.dart)); e o celular confere a resposta da IA:
+  linha com data e valor que ela não citou é pedida de novo, e o que ainda faltar é dito
+  ([`MissedLines`](app/lib/src/features/statements/application/missed_lines.dart)).
+- **Resultado:** nenhuma linha some calada. Os casos do aparelho viraram testes com as linhas exatas que o OCR leu.
+
+### 3. Cartão é forma de pagamento; vale é outra moeda
+
+- **Problema:** a planilha sabia que a compra no cartão conta no mês em que foi feita, e não no mês da fatura, e que o
+  vale-alimentação não é dinheiro. Um app que soma tudo num total só erra o mês inteiro.
+- **Solução:** todo valor do mês é um `TenderAmounts`, com dinheiro e vale em campos separados, e não existe operação
+  que junte os dois. A fatura é uma visão calculada, nunca um lançamento; a compra parcelada vira compromisso do
+  bloco de dívidas, parcela a parcela.
+- **Resultado:** o compilador recusa a soma errada. O pagamento da fatura lido num extrato aparece como "não conta".
+
+### 4. Privacidade antes da IA
+
+- **Problema:** extrato e comprovante trazem nome de quem recebeu o Pix, CPF e número de conta.
+- **Solução:** a máscara roda no celular antes de qualquer envio
+  ([`PiiRedactor`](packages/domain/lib/src/receipts/pii_redactor.dart),
+  [`TransferLine`](packages/domain/lib/src/statements/transfer_line.dart)). O nome de verdade fica no aparelho, e é
+  ali que aparece na pergunta ("Pix para Carla M Souza"). A resposta da IA passa por esquema fechado, e todo valor
+  precisa estar escrito no texto. Resposta lembrada que fala de pessoa nunca vira exemplo para a IA.
+- **Resultado:** a IA vê "PIX ENVIADO [NOME] 150,00" e o celular mostra o nome. Há uma suíte de comprovantes
+  maliciosos que tenta injeção de prompt.
+
+<details>
+<summary><b>Mais 4 desafios: sincronização, verificador próprio, troca de tela e som</b></summary>
+
+### 5. Dois celulares, um livro
+
+- **Problema:** o casal usa dois celulares, e cada um lança sem rede às vezes.
+- **Solução:** registro de eventos (nada é apagado; corrigir e cancelar acrescentam), ids que nascem do conteúdo e
+  "a edição mais nova vence" ([ADR-019](docs/architecture/adr/ADR-019-dois-aparelhos-um-livro.md)). Com o app na
+  frente, cada aparelho pergunta ao servidor, a cada 20 segundos, um número que só anda quando o livro muda
+  ([ADR-024](docs/architecture/adr/ADR-024-sincronia-ao-vivo-e-auth-simples.md)).
+- **Resultado:** o que um lança aparece no outro em segundos, e descer o livro de novo nunca duplica nada.
+
+### 6. Regras de código que a máquina reprova
+
+- **Problema:** arquitetura limpa só por convenção se desfaz no primeiro prazo apertado.
+- **Solução:** um verificador próprio, escrito com `package:analyzer` ([`tool/code_metrics`](tool/code_metrics)),
+  roda no pre-commit e na esteira. Ele reprova import de fora para dentro das camadas, arquivo com mais de 300
+  linhas, função com mais de 30, mais de 3 níveis de bloco, dois tipos públicos no mesmo arquivo e cor escrita à mão
+  numa tela.
+- **Resultado:** 994 arquivos conferidos a cada commit, nenhum limite estourado. Trocar a cor de todos os botões é
+  mudar um token.
+
+### 7. A troca de tela que misturava duas telas
+
+- **Problema:** ao abrir uma tela, a anterior ainda aparecia por baixo da nova por alguns quadros.
+- **Solução:** a câmera entre telas virou uma passagem num relógio linear comum
+  ([`CameraMove`](packages/design_system/lib/src/motion/camera_move.dart)): a tela de trás sai inteira antes de a
+  nova chegar.
+- **Resultado:** conferido no aparelho por gravação de tela, quadro a quadro, e preso por um teste que falha com o
+  código antigo.
+
+### 8. Um som por família de controle
+
+- **Problema:** os sons escolhidos vinham em MP3, com silêncio no começo e volumes diferentes.
+- **Solução:** o tratamento foi feito no próprio navegador, pela Web Audio API: corte do silêncio, entrada de 2 ms,
+  saída em cosseno e volume igualado. A origem e a licença de cada arquivo estão em
+  [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
+- **Resultado:** botão de ação, cartão, tecla, chave e chip têm cada um o seu som, como token do design system.
+
+</details>
+
+## Stack
+
+| Camada            | Tecnologias                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| App               | Flutter 3.47 (Android para usar, web para consultar), Riverpod 3 com estado selado, Dart 3.13          |
+| Nativo (Android)  | Kotlin: compartilhamento, OCR com ML Kit no aparelho, leitura de notificações, widget, lembretes       |
+| Domínio           | Dart puro, sem Flutter e sem `dart:io`: o mesmo código no celular e no servidor                        |
+| Servidor          | Dart + Shelf, compilado em executável único, numa VM da Oracle com Caddy (TLS) e systemd               |
+| Dados             | Registro de eventos cifrado com AES-256-GCM e encadeado por SHA-256, backup diário                     |
+| IA                | DeepSeek (`deepseek-flash`) com ferramentas: lançar, cancelar, listar, registrar renda, ler extrato     |
+| Design system     | Pacote próprio com tokens, componentes, movimento 3D e sons; gallery navegável                         |
+| Qualidade         | `very_good_analysis`, verificador próprio, cobertura com piso por pacote, varredura de segredos        |
+| Esteira           | GitHub Actions, Conventional Commits, Vercel para a web                                                |
+
+## Arquitetura
+
+Arquitetura limpa, organizada por feature (`features/<x>/{application,infrastructure,presentation}`). O
+`composition.dart` é o único lugar que liga uma porta a um adaptador, e nenhuma conta mora no app: ele pergunta ao
+domínio.
+
+```mermaid
+flowchart LR
+  subgraph PHONE["Celular Android"]
+    UI["Telas Flutter<br/>ViewModels com estado selado"]
+    APP["Casos de uso<br/>(application)"]
+    NAT["Kotlin<br/>OCR · notificações · widget"]
+    LOG[("Livro local<br/>eventos cifrados")]
+  end
+  DOM["Domínio<br/>Dart puro"]
+  subgraph VM["Servidor (VM)"]
+    API["API Shelf"]
+    STORE[("Registro de eventos<br/>AES-256-GCM + SHA-256")]
+    AI["Leitura com IA<br/>máscara e esquema"]
+  end
+  WEB["Web<br/>modo consulta"]
+  DS["IA (DeepSeek)"]
+
+  UI --> APP --> DOM
+  NAT --> APP
+  APP --> LOG
+  APP -- "fatos + chave da casa" --> API
+  WEB --> API
+  API --> DOM
+  API --> STORE
+  API --> AI --> DS
 ```
-app/                  Flutter — Android é o app de uso; a web é modo consulta
-server/               Dart + Shelf, compilado como executável único
-packages/domain/      Dart puro: as regras. Roda igual no celular e no servidor
-packages/api_contract/  DTOs, leitura estrita de JSON, catálogo de erros
-packages/persistence/ registro de eventos cifrado, com cadeia de hash
-packages/design_system/  tokens, componentes e uma gallery navegável
-tool/                 verificadores próprios: tamanho, camadas, segredos, cobertura
-docs/                 especificação, ADRs, modelo de ameaças, operação
+
+**O extrato pela Juju**, do compartilhamento ao lote gravado:
+
+```mermaid
+sequenceDiagram
+  participant P as Pessoa
+  participant C as Celular
+  participant S as Servidor
+  participant I as IA
+  P->>C: compartilha o PDF do app do banco
+  C->>C: OCR por página, linhas pela posição, número consertado
+  C->>C: reconhece o extrato e mascara nomes, CPF e conta
+  loop cada página
+    C->>S: linhas numeradas, já mascaradas
+    S->>I: instrução fixa + dados entre marcadores
+    I-->>S: movimentações em JSON
+    S-->>C: só as que passam no esquema e têm o valor escrito
+    C->>C: pede de novo as linhas com data e valor que faltaram
+  end
+  C->>P: resumo, blocos por categoria, dúvidas uma a uma
+  P->>C: Pode lançar (N)
+  C->>S: lote com chaves pelo conteúdo
 ```
 
-**Arquitetura Limpa, feature-first.** As camadas só apontam para dentro, e isso **não é convenção: é reprovado por máquina**. Um verificador próprio, escrito com `package:analyzer`, barra o commit que importar de fora para dentro, passar de 300 linhas por arquivo, 30 por função, 3 níveis de aninhamento, declarar dois tipos públicos no mesmo arquivo, deixar um `TODO` solto ou escrever uma cor à mão numa tela.
+Detalhes nas [ADRs](docs/architecture/adr): a [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) é a do
+extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso, a
+[022](docs/architecture/adr/ADR-022-a-ia-le-a-foto.md) é a da foto lida pela IA.
 
-**O domínio é Dart puro** — sem Flutter, sem `dart:io`. A mesma regra, a mesma conta e o mesmo teste valem no aparelho e no servidor. O servidor **revalida tudo** o que o app já validou: nunca se confia no cliente.
+## Segurança e privacidade
 
-**Registro de eventos, e nada é apagado.** Corrigir acrescenta, cancelar acrescenta. Cada registro é cifrado com AES-256-GCM e encadeado por SHA-256, então dá para provar que ninguém mexeu no passado sem ter a chave.
-
-## Segurança
-
-Não há senha, e não há conta em servidor de terceiro.
-
-- **A chave do aparelho nasce dentro do hardware e nunca sai.** No StrongBox do Galaxy S22. O servidor manda um desafio, o celular assina, e é a assinatura que prova quem é — nunca um "a biometria passou" vindo do app.
-- **A biometria libera a chave**, com validade de um dia contada pelo próprio hardware. Trocar a digital cadastrada no aparelho invalida a chave.
-- **A tela não vai para a miniatura do seletor de apps** nem se deixa fotografar.
-- **A chave da IA existe só no servidor**, como credencial cifrada do systemd, presa àquela máquina. Nunca no app, nunca no bundle web, nunca no repositório — e há um verificador que varre a árvore **e o histórico inteiro** a cada commit e a cada PR.
-- **Para a IA vai só texto, nunca imagem**, e com PII mascarada antes de sair. O comprovante é tratado como entrada hostil: o bloco de dados tem marcador aleatório, e há uma suíte de comprovantes maliciosos que tenta injeção de prompt.
-- **A resposta da IA também é entrada não confiável**: esquema fechado, e **todo valor em reais precisa existir no contexto** — senão a resposta é descartada.
-
-Modelo de ameaças em STRIDE com 31 ameaças, e um checklist ASVS nível 2 gerado do CSV oficial. Onde um controle **não** está implementado, está escrito que não está.
+- **Uma chave da casa** de 32 bytes aleatórios, gerada no computador do dono e compilada no APK. O servidor guarda só
+  o hash, numa credencial cifrada do systemd ([ADR-020](docs/architecture/adr/ADR-020-chave-da-casa.md)).
+- **A web entra com código de autenticador** (TOTP, RFC 6238), e o segredo também fica cifrado na VM
+  ([ADR-027](docs/architecture/adr/ADR-027-codigo-do-autenticador.md)).
+- **A chave da IA existe só no servidor**, nunca no app, no bundle web ou no repositório. Um verificador varre a
+  árvore **e o histórico inteiro** a cada commit e a cada PR.
+- **Dados cifrados em repouso:** cada registro com AES-256-GCM e encadeado por SHA-256. Dá para provar que ninguém
+  mexeu no passado.
+- **Máscara antes da IA e resposta da IA como entrada hostil**, como no [desafio 4](#4-privacidade-antes-da-ia).
+- Modelo de ameaças em STRIDE e checklist ASVS nível 2 em [`docs/security`](docs/security). Onde um controle **não**
+  está implementado, está escrito que não está.
 
 ## Qualidade
 
-| | |
-|---|---|
-| Testes | app 164 · domínio 194 · servidor 77 · design system 71 · gallery 8 · contrato 19 · persistência 25 · verificador 26 |
-| Cobertura | domínio 94% · persistência 94% · servidor 92% · app 80% · design system 80% |
-| Analisador | `very_good_analysis`, zero aviso |
-| Verificador próprio | 526 arquivos, nenhum limite estourado |
-| Lighthouse (web) | Acessibilidade **100** · Desempenho 60 — [por quê](docs/ops/lighthouse.md) |
+| Item                | Situação                                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| Testes              | **1.584**: app 487 · domínio 491 · servidor 222 · design system 207 · contrato 93 · gallery 33 · persistência 25 · verificador 26 |
+| Cobertura           | contrato 94,7% · domínio 92,8% · persistência 91,5% · servidor 90,7% · design system 87,7% · app 85,1%   |
+| Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
+| Textos              | Todo erro que a pessoa lê vem de um catálogo de 46 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
+| Voz                 | Termos proibidos ("déficit", "estourou", exclamação) são reprovados por teste em todas as frases do app |
+| Analisador          | `very_good_analysis`, zero aviso                                                                          |
+| Verificador próprio | 994 arquivos, nenhum limite estourado                                                                     |
+| Acessibilidade      | Lighthouse 100 na web; semântica ligada desde a raiz; o leitor de tela diz quem fala na conversa         |
 
-Cada regra de negócio tem número (`RN-xxx`) e **um teste com o mesmo número**. Quando a especificação traz um exemplo numérico, o teste o reproduz centavo a centavo.
+**Em números:** 93 mil linhas de Dart em 991 arquivos (31 mil delas de teste), 2,6 mil de Kotlin, 420 regras de
+negócio, 114 requisitos não funcionais, 30 ADRs e 103 pull requests.
 
-Todo texto que a pessoa lê vem de um catálogo de erros, e o código que o exibe é **gerado** desse catálogo. Uma lista de termos proibidos — "déficit", "estourou", exclamação — é aplicada por teste a todas as frases do app.
-
-## O que deu errado, e o que isso ensinou
+## O que deu errado
 
 A parte mais honesta do projeto, e a mais útil de ler:
 
-- **Três defeitos que 142 testes verdes não pegaram** e o primeiro uso num celular derrubou em minutos. O pior: o app lia o corpo de erro da API no lugar errado, então **nenhuma recusa do servidor chegava com o código certo** — e o teste não pegou porque o servidor de mentira imitava a suposição do cliente, não o servidor.
-- **A compra parcelada contava inteira no mês da compra.** O domínio sempre soube fazer certo; a camada de cima somava sozinha em vez de perguntar. Era o conceito central do produto, quebrado.
-- **A web nunca tinha rodado.** O cliente HTTP do `dart:io` estoura ao ser criado no navegador, e a raiz de composição o criava sempre: o app morria antes do primeiro quadro, calado.
-- **Um compartilhamento ilegível matava o app na abertura** — a exceção escapava até o `configureFlutterEngine`. Um app hostil manda isso de propósito.
-- **Uma ferramenta prometida numa ADR existia, estava testada, e nunca tinha sido ligada a um executável.**
+- **Testes verdes não pegaram o que o aparelho pegou.** O extrato passou em centenas de testes, e o primeiro PDF de
+  verdade misturou colunas ([desafio 2](#2-a-tabela-que-o-ocr-desmonta)). Antes disso, o app lia o corpo de erro da
+  API no lugar errado, e o teste não pegou porque o servidor de mentira imitava a suposição do cliente, não o servidor.
+- **A compra parcelada contava inteira no mês da compra.** O domínio sempre soube fazer certo; a camada de cima
+  somava sozinha em vez de perguntar. Era o conceito central do produto, quebrado.
+- **Três textos de erro saíam quebrados.** Um teste que passa por todo código de erro que a leitura do extrato pode
+  trazer achou três marcadores sem valor.
+- **A web nunca tinha rodado.** O cliente HTTP do `dart:io` quebra ao ser criado no navegador, e o app morria antes
+  do primeiro quadro, sem mensagem.
+- **Um compartilhamento ilegível fechava o app na abertura.** Um app hostil manda isso de propósito.
 
-Todos achados por auditoria adversarial ou por usar o app de verdade, e todos com teste que prende o caso. O registro do projeto foi corrigido onde ele afirmava mais do que o código fazia.
+Cada um foi achado por revisão adversarial ou por uso real, e cada um tem hoje um teste que prende o caso.
 
 ## Custo
 
-**R$ 0,00 fixo.** VM gratuita na Oracle, TLS do Let's Encrypt, DNS dinâmico gratuito, repositório e esteira no GitHub, Vercel no plano Hobby, sons CC0, fontes livres.
+**R$ 0,00 fixo.** VM gratuita na Oracle, TLS do Let's Encrypt, DNS dinâmico gratuito, repositório e esteira no GitHub
+e a web na Vercel, no plano Hobby. O único custo variável é a IA, de **cerca de R$ 0,60 por mês** no cenário de 120
+lançamentos ([a conta está aqui](docs/ops/ai-cost-estimate.md)).
 
-O único custo variável é a IA: **cerca de R$ 0,60 por mês** no cenário de 120 lançamentos — [a conta está aqui](docs/ops/ai-cost-estimate.md), com o preço lido na fonte.
+---
 
-## Por onde começar a ler
+## Para desenvolvedores
 
-| Quero entender… | Leia |
-|---|---|
-| as decisões e o porquê de cada uma | [`docs/architecture/adr/`](docs/architecture/) — 18 ADRs |
-| as regras de negócio | [`docs/spec/rules/`](docs/spec/) |
-| as ameaças e os controles | [`docs/security/threat-model.md`](docs/security/threat-model.md) |
-| como operar o servidor | [`docs/ops/runbook.md`](docs/ops/runbook.md) |
-| o que está feito e o que falta | [`PROGRESS.md`](PROGRESS.md) e [`BACKLOG.md`](BACKLOG.md) |
+### Começando
+
+**Pré-requisitos:** Flutter 3.47 (com Dart 3.13), Android SDK e um aparelho ou emulador Android. Python 3 só para os
+verificadores da esteira.
+
+```bash
+git clone https://github.com/Marcos-Codfy/cajui.git
+cd cajui
+flutter pub get
+cd app && flutter run
+```
+
+Sem a chave da casa compilada, o app nasce sem servidor e funciona sozinho no aparelho. A web de consulta sai com
+`flutter build web --no-web-resources-cdn` dentro de `app/`.
+
+### Scripts
+
+| Comando (PowerShell, da raiz)          | O que faz                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------- |
+| `.\scripts\apk.ps1 -Release`           | Compila o APK de uso com a chave da casa e instala no celular ligado         |
+| `.\scripts\servidor-local.ps1`         | Sobe o servidor nesta máquina, lendo a chave da IA de fora do repositório    |
+| `.\scripts\servidor-atualizar.ps1`     | Leva à VM o servidor da última esteira verde da `main`                       |
+| `.\scripts\backup-baixar.ps1`          | Traz para este computador os backups cifrados da VM                          |
+| `.\scripts\chave-da-casa.ps1`          | Gera a chave da casa, fora do repositório                                    |
+| `dart run tool/code_metrics/bin/check.dart` | Roda o verificador de tamanho e camadas                                  |
+
+<details>
+<summary><b>Testes de cada pacote</b></summary>
+
+```bash
+cd app && flutter test
+cd packages/design_system && flutter test
+cd packages/design_system/gallery && flutter test
+cd packages/domain && dart test
+cd packages/api_contract && dart test
+cd packages/persistence && dart test
+cd server && dart test
+cd tool/code_metrics && dart test
+```
+
+</details>
+
+### Estrutura do projeto
+
+<details>
+<summary><b>Árvore de pastas</b></summary>
+
+```text
+app/                      Flutter: Android para usar, web para consultar
+  lib/src/features/       assistant, statements, receipts, ledger, budget, cards, home, export, reminders…
+  android/                Kotlin: compartilhamento, OCR, notificações, widget, lembretes
+packages/
+  domain/                 regras de negócio em Dart puro
+  api_contract/           DTOs, leitura estrita de JSON, catálogo de erros
+  persistence/            registro de eventos cifrado, com cadeia de hash
+  design_system/          tokens, componentes, movimento, sons
+    gallery/              o sample navegável do design system
+server/                   Dart + Shelf: API, leitura com IA, sincronização
+tool/                     verificadores: tamanho, camadas, segredos, cobertura
+docs/                     especificação, ADRs, marca, segurança, operação
+scripts/                  APK, deploy, backup, chaves
+```
+
+</details>
+
+### Deploy
+
+- **Servidor:** cada push na `main` compila o executável na esteira; `servidor-atualizar.ps1` o leva à VM, instala o
+  serviço do systemd, o Caddy e o backup diário, e confere se responde pela internet com TLS. Rodar de novo não muda
+  nada. O passo a passo está no [runbook](docs/ops/runbook.md).
+- **Web:** a Vercel publica a `main`.
+- **App:** o APK de uso é gerado e instalado por cabo, com a chave da casa compilada.
+
+## Roadmap
+
+- [x] Especificação, marca e design system aprovados
+- [x] Domínio com cartão como forma de pagamento e vale como outra moeda
+- [x] Comprovante por foto, print e PDF, com OCR no aparelho e IA quando as regras não bastam
+- [x] Notificações do banco que viram lançamento
+- [x] A Juju: lançar falando, perguntar com os números da casa, ditar
+- [x] Dois celulares sincronizados ao vivo e web de consulta com autenticador
+- [x] Extrato pela Juju, página a página, com lote e "Desfazer tudo"
+- [x] Lembretes de vencimento, widget, planilha do mês e movimento 3D
+- [ ] Conferir a leitura com extratos reais de cada banco
+- [ ] Vários arquivos do mesmo compartilhamento numa leitura só
+- [ ] Ler a camada de texto do PDF, além do OCR
+- [ ] Publicar a gallery do design system
+
+## Créditos
+
+- **Especificação, design e desenvolvimento:** [Marcos Vinicius Muniz Arruda](https://github.com/Marcos-Codfy)
+- **Fontes:** Fraunces e Geist (SIL Open Font License)
+- **Sons de toque:** Pixabay, sob a Pixabay Content License, tratados no projeto; os demais são sintetizados aqui
+  ([origem de cada arquivo](packages/design_system/assets/CREDITS.md))
+- **Ícones e ilustrações:** desenhados no próprio projeto
+
+---
+
+<div align="center">
+
+<sub>O nome vem do **cajuí** (<i>Anacardium humile</i>), o cajuzinho rasteiro do Cerrado tocantinense, que rebrota
+depois do fogo.</sub>
+
+<sub>Feito por <a href="https://github.com/Marcos-Codfy">Marcos Vinicius Muniz Arruda</a> · Palmas-TO · 2026</sub>
+
+</div>
