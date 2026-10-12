@@ -21,7 +21,7 @@ class ContentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
-      title: 'Conteúdo',
+      title: 'Valores e cartões',
       lead:
           'Onde o dinheiro aparece. O valor é sempre texto de verdade, com '
           'algarismos tabulares; gráfico só onde há parte e todo.',

@@ -12,7 +12,7 @@ class CapturePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Confirmação de captura',
+      title: 'Comprovante',
       lead:
           'O fluxo mais importante do app: um comprovante fotografado ou '
           'compartilhado de qualquer lugar vira lançamento. Cupom de papel '

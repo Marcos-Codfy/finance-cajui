@@ -19,7 +19,7 @@ class ClosingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Fechamento',
+      title: 'Fechamento do mês',
       lead:
           'O retrato de um mês encerrado. É a tela que dá a notícia — boa ou '
           'ruim — e por isso é onde o tom de voz mais importa.',

@@ -34,7 +34,7 @@ class AssistantPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Juju',
+      title: 'Juju, a assistente',
       lead:
           'A tela principal do app: diga o que gastou e ela lança; pergunte '
           'e ela responde com os números do mês na mão. Recebe só totais e '

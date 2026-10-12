@@ -31,7 +31,7 @@ class _WalletPageState extends State<WalletPage> {
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
-      title: 'Pilha de carteira',
+      title: 'Pilha de cartões',
       lead:
           'Os cartões saem de um maço ao aparecer, param no alto da tela e '
           'se empilham conforme se rola, e se abrem em leque quando se puxa '

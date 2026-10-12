@@ -48,7 +48,7 @@ class _ActionPageState extends State<ActionPage> {
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
-      title: 'Ação',
+      title: 'Botões e controles',
       lead:
           'Tudo o que se toca nasce da mesma base: responde em menos de '
           '100 ms, tem alvo de 48, anel de foco no teclado e nome para o '

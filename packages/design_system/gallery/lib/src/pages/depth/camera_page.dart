@@ -17,7 +17,7 @@ class CameraPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const GalleryPage(
-      title: 'Câmera entre telas',
+      title: 'Troca de tela',
       lead:
           'A troca de tela deixa de ser um corte e vira um movimento de '
           'câmera. É uma passagem, e não uma mistura: em nenhum instante as '

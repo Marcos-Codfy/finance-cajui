@@ -19,7 +19,7 @@ class StatementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Fatura',
+      title: 'Fatura do cartão',
       lead:
           'A fatura é uma visão calculada, nunca uma despesa: cada compra já '
           'contou no mês em que foi feita. Pagar a fatura é uma liquidação.',

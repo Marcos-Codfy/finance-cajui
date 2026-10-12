@@ -25,7 +25,7 @@ class _StatePageState extends State<StatePage> {
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
-      title: 'Estados',
+      title: 'Aviso, vazio e carregando',
       lead:
           'O que a tela mostra quando não tem o dado: porque está vindo, '
           'porque não existe ainda, ou porque algo falhou. Nenhum desses é '
