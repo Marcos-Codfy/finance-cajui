@@ -8,7 +8,7 @@ import 'package:design_system/src/sound/sound_category.dart';
 /// Repare na ausência: **não existe som de erro.** O aviso é uma nota grave e
 /// macia de madeira, que informa sem assustar.
 enum CajuiSound {
-  /// Toque num botão de ação: um clique moderno, com cauda curta.
+  /// Toque num botão de ação: um toque macio, curto e grave.
   tap('tap', SoundCategory.touches),
 
   /// Toque num card, numa linha de lista ou numa opção: um pop mínimo.
