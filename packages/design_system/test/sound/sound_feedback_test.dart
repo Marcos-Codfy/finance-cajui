@@ -137,22 +137,24 @@ void main() {
       expect(haptics, hasLength(2));
     });
 
-    test('a página do carrossel encaixa com o deslize, que é de ambiente', () {
+    test('a página do carrossel assenta com o pop do card, como os outros '
+        'cards do app', () {
       final player = _RecordingPlayer();
       final feedback = SoundAndHapticFeedback(
         player: player,
         settings: const SoundSettings(soundEnabled: true),
       )..pageTurned();
 
-      expect(player.played.single.$1, CajuiSound.swipe);
+      expect(player.played.single.$1, CajuiSound.card);
       expect(haptics, ['HapticFeedbackType.lightImpact']);
 
-      // Quem folheia muito cala só o ambiente; o pulso continua.
+      // É da família de toques: calar os toques cala o carrossel; o pulso
+      // continua.
       player.played.clear();
       feedback
         ..settings = const SoundSettings(
           soundEnabled: true,
-          categories: {SoundCategory.touches, SoundCategory.confirmations},
+          categories: {SoundCategory.confirmations, SoundCategory.ambient},
         )
         ..pageTurned();
       expect(player.played, isEmpty);

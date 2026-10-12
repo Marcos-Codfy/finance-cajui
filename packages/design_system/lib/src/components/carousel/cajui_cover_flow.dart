@@ -20,7 +20,7 @@ import 'package:flutter/widgets.dart';
 /// Feito para poucos blocos irmãos que a pessoa folheia — os números do mês
 /// no alto do Início: sobra, o que entra, o que sai, o vale. Arrasta-se de
 /// lado (o arrasto vertical continua rolando a tela), e a página **encaixa**
-/// com mola (`CajuiSprings.page`), com o deslize e o pulso de tecla do
+/// com mola (`CajuiSprings.page`), com o pop do card e o pulso de tecla do
 /// retorno sensorial. Um gesto rápido passa uma página só, como num livro.
 ///
 /// Sem arrastar também se chega a tudo (RNF-A11Y-10): tocar numa vizinha a

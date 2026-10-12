@@ -6,7 +6,7 @@ enum SoundCategory {
   /// Confirmações: salvo, conquista, aviso.
   confirmations('Confirmações'),
 
-  /// Sons de transição e de ambiente: folha abrindo, deslize.
+  /// Sons de transição e de ambiente: a folha abrindo.
   ambient('Ambiente');
 
   new(this.label);

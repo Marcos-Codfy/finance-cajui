@@ -27,9 +27,6 @@ enum CajuiSound {
   /// Folha ou aviso abrindo: papel deslizando.
   open('open', SoundCategory.ambient),
 
-  /// Deslize: palha roçando.
-  swipe('swipe', SoundCategory.ambient),
-
   /// Comprovante recebido: folha de papel.
   receiptIn('receipt_in', SoundCategory.confirmations),
 

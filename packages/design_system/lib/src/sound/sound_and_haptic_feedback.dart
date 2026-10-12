@@ -109,12 +109,13 @@ class SoundAndHapticFeedback implements CajuiFeedback {
     _haptic(HapticFeedback.lightImpact);
   }
 
-  /// O deslize é som de ambiente, não de toque: quem folheia os números do
-  /// mês várias vezes ao dia pode calar só ele. A vibração é o pulso de
-  /// tecla, a trava que se sente quando a página assenta.
+  /// O carrossel é feito de cards, e a página que assenta soa como card: o
+  /// pop da família de toques (pedido do dono, 12/10). Antes era um deslize
+  /// de ambiente, que destoava dos outros cards do app. A vibração é o pulso
+  /// de tecla, a trava que se sente quando a página assenta.
   @override
   void pageTurned() {
-    _sound(CajuiSound.swipe);
+    _sound(CajuiSound.card);
     _haptic(HapticFeedback.lightImpact);
   }
 }
