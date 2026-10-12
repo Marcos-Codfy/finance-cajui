@@ -119,6 +119,10 @@ abstract final class ErrorTexts {
       'A classificação automática devolveu algo que não deu para aproveitar. Usei as regras locais — confira a categoria antes de lançar.',
       actions: ['Lançar', 'Conferir depois'],
     ),
+    ErrorCode.ai05 => const ErrorText(
+      'Li só parte da página {página}. As movimentações que vieram inteiras estão no resumo; o resto dessa página dá para conferir no extrato e lançar à mão.',
+      actions: ['Seguir com o resumo', 'Lançar à mão'],
+    ),
     ErrorCode.auth01 => const ErrorText(
       'Este aparelho não tem biometria configurada. O Cajui usa a biometria do Android para proteger seus dados.',
       actions: ['Abrir as configurações do Android'],

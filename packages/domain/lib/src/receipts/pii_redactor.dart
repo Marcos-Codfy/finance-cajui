@@ -1,3 +1,5 @@
+import 'package:domain/src/statements/transfer_line.dart';
+
 /// Mascara os dados pessoais de um comprovante antes que o texto saia do
 /// aparelho — e de novo no servidor, antes de montar o pedido à IA (RN-730).
 ///
@@ -9,6 +11,11 @@
 /// As expressões são literais fixas, nunca montadas com texto de entrada, e
 /// sem quantificador aninhado: a entrada é limitada em tamanho, e o custo
 /// cresce em linha reta com ela (RN-733).
+///
+/// O texto mascarado tem **sempre o mesmo número de linhas** que o
+/// original. O extrato vai à IA com as linhas numeradas, e é pelo número
+/// que o celular volta ao texto sem máscara (RN-1106, ADR-030): um
+/// marcador que engolisse uma quebra de linha deslocaria todas as de baixo.
 abstract final class PiiRedactor {
   static final List<(RegExp, String)> _patterns = [
     // Linha digitável e código de barras: antes de tudo, porque contêm
@@ -103,14 +110,58 @@ abstract final class PiiRedactor {
   static String redact(String text, {List<String> householdNames = const []}) {
     var result = text;
     for (final (pattern, marker) in _patterns) {
-      result = result.replaceAll(pattern, marker);
+      result = result.replaceAllMapped(
+        pattern,
+        (m) => _inPlace(m.group(0)!, marker),
+      );
     }
     for (final (pattern, marker) in _labelled) {
-      result = result.replaceAllMapped(pattern, (m) => '${m.group(1)}$marker');
+      result = result.replaceAllMapped(pattern, (m) {
+        final label = m.group(1)!;
+        return label + _inPlace(m.group(0)!.substring(label.length), marker);
+      });
     }
-    final lines = _maskBlockPeople(_maskPeople(result.split('\n')));
+    final people = _maskBlockPeople(_maskPeople(result.split('\n')));
+    final lines = _maskTransfers(people);
     return householdNames.fold(lines.join('\n'), _maskName);
   }
+
+  /// As [lines] de uma página de extrato, mascaradas, cada uma na mesma
+  /// posição: é pelo número da linha que o celular volta ao texto sem
+  /// máscara (RN-1106). Mascarar o bloco inteiro pega o nome quebrado em
+  /// várias linhas; se a contagem não bater, cada linha vai sozinha, e a
+  /// numeração continua valendo de qualquer jeito.
+  static List<String> redactLines(
+    List<String> lines, {
+    List<String> householdNames = const [],
+  }) {
+    final masked = redact(
+      lines.join('\n'),
+      householdNames: householdNames,
+    ).split('\n');
+    if (masked.length == lines.length) return masked;
+    return [
+      for (final line in lines) redact(line, householdNames: householdNames),
+    ];
+  }
+
+  /// [marker] no lugar de [matched], com as quebras de linha que havia
+  /// nele: o número numa linha e o resto na de baixo, como acontece com o
+  /// telefone partido pelo OCR, viram o marcador e uma linha vazia.
+  static String _inPlace(String matched, String marker) =>
+      marker + '\n' * '\n'.allMatches(matched).length;
+
+  /// O nome de quem recebeu ou mandou um Pix, solto na linha do extrato —
+  /// "PIX ENVIADO JOAO P SILVA 150,00", sem rótulo e sem CPF por perto —,
+  /// que a máscara da RN-732 deixava passar (RN-1106). Uma linha de cada
+  /// vez: o nome de uma nunca se junta ao da outra.
+  static List<String> _maskTransfers(List<String> lines) => [
+    for (final line in lines)
+      if (TransferLine.personIn(line) case final person?)
+        line.replaceAll(person, '[NOME]')
+      else
+        line,
+  ];
 
   static final _blockLabel = RegExp(
     r'^\s*(?:de|para|pagador|recebedor|favorecido|origem|destino|'
@@ -124,15 +175,17 @@ abstract final class PiiRedactor {
 
   /// O nome em bloco dos bancos digitais: o rótulo sozinho numa linha ("De"),
   /// o nome quebrado nas de baixo e, depois, o documento. Se o documento é
-  /// CPF, as linhas do nome viram um `[NOME]` só; se é CNPJ, é o
-  /// estabelecimento, e fica (RN-732).
+  /// CPF, cada linha do nome vira um `[NOME]`; se é CNPJ, é o
+  /// estabelecimento, e fica (RN-732). Antes as linhas do nome viravam um
+  /// marcador só, e a numeração das linhas de baixo mudava (RN-1106).
   static List<String> _maskBlockPeople(List<String> lines) {
     final result = <String>[];
     var index = 0;
     while (index < lines.length) {
       final nameLines = _personBlockAfter(lines, index);
-      result.add(lines[index]);
-      if (nameLines > 0) result.add('[NOME]');
+      result
+        ..add(lines[index])
+        ..addAll(List.filled(nameLines, '[NOME]'));
       index += 1 + nameLines;
     }
     return result;
@@ -171,7 +224,9 @@ abstract final class PiiRedactor {
   /// expressão é montada com texto que não seja literal do código.
   static String _maskName(String text, String name) {
     final needle = name.trim().toLowerCase();
-    if (needle.length < 3) return text;
+    // Nome com quebra de linha não é nome de gente, e trocá-lo juntaria
+    // duas linhas numa só.
+    if (needle.length < 3 || needle.contains('\n')) return text;
     final buffer = StringBuffer();
     var from = 0;
     final haystack = text.toLowerCase();

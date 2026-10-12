@@ -4,6 +4,8 @@ import 'package:domain/domain.dart';
 import 'package:path/path.dart' as p;
 import 'package:persistence/persistence.dart';
 import 'package:server/src/ai/ai_receipt_classifier.dart';
+import 'package:server/src/ai/ai_statement_reader.dart';
+import 'package:server/src/ai/chat_client.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/deepseek_chat_client.dart';
 import 'package:server/src/ai/token_budget.dart';
@@ -68,16 +70,20 @@ String? _flag(List<String> arguments, String name) {
   return at >= 0 && at + 1 < arguments.length ? arguments[at + 1] : null;
 }
 
-/// As duas peças que falam com a IA: o classificador de comprovantes e o
-/// assistente.
-typedef _Ai = ({ReceiptClassifier classifier, AssistantService? assistant});
+/// As peças que falam com a IA: o classificador de comprovantes, o
+/// assistente e o leitor de extrato.
+typedef _Ai = ({
+  ReceiptClassifier classifier,
+  AssistantService? assistant,
+  AiStatementReader? statements,
+});
 
 /// Com a credencial da DeepSeek, a IA entra por cima das regras locais e o
 /// assistente responde; sem ela, o servidor sobe só com as regras, o
 /// assistente diz que está fora do ar, e tudo o mais continua funcionando.
 ///
-/// O orçamento de tokens e o disjuntor são **um só** para as duas peças
-/// (RN-960): conversa e classificação gastam do mesmo teto.
+/// O orçamento de tokens e o disjuntor são **um só** para as três peças
+/// (RN-960): conversa, classificação e extrato gastam do mesmo teto.
 _Ai _ai(EventStore store) {
   final directory = Platform.environment['CREDENTIALS_DIRECTORY'];
   final keyFile = directory == null
@@ -87,24 +93,34 @@ _Ai _ai(EventStore store) {
     stdout.writeln(
       'sem credencial da IA: classificando só pelas regras locais',
     );
-    return (classifier: const RuleBasedClassifier(), assistant: null);
+    return (
+      classifier: const RuleBasedClassifier(),
+      assistant: null,
+      statements: null,
+    );
   }
-  final client = DeepSeekChatClient(apiKey: keyFile.readAsStringSync().trim());
-  final budget = TokenBudget(store, monthlyLimit: 2000000);
-  final breaker = CircuitBreaker();
-  return (
-    classifier: AiReceiptClassifier(
-      client: client,
-      budget: budget,
-      breaker: breaker,
-    ),
-    assistant: AssistantService(
-      client: client,
-      budget: budget,
-      breaker: breaker,
-    ),
+  return _pieces(
+    DeepSeekChatClient(apiKey: keyFile.readAsStringSync().trim()),
+    TokenBudget(store, monthlyLimit: 2000000),
+    CircuitBreaker(),
   );
 }
+
+/// As três peças sobre o mesmo [client], o mesmo [budget] e o mesmo
+/// [breaker].
+_Ai _pieces(ChatClient client, TokenBudget budget, CircuitBreaker breaker) => (
+  classifier: AiReceiptClassifier(
+    client: client,
+    budget: budget,
+    breaker: breaker,
+  ),
+  assistant: AssistantService(client: client, budget: budget, breaker: breaker),
+  statements: AiStatementReader(
+    client: client,
+    budget: budget,
+    breaker: breaker,
+  ),
+);
 
 /// O servidor montado sobre o registro [store]: a IA se houver credencial,
 /// a chave da casa (ADR-020) e a origem da web. Sem a chave o servidor
@@ -128,6 +144,7 @@ App _app(EventStore store, {String? accessKeyFile}) {
     sessions: SessionBook(),
     classifier: ai.classifier,
     assistant: ai.assistant,
+    statementReader: ai.statements,
     householdKey: key,
     totp: totp,
     // Um ensaio em outra Vercel troca a origem sem recompilar.

@@ -23,3 +23,6 @@ export 'src/month_setup_codec.dart';
 export 'src/payment_line_dto.dart';
 export 'src/proposal_codec.dart';
 export 'src/reversal_codec.dart';
+export 'src/statement_movement.dart';
+export 'src/statement_page_reply.dart';
+export 'src/statement_page_request.dart';

@@ -46,6 +46,8 @@ import 'package:cajui/src/features/reminders/application/reminders_providers.dar
 import 'package:cajui/src/features/reminders/infrastructure/native_reminder_schedule.dart';
 import 'package:cajui/src/features/review/application/review_providers.dart';
 import 'package:cajui/src/features/review/infrastructure/event_store_review_log.dart';
+import 'package:cajui/src/features/statements/application/statement_page_source.dart';
+import 'package:cajui/src/features/statements/infrastructure/http_statement_page_source.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:persistence/event_store.dart';
@@ -148,7 +150,9 @@ abstract final class Composition {
       );
 
   /// O que fala com o servidor: subir o livro, conversar com o assistente,
-  /// ditar. A web só lê e conversa — o livro dela desce, não sobe.
+  /// ditar, ler o extrato página a página (ADR-030). A web só lê e
+  /// conversa — o livro dela desce, não sobe, e o servidor não lê extrato
+  /// para ela.
   static List<Override> _server(CajuiApi api, {required bool local}) => [
     ledgerUplinkProvider.overrideWithValue(
       local ? CajuiLedgerApi(api) : const NoLedgerUplink(),
@@ -159,6 +163,7 @@ abstract final class Composition {
     speechInputProvider.overrideWithValue(
       local ? const NativeSpeechInput() : const NoSpeechInput(),
     ),
+    statementPageSourceProvider.overrideWithValue(HttpStatementPageSource(api)),
   ];
 
   static List<Override> _capture(NativeReceiptInbox? inbox, CajuiApi api) => [

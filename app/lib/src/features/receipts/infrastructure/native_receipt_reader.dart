@@ -34,13 +34,7 @@ final class NativeReceiptReader implements ReceiptReader {
         'kind': file.isPdf ? 'pdf' : 'image',
         'withImages': true,
       });
-      return ReadText(
-        read?['text'] as String? ?? '',
-        images: [
-          for (final image in read?['images'] as List? ?? const [])
-            if (image is Uint8List) image,
-        ],
-      );
+      return _text(read ?? const {});
     } on PlatformException catch (failure) {
       // O lado nativo responde com o código do catálogo. Código que o app
       // não conhece vira "não consegui ler", que é o que a pessoa viu.
@@ -49,4 +43,25 @@ final class NativeReceiptReader implements ReceiptReader {
       await listening.cancel();
     }
   }
+
+  /// O que o lado nativo devolveu: o texto juntado, que o comprovante lê,
+  /// e o de cada página com o total real, que o extrato lê (ADR-030). Lado
+  /// nativo antigo, sem as páginas, ainda serve: o texto vira a página
+  /// única.
+  static ReadText _text(Map<String, Object?> read) => ReadText(
+    read['text'] as String? ?? '',
+    images: [
+      for (final image in read['images'] as List? ?? const [])
+        if (image is Uint8List) image,
+    ],
+    pages: [
+      for (final page in read['pageTexts'] as List? ?? const [])
+        if (page is String) page,
+    ],
+    pageCount: read['pageCount'] as int?,
+    imagePages: [
+      for (final page in read['imagePages'] as List? ?? const [])
+        if (page is int) page,
+    ],
+  );
 }

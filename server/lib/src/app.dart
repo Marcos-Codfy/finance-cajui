@@ -1,6 +1,8 @@
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
+import 'package:server/src/ai/ai_statement_reader.dart';
 import 'package:server/src/ai/receipt_routes.dart';
+import 'package:server/src/ai/statement_routes.dart';
 import 'package:server/src/assistant/assistant_routes.dart';
 import 'package:server/src/assistant/assistant_service.dart';
 import 'package:server/src/auth/authenticate.dart';
@@ -39,6 +41,7 @@ final class App {
     RateLimiter? rateLimiter,
     this.classifier = const RuleBasedClassifier(),
     this.assistant,
+    this.statementReader,
     this.householdKey,
     this.totp,
     this.webOrigin = defaultWebOrigin,
@@ -66,6 +69,10 @@ final class App {
   /// Quem atende a conversa com o assistente; `null` num servidor sem a
   /// credencial da IA, que responde `E-AI-01` às perguntas.
   final AssistantService? assistant;
+
+  /// Quem lê o extrato com a IA, uma página por pedido (ADR-030); `null`
+  /// sem a credencial, e toda página recebe `E-AI-01`.
+  final AiStatementReader? statementReader;
 
   /// A chave da casa (ADR-020). `null` num servidor sem a credencial: aí
   /// ninguém entra, e o servidor só responde se está de pé.
@@ -111,6 +118,12 @@ final class App {
     clock: _clock,
   );
 
+  late final StatementRoutes _statements = StatementRoutes(
+    state: _ledger.state,
+    clock: _clock,
+    reader: statementReader,
+  );
+
   late final CodeRoutes _codes = CodeRoutes(
     totp: totp,
     sessions: sessions,
@@ -150,6 +163,7 @@ final class App {
       ..get('/health', _health)
       ..mount('/v1/auth', _codes.router.call)
       ..mount('/v1/receipts', _receipts.router.call)
+      ..mount('/v1/statements', _statements.router.call)
       ..mount('/v1/assistant', _assistant.router.call)
       ..mount('/v1', _head.router.call)
       ..mount('/v1', _catalog.router.call)
