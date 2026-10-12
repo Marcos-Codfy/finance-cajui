@@ -92,6 +92,10 @@ abstract final class CajuiPalette {
   /// Capim claro: o ouro no tema escuro.
   static const goldLight = Color(0xFFF0C26A);
 
+  /// O fim da hora azul: o roxo escuro em que a aurora do widget se apaga.
+  /// Só fundo de luz difusa, nunca de texto pequeno.
+  static const dusk = Color(0xFF241B2E);
+
   // Vereda, barro, céu e o vermelho reservado.
   /// Vereda: sobra, progresso, confirmação.
   static const vereda = Color(0xFF2E6F57);

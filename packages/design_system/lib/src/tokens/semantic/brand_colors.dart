@@ -14,6 +14,8 @@ class BrandColors {
     required this.gold,
     required this.fruitGradient,
     required this.sheen,
+    required this.aurora,
+    required this.auroraSky,
   });
 
   /// O laranja-cajuí. Um por tela.
@@ -30,12 +32,31 @@ class BrandColors {
   /// quando a sala escurece — e entra sempre translúcida, nunca como fundo.
   final Color sheen;
 
+  /// As três luzes da aurora do Cerrado à noite: o cajuí, o capim dourado e
+  /// a vereda. É o fundo do widget da tela inicial, e o brilho que acende
+  /// por trás do número quando o app abre por ele (`CajuiGlassArrival`).
+  /// Só luz difusa, nunca fundo de texto.
+  final List<Color> aurora;
+
+  /// O céu por trás da aurora, de cima à esquerda para baixo à direita: a
+  /// noite que vira o fim da hora azul. É o mesmo nos dois temas: o widget
+  /// vive sobre o papel de parede, e não dentro do tema do app.
+  final List<Color> auroraSky;
+
   /// O mais forte que o brilho pode ficar por baixo de um texto.
   ///
   /// Luz clareia o fundo, e fundo mais claro tira contraste de texto branco:
   /// a 12%, o texto do cartão no tema claro fica em 4,58:1, ainda acima dos
   /// 4,5:1 da WCAG. O teste de contraste confere o par com o brilho aplicado.
   static const double sheenOverText = 0.12;
+
+  static const List<Color> _aurora = [
+    CajuiPalette.cajui,
+    CajuiPalette.gold,
+    CajuiPalette.veredaLight,
+  ];
+
+  static const List<Color> _sky = [CajuiPalette.night, CajuiPalette.dusk];
 
   static const List<Color> _fruit = [
     CajuiPalette.fruitTop,
@@ -49,6 +70,8 @@ class BrandColors {
     gold: CajuiPalette.gold,
     fruitGradient: _fruit,
     sheen: CajuiPalette.paper,
+    aurora: _aurora,
+    auroraSky: _sky,
   );
 
   /// Marca no tema escuro.
@@ -57,5 +80,7 @@ class BrandColors {
     gold: CajuiPalette.goldLight,
     fruitGradient: _fruit,
     sheen: CajuiPalette.paper,
+    aurora: _aurora,
+    auroraSky: _sky,
   );
 }
