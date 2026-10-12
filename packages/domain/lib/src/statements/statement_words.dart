@@ -67,7 +67,7 @@ abstract final class StatementWords {
       : '${_count(count, 'ficou', 'ficaram')} em dúvida: pergunto depois dos '
             'blocos.';
 
-  /// "62 gastos, R$ 2.371,90; 2 entradas, R$ 3.120,00."
+  /// "62 gastos, R$ 2.371,90; 2 entradas, R$ 4.200,00."
   static String? _counted(StatementDigest digest) {
     final spending = digest.spending;
     final income = digest.income;

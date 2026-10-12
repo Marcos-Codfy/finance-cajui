@@ -37,7 +37,7 @@ class ContentPage extends StatelessWidget {
 
   Widget _amounts() {
     const samples = {
-      CajuiAmountTone.neutral: 312000,
+      CajuiAmountTone.neutral: 420000,
       CajuiAmountTone.muted: 3840,
       CajuiAmountTone.positive: 131240,
       CajuiAmountTone.shortfall: -27050,
@@ -52,7 +52,7 @@ class ContentPage extends StatelessWidget {
         children: [
           const GallerySpecimen(
             state: 'Manchete',
-            child: CajuiAmountText(312000, large: true, hideZeroCents: true),
+            child: CajuiAmountText(420000, large: true, hideZeroCents: true),
           ),
           for (final MapEntry(key: tone, value: cents) in samples.entries)
             GallerySpecimen(
