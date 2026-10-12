@@ -99,8 +99,11 @@ void main() {
     tester,
   ) async {
     await openGallery(tester, page: GalleryDestination.contrast);
-
-    expect(find.text('falha'), findsNothing);
     expect(find.textContaining('passam no nível AA'), findsOneWidget);
+
+    // A lista inteira abre sob pedido; aberta, nenhuma linha reprova.
+    await tapVisible(tester, find.textContaining('Mostrar os'));
+    expect(find.text('passa'), findsWidgets);
+    expect(find.text('falha'), findsNothing);
   });
 }
