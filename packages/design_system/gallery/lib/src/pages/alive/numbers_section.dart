@@ -61,7 +61,7 @@ class _NumbersSectionState extends State<NumbersSection> {
         CajuiButton(
           label: 'Rolar de novo',
           size: CajuiButtonSize.compact,
-          variant: CajuiButtonVariant.ghost,
+          variant: CajuiButtonVariant.secondary,
           onPressed: () => setState(() => _run++),
         ),
       ],

@@ -1,6 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
-import 'package:gallery/src/app/gallery_scope.dart';
+import 'package:gallery/src/pages/depth/motion_level_chips.dart';
 import 'package:gallery/src/pages/senses/curve_track.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
@@ -16,12 +16,6 @@ class MotionDeskPage extends StatefulWidget {
 }
 
 class _MotionDeskPageState extends State<MotionDeskPage> {
-  static const Map<MotionLevel, String> _levels = {
-    MotionLevel.full: 'Completo',
-    MotionLevel.lite: 'Leve',
-    MotionLevel.reduced: 'Reduzido',
-  };
-
   /// O uso vem primeiro, em português; a curva e a duração, pelo token.
   static const Map<String, (Curve, Duration)> _tracks = {
     'Resposta a toque · spring · fast (180 ms)': (
@@ -63,30 +57,22 @@ class _MotionDeskPageState extends State<MotionDeskPage> {
     );
   }
 
+  /// Os mesmos chips das páginas de movimento, com o repetir na linha de
+  /// baixo, igual em toda a gallery.
   Widget _levelChooser(BuildContext context) {
-    final controller = GalleryScope.of(context);
     return GallerySection(
       title: 'Nível de movimento',
       description:
           'No app, o nível vem do sistema (movimento reduzido), depois da '
           'medição de quadros no aparelho, e só então da preferência. Aqui '
           'a escolha é manual e vale para a gallery inteira.',
-      child: Wrap(
-        spacing: CajuiSpacing.sm,
-        runSpacing: CajuiSpacing.sm,
-        children: [
-          for (final MapEntry(key: level, value: label) in _levels.entries)
-            CajuiChip(
-              label: label,
-              selected: controller.motionLevel == level,
-              onSelected: (_) => controller.useMotionLevel(level),
-            ),
-          CajuiButton(
-            label: 'Rodar de novo',
-            size: CajuiButtonSize.compact,
-            onPressed: _replay,
-          ),
-        ],
+      child: MotionLevelChips(
+        action: CajuiButton(
+          label: 'Rodar de novo',
+          size: CajuiButtonSize.compact,
+          variant: CajuiButtonVariant.secondary,
+          onPressed: _replay,
+        ),
       ),
     );
   }

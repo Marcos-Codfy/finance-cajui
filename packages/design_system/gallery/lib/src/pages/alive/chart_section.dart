@@ -49,7 +49,7 @@ class _ChartSectionState extends State<ChartSection> {
             CajuiButton(
               label: 'Crescer de novo',
               size: CajuiButtonSize.compact,
-              variant: CajuiButtonVariant.ghost,
+              variant: CajuiButtonVariant.secondary,
               onPressed: () => setState(() => _run++),
             ),
           ],

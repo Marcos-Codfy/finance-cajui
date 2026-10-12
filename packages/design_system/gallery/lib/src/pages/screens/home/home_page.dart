@@ -62,9 +62,10 @@ class HomePage extends StatelessWidget {
 
   static ScreenVariant _party() => _ready(
     'Mês no verde, primeira vez',
-    'Escolha 5 do dono: na primeira vez em que o mês fecha, a sobra faz '
-        'festa ao aparecer. Nas outras, só o brilho calmo.',
+    'Na primeira vez em que o mês fecha, a sobra faz festa ao aparecer; nas '
+        'outras, só o brilho calmo. A festa roda uma vez, ao abrir.',
     HomeNumbers.closing(party: true),
+    moving: true,
   );
 
   static List<Widget> _cached() => [
@@ -82,9 +83,11 @@ class HomePage extends StatelessWidget {
     Widget? notice,
     List<Widget>? links,
     bool readOnly = false,
+    bool moving = false,
   }) => ScreenVariant(
     label: label,
     note: note,
+    moving: moving,
     builder: (_) => CajuiScreen(
       title: _month,
       trailing: ScreenTools(readOnly: readOnly, settings: true),

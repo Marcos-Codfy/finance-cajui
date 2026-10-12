@@ -57,7 +57,7 @@ class _StreamingSectionState extends State<StreamingSection> {
     child: CajuiButton(
       label: 'Responder de novo',
       size: CajuiButtonSize.compact,
-      variant: CajuiButtonVariant.ghost,
+      variant: CajuiButtonVariant.secondary,
       onPressed: () => setState(() => _run++),
     ),
   );

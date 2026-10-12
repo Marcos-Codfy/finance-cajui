@@ -76,6 +76,7 @@ class _WalletPageState extends State<WalletPage> {
         action: CajuiButton(
           label: 'Abrir o maço de novo',
           size: CajuiButtonSize.compact,
+          variant: CajuiButtonVariant.secondary,
           onPressed: () => setState(() => _deal++),
         ),
       ),

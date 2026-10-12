@@ -83,12 +83,49 @@ class _ScreenThumbnailState extends State<ScreenThumbnail> {
         borderRadius: ScreenThumbnail._radius,
         boxShadow: lifted ? CajuiShadows.floating : CajuiShadows.raised,
       ),
-      child: RepaintBoundary(
-        // A tela pequena não recebe toque, leitor de tela nem foco: sem o
-        // ExcludeFocus, o Tab entrava nos botões e campos de cada miniatura,
-        // e o Enter acionava o botão de dentro em vez de abrir a tela.
-        child: IgnorePointer(
-          child: ExcludeSemantics(child: ExcludeFocus(child: _still(context))),
+      child: Stack(
+        children: [
+          RepaintBoundary(
+            // A tela pequena não recebe toque, leitor de tela nem foco: sem
+            // o ExcludeFocus, o Tab entrava nos botões e campos de cada
+            // miniatura, e o Enter acionava o botão de dentro em vez de abrir
+            // a tela.
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: ExcludeFocus(child: _still(context)),
+              ),
+            ),
+          ),
+          if (widget.variant.moving) _movingBadge(context),
+        ],
+      ),
+    );
+  }
+
+  /// O selo do estado que só se vê em movimento: parada, a tela é igual à
+  /// do vizinho, e sem o selo a vitrine parecia ter um estado repetido.
+  Widget _movingBadge(BuildContext context) {
+    final theme = CajuiTheme.of(context);
+    return Positioned(
+      left: CajuiSpacing.sm,
+      bottom: CajuiSpacing.sm,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colors.surface.elevated,
+          borderRadius: const BorderRadius.all(CajuiRadius.pill),
+          boxShadow: CajuiShadows.raised,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: CajuiSpacing.sm,
+            vertical: CajuiSpacing.xs,
+          ),
+          child: Text(
+            'Com animação',
+            style: theme.typography.caption.copyWith(
+              color: theme.colors.text.primary,
+            ),
+          ),
         ),
       ),
     );

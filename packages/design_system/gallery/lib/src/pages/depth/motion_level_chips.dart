@@ -17,20 +17,28 @@ class MotionLevelChips extends StatelessWidget {
     MotionLevel.reduced: 'Reduzido',
   };
 
+  /// O botão de repetir fica numa linha própria, embaixo: colado aos chips,
+  /// ele parecia um quarto nível — duas pílulas vermelhas lado a lado, uma
+  /// escolha e uma ação.
   @override
   Widget build(BuildContext context) {
     final controller = GalleryScope.of(context);
-    return Wrap(
-      spacing: CajuiSpacing.sm,
-      runSpacing: CajuiSpacing.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: CajuiSpacing.md,
       children: [
-        for (final MapEntry(key: level, value: label) in _levels.entries)
-          CajuiChip(
-            label: label,
-            selected: controller.motionLevel == level,
-            onSelected: (_) => controller.useMotionLevel(level),
-          ),
+        Wrap(
+          spacing: CajuiSpacing.sm,
+          runSpacing: CajuiSpacing.sm,
+          children: [
+            for (final MapEntry(key: level, value: label) in _levels.entries)
+              CajuiChip(
+                label: label,
+                selected: controller.motionLevel == level,
+                onSelected: (_) => controller.useMotionLevel(level),
+              ),
+          ],
+        ),
         ?action,
       ],
     );
