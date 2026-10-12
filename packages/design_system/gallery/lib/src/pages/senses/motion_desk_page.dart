@@ -22,20 +22,21 @@ class _MotionDeskPageState extends State<MotionDeskPage> {
     MotionLevel.reduced: 'Reduzido',
   };
 
+  /// O uso vem primeiro, em português; a curva e a duração, pelo token.
   static const Map<String, (Curve, Duration)> _tracks = {
-    'spring · fast (180 ms) · resposta a toque': (
+    'Resposta a toque · spring · fast (180 ms)': (
       CajuiCurves.spring,
       CajuiDurations.fast,
     ),
-    'enter · base (260 ms) · algo entrando': (
+    'Algo entrando · enter · base (260 ms)': (
       CajuiCurves.enter,
       CajuiDurations.base,
     ),
-    'standard · slow (420 ms) · troca de tela': (
+    'Troca de tela · standard · slow (420 ms)': (
       CajuiCurves.standard,
       CajuiDurations.slow,
     ),
-    'exit · fast (180 ms) · algo saindo': (
+    'Algo saindo · exit · fast (180 ms)': (
       CajuiCurves.exit,
       CajuiDurations.fast,
     ),
@@ -65,7 +66,7 @@ class _MotionDeskPageState extends State<MotionDeskPage> {
   Widget _levelChooser(BuildContext context) {
     final controller = GalleryScope.of(context);
     return GallerySection(
-      title: 'Nível de qualidade',
+      title: 'Nível de movimento',
       description:
           'No app, o nível vem do sistema (movimento reduzido), depois da '
           'medição de quadros no aparelho, e só então da preferência. Aqui '

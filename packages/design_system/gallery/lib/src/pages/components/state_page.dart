@@ -84,7 +84,13 @@ class _StatePageState extends State<StatePage> {
     String? secondary,
   }) {
     return GallerySpecimen(
-      state: intent.name,
+      state: switch (intent) {
+        CajuiNoticeIntent.info => 'Informação',
+        CajuiNoticeIntent.positive => 'Confirmação',
+        CajuiNoticeIntent.attention => 'Atenção',
+        CajuiNoticeIntent.danger => 'Grave',
+      },
+      token: intent.name,
       width: _wide,
       child: CajuiNotice(
         intent: intent,
