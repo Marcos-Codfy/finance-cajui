@@ -7,6 +7,7 @@ import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/notifications/application/notice_announcement.dart';
 import 'package:cajui/src/features/notifications/application/notice_payment_method.dart';
 import 'package:cajui/src/features/notifications/application/notice_words.dart';
+import 'package:cajui/src/features/receipts/application/classification_memory.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,11 +132,16 @@ class NoticeRecorder {
   Future<Category> _categoryOf(BankReading reading, LedgerBook book) async {
     final fallback = book.categoryOf(DraftDefaults.fallbackCategoryId);
     if (reading.counterpart == null) return fallback;
+    final rules = await ClassificationMemory.of(
+      book,
+      ref.read(captureShelfProvider),
+    );
     final request = ClassificationRequest(
       text: ReceiptText.clean(NoticeWords.receiptText(reading)),
       categories: book.categories,
       today: ref.read(clockProvider).today(),
-      learnedRules: await ref.read(captureShelfProvider).learnedRules(),
+      learnedRules: rules.shared,
+      personalRules: rules.personal,
       categoryByMerchantKind: DefaultCatalog.categoryByMerchantKind,
     );
     final proposal = await _classify(request);
