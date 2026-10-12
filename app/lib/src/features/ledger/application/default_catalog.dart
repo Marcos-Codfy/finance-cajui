@@ -167,6 +167,9 @@ abstract final class DefaultCatalog {
     MerchantKind.dining: 'eating-out',
     MerchantKind.pharmacy: 'health',
     MerchantKind.fuel: 'transport',
+    MerchantKind.delivery: 'eating-out',
+    MerchantKind.rideHailing: 'transport',
+    MerchantKind.streaming: 'subscriptions',
   };
 
   /// O livro de quem acabou de instalar o app: o cadastro e mais nada.

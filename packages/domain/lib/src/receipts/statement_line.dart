@@ -1,6 +1,7 @@
 import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/payment_method_kind.dart';
 import 'package:domain/src/money/money.dart';
+import 'package:domain/src/receipts/confidence.dart';
 import 'package:domain/src/receipts/statement_line_kind.dart';
 import 'package:meta/meta.dart';
 
@@ -21,6 +22,9 @@ final class StatementLine {
     this.categoryId,
     this.paymentKind,
     this.doubtful = false,
+    this.confidence = Confidence.medium,
+    this.page,
+    this.sourceLine,
   });
 
   /// O dia da movimentação.
@@ -47,6 +51,18 @@ final class StatementLine {
   /// pessoa marcar (RN-757).
   final bool doubtful;
 
+  /// O quanto a IA confia na categoria. Só a confiança alta decide sozinha
+  /// (RN-1109); a leitura antiga não dizia, e conta como média.
+  final Confidence confidence;
+
+  /// A página do extrato de onde a linha veio, a partir de 1.
+  final int? page;
+
+  /// O número da linha, naquela página, de onde a movimentação saiu. É por
+  /// ele que o celular volta ao texto original, sem máscara, que nunca saiu
+  /// dele (RN-1106, ADR-030).
+  final int? sourceLine;
+
   /// A mesma linha, paga por [kind]: o extrato do vale não repete "vale" em
   /// cada linha, e a linha sem forma cairia no dinheiro (RN-111).
   StatementLine paidBy(PaymentMethodKind kind) => StatementLine(
@@ -57,5 +73,8 @@ final class StatementLine {
     categoryId: categoryId,
     paymentKind: kind,
     doubtful: doubtful,
+    confidence: confidence,
+    page: page,
+    sourceLine: sourceLine,
   );
 }
