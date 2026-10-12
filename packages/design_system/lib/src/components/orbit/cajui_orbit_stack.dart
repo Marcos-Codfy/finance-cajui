@@ -5,7 +5,6 @@ import 'package:design_system/src/motion/camera_move.dart';
 import 'package:design_system/src/motion/motion_level.dart';
 import 'package:design_system/src/motion/motion_of.dart';
 import 'package:design_system/src/motion/space_pose.dart';
-import 'package:design_system/src/tokens/primitives/cajui_curves.dart';
 import 'package:design_system/src/tokens/primitives/cajui_durations.dart';
 import 'package:flutter/widgets.dart';
 
@@ -105,10 +104,10 @@ class _CajuiOrbitStackState extends State<CajuiOrbitStack>
   SpacePose _pose(bool front, double width, MotionLevel level) {
     final leaving = _leaving;
     if (leaving == null) return SpacePose.rest;
-    final t = CajuiCurves.standard.transform(_orbit.value);
+    final clock = _orbit.value;
     final direction = widget.index > leaving ? 1 : -1;
     return front
-        ? CameraMove.orbitIn(t, direction, width, level)
-        : CameraMove.orbitOut(t, direction, width, level);
+        ? CameraMove.orbitIn(clock, direction, width, level)
+        : CameraMove.orbitOut(clock, direction, width, level);
   }
 }

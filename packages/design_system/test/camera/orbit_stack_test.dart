@@ -52,8 +52,8 @@ void main() {
       expect(find.text('conversa 1'), findsOneWidget);
     });
 
-    testWidgets('no meio da órbita as duas aparecem, giradas; ao fim, só a '
-        'da frente, plana', (tester) async {
+    testWidgets('no meio da órbita a aba que sai já sumiu e a nova chega '
+        'girada; ao fim, só a da frente, plana', (tester) async {
       await tester.pumpWidget(_tabs(0));
       await tester.pumpWidget(_tabs(1));
       await tester.pump(CajuiDurations.slow ~/ 2);
@@ -61,7 +61,10 @@ void main() {
       expect(find.text('conversa 0'), findsOneWidget);
       expect(find.text('inicio 0'), findsOneWidget);
       final posed = tester.widgetList<CajuiPosed>(find.byType(CajuiPosed));
-      expect(posed.where((it) => it.pose.turn != 0), hasLength(2));
+      final leaving = posed.where((it) => it.pose.opacity == 0);
+      final arriving = posed.where((it) => it.pose.opacity > 0);
+      expect(leaving, hasLength(1));
+      expect(arriving.single.pose.turn, isNot(0));
 
       await tester.pumpAndSettle();
       expect(find.text('conversa 0'), findsNothing);

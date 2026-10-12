@@ -15,11 +15,39 @@ void main() {
       expect(end.opacity, 1);
     });
 
-    test('a tela de trás recua e apaga enquanto a nova chega', () {
-      final behind = CameraMove.receding(1, MotionLevel.full);
+    test('a tela de trás recua e some no primeiro terço da troca', () {
+      final behind = CameraMove.receding(CameraMove.leaveBy, MotionLevel.full);
 
       expect(behind.scale, CameraMove.recedeScale);
-      expect(behind.opacity, lessThan(1));
+      expect(behind.opacity, 0);
+    });
+
+    test('a passagem: em nenhum ponto do relógio as duas telas aparecem '
+        'juntas, em nenhum nível de movimento', () {
+      for (final level in MotionLevel.values) {
+        for (var step = 0; step <= 100; step++) {
+          final clock = step / 100;
+          final behind = CameraMove.receding(clock, level).opacity;
+          final ahead = CameraMove.arriving(clock, level).opacity;
+          final aside = CameraMove.orbitOut(clock, 1, 400, level).opacity;
+          final front = CameraMove.orbitIn(clock, 1, 400, level).opacity;
+
+          expect(behind < ahead ? behind : ahead, lessThan(0.05));
+          expect(aside < front ? aside : front, lessThan(0.05));
+        }
+      }
+    });
+
+    test('a tela nova faz o caminho todo depois de começar a aparecer: '
+        'invisível, ela ainda não andou', () {
+      final hidden = CameraMove.arriving(
+        CameraMove.arriveFrom,
+        MotionLevel.full,
+      );
+
+      expect(hidden.opacity, 0);
+      expect(hidden.tilt, CameraMove.arrivalTilt);
+      expect(hidden.scale, CameraMove.arrivalScale);
     });
 
     test('a órbita: a aba que chega vem do lado da ida, girada, e a que sai '

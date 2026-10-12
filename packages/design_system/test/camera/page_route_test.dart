@@ -42,6 +42,31 @@ Future<void> _push(WidgetTester tester, String name) {
   return tester.pump();
 }
 
+/// O quanto a tela [name] aparece: o produto das poses acima dela — a de
+/// quem recua e a de quem chega. Fora do palco (a rota de baixo, depois que
+/// a de cima assentou) ela não é pintada: não aparece.
+double _visible(WidgetTester tester, String name) {
+  final screen = find.textContaining(name);
+  if (screen.evaluate().isEmpty) return 0;
+  return tester
+      .widgetList<CajuiPosed>(
+        find.ancestor(of: screen, matching: find.byType(CajuiPosed)),
+      )
+      .fold(1, (shown, posed) => shown * posed.pose.opacity);
+}
+
+/// Anda a troca até o fim, um quadro de 16 ms por vez, conferindo em cada
+/// quadro que as duas telas não estão à vista juntas.
+Future<void> _framesWithoutOverlap(WidgetTester tester) async {
+  for (var frame = 0; frame < 30; frame++) {
+    await tester.pump(const Duration(milliseconds: 16));
+    final behind = _visible(tester, 'inicio');
+    final ahead = _visible(tester, 'mes');
+    expect(behind < ahead ? behind : ahead, lessThan(0.05));
+  }
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('CajuiPageRoute · a troca de tela é a câmera avançando', () {
     testWidgets('no meio da troca a tela nova vem deitada e menor; ao fim, '
@@ -64,6 +89,17 @@ void main() {
         ),
       );
       expect(settled.every((it) => it.pose.isFlat), isTrue);
+    });
+
+    testWidgets('quadro a quadro, na ida e na volta, a tela de trás já '
+        'sumiu quando a nova aparece', (tester) async {
+      await tester.pumpWidget(_app());
+      await _push(tester, 'mes');
+      await _framesWithoutOverlap(tester);
+
+      _navigator(tester).pop();
+      await tester.pump();
+      await _framesWithoutOverlap(tester);
     });
 
     testWidgets('a tela de trás recua e volta sem perder o estado', (

@@ -1,6 +1,5 @@
 import 'package:design_system/src/motion/cajui_posed.dart';
 import 'package:design_system/src/motion/camera_move.dart';
-import 'package:design_system/src/motion/motion_level.dart';
 import 'package:design_system/src/motion/motion_of.dart';
 import 'package:design_system/src/tokens/primitives/cajui_curves.dart';
 import 'package:design_system/src/tokens/primitives/cajui_durations.dart';
@@ -11,8 +10,9 @@ import 'package:flutter/widgets.dart';
 /// a de trás recua e apaga, como o fundo de uma cena. Voltar é o mesmo
 /// movimento ao contrário: a câmera recua.
 ///
-/// Com movimento reduzido sobra só o esmaecer: a troca continua perceptível,
-/// mas nada se desloca.
+/// As duas telas nunca aparecem juntas: a de trás some antes de a nova
+/// aparecer (ver `CameraMove`). Com movimento reduzido sobra só essa
+/// passagem de opacidade: a troca continua perceptível, mas nada se desloca.
 class CajuiPageRoute<T> extends PageRouteBuilder<T> {
   /// Cria a rota para a tela montada por [builder].
   new({required WidgetBuilder builder, super.settings})
@@ -30,32 +30,31 @@ class CajuiPageRoute<T> extends PageRouteBuilder<T> {
     Widget child,
   ) {
     final level = motionOf(context);
-    final arriving = CurvedAnimation(
-      parent: animation,
-      curve: CajuiCurves.settle,
-      reverseCurve: CajuiCurves.exit,
-    );
-    final receding = CurvedAnimation(
-      parent: secondaryAnimation,
-      curve: CajuiCurves.enter,
-      reverseCurve: CajuiCurves.exit,
-    );
     return AnimatedBuilder(
-      animation: Listenable.merge([arriving, receding]),
+      animation: Listenable.merge([animation, secondaryAnimation]),
       child: child,
       builder: (context, child) => CajuiPosed(
-        pose: CameraMove.receding(receding.value, level),
+        pose: CameraMove.receding(
+          secondaryAnimation.value,
+          level,
+          curve: _curve(secondaryAnimation, CajuiCurves.enter),
+        ),
         child: CajuiPosed(
-          pose: CameraMove.arriving(_progress(arriving.value, level), level),
+          pose: CameraMove.arriving(
+            animation.value,
+            level,
+            curve: _curve(animation, CajuiCurves.settle),
+          ),
           child: child!,
         ),
       ),
     );
   }
 
-  /// A curva com mola passa um pouco do fim e volta: no giro e na escala,
-  /// é o assentar; no esmaecer do movimento reduzido, ficaria só o número
-  /// errado — ali o progresso é o de verdade, sem passar de 1.
-  static double _progress(double value, MotionLevel level) =>
-      level == MotionLevel.reduced ? value.clamp(0, 1).toDouble() : value;
+  /// A curva da ida, ou a de saída na volta. A câmera recebe o relógio
+  /// linear, e não a animação já curvada: a passagem de uma tela para a
+  /// outra precisa das duas no mesmo relógio, ou uma curva adiantaria a
+  /// tela nova sobre a velha que ainda não sumiu.
+  static Curve _curve(Animation<double> animation, Curve forward) =>
+      animation.status == AnimationStatus.reverse ? CajuiCurves.exit : forward;
 }
