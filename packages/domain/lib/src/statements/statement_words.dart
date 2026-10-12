@@ -211,16 +211,30 @@ abstract final class StatementWords {
     List<int> failed = const [],
     List<int> partial = const [],
     int beyond = 0,
+    int unread = 0,
   }) {
     final notes = [
       if (read < total) 'Li as páginas 1 a $read de $total.',
       if (beyond > 0)
         'Passou de 400 movimentações: as últimas $beyond ficaram de fora.',
+      ?_unread(unread),
       ?_pagesNote(failed, 'não deu para ler', 'não deram para ler'),
       ?_pagesNote(partial, 'foi lida em parte', 'foram lidas em parte'),
     ];
     return notes.isEmpty ? null : notes.join(' ');
   }
+
+  /// As linhas com data e valor que a leitura não trouxe, nem pedindo de
+  /// novo (RN-1104): ditas, para a pessoa conferir no extrato.
+  static String? _unread(int count) => switch (count) {
+    0 => null,
+    1 =>
+      '1 linha com data e valor não veio na leitura: dá para conferir no '
+          'extrato e lançar à mão.',
+    _ =>
+      '$count linhas com data e valor não vieram na leitura: dá para '
+          'conferir no extrato e lançar à mão.',
+  };
 
   /// "A página 4 não deu para ler." ou "As páginas 4 e 6 não deram…".
   static String? _pagesNote(List<int> pages, String one, String many) {

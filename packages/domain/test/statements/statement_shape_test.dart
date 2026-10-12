@@ -39,6 +39,24 @@ void main() {
       expect(StatementShape.looksLike(receipt), isFalse);
     });
 
+    test('RN-1104 · movimentação é linha com data e valor que não é saldo '
+        'nem total', () {
+      expect(
+        StatementShape.isMovement('01/10  TED RECEBIDA EMPRESA  +3.120,00'),
+        isTrue,
+      );
+      expect(
+        StatementShape.isMovement('04/10  COMPRA CARTAO DROGARIA  -32,80'),
+        isTrue,
+      );
+      expect(
+        StatementShape.isMovement('01/10  SALDO ANTERIOR  1.000,00'),
+        isFalse,
+      );
+      expect(StatementShape.isMovement('BANCO FICTICIO S.A.'), isFalse);
+      expect(StatementShape.isMovement('01/10  TARIFA'), isFalse);
+    });
+
     test('um comprovante de Pix não é extrato', () {
       const pix =
           'Comprovante de Pix\n'

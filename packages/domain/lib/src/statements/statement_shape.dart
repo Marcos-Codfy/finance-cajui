@@ -26,6 +26,20 @@ abstract final class StatementShape {
     return dated >= (named ? minLinesNamed : minLines);
   }
 
+  /// Se [line] tem cara de movimentação: começa com a data e traz um
+  /// valor, e não é saldo, total nem limite, que o extrato também escreve
+  /// com data. É o que o celular confere na resposta da IA: linha assim que
+  /// ela não citou é pedida de novo e, se ainda faltar, é dita (RN-1104).
+  static bool isMovement(String line) {
+    final upper = line.toUpperCase();
+    return _startsWithDate.hasMatch(upper) &&
+        _amount.hasMatch(upper) &&
+        !_notMovement.hasMatch(upper);
+  }
+
+  /// O que vem com data e valor sem ser movimentação.
+  static final _notMovement = RegExp(r'\b(SALDO|TOTAL|LIMITE)\b');
+
   /// "05/10", "5/10/2026", "05 OUT", "05-10" no começo da linha.
   static final _startsWithDate = RegExp(
     r'^\s*\d{1,2}(?:[/.-]\d{1,2}(?:[/.-]\d{2,4})?|\s?(?:JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ))\b',
