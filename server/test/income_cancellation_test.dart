@@ -20,7 +20,7 @@ const Map<String, Object?> _salary = {
 
 /// O fato "recebimento desfeito" para [receiptId].
 Map<String, Object?> _undo(String receiptId) => {
-  'id': 'income-cancel-$receiptId',
+  'id': 'undo-income-$receiptId',
   'type': DeviceFact.incomeCancelled,
   'payload': IncomeCancellationCodec.encode((
     receiptId: receiptId,

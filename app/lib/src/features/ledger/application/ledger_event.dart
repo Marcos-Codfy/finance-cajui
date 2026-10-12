@@ -90,9 +90,11 @@ final class IncomeReceived extends LedgerEvent {
 final class IncomeCancelled extends LedgerEvent {
   /// Registra que o recebimento [receiptId] foi desfeito em [on]. O
   /// identificador sai do recebimento: desfazer duas vezes, ou nos dois
-  /// celulares, é um fato só.
+  /// celulares, é um fato só. Não começa com "income-", o começo do
+  /// recebimento: um recebimento de identificador "cancel-x" teria o mesmo
+  /// identificador do desfazer de "x", e o registro descartaria um deles.
   const new({required this.receiptId, required this.on})
-    : super(id: 'income-cancel-$receiptId');
+    : super(id: 'undo-income-$receiptId');
 
   /// O recebimento desfeito.
   final String receiptId;
