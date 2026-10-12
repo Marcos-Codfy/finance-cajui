@@ -37,6 +37,14 @@ class _ActionPageState extends State<ActionPage> {
 
   void _nothing() {}
 
+  /// O nome de cada variante em português; o nome da API vem ao lado.
+  static String _variantName(CajuiButtonVariant variant) => switch (variant) {
+    CajuiButtonVariant.primary => 'Principal',
+    CajuiButtonVariant.secondary => 'Secundário',
+    CajuiButtonVariant.ghost => 'Discreto',
+    CajuiButtonVariant.destructive => 'Destrutivo',
+  };
+
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
@@ -86,7 +94,8 @@ class _ActionPageState extends State<ActionPage> {
           for (final MapEntry(key: variant, value: label)
               in _variantLabels.entries)
             GallerySpecimen(
-              state: variant.name,
+              state: _variantName(variant),
+              token: variant.name,
               child: CajuiButton(
                 label: label,
                 variant: variant,
@@ -145,7 +154,11 @@ class _ActionPageState extends State<ActionPage> {
       child: GallerySpecimens(
         children: [
           for (final variant in CajuiButtonVariant.values)
-            _iconButton(variant.name, variant: variant),
+            _iconButton(
+              _variantName(variant),
+              token: variant.name,
+              variant: variant,
+            ),
           _iconButton('Inativo', enabled: false),
         ],
       ),
@@ -154,11 +167,13 @@ class _ActionPageState extends State<ActionPage> {
 
   Widget _iconButton(
     String state, {
+    String? token,
     CajuiButtonVariant variant = CajuiButtonVariant.ghost,
     bool enabled = true,
   }) {
     return GallerySpecimen(
       state: state,
+      token: token,
       child: CajuiIconButton(
         icon: CajuiIconData.share,
         semanticLabel: 'Compartilhar',

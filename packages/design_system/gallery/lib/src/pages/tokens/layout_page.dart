@@ -30,12 +30,13 @@ class LayoutPage extends StatelessWidget {
     'pill': CajuiRadius.pill,
   };
 
-  static final Map<String, List<BoxShadow>> _shadows = {
-    'none': CajuiShadows.none,
-    'contact': CajuiShadows.contact,
-    'raised': CajuiShadows.raised,
-    'floating': CajuiShadows.floating,
-    'overlay': CajuiShadows.overlay,
+  /// Cada sombra pelo nome em português e pelo token, que vem ao lado.
+  static final Map<(String, String), List<BoxShadow>> _shadows = {
+    ('Nenhuma', 'none'): CajuiShadows.none,
+    ('Contato', 'contact'): CajuiShadows.contact,
+    ('Elevada', 'raised'): CajuiShadows.raised,
+    ('Flutuante', 'floating'): CajuiShadows.floating,
+    ('Sobreposta', 'overlay'): CajuiShadows.overlay,
   };
 
   @override
@@ -91,12 +92,20 @@ class LayoutPage extends StatelessWidget {
     radius: BorderRadius.all(entry.value),
   );
 
-  Widget _shadow(MapEntry<String, List<BoxShadow>> entry) => _ShapeSample(
-    name: entry.key,
-    detail: '${entry.value.length} camada(s)',
-    radius: const BorderRadius.all(CajuiRadius.md),
-    shadow: entry.value,
-  );
+  Widget _shadow(MapEntry<(String, String), List<BoxShadow>> entry) {
+    final (name, token) = entry.key;
+    final layers = switch (entry.value.length) {
+      0 => 'sem sombra',
+      1 => '1 camada',
+      final n => '$n camadas',
+    };
+    return _ShapeSample(
+      name: name,
+      detail: '$token · $layers',
+      radius: const BorderRadius.all(CajuiRadius.md),
+      shadow: entry.value,
+    );
+  }
 }
 
 class _SpacingRow extends StatelessWidget {

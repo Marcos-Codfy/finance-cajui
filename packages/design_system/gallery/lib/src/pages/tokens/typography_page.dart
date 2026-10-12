@@ -66,8 +66,12 @@ class TypographyPage extends StatelessWidget {
     return GallerySection(
       title: title,
       description: note,
+      // O espaço fica entre as amostras, e não embaixo de cada uma: com ele
+      // embaixo, a última somava o vão da seção e esta página respirava
+      // mais que as outras.
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: CajuiSpacing.xl,
         children: [for (final sample in samples) _SampleRow(sample)],
       ),
     );
@@ -97,24 +101,21 @@ class _SampleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: CajuiSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${sample.token} · $_spec',
-            style: theme.typography.caption.copyWith(
-              color: theme.colors.text.faint,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${sample.token} · $_spec',
+          style: theme.typography.caption.copyWith(
+            color: theme.colors.text.faint,
           ),
-          const SizedBox(height: CajuiSpacing.xs),
-          Text(
-            sample.sample,
-            style: sample.style.copyWith(color: theme.colors.text.primary),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: CajuiSpacing.xs),
+        Text(
+          sample.sample,
+          style: sample.style.copyWith(color: theme.colors.text.primary),
+        ),
+      ],
     );
   }
 }

@@ -96,26 +96,50 @@ class _NavItem extends StatelessWidget {
     );
   }
 
+  /// A página aberta tem fundo e um traço na cor de ação à esquerda; o
+  /// mouse por cima só clareia o fundo. Antes os dois usavam o mesmo fundo,
+  /// e com o mouse em outro item pareciam abertas duas páginas.
   Widget _label(BuildContext context, Set<WidgetState> states) {
-    final theme = CajuiTheme.of(context);
-    final lit = selected || states.contains(WidgetState.hovered);
+    final colors = CajuiTheme.of(context).colors;
+    final hovered = states.contains(WidgetState.hovered);
+    final background = selected
+        ? colors.surface.sunken
+        : hovered
+        ? colors.surface.sunken.withValues(alpha: 0.5)
+        : null;
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: lit ? theme.colors.surface.sunken : null,
-        borderRadius: _radius,
-      ),
+      decoration: BoxDecoration(color: background, borderRadius: _radius),
       child: Container(
         constraints: const BoxConstraints(minHeight: CajuiSpacing.touchTarget),
-        padding: const EdgeInsets.symmetric(horizontal: CajuiSpacing.md),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          destination.title,
-          style: theme.typography.label.copyWith(
-            color: selected
-                ? theme.colors.text.primary
-                : theme.colors.text.muted,
-          ),
+        padding: const EdgeInsets.only(right: CajuiSpacing.md),
+        child: Row(
+          spacing: CajuiSpacing.md - _markWidth,
+          children: [
+            _mark(colors),
+            Expanded(child: _title(context)),
+          ],
         ),
+      ),
+    );
+  }
+
+  static const double _markWidth = 3;
+
+  Widget _mark(CajuiColors colors) => Container(
+    width: _markWidth,
+    height: CajuiSpacing.lg,
+    decoration: BoxDecoration(
+      color: selected ? colors.action.primary : null,
+      borderRadius: const BorderRadius.all(CajuiRadius.pill),
+    ),
+  );
+
+  Widget _title(BuildContext context) {
+    final theme = CajuiTheme.of(context);
+    return Text(
+      destination.title,
+      style: theme.typography.label.copyWith(
+        color: selected ? theme.colors.text.primary : theme.colors.text.muted,
       ),
     );
   }

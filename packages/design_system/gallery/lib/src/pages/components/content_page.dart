@@ -35,6 +35,15 @@ class ContentPage extends StatelessWidget {
     );
   }
 
+  /// O papel de cada tom, em português; o nome da API vem ao lado.
+  static String _toneName(CajuiAmountTone tone) => switch (tone) {
+    CajuiAmountTone.neutral => 'Neutro',
+    CajuiAmountTone.muted => 'Apagado',
+    CajuiAmountTone.positive => 'Sobra',
+    CajuiAmountTone.shortfall => 'Falta',
+    CajuiAmountTone.accent => 'Destaque',
+  };
+
   Widget _amounts() {
     const samples = {
       CajuiAmountTone.neutral: 420000,
@@ -56,7 +65,8 @@ class ContentPage extends StatelessWidget {
           ),
           for (final MapEntry(key: tone, value: cents) in samples.entries)
             GallerySpecimen(
-              state: tone.name,
+              state: _toneName(tone),
+              token: tone.name,
               child: CajuiAmountText(cents, tone: tone),
             ),
         ],
@@ -205,7 +215,12 @@ class ContentPage extends StatelessWidget {
         children: [
           for (final level in CajuiConfidenceLevel.values)
             GallerySpecimen(
-              state: level.name,
+              state: switch (level) {
+                CajuiConfidenceLevel.high => 'Alta',
+                CajuiConfidenceLevel.medium => 'Média',
+                CajuiConfidenceLevel.low => 'Baixa',
+              },
+              token: level.name,
               child: CajuiConfidenceIndicator(level),
             ),
         ],

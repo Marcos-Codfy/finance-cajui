@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
 import 'package:gallery/src/shell/gallery_nav.dart';
+import 'package:gallery/src/shell/gallery_pager.dart';
 import 'package:gallery/src/shell/gallery_pages.dart';
 import 'package:gallery/src/shell/gallery_toolbar.dart';
 
@@ -103,14 +104,22 @@ class _GalleryShellState extends State<GalleryShell> {
   /// (`CameraMove`): a página que sai some na primeira metade, e a nova só
   /// aparece na segunda. A fusão de antes mostrava as duas, uma através da
   /// outra — o mesmo defeito que o dono apontou no app.
+  ///
+  /// Cada página leva o seu próprio [GalleryPager]: a que sai continua
+  /// mostrando o rodapé dela enquanto se apaga, sem trocar de texto no meio.
   Widget _page(BuildContext context) {
     final reduced = CajuiTheme.of(context).motionLevel == MotionLevel.reduced;
     return AnimatedSwitcher(
       duration: reduced ? CajuiDurations.reducedFade : CajuiDurations.base,
       transitionBuilder: _handOver,
+      layoutBuilder: _pinnedToTop,
       child: KeyedSubtree(
         key: ValueKey(_selected),
-        child: galleryPageOf(_selected),
+        child: GalleryPager(
+          current: _selected,
+          onSelect: _select,
+          child: galleryPageOf(_selected),
+        ),
       ),
     );
   }
@@ -121,6 +130,15 @@ class _GalleryShellState extends State<GalleryShell> {
 Widget _handOver(Widget child, Animation<double> animation) => FadeTransition(
   opacity: CurvedAnimation(parent: animation, curve: const Interval(0.5, 1)),
   child: child,
+);
+
+/// Toda página ocupa a área inteira e começa no alto. O arranjo padrão do
+/// `AnimatedSwitcher` centraliza: página mais curta que a janela boiava no
+/// meio, e o título mudava de altura a cada troca.
+Widget _pinnedToTop(Widget? current, List<Widget> previous) => Stack(
+  fit: StackFit.expand,
+  alignment: Alignment.topLeft,
+  children: [...previous, ?current],
 );
 
 class _Masthead extends StatelessWidget {

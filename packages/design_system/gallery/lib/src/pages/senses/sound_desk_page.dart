@@ -12,9 +12,9 @@ class SoundDeskPage extends StatelessWidget {
   const new({super.key});
 
   static const Map<String, double> _volumes = {
-    'Baixo': 0.3,
-    'Médio': 0.6,
-    'Alto': 1,
+    'baixo': 0.3,
+    'médio': 0.6,
+    'alto': 1,
   };
 
   @override
