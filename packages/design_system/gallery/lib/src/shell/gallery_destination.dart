@@ -48,6 +48,9 @@ enum GalleryDestination {
   /// Os cartões que saem do maço e se empilham ao rolar.
   wallet('Pilha de carteira', GalleryGroup.depth),
 
+  /// A câmera que avança para a tela nova e orbita entre as abas.
+  camera('Câmera entre telas', GalleryGroup.depth),
+
   /// O Início, em todos os estados.
   home('Início', GalleryGroup.screens),
 

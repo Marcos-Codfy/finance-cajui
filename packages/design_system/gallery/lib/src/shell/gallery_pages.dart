@@ -4,6 +4,7 @@ import 'package:gallery/src/pages/components/action_page.dart';
 import 'package:gallery/src/pages/components/content_page.dart';
 import 'package:gallery/src/pages/components/field_page.dart';
 import 'package:gallery/src/pages/components/state_page.dart';
+import 'package:gallery/src/pages/depth/camera_page.dart';
 import 'package:gallery/src/pages/depth/cinematic_page.dart';
 import 'package:gallery/src/pages/depth/cover_flow_page.dart';
 import 'package:gallery/src/pages/depth/depth_scroll_page.dart';
@@ -41,6 +42,7 @@ Widget galleryPageOf(GalleryDestination destination) => switch (destination) {
   GalleryDestination.coverFlow => const CoverFlowPage(),
   GalleryDestination.cinematic => const CinematicPage(),
   GalleryDestination.wallet => const WalletPage(),
+  GalleryDestination.camera => const CameraPage(),
   GalleryDestination.home => const HomePage(),
   GalleryDestination.capture => const CapturePage(),
   GalleryDestination.statement => const StatementPage(),
