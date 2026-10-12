@@ -4,13 +4,17 @@ import 'package:gallery/src/pages/screens/shared/stat_card.dart';
 
 /// Os blocos da tela de fatura, com os números do exemplo da especificação:
 /// fatura de R$ 1.240,00, vencendo em 05/10, com R$ 640,00 já reservados.
+///
+/// O ciclo é o de 29/08 a 28/09, e a gallery vive em outubro: a fatura já
+/// fechou (RN-303: o dia 29 abre o ciclo novo), e o que resta dizer é o
+/// vencimento.
 abstract final class StatementBlocks {
   /// O total calculado da fatura. Nunca é digitado nem vira despesa (RN-330).
   static Widget total({int cents = 124000, String? caption}) => StatCard(
     label: 'Total da fatura',
     cents: cents,
     large: true,
-    caption: caption ?? 'Vence em 05/10 · fecha em 3 dias',
+    caption: caption ?? 'Vence em 05/10 · fechou em 29/09',
   );
 
   /// A composição por bloco (RN-331).
