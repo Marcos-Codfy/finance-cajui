@@ -116,6 +116,7 @@ export 'src/statements/learned_rules.dart';
 export 'src/statements/line_doubt.dart';
 export 'src/statements/line_treatment.dart';
 export 'src/statements/merchant_brand.dart';
+export 'src/statements/ocr_line.dart';
 export 'src/statements/resolved_line.dart';
 export 'src/statements/statement_block.dart';
 export 'src/statements/statement_dates.dart';

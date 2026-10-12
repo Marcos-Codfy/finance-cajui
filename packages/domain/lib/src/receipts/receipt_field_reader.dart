@@ -1,6 +1,7 @@
 import 'package:domain/src/calendar/local_date.dart';
 import 'package:domain/src/ledger/payment_method_kind.dart';
 import 'package:domain/src/money/money.dart';
+import 'package:domain/src/notifications/notice_text.dart';
 import 'package:domain/src/receipts/document_kind.dart';
 
 /// As regras fixas que leem um comprovante **sem IA e sem rede** (RN-752):
@@ -82,13 +83,20 @@ abstract final class ReceiptFieldReader {
     ],
     DocumentKind.incomeReceipt: [
       'pix recebido',
+      'ted recebida',
+      'doc recebido',
       'transferência recebida',
+      'transf recebida',
       'você recebeu',
       'crédito em conta',
       'crédito de salário',
       'depósito',
     ],
-    DocumentKind.ownTransfer: ['saque', 'transferência entre contas'],
+    DocumentKind.ownTransfer: [
+      'saque',
+      'transferência entre contas',
+      'transf entre contas',
+    ],
   };
 
   /// Todos os valores em dinheiro que aparecem em [text], em centavos. É
@@ -171,10 +179,17 @@ abstract final class ReceiptFieldReader {
   }
 
   /// O tipo do documento, pelas palavras do texto (RN-756, RN-758 e RN-759).
+  ///
+  /// Compara sem acento e sem espaço repetido: o extrato escreve em
+  /// maiúsculas e sem acento — "TRANSFERENCIA ENTRE CONTAS" —, e a
+  /// transferência entre contas virava pergunta no lugar de "não conta"
+  /// (visto no S22, em 12/10).
   static DocumentKind documentKindIn(String text) {
-    final lower = text.toLowerCase();
+    final plain = NoticeText.fold(text);
     for (final MapEntry(key: kind, value: words) in _kindWords.entries) {
-      if (words.any(lower.contains)) return kind;
+      if (words.any((word) => plain.contains(NoticeText.fold(word)))) {
+        return kind;
+      }
     }
     return DocumentKind.purchase;
   }

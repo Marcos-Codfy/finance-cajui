@@ -115,6 +115,7 @@ class StatementOpening {
       total: reading.pageCount,
       failed: reading.failedPages,
       beyond: reading.beyondLimit,
+      unread: reading.unreadLines,
     ),
     for (final page in reading.partialPages)
       ErrorTexts.of(ErrorCode.ai05).fill({'página': '$page'}).message,

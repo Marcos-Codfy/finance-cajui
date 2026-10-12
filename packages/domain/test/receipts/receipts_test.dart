@@ -189,6 +189,30 @@ void main() {
       },
     );
 
+    test('RN-759 e RN-1110 · o extrato em maiúsculas e sem acento também '
+        'diz o tipo', () {
+      expect(
+        ReceiptFieldReader.documentKindIn(
+          '10/10  TRANSFERENCIA ENTRE CONTAS  -500,00',
+        ),
+        DocumentKind.ownTransfer,
+      );
+      expect(
+        ReceiptFieldReader.documentKindIn(
+          '01/10  TED RECEBIDA EMPRESA EXEMPLO LTDA  +3.120,00',
+        ),
+        DocumentKind.incomeReceipt,
+      );
+      expect(
+        ReceiptFieldReader.documentKindIn('05/10 CREDITO EM CONTA 900,00'),
+        DocumentKind.incomeReceipt,
+      );
+      expect(
+        ReceiptFieldReader.documentKindIn('04/10 PAGAMENTO  DE FATURA 80,00'),
+        DocumentKind.statementPayment,
+      );
+    });
+
     test(
       'RN-727 o estabelecimento normalizado ignora loja, caixa e sufixo',
       () {

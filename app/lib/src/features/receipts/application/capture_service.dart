@@ -53,17 +53,26 @@ class CaptureService {
         .read(file, onPage: onPage);
     return switch (read) {
       ReadFailed(:final code) => CaptureRefused(code),
-      ReadText(:final text, :final images) => await _propose(
+      final ReadText text => await _propose(
         PendingCapture(
           id: file.id,
           receivedOn: today,
-          text: text,
+          text: _statementText(text) ?? text.text,
           filePath: file.path,
           isPdf: file.isPdf,
-          images: images,
+          images: text.images,
         ),
       ),
     };
+  }
+
+  /// O texto em linhas, quando ele tem cara de extrato: o reconhecimento
+  /// (RN-1100) olha linhas com data e valor, e o texto por blocos do OCR
+  /// pode separá-los numa página em forma de tabela. Guardado como o texto
+  /// da captura, ele também é o que a reabertura reconhece depois.
+  static String? _statementText(ReadText read) {
+    final rows = read.rowsText;
+    return rows != null && StatementShape.looksLike(rows) ? rows : null;
   }
 
   /// Monta de novo a proposta de uma captura guardada, já com o que o app

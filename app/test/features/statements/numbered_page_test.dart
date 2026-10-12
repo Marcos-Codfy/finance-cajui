@@ -30,4 +30,18 @@ void main() {
       expect(page.personOn(3), isNull);
     });
   });
+
+  test('RN-1104 · o valor que o OCR quebrou chega inteiro à IA e fica '
+      'inteiro no celular', () {
+    final page = NumberedPage.of(
+      '01/10 TED RECEBIDA EMPRESA EXEMPLO LTDA  +3.120,,00\n'
+      '04/10  COMPRA CARTA0 DROGARIA CENTRAL  -32, 80',
+    );
+
+    expect(page.original, [
+      '01/10 TED RECEBIDA EMPRESA EXEMPLO LTDA  +3.120,00',
+      '04/10  COMPRA CARTA0 DROGARIA CENTRAL  -32,80',
+    ]);
+    expect(page.masked[1], contains('-32,80'));
+  });
 }

@@ -12,7 +12,7 @@ import 'package:flutter/widgets.dart';
 /// entra em soma nenhuma do dinheiro (RN-111).
 abstract final class HomeNumbers {
   /// O que entra em dinheiro: salário e freela.
-  static const int income = 312000;
+  static const int income = 420000;
 
   /// O vale do mês. Cobre o mercado inteiro, que passou de R$ 600,00.
   static const int voucher = 60000;

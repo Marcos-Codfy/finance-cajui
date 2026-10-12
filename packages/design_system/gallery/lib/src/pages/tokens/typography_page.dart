@@ -58,7 +58,7 @@ class TypographyPage extends StatelessWidget {
       style: t.amountLarge,
       sample: BrlFormatter.format(131240),
     ),
-    (token: 'amount', style: t.amount, sample: BrlFormatter.format(312000)),
+    (token: 'amount', style: t.amount, sample: BrlFormatter.format(420000)),
     (token: 'amount', style: t.amount, sample: BrlFormatter.format(111111)),
   ];
 

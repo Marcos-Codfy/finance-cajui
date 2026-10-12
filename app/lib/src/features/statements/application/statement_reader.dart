@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
+import 'package:cajui/src/features/statements/application/missed_lines.dart';
 import 'package:cajui/src/features/statements/application/numbered_page.dart';
 import 'package:cajui/src/features/statements/application/statement_page.dart';
 import 'package:cajui/src/features/statements/application/statement_page_source.dart';
@@ -90,8 +91,36 @@ final class StatementReader {
     if (reply == null) {
       reading.fail(number, outcome.failure ?? ErrorCode.app01);
     } else {
-      reading.add(number, reply);
+      reading.add(number, await _withMissed(reading, request, reply, knows));
     }
+  }
+
+  /// [reply] com as linhas de data e valor que ela não citou pedidas de
+  /// novo, uma vez só; o que ainda faltar fica contado, para a conversa
+  /// dizer (RN-1104). Resposta sem movimentação nenhuma não é repetida:
+  /// pedir as mesmas linhas de novo seria o mesmo pedido.
+  Future<StatementPageReply> _withMissed(
+    _Reading reading,
+    StatementPageRequest request,
+    StatementPageReply reply,
+    bool Function(String id) knows,
+  ) async {
+    final page = reading.numbered[request.page - 1];
+    final missed = MissedLines.of(page, reply);
+    if (missed.isEmpty || reply.movements.isEmpty) {
+      reading.unread[request.page] = missed.length;
+      return reply;
+    }
+    final again = await _source.read(
+      MissedLines.retry(request, missed),
+      knowsCategory: knows,
+    );
+    final extra = again.reply;
+    final merged = extra == null
+        ? reply
+        : MissedLines.merged(reply, extra, missed, page);
+    reading.unread[request.page] = MissedLines.of(page, merged).length;
+    return merged;
   }
 
   /// Resposta lembrada que fala de pessoa nunca vira exemplo para a IA
@@ -116,6 +145,10 @@ final class _Reading {
   final Map<String, String> examples;
   final Map<int, StatementPageReply> replies = {};
   final Map<int, ErrorCode> failures = {};
+
+  /// Quantas linhas com data e valor de cada página não vieram, nem
+  /// pedindo de novo.
+  final Map<int, int> unread = {};
 
   /// A falha que vale para todas as páginas, se já houve uma.
   ErrorCode? get halted =>
@@ -162,6 +195,7 @@ final class _Reading {
           if (value.partial) key,
       ],
       beyondLimit: max(0, lines.length - most),
+      unreadLines: unread.values.fold(0, (sum, count) => sum + count),
       failure: failures.values.lastOrNull,
     );
   }

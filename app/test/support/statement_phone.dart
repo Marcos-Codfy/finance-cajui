@@ -108,12 +108,14 @@ Future<void> settleStatement(WidgetTester tester) async {
 }
 
 /// Abre o app com o plano de exemplo e [events] no livro; as páginas são
-/// lidas por [pages].
+/// lidas por [pages]. O arquivo compartilhado lê como [page], ou como
+/// [read], quando o teste quer o resultado do OCR inteiro.
 Future<StatementPhone> openStatementPhone(
   WidgetTester tester, {
   FakePageSource? pages,
   List<LedgerEvent> events = const [],
   String page = septemberPage,
+  ReadText? read,
 }) async {
   tester.view.physicalSize = const Size(420, 2400);
   tester.view.devicePixelRatio = 1;
@@ -121,7 +123,12 @@ Future<StatementPhone> openStatementPhone(
   final inbox = FakeInbox();
   await tester.pumpWidget(
     ProviderScope(
-      overrides: _overrides(inbox, pages ?? septemberSource(), events, page),
+      overrides: _overrides(
+        inbox,
+        pages ?? septemberSource(),
+        events,
+        read ?? ReadText(page, pages: [page], pageCount: 1),
+      ),
       child: const CajuiApp(),
     ),
   );
@@ -136,14 +143,12 @@ List<Override> _overrides(
   FakeInbox inbox,
   FakePageSource pages,
   List<LedgerEvent> events,
-  String page,
+  ReadText read,
 ) => [
   ...testOverrides(
     journal: MemoryLedgerJournal([...samplePlanEvents, ...events]),
     inbox: inbox,
-    reader: FakeReader({
-      '/inbox/extrato': ReadText(page, pages: [page], pageCount: 1),
-    }),
+    reader: FakeReader({'/inbox/extrato': read}),
   ),
   statementPageSourceProvider.overrideWithValue(pages),
 ];

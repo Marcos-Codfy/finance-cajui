@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
@@ -16,6 +17,16 @@ import java.util.concurrent.TimeoutException
 
 /** Uma leitura que não deu certo, com o código do catálogo de erros. */
 class ReadFailure(val code: String) : Exception(code)
+
+/** Uma página lida: o texto do ML Kit e o mesmo texto em linhas, pela posição ([TextRows]). */
+class PageRead(val text: String, val rows: String) {
+    companion object {
+        /** A página que o OCR não leu a tempo, mas cuja imagem a IA ainda vê. */
+        val EMPTY = PageRead("", "")
+
+        fun of(result: Text) = PageRead(result.text, TextRows.of(result))
+    }
+}
 
 /**
  * Lê o texto de um comprovante **no aparelho** (ADR-007).
@@ -51,9 +62,10 @@ class ReceiptOcr(private val context: Context) {
      * escura ou amassada que o celular não leu ainda pode ser lida pela IA.
      *
      * Volta o texto juntado, que o comprovante lê, e também o de cada
-     * página (`pageTexts`), o total real de páginas (`pageCount`) e a página
-     * de cada imagem (`imagePages`, a partir de 1): imagem que não saiu não
-     * desloca as outras.
+     * página (`pageTexts`), o mesmo em linhas pela posição (`pageRows`), que
+     * o extrato lê, o total real de páginas (`pageCount`) e a página de cada
+     * imagem (`imagePages`, a partir de 1): imagem que não saiu não desloca
+     * as outras.
      */
     fun read(
         path: String,
@@ -69,21 +81,22 @@ class ReceiptOcr(private val context: Context) {
             images.add(1) { AiImage.fromFile(file) }
             listOf(orForAi(images.bytes) { readImage(file) }) to 1
         }
-        val text = pages.joinToString("\n").trim()
+        val text = pages.joinToString("\n") { it.text }.trim()
         if (text.length < MIN_READABLE_CHARS && images.bytes.isEmpty()) {
             throw ReadFailure("E-CAPT-01")
         }
         return mapOf(
             "text" to text,
             "pages" to pages.size,
-            "pageTexts" to pages,
+            "pageTexts" to pages.map { it.text },
+            "pageRows" to pages.map { it.rows },
             "pageCount" to pageCount,
             "images" to images.bytes,
             "imagePages" to images.pages,
         )
     }
 
-    private fun readImage(file: File): String =
+    private fun readImage(file: File): PageRead =
         recognize(InputImage.fromFilePath(context, Uri.fromFile(file)))
 
     /**
@@ -94,7 +107,7 @@ class ReceiptOcr(private val context: Context) {
         file: File,
         images: AiPages,
         onPage: (Int, Int) -> Unit,
-    ): Pair<List<String>, Int> {
+    ): Pair<List<PageRead>, Int> {
         val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         val renderer = try {
             PdfRenderer(descriptor)
@@ -169,15 +182,15 @@ class ReceiptOcr(private val context: Context) {
      * O OCR do aparelho demorou demais (E-CAPT-07). Com a imagem na mão, a IA
      * ainda pode ler: o texto fica vazio, e a leitura segue. Sem ela, falha.
      */
-    private fun orForAi(images: List<ByteArray>, read: () -> String): String = try {
+    private fun orForAi(images: List<ByteArray>, read: () -> PageRead): PageRead = try {
         read()
     } catch (slow: ReadFailure) {
         if (slow.code != "E-CAPT-07" || images.isEmpty()) throw slow
-        ""
+        PageRead.EMPTY
     }
 
-    private fun recognize(image: InputImage): String = try {
-        Tasks.await(recognizer.process(image), PAGE_TIMEOUT_SECONDS, TimeUnit.SECONDS).text
+    private fun recognize(image: InputImage): PageRead = try {
+        PageRead.of(Tasks.await(recognizer.process(image), PAGE_TIMEOUT_SECONDS, TimeUnit.SECONDS))
     } catch (slow: TimeoutException) {
         throw ReadFailure("E-CAPT-07")
     }

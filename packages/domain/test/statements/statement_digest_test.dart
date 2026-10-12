@@ -174,6 +174,15 @@ void main() {
   test('RN-1101 a RN-1103 · as páginas que ficaram de fora são ditas', () {
     expect(StatementWords.pages(read: 7, total: 7), isNull);
     expect(
+      StatementWords.pages(read: 2, total: 2, unread: 2),
+      '2 linhas com data e valor não vieram na leitura: dá para conferir no '
+      'extrato e lançar à mão.',
+    );
+    expect(
+      StatementWords.pages(read: 2, total: 2, unread: 1),
+      startsWith('1 linha com data e valor não veio na leitura'),
+    );
+    expect(
       StatementWords.pages(read: 7, total: 7, beyond: 12),
       'Passou de 400 movimentações: as últimas 12 ficaram de fora.',
     );
