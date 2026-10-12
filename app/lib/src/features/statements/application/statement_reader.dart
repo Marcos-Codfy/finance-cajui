@@ -31,9 +31,16 @@ final class StatementReader {
   static const maxLines = 400;
 
   /// Falhas que valem para todas as páginas: sem orçamento de IA, sem a
-  /// chave da casa. Tentar de novo, ou ler a página seguinte, só gastaria
-  /// pedidos.
-  static const Set<ErrorCode> _forAllPages = {ErrorCode.ai03, ErrorCode.auth03};
+  /// chave da casa, ou o provedor pedindo pausa (E-AI-02, o 429). Tentar de
+  /// novo, ou ler a página seguinte, só gastaria pedidos — e, no caso da
+  /// pausa, cada pedido recusado conta no disjuntor do servidor, que é o
+  /// mesmo do chat e do comprovante: insistir página após página o abriria
+  /// para o resto do app.
+  static const Set<ErrorCode> _forAllPages = {
+    ErrorCode.ai02,
+    ErrorCode.ai03,
+    ErrorCode.auth03,
+  };
 
   /// Lê [pages], na ordem. [pageCount] é o total real dos arquivos, quando
   /// passa do que foi lido; [examples] são as respostas lembradas, chave
@@ -88,10 +95,14 @@ final class StatementReader {
   }
 
   /// Resposta lembrada que fala de pessoa nunca vira exemplo para a IA
-  /// (RN-1107) — mesmo que alguém a tenha posto na lista.
+  /// (RN-1107) — mesmo que alguém a tenha posto na lista. Não basta o
+  /// prefixo "pessoa:": a regra antiga do comprovante guardava o nome solto
+  /// ("joao p silva"), e é o domínio que diz se a chave tem cara de gente.
   static Map<String, String> _withoutPeople(Map<String, String> examples) => {
     for (final MapEntry(:key, :value) in examples.entries)
-      if (!key.startsWith(StatementLineResolver.personPrefix)) key: value,
+      if (!key.startsWith(StatementLineResolver.personPrefix) &&
+          !LearnedRules.looksLikePerson(key))
+        key: value,
   };
 }
 

@@ -80,6 +80,23 @@ void main() {
       expect(reading.failedPages, [1, 2, 3]);
       expect(reading.failure, ErrorCode.ai03);
     });
+
+    test('E-AI-02 · o provedor pediu pausa: nem a página é tentada de '
+        'novo, nem as seguintes são pedidas', () async {
+      final source = FakePageSource({
+        2: [pageFailed(ErrorCode.ai02)],
+      });
+
+      final reading = await readStatement(
+        source,
+        List.filled(4, statementPage()),
+      );
+
+      expect(source.requests.map((r) => r.page), [1, 2]);
+      expect(reading.failedPages, [2, 3, 4]);
+      expect(reading.failure, ErrorCode.ai02);
+      expect(reading.lines, isEmpty);
+    });
   });
 
   group('ADR-030 · juntar as páginas', () {
@@ -139,6 +156,45 @@ void main() {
       );
 
       expect(source.requests.single.examples, {'padaria boa vista': 'bakery'});
+    });
+
+    test('RN-1107 · chave com cara de nome de gente, sem o prefixo, também '
+        'não vai', () async {
+      final source = FakePageSource();
+
+      await readStatement(
+        source,
+        [statementPage()],
+        examples: const {
+          'maria de souza lima': 'gifts',
+          'padaria boa vista': 'bakery',
+          'netflix': 'subscriptions',
+        },
+      );
+
+      expect(source.requests.single.examples, {
+        'padaria boa vista': 'bakery',
+        'netflix': 'subscriptions',
+      });
+    });
+
+    test('RN-1106 · o nome na linha de baixo de "Transferência enviada pelo '
+        'Pix" também sai mascarado', () async {
+      final source = FakePageSource();
+
+      await readStatement(source, [
+        statementPage(
+          'Transferência enviada pelo Pix 150,00\n'
+          'FULANO DE TAL - •••.123.456-•• - BANCO EXEMPLO\n'
+          '05/10 PIX ENVIADO JOAO P SILVA 20,00',
+        ),
+      ]);
+
+      expect(source.requests.single.lines, [
+        'Transferência enviada pelo Pix 150,00',
+        '[NOME] - [CPF] - BANCO EXEMPLO',
+        '05/10 PIX ENVIADO [NOME] 20,00',
+      ]);
     });
 
     test('a imagem só vai quando o OCR da página veio fraco', () async {

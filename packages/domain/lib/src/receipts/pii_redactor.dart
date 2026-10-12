@@ -44,13 +44,17 @@ abstract final class PiiRedactor {
     (RegExp(r'\b\d{2}\.?\d{3}\.?\d{3}/\d{4}-?\d{2}\b'), '[CNPJ]'),
     (
       // O hífen é opcional: a camada de texto de alguns PDFs o perde, e o
-      // CPF "meio mascarado" do banco (***.123.456-**) ainda traz seis dígitos
-      // de verdade — continua sendo dado pessoal.
+      // CPF "meio mascarado" do banco ainda traz seis dígitos de verdade —
+      // continua sendo dado pessoal. Cada banco esconde as pontas com um
+      // sinal: "***.123.456-**", "•••.123.456-••" (Nubank), "xxx.…-xx".
       RegExp(
-        r'(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})-?(?:\d{2}|\*{2})',
+        r'(?:\d{3}|[*•xX]{3})\.(?:\d{3}|[*•xX]{3})\.(?:\d{3}|[*•xX]{3})-?'
+        r'(?:\d{2}|[*•xX]{2})',
       ),
       '[CPF]',
     ),
+    // O mesmo CPF meio mascarado sem os pontos: "•••123456••".
+    (RegExp(r'[*•xX]{3}\d{6}-?[*•xX]{2}'), '[CPF]'),
     (RegExp(r'[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,4}'), '[EMAIL]'),
     (RegExp(r'\(\d{2}\)\s?9?\d{4}[-\s]?\d{4}\b'), '[TELEFONE]'),
     (RegExp(r'\b\d{5}-\d{3}\b'), '[ENDERECO]'),
@@ -77,8 +81,9 @@ abstract final class PiiRedactor {
       '[ID]',
     ),
     (
+      // "S A L D O": o PDF de alguns bancos espaça as letras do rótulo.
       RegExp(
-        r'\b(saldo[^\n\d]{0,40})R?\$?\s?[\d.]{1,12},\d{2}',
+        r'\b(s ?a ?l ?d ?o[^\n\d]{0,40})R?\$?\s?[\d.]{1,12},\d{2}',
         caseSensitive: false,
       ),
       '[SALDO]',
@@ -122,7 +127,7 @@ abstract final class PiiRedactor {
       });
     }
     final people = _maskBlockPeople(_maskPeople(result.split('\n')));
-    final lines = _maskTransfers(people);
+    final lines = _maskBalances(_maskTransfers(people));
     return householdNames.fold(lines.join('\n'), _maskName);
   }
 
@@ -140,8 +145,15 @@ abstract final class PiiRedactor {
       householdNames: householdNames,
     ).split('\n');
     if (masked.length == lines.length) return masked;
+    // Sozinha, a linha não vê o nome que mora na de baixo de "Transferência
+    // enviada pelo Pix": quem o acha é a página inteira.
+    final people = TransferLine.peopleIn(lines);
     return [
-      for (final line in lines) redact(line, householdNames: householdNames),
+      for (final (index, line) in lines.indexed)
+        _maskPerson(
+          redact(line, householdNames: householdNames),
+          people[index],
+        ),
     ];
   }
 
@@ -152,16 +164,39 @@ abstract final class PiiRedactor {
       marker + '\n' * '\n'.allMatches(matched).length;
 
   /// O nome de quem recebeu ou mandou um Pix, solto na linha do extrato —
-  /// "PIX ENVIADO JOAO P SILVA 150,00", sem rótulo e sem CPF por perto —,
-  /// que a máscara da RN-732 deixava passar (RN-1106). Uma linha de cada
-  /// vez: o nome de uma nunca se junta ao da outra.
-  static List<String> _maskTransfers(List<String> lines) => [
+  /// "PIX ENVIADO JOAO P SILVA 150,00", sem rótulo e sem CPF por perto, ou
+  /// na linha de baixo de "Transferência enviada pelo Pix" —, que a máscara
+  /// da RN-732 deixava passar (RN-1106). Linha por linha: o nome de uma
+  /// nunca se junta ao da outra, e o número de linhas não muda.
+  static List<String> _maskTransfers(List<String> lines) {
+    final people = TransferLine.peopleIn(lines);
+    return [
+      for (final (index, line) in lines.indexed)
+        _maskPerson(line, people[index]),
+    ];
+  }
+
+  static String _maskPerson(String line, String? person) =>
+      person == null ? line : line.replaceAll(person, '[NOME]');
+
+  /// A linha de saldo — "SALDO DO DIA", "SALDO ANTERIOR EM 30/09",
+  /// "S A L D O", com ou sem a data na frente — tem todo valor trocado por
+  /// `[SALDO]`. O rótulo sozinho não bastava: a data entre ele e o valor
+  /// deixava o valor passar.
+  static List<String> _maskBalances(List<String> lines) => [
     for (final line in lines)
-      if (TransferLine.personIn(line) case final person?)
-        line.replaceAll(person, '[NOME]')
+      if (_balanceLine.hasMatch(line))
+        line.replaceAll(_amount, '[SALDO]')
       else
         line,
   ];
+
+  static final _balanceLine = RegExp(
+    r'^\s*(?:\d{2}/\d{2}(?:/\d{2,4})?\s+)?s ?a ?l ?d ?o\b',
+    caseSensitive: false,
+  );
+
+  static final _amount = RegExp(r'-?(?:R\$ ?)?-?\d[\d.]{0,14},\d{2}');
 
   static final _blockLabel = RegExp(
     r'^\s*(?:de|para|pagador|recebedor|favorecido|origem|destino|'

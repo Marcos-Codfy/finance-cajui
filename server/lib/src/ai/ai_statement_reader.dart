@@ -158,8 +158,9 @@ final class AiStatementReader {
   }
 
   /// As linhas [numbers] em duas metades, perguntadas juntas, uma vez só.
-  /// Metade cortada de novo rende o que veio completo; se as metades nem
-  /// voltam, rende o que a primeira resposta trouxe completo.
+  /// Metade cortada de novo rende o que veio completo; metade fora do
+  /// esquema, ou metades que nem voltam, rendem o que a primeira resposta
+  /// trouxe completo ([StatementAnswer.ofHalves]).
   Future<List<StatementAnswerParts?>> _halves(
     _Page page,
     List<int> numbers,
@@ -167,12 +168,12 @@ final class AiStatementReader {
   ) async {
     if (numbers.length < 2) return [StatementAnswer.of(cut)];
     final middle = numbers.length ~/ 2;
+    final halves = [numbers.sublist(0, middle), numbers.sublist(middle)];
     try {
       final replies = await Future.wait([
-        _ask(page, numbers.sublist(0, middle)),
-        _ask(page, numbers.sublist(middle)),
+        for (final half in halves) _ask(page, half),
       ]);
-      return [for (final reply in replies) StatementAnswer.of(reply)];
+      return StatementAnswer.ofHalves(replies, halves, cut);
     } on ChatUnavailable {
       return [StatementAnswer.of(cut)];
     } on TimeoutException {
