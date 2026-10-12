@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- O fundo do widget: a superfície do cartão do app, cantos de 24 dp — o
-     mesmo raio dos cartões grandes do design system. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/cajui_widget_surface" />
-    <corners android:radius="24dp" />
-</shape>

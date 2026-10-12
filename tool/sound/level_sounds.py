@@ -52,7 +52,10 @@ CEILING = 10 ** (-0.9 / 20)
 CONFIRMATION = (-6.5, 3.0)
 TOUCH = (-7.5, 5.0)
 TARGETS = {
-    "tap": TOUCH,
+    # O botão satura pouco: o som que o dono escolheu é macio ("soft app
+    # button tap"), e o clique anterior, saturado até o alvo dos toques,
+    # ficou feio no aparelho (12/10). Fica um pouco atrás das chaves.
+    "tap": (-8.5, 2.0),
     "toggle_on": TOUCH,
     "toggle_off": TOUCH,
     "card": (-10.0, 5.0),

@@ -9,6 +9,7 @@ import 'package:cajui/src/features/home/presentation/home_links.dart';
 import 'package:cajui/src/features/home/presentation/home_state.dart';
 import 'package:cajui/src/features/home/presentation/month_celebration.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
+import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
@@ -49,6 +50,14 @@ class HomePage extends ConsumerWidget {
     };
   }
 
+  /// Os números do mês. Tocar no número do widget os traz atravessando o
+  /// vidro.
+  Widget _cards(WidgetRef ref, HomeView view, {required bool visible}) =>
+      CajuiGlassArrival(
+        arrival: ref.watch(widgetArrivalProvider),
+        child: HomeCards.of(view, party: _party(ref, view, visible: visible)),
+      );
+
   Widget _ready(
     BuildContext context,
     WidgetRef ref,
@@ -71,7 +80,7 @@ class HomePage extends ConsumerWidget {
       replayKey: view.budget.month,
       children: [
         ..._notice(context, ref, state),
-        HomeCards.of(view, party: _party(ref, view, visible: visible)),
+        _cards(ref, view, visible: visible),
         const SizedBox(height: CajuiSpacing.xl),
         ..._links(context, ref, view),
       ],

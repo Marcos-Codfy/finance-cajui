@@ -17,6 +17,7 @@ import 'package:gallery/src/pages/screens/debts/debts_page.dart';
 import 'package:gallery/src/pages/screens/home/home_page.dart';
 import 'package:gallery/src/pages/screens/shortfall/shortfall_compare_page.dart';
 import 'package:gallery/src/pages/screens/statement/statement_page.dart';
+import 'package:gallery/src/pages/screens/widget/home_widget_page.dart';
 import 'package:gallery/src/pages/senses/motion_desk_page.dart';
 import 'package:gallery/src/pages/senses/sound_desk_page.dart';
 import 'package:gallery/src/pages/tokens/colors_page.dart';
@@ -46,6 +47,7 @@ Widget galleryPageOf(GalleryDestination destination) => switch (destination) {
   GalleryDestination.wallet => const WalletPage(),
   GalleryDestination.camera => const CameraPage(),
   GalleryDestination.home => const HomePage(),
+  GalleryDestination.homeWidget => const HomeWidgetPage(),
   GalleryDestination.capture => const CapturePage(),
   GalleryDestination.statement => const StatementPage(),
   GalleryDestination.closing => const ClosingPage(),

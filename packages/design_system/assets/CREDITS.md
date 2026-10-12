@@ -12,7 +12,7 @@ O dono escolheu um som para cada família de controle: botões de ação, cards,
 
 | Arquivo | Token | Origem (autor no Pixabay · código) | Tratamento | Duração |
 |---|---|---|---|---|
-| `tap.wav` | `CajuiSound.tap` | "Modern Button Click", freesoundeffects · 291234 | Corte em 300 ms com saída de 140 ms; +14,9 dB (o original vinha a −18,5 dBFS) | 300 ms |
+| `tap.wav` | `CajuiSound.tap` | "Soft App Button Tap Sound 5", vadim_makes_sound · 547873 — trocado em 12/10/2026 a pedido do dono: o "Modern Button Click" (freesoundeffects · 291234), saturado para aparecer no celular, ficou feio | Começo no ataque (o original abre com 23 ms de silêncio), corte em 150 ms com saída de 60 ms | 150 ms |
 | `card.wav` | `card` | "Minimal Pop Click UI 2", floraphonic · 198302 | Corte em 70 ms com saída de 25 ms | 70 ms |
 | `key.wav` | `key` | "ImmersiveControl Button Click Sound", denielcz · 463065 | Corte do clique, pico em −6 dBFS: a tecla soa a cada letra e fica mais baixa que os outros | 24 ms |
 | `toggle_on.wav` | `toggleOn` | "New Notification 040", universfield · 493469 | Começo em 131 ms (o original abre com silêncio), corte em 230 ms com saída de 70 ms; +5,1 dB | 230 ms |
@@ -67,7 +67,8 @@ Todo arquivo desta pasta passa por `tool/sound/level_sounds.py`, depois do trata
 
 | Família | Alvo | Antes → depois (LUFS no celular) |
 |---|---|---|
-| Botão e chaves | −7,5 | botão −16,0 → −7,5 · chaves −10,5/−11,2 → −7,5 |
+| Botão, o toque macio | −8,5 | −15,6 → −8,7 (saturação até 2: mais que isso deixa o som feio) |
+| Chaves | −7,5 | −10,5/−11,2 → −7,5 |
 | Card | −10,0 | −15,1 → −10,0 |
 | Tecla, que soa a cada letra | −11,5 | −22,0 → −11,5 |
 | Confirmações | −6,5 | de −10,6 a −6,4 → −6,5 |

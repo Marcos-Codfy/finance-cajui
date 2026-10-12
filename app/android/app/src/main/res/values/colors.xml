@@ -4,12 +4,11 @@
      system (`cajui_palette.dart`), tema claro; o escuro está em
      `values-night`. Quem muda a paleta lá muda aqui junto. -->
 <resources>
-    <!-- paper -->
-    <color name="cajui_widget_surface">#FFFFFFFF</color>
-    <!-- ink -->
-    <color name="cajui_widget_text">#FF2A1D17</color>
-    <!-- inkSoft -->
-    <color name="cajui_widget_text_muted">#FF5F4E44</color>
+    <!-- O texto sobre o vidro do widget: o widget é sempre a aurora à noite,
+         nos dois temas, então o texto é sempre claro. paper -->
+    <color name="cajui_glass_text">#FFFFFFFF</color>
+    <!-- moon, a 80% -->
+    <color name="cajui_glass_text_muted">#CCF4ECE0</color>
     <!-- cajuiStrong -->
     <color name="cajui_accent">#FFB93D17</color>
     <!-- paper, sobre o cajuiStrong -->

@@ -11,9 +11,9 @@ abstract final class SoundNotes {
   /// A nota de cada som.
   static const Map<CajuiSound, SoundNote> all = {
     CajuiSound.tap: (
-      timbre: 'Clique moderno, com cauda curta',
+      timbre: 'Toque macio, curto e grave',
       use: 'Toque em botão de ação',
-      milliseconds: 300,
+      milliseconds: 150,
     ),
     CajuiSound.card: (
       timbre: 'Pop mínimo',

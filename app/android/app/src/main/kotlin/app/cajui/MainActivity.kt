@@ -118,13 +118,16 @@ class MainActivity : FlutterActivity() {
     /**
      * Os atalhos de fora: a câmera e a galeria do widget abrem o mesmo
      * caminho do botão de dentro do app (ADR-017); o aviso de domingo abre a
-     * revisão da semana, e não o painel (RN-849).
+     * revisão da semana, e não o painel (RN-849); o número do widget abre o
+     * Início com a chegada pelo vidro.
      */
     private fun handleShortcut(intent: Intent?, appIsRunning: Boolean) {
         when (intent?.action) {
             ACTION_PHOTO -> photos.start()
             ACTION_PICK -> files.start()
             ACTION_REVIEW -> NoticeRouter.requestRoute(REVIEW_ROUTE, appIsRunning)
+            // O número do widget abre o Início com a chegada pelo vidro.
+            ACTION_WIDGET -> NoticeRouter.requestRoute(WIDGET_ROUTE, appIsRunning)
             // O lembrete de vencimento abre a tela do assunto (RN-1087).
             ReminderPoster.ACTION_OPEN -> ReminderPoster.routeOf(intent)
                 ?.let { NoticeRouter.requestRoute(it, appIsRunning) }
@@ -135,6 +138,10 @@ class MainActivity : FlutterActivity() {
         const val ACTION_PHOTO = "app.cajui.action.PHOTO"
         const val ACTION_PICK = "app.cajui.action.PICK"
         const val ACTION_REVIEW = "app.cajui.action.REVIEW"
+        const val ACTION_WIDGET = "app.cajui.action.WIDGET"
+
+        /** O contrato com `WidgetArrival.route`, no Dart. */
+        private const val WIDGET_ROUTE = "widget"
 
         /** O contrato com `NotificationsHost.reviewRoute`, no Dart. */
         private const val REVIEW_ROUTE = "review"

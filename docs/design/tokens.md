@@ -40,7 +40,7 @@ Os papéis, agrupados como em `CajuiColors`. Valores e contraste de cada um: pá
 | `action` | `primary` · `secondary` (cada um com `Hover` e `Pressed`) · `disabled` | Tudo o que se toca |
 | `intent` | `positive` · `notice` · `danger` · `info` · `achievement` (cada um com `Subtle`) | O sentido de um aviso ou de um número |
 | `border` | `subtle` · `field` · `strong` · `focusRing` · `focusGap` | Limites e foco |
-| `brand` | `accent` · `gold` · `sheen` | O cajuí e o capim dourado, em detalhe; `sheen` é a luz que bate em superfície 3D (o brilho do cartão), sempre translúcida e, sob texto, no máximo `BrandColors.sheenOverText` (12%) |
+| `brand` | `accent` · `gold` · `sheen` · `aurora` · `auroraSky` | O cajuí e o capim dourado, em detalhe; `sheen` é a luz que bate em superfície 3D (o brilho do cartão), sempre translúcida e, sob texto, no máximo `BrandColors.sheenOverText` (12%). `aurora` são as três luzes do widget de vidro (cajuí, dourado, vereda) e `auroraSky` o céu atrás delas, da noite ao crepúsculo (`dusk`): iguais nos dois temas, porque a aurora é sempre noite |
 | `data` | `fixed` · `variable` · `debt` · `voucher` · `track` | Os três blocos de despesa e o vale, nos medidores. A `water`, do pote do "pode gastar", saiu com ele em 11/10/2026 |
 | — | `shortfall` · `shortfallSubtle` | A falta do mês; resolve pelo `ShortfallStyle` em vigor |
 

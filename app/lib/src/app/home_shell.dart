@@ -2,6 +2,7 @@ import 'package:cajui/src/app/home_tab.dart';
 import 'package:cajui/src/app/home_tab_controller.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_page.dart';
 import 'package:cajui/src/features/home/presentation/home_page.dart';
+import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
@@ -57,6 +58,12 @@ class HomeShell extends ConsumerWidget {
       if (before is! StatementTalkIdle || now is StatementTalkIdle) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
       ref.read(homeTabProvider.notifier).select(HomeTab.conversar);
+    });
+    // O número do widget abre o Início, com a chegada pelo vidro.
+    ref.listen(widgetArrivalProvider, (before, now) {
+      if (now == 0 || now == before) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      ref.read(homeTabProvider.notifier).select(HomeTab.inicio);
     });
   }
 
