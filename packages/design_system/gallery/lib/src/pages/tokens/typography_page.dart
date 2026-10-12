@@ -34,31 +34,31 @@ class TypographyPage extends StatelessWidget {
   }
 
   List<_TypeSample> _display(CajuiTypography t) => [
-    (token: 'displayLarge', style: t.displayLarge, sample: 'Sobra de setembro'),
+    (token: 'displayLarge', style: t.displayLarge, sample: 'Sobra de outubro'),
     (token: 'displayMedium', style: t.displayMedium, sample: 'O mês até aqui'),
-    (token: 'headline', style: t.headline, sample: 'Fatura de outubro'),
-    (token: 'title', style: t.title, sample: 'Gastos variáveis'),
+    (token: 'headline', style: t.headline, sample: 'Outubro'),
+    (token: 'title', style: t.title, sample: 'Seu dinheiro'),
   ];
 
   List<_TypeSample> _reading(CajuiTypography t) => [
     (
       token: 'body',
       style: t.body,
-      sample: 'Você ainda tem folga nesta semana. Dá para o mercado de sábado.',
+      sample: 'Outubro fecha com sobra. Dá para o mercado de sábado.',
     ),
     (token: 'bodyStrong', style: t.bodyStrong, sample: 'Confere se é isso?'),
     (token: 'label', style: t.label, sample: 'Salvar lançamento'),
     (token: 'caption', style: t.caption, sample: 'Pago no vale alimentação'),
-    (token: 'overline', style: t.overline, sample: 'ESTA SEMANA'),
+    (token: 'overline', style: t.overline, sample: 'OUTUBRO DE 2026'),
   ];
 
   List<_TypeSample> _amounts(CajuiTypography t) => [
     (
       token: 'amountLarge',
       style: t.amountLarge,
-      sample: BrlFormatter.format(55800),
+      sample: BrlFormatter.format(131240),
     ),
-    (token: 'amount', style: t.amount, sample: BrlFormatter.format(19600)),
+    (token: 'amount', style: t.amount, sample: BrlFormatter.format(312000)),
     (token: 'amount', style: t.amount, sample: BrlFormatter.format(111111)),
   ];
 

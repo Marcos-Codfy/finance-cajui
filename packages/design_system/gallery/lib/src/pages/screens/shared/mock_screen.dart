@@ -16,7 +16,7 @@ class MockScreen extends StatelessWidget {
   /// O título da tela.
   final String title;
 
-  /// A linha miúda acima do título: o mês, a semana, o passo.
+  /// A linha miúda acima do título: o mês, o passo.
   final String? overline;
 
   /// O conteúdo, de cima para baixo.

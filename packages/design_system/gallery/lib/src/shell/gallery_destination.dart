@@ -32,8 +32,11 @@ enum GalleryDestination {
   /// Aviso, vazio, esqueleto, carregando e ícone-herói.
   states('Estados', GalleryGroup.components),
 
-  /// Pote de água, cartão em 3D, número que voa, semente e folha, brilho,
-  /// mês a mês e resposta palavra por palavra.
+  /// A fala comum e a fala que pede resposta, com botões ou opções.
+  conversation('Conversa', GalleryGroup.components),
+
+  /// Cartão em 3D, número que rola e voa, semente e folha, brilho, mês a
+  /// mês e resposta palavra por palavra.
   alive('Efeitos vivos', GalleryGroup.components),
 
   /// A rolagem que curva nas bordas como a face de um tambor.
@@ -48,8 +51,11 @@ enum GalleryDestination {
   /// Os cartões que saem do maço e se empilham ao rolar.
   wallet('Pilha de carteira', GalleryGroup.depth),
 
-  /// O painel, em todos os estados.
-  dashboard('Painel', GalleryGroup.screens),
+  /// A câmera que avança para a tela nova e orbita entre as abas.
+  camera('Câmera entre telas', GalleryGroup.depth),
+
+  /// O Início, em todos os estados.
+  home('Início', GalleryGroup.screens),
 
   /// A confirmação de captura, nos 17 estados do compartilhamento.
   capture('Captura', GalleryGroup.screens),
@@ -63,8 +69,8 @@ enum GalleryDestination {
   /// As dívidas e o marco de quitação.
   debts('Dívidas', GalleryGroup.screens),
 
-  /// A conversa com o assistente e as falhas da IA.
-  assistant('Assistente', GalleryGroup.screens),
+  /// A conversa com a Juju, o extrato conferido com ela e as falhas da IA.
+  assistant('Juju', GalleryGroup.screens),
 
   /// A falta do mês em barro e em vermelho, lado a lado.
   shortfall('Falta: barro × vermelho', GalleryGroup.decisions),

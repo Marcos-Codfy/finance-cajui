@@ -16,12 +16,18 @@ class GalleryNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    // Uma coluna inteira, e não uma lista preguiçosa: são poucas dezenas de
+    // linhas, e montadas todas o leitor de tela e o Tab alcançam a última
+    // página sem precisar rolar o menu antes.
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(CajuiSpacing.lg),
-      children: [
-        for (final group in GalleryGroup.values)
-          if (GalleryDestination.inGroup(group).isNotEmpty) ..._group(group),
-      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final group in GalleryGroup.values)
+            if (GalleryDestination.inGroup(group).isNotEmpty) ..._group(group),
+        ],
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/app/gallery_scope.dart';
 import 'package:gallery/src/pages/senses/sound_notes.dart';
+import 'package:gallery/src/pages/senses/touch_families.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
 
@@ -21,11 +22,13 @@ class SoundDeskPage extends StatelessWidget {
     return GalleryPage(
       title: 'Mesa de som',
       lead:
-          'Dez sons curtos, secos e baixos, sintetizados pelo próprio '
-          'projeto. O botão Tocar sempre toca, mesmo com o som do app '
-          'desligado: aqui é audição. Não existe som de erro.',
+          'Os sons do Cajui: curtos, secos e baixos, gravados e tratados ou '
+          'sintetizados pelo próprio projeto. O botão Tocar sempre toca, '
+          'mesmo com o som do app desligado: aqui é audição. Não existe som '
+          'de erro.',
       sections: [
         _preferences(context),
+        const TouchFamilies(),
         for (final category in SoundCategory.values) _family(category),
       ],
     );

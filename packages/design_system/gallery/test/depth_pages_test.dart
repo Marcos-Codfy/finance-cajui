@@ -76,6 +76,53 @@ void main() {
     expect(tester.hasRunningAnimations, isFalse);
   });
 
+  testWidgets('a câmera avança para a tela nova, dentro do celular, e recua '
+      'ao voltar', (tester) async {
+    await _open(tester, GalleryDestination.camera);
+
+    await _tapVisible(tester, find.text('Abrir o Meu mês'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.hasRunningAnimations, isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('OUTUBRO DE 2026'), findsOneWidget);
+    // A gallery em volta não saiu do lugar: a troca foi só no palco.
+    expect(find.text('Trocar de aba'), findsOneWidget);
+
+    await _tapVisible(tester, find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+    expect(find.text('OUTUBRO DE 2026'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('as abas orbitam e cada uma guarda o seu contador', (
+    tester,
+  ) async {
+    await _open(tester, GalleryDestination.camera);
+    final more = find.text('Contar mais um');
+    Finder tab(String label) => find.descendant(
+      of: find.byType(CajuiNavBar),
+      matching: find.text(label),
+    );
+
+    await _tapVisible(tester, more);
+    await tester.pump();
+    await tester.tap(more);
+    await tester.pump();
+    expect(find.text('2 toques nesta aba'), findsOneWidget);
+
+    await tester.tap(tab('Início'));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.hasRunningAnimations, isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('0 toques nesta aba'), findsOneWidget);
+    expect(find.text('2 toques nesta aba'), findsNothing);
+
+    await tester.tap(tab('Conversar'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 toques nesta aba'), findsOneWidget);
+  });
+
   testWidgets('RNF-A11Y-07 trocar para o reduzido no meio não quebra nada', (
     tester,
   ) async {

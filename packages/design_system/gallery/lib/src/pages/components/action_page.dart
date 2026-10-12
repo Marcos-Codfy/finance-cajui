@@ -24,11 +24,11 @@ class _ActionPageState extends State<ActionPage> {
     CajuiButtonVariant.destructive: 'Apagar lançamento',
   };
 
+  /// As duas áreas do app: a conversa com a Juju, que é a tela principal, e
+  /// o Início, de onde se abre o resto.
   static const _areas = [
-    CajuiNavDestination(icon: CajuiIconData.chart, label: 'Painel'),
-    CajuiNavDestination(icon: CajuiIconData.receipt, label: 'Lançamentos'),
-    CajuiNavDestination(icon: CajuiIconData.chat, label: 'Assistente'),
-    CajuiNavDestination(icon: CajuiIconData.sliders, label: 'Ajustes'),
+    CajuiNavDestination(icon: CajuiIconData.chat, label: 'Conversar'),
+    CajuiNavDestination(icon: CajuiIconData.wallet, label: 'Início'),
   ];
 
   String _category = _categories.first;

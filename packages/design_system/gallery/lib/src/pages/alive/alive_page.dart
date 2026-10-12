@@ -20,8 +20,8 @@ class AlivePage extends StatefulWidget {
 }
 
 class _AlivePageState extends State<AlivePage> {
-  /// A inclinação de mentira, a mesma para o pote e para o cartão: no app,
-  /// é o acelerômetro que escreve aqui.
+  /// A inclinação de mentira do cartão: no app, é o acelerômetro que
+  /// escreve aqui.
   final ValueNotifier<Offset> _tilt = ValueNotifier(Offset.zero);
 
   @override

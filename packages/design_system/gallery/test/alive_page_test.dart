@@ -21,7 +21,7 @@ class _MutePlayer implements SoundPlayer {
 
 const _desktop = Size(1280, 1600);
 
-/// O pote e as barras assentam sozinhos; o tempo fixo basta para a página
+/// O número e as barras assentam sozinhos; o tempo fixo basta para a página
 /// abrir sem esperar cada mola parar.
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
@@ -63,16 +63,17 @@ void main() {
     expect(player.played, [CajuiSound.entrySaved, CajuiSound.undone]);
   });
 
-  testWidgets('o número voa para o detalhe e volta sem erro', (tester) async {
+  testWidgets('a sobra voa para o Meu mês e volta sem erro', (tester) async {
     await _openAlive(tester);
 
-    await _tapVisible(tester, 'Abrir o detalhe');
+    await _tapVisible(tester, 'Abrir o Meu mês');
     await tester.pumpAndSettle();
-    expect(find.text('Esta semana'), findsOneWidget);
+    expect(find.text('Meu mês'), findsOneWidget);
+    expect(find.text(BrlFormatter.format(131240)), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Voltar'));
     await tester.pumpAndSettle();
-    expect(find.text('Esta semana'), findsNothing);
+    expect(find.text('Meu mês'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

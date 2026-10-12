@@ -2,8 +2,10 @@ import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/alive/alive_page.dart';
 import 'package:gallery/src/pages/components/action_page.dart';
 import 'package:gallery/src/pages/components/content_page.dart';
+import 'package:gallery/src/pages/components/conversation_page.dart';
 import 'package:gallery/src/pages/components/field_page.dart';
 import 'package:gallery/src/pages/components/state_page.dart';
+import 'package:gallery/src/pages/depth/camera_page.dart';
 import 'package:gallery/src/pages/depth/cinematic_page.dart';
 import 'package:gallery/src/pages/depth/cover_flow_page.dart';
 import 'package:gallery/src/pages/depth/depth_scroll_page.dart';
@@ -11,8 +13,8 @@ import 'package:gallery/src/pages/depth/wallet_page.dart';
 import 'package:gallery/src/pages/screens/assistant/assistant_page.dart';
 import 'package:gallery/src/pages/screens/capture/capture_page.dart';
 import 'package:gallery/src/pages/screens/closing/closing_page.dart';
-import 'package:gallery/src/pages/screens/dashboard/dashboard_page.dart';
 import 'package:gallery/src/pages/screens/debts/debts_page.dart';
+import 'package:gallery/src/pages/screens/home/home_page.dart';
 import 'package:gallery/src/pages/screens/shortfall/shortfall_compare_page.dart';
 import 'package:gallery/src/pages/screens/statement/statement_page.dart';
 import 'package:gallery/src/pages/senses/motion_desk_page.dart';
@@ -36,12 +38,14 @@ Widget galleryPageOf(GalleryDestination destination) => switch (destination) {
   GalleryDestination.content => const ContentPage(),
   GalleryDestination.fields => const FieldPage(),
   GalleryDestination.states => const StatePage(),
+  GalleryDestination.conversation => const ConversationPage(),
   GalleryDestination.alive => const AlivePage(),
   GalleryDestination.depthScroll => const DepthScrollPage(),
   GalleryDestination.coverFlow => const CoverFlowPage(),
   GalleryDestination.cinematic => const CinematicPage(),
   GalleryDestination.wallet => const WalletPage(),
-  GalleryDestination.dashboard => const DashboardPage(),
+  GalleryDestination.camera => const CameraPage(),
+  GalleryDestination.home => const HomePage(),
   GalleryDestination.capture => const CapturePage(),
   GalleryDestination.statement => const StatementPage(),
   GalleryDestination.closing => const ClosingPage(),

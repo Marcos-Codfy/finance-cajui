@@ -1,8 +1,10 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/screens/home/home_numbers.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
 
-/// O número que rola até o valor e voa do Início para o detalhe.
+/// O número que rola até o valor e voa do Início para o Meu mês, como no
+/// app (escolha 3 do dono).
 class NumbersSection extends StatefulWidget {
   /// Cria a seção.
   const new({super.key});
@@ -12,13 +14,13 @@ class NumbersSection extends StatefulWidget {
 }
 
 class _NumbersSectionState extends State<NumbersSection> {
-  static const _tag = 'gallery-week-left';
+  static const _tag = 'gallery-month-result';
   int _run = 0;
 
   void _openDetail() {
     Navigator.of(
       context,
-    ).push(CajuiPageRoute<void>(builder: (_) => const _WeekDetail(tag: _tag)));
+    ).push(CajuiPageRoute<void>(builder: (_) => const _MonthDetail(tag: _tag)));
   }
 
   @override
@@ -28,9 +30,10 @@ class _NumbersSectionState extends State<NumbersSection> {
       title: 'Números que rolam e voam',
       description:
           'O número rola do zero até o valor ao aparecer, e o leitor de tela '
-          'ouve só o valor final. Abrindo o detalhe, ele sai do cartão e '
-          'cresce até o título da tela nova. No movimento reduzido, o número '
-          'nasce pronto e a tela troca com a fusão curta de sempre.',
+          'ouve só o valor final. Abrindo o Meu mês, a sobra sai do cartão e '
+          'cresce até o alto da tela nova: o olho não precisa procurá-la de '
+          'novo. No movimento reduzido, o número nasce pronto e a tela troca '
+          'com a fusão curta de sempre.',
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360),
         child: Column(
@@ -51,7 +54,7 @@ class _NumbersSectionState extends State<NumbersSection> {
       runSpacing: CajuiSpacing.sm,
       children: [
         CajuiButton(
-          label: 'Abrir o detalhe',
+          label: 'Abrir o Meu mês',
           size: CajuiButtonSize.compact,
           onPressed: _openDetail,
         ),
@@ -70,7 +73,7 @@ class _NumbersSectionState extends State<NumbersSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Pode gastar esta semana',
+          'Sobra de outubro',
           style: theme.typography.label.copyWith(
             color: theme.colors.text.muted,
           ),
@@ -79,7 +82,7 @@ class _NumbersSectionState extends State<NumbersSection> {
         CajuiHeroNumber(
           tag: _tag,
           child: CajuiRollingAmount(
-            21200,
+            HomeNumbers.leftover,
             key: ValueKey(_run),
             from: 0,
             tone: CajuiAmountTone.positive,
@@ -91,23 +94,26 @@ class _NumbersSectionState extends State<NumbersSection> {
   }
 }
 
-/// A tela de detalhe de mentira, onde o número pousa.
-class _WeekDetail extends StatelessWidget {
+/// O Meu mês de mentira, onde a sobra pousa.
+class _MonthDetail extends StatelessWidget {
   const new({required this.tag});
 
   final String tag;
+
+  static String _brl(int cents) => BrlFormatter.format(cents);
 
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
     return CajuiScreen(
-      title: 'Esta semana',
+      title: 'Meu mês',
+      overline: 'Outubro de 2026',
       onBack: () => Navigator.of(context).pop(),
       children: [
         CajuiHeroNumber(
           tag: tag,
           child: Text(
-            BrlFormatter.format(21200),
+            _brl(HomeNumbers.leftover),
             style: theme.typography.displayLarge.copyWith(
               color: theme.colors.intent.positive,
             ),
@@ -115,8 +121,9 @@ class _WeekDetail extends StatelessWidget {
         ),
         const SizedBox(height: CajuiSpacing.sm),
         Text(
-          r'de R$ 400,00 até domingo. Mercado, farmácia e transporte já '
-          'estão descontados.',
+          'Sobra de outubro. Entra ${_brl(HomeNumbers.income)}; sai do '
+          'bolso ${_brl(HomeNumbers.outOfPocket)}, já com o vale cobrindo o '
+          'mercado.',
           style: theme.typography.body.copyWith(color: theme.colors.text.muted),
         ),
       ],

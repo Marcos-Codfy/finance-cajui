@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/screens/home/home_numbers.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
 
 /// A resposta do assistente aparecendo palavra por palavra.
@@ -14,10 +15,12 @@ class StreamingSection extends StatefulWidget {
 class _StreamingSectionState extends State<StreamingSection> {
   /// Uma conversa fictícia, no tom do guia de voz.
   static const _question = 'Dá para pedir uma pizza hoje?';
-  static const _answer =
-      r'Dá, sim. Ainda cabem R$ 212,00 até domingo, e a pizza de R$ 58,00 '
-      r'deixa R$ 154,00 para o resto da semana. A conta de luz vence na '
-      'quinta, mas já está separada.';
+  static String get _answer {
+    String brl(int cents) => BrlFormatter.format(cents);
+    return 'Dá, sim. Sobram ${brl(HomeNumbers.leftover)} neste mês, e a '
+        'pizza de ${brl(5800)} deixa ${brl(HomeNumbers.leftover - 5800)}. A '
+        'conta de luz vence na quinta, mas já está contada no que sai.';
+  }
 
   int _run = 0;
 
@@ -36,19 +39,26 @@ class _StreamingSectionState extends State<StreamingSection> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const CajuiChatBubble(_question, fromUser: true),
-            CajuiChatBubble(_answer, key: ValueKey(_run), streamed: true),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: CajuiButton(
-                label: 'Responder de novo',
-                size: CajuiButtonSize.compact,
-                variant: CajuiButtonVariant.ghost,
-                onPressed: () => setState(() => _run++),
-              ),
+            CajuiChatBubble(
+              _answer,
+              key: ValueKey(_run),
+              streamed: true,
+              speaker: 'Juju',
             ),
+            _again(),
           ],
         ),
       ),
     );
   }
+
+  Widget _again() => Align(
+    alignment: Alignment.centerLeft,
+    child: CajuiButton(
+      label: 'Responder de novo',
+      size: CajuiButtonSize.compact,
+      variant: CajuiButtonVariant.ghost,
+      onPressed: () => setState(() => _run++),
+    ),
+  );
 }

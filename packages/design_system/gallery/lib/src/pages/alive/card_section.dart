@@ -10,7 +10,7 @@ class CardSection extends StatelessWidget {
   /// Cria a seção, ligada à inclinação de mentira [tilt].
   const new({required this.tilt, super.key});
 
-  /// A inclinação compartilhada com o pote.
+  /// A inclinação de mentira, escrita pelo celular de arrasto (`TiltPad`).
   final ValueNotifier<Offset> tilt;
 
   /// Cartões fictícios, com nomes de árvore do Cerrado: limite de
