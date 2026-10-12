@@ -14,7 +14,7 @@ import 'package:server/src/auth/secure_random.dart';
 abstract final class StatementPrompt {
   /// A versão das instruções. Entra na chave do cache: mudar as instruções
   /// invalida o que foi guardado (RN-778).
-  static const version = 1;
+  static const version = 2;
 
   /// As instruções fixas: sem segredo, sem dado de ninguém (RN-771).
   static const system = '''
@@ -27,14 +27,17 @@ Responda somente com um objeto JSON, sem texto fora dele, com estes campos,
 nesta ordem:
   "period": o mês do extrato, "AAAA-MM", se a página escreve o período ou o
     mês de referência; senão null
-  "lines": as movimentações da página, na ordem em que aparecem, até 60,
-    cada uma com:
+  "lines": as movimentações da página, na ordem em que aparecem, até 60.
+    Toda linha que começa com data e traz um valor é uma movimentação:
+    devolva todas, inclusive as entradas (com "+" ou "C"), as
+    transferências e o pagamento de fatura. Cada uma com:
     "line": o número entre colchetes da linha de onde ela saiu
     "day" e "month": o dia e o mês, em números, como a linha escreve — ou
       como o cabeçalho de data logo acima dela escreve
     "year": o ano, só se a linha o escreve; senão null
     "description": nome curto e legível do lugar ou do que foi pago, até 60
-      caracteres, sem CNPJ, telefone, link ou e-mail
+      caracteres, sem CNPJ, telefone, link ou e-mail, com o erro óbvio de
+      leitura corrigido ("B0A VISTA" é "Boa Vista")
     "amountCents": o valor em centavos inteiros, sempre positivo
     "kind": "expense" (compra ou conta), "income" (dinheiro que entrou, ou
       estorno), "cardPayment" (pagamento de fatura de cartão) ou
@@ -45,7 +48,8 @@ nesta ordem:
       categoria
     "paymentKind": "pix", "debit", "creditCard", "physicalCash",
       "mealVoucher" ou "bankSlip", ou null; no extrato do vale, toda linha
-      é "mealVoucher"
+      é "mealVoucher"; no extrato de conta, a compra com cartão é no
+      débito, "debit" — "creditCard" só na fatura do cartão de crédito
 Linha de saldo, de total, de limite ou de juros previstos fica de fora.
 "[NOME]" é o nome de uma pessoa, escondido de propósito: não tente adivinhar.
 Os "examples" são escolhas anteriores do usuário para estabelecimentos:
