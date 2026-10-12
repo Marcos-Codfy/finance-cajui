@@ -57,12 +57,24 @@ abstract final class StatementEndings {
     if (code == null) {
       return StatementWords.summary(StatementDigest.of(const []));
     }
-    return ErrorTexts.of(code).inContext('Na captura').fill({
-      'recurso': 'Ler o extrato',
-      'ação': 'ler o extrato',
-      'mês': CalendarWords.month(month),
-    }).message;
+    return _catalog(code, {'mês': CalendarWords.month(month)});
   }
+
+  /// O texto do catálogo com toda chave que a leitura e o lote podem
+  /// trazer. A pausa pedida pelo serviço (E-AI-02, E-RATE-01) não chega até
+  /// aqui — a leitura guarda só o código da página —, e vale a mesma espera
+  /// que o chat usa quando o servidor não diz (BL-104).
+  static String _catalog(
+    ErrorCode code, [
+    Map<String, String> more = const {},
+  ]) => ErrorTexts.of(code).inContext('Na captura').fill({
+    'recurso': 'Ler o extrato',
+    'ação': 'ler o extrato',
+    'segundos': '60',
+    'fila': '',
+    'preservado': 'Nada foi gravado',
+    ...more,
+  }).message;
 
   /// O que a Juju diz ao lançar (RN-1118): os que entraram, os que já
   /// estavam, os recusados e o erro que parou o lote, quando parou.
@@ -73,7 +85,7 @@ abstract final class StatementEndings {
       refused: done.refused.length,
     );
     final stopped = done.stopped;
-    return stopped == null ? words : '$words ${ErrorTexts.of(stopped).message}';
+    return stopped == null ? words : '$words ${_catalog(stopped)}';
   }
 
   /// Cada linha recusada, com o texto do catálogo.
