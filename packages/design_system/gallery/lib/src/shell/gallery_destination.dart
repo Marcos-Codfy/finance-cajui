@@ -57,6 +57,9 @@ enum GalleryDestination {
   /// O Início, em todos os estados.
   home('Início', GalleryGroup.screens),
 
+  /// O widget da tela inicial, de vidro, e o app que nasce dele.
+  homeWidget('Widget', GalleryGroup.screens),
+
   /// A confirmação de captura, nos 17 estados do compartilhamento.
   capture('Captura', GalleryGroup.screens),
 
