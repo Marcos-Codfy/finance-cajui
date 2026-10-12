@@ -8,10 +8,22 @@ import 'package:gallery/src/pages/screens/shared/stat_card.dart';
 
 /// O fechamento do mês, em todos os estados da matriz de telas.
 class ClosingPage extends StatelessWidget {
-  /// Cria a página do fechamento.
-  const new({super.key});
+  /// Cria a página do fechamento, aberta no estado [initialIndex].
+  const new({this.initialIndex = 0, super.key});
 
-  static const _title = 'Fechamento de setembro';
+  /// O estado aberto ao entrar: a vitrine de estados abre direto no que
+  /// foi tocado.
+  final int initialIndex;
+
+  /// O nome da tela, o mesmo do menu.
+  static const title = 'Fechamento do mês';
+
+  /// O papel da tela no app.
+  static const lead =
+      'O retrato de um mês encerrado. É a tela que dá a notícia — boa ou '
+      'ruim — e por isso é onde o tom de voz mais importa.';
+
+  static const _screenTitle = 'Fechamento de setembro';
   static const _gap = SizedBox(height: CajuiSpacing.lg);
 
   static String _brl(int cents) => BrlFormatter.format(cents);
@@ -19,25 +31,28 @@ class ClosingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Fechamento',
-      lead:
-          'O retrato de um mês encerrado. É a tela que dá a notícia — boa ou '
-          'ruim — e por isso é onde o tom de voz mais importa.',
-      variants: [
-        _withLeftover(),
-        CommonVariants.loading(_title),
-        CommonVariants.serverError(_title),
-        CommonVariants.offline(_title, _summary(leftover: 55800)),
-        _tooEarly(),
-        _openItems(),
-        shortfall(),
-        _closed(),
-        _revised(),
-      ],
+      title: title,
+      lead: lead,
+      variants: variants(),
+      initialIndex: initialIndex,
     );
   }
 
-  ScreenVariant _variant(
+  /// Os estados, na ordem do seletor. Ficam fora do `build` para que a
+  /// vitrine de estados mostre exatamente os mesmos, lado a lado.
+  static List<ScreenVariant> variants() => [
+    _withLeftover(),
+    CommonVariants.loading(_screenTitle),
+    CommonVariants.serverError(_screenTitle),
+    CommonVariants.offline(_screenTitle, _summary(leftover: 55800)),
+    _tooEarly(),
+    _openItems(),
+    shortfall(),
+    _closed(),
+    _revised(),
+  ];
+
+  static ScreenVariant _variant(
     String label,
     String note,
     List<Widget> children, {
@@ -48,7 +63,7 @@ class ClosingPage extends StatelessWidget {
       label: label,
       note: note,
       builder: (_) => MockScreen(
-        title: _title,
+        title: _screenTitle,
         overline: overline,
         footer: action == null
             ? null
@@ -60,7 +75,10 @@ class ClosingPage extends StatelessWidget {
 
   /// O resultado do mês e de onde ele veio. Sobra e falta usam o mesmo
   /// cartão: muda o rótulo, o sinal e o tom — nunca o tamanho do alarme.
-  List<Widget> _summary({required int leftover, int variable = 98000}) => [
+  static List<Widget> _summary({
+    required int leftover,
+    int variable = 98000,
+  }) => [
     StatCard(
       label: leftover < 0 ? 'Faltou em setembro' : 'Sobrou em setembro',
       cents: leftover,
@@ -87,12 +105,12 @@ class ClosingPage extends StatelessWidget {
     ),
   ];
 
-  Widget _line(String label, int cents) => CajuiListRow(
+  static Widget _line(String label, int cents) => CajuiListRow(
     title: label,
     trailing: CajuiAmountText(cents, tone: CajuiAmountTone.muted),
   );
 
-  CajuiNotice _notice(
+  static CajuiNotice _notice(
     CajuiNoticeIntent intent,
     String what,
     String meaning, {
@@ -112,14 +130,14 @@ class ClosingPage extends StatelessWidget {
     );
   }
 
-  ScreenVariant _withLeftover() => _variant(
+  static ScreenVariant _withLeftover() => _variant(
     'Com sobra',
     'Pronto para fechar, tudo conferido.',
     _summary(leftover: 55800),
     action: 'Fechar setembro',
   );
 
-  ScreenVariant _tooEarly() => _variant(
+  static ScreenVariant _tooEarly() => _variant(
     'Mês em curso',
     'E-BUDG-02: fechar um mês que ainda não terminou.',
     [
@@ -134,7 +152,7 @@ class ClosingPage extends StatelessWidget {
     ],
   );
 
-  ScreenVariant _openItems() => _variant(
+  static ScreenVariant _openItems() => _variant(
     'Com itens em aberto',
     'Dá para fechar assim mesmo: o que entrar depois vira revisão (RN-441).',
     [
@@ -153,7 +171,7 @@ class ClosingPage extends StatelessWidget {
 
   /// O fechamento com falta. É público porque a página de comparação das
   /// duas versões da falta mostra exatamente esta tela, lado a lado.
-  ScreenVariant shortfall() => _variant(
+  static ScreenVariant shortfall() => _variant(
     'Com falta',
     'RN-443: a falta é informada; o que fazer com ela é decisão de quem usa.',
     [
@@ -171,7 +189,7 @@ class ClosingPage extends StatelessWidget {
     action: 'Fechar setembro',
   );
 
-  ScreenVariant _closed() => _variant(
+  static ScreenVariant _closed() => _variant(
     'Fechado',
     'RN-440: retrato imutável. Mudar uma faixa em outubro não mexe aqui.',
     [
@@ -185,7 +203,7 @@ class ClosingPage extends StatelessWidget {
     ],
   );
 
-  ScreenVariant _revised() => _variant(
+  static ScreenVariant _revised() => _variant(
     'Revisado',
     'RN-441: lançamento tardio gera revisão; a versão anterior é preservada.',
     [

@@ -108,7 +108,7 @@ class _Version extends StatelessWidget {
     return CajuiTheme(
       data: theme,
       child: PhoneFrame(
-        child: Builder(builder: const ClosingPage().shortfall().builder),
+        child: Builder(builder: ClosingPage.shortfall().builder),
       ),
     );
   }

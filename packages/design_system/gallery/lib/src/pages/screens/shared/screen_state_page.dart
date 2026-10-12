@@ -9,11 +9,13 @@ import 'package:gallery/src/shell/gallery_page.dart';
 /// Todas as telas usam esta mesma página, para que conferir um estado seja
 /// sempre o mesmo gesto: escolher no seletor, olhar o aparelho, ler a nota.
 class ScreenStatePage extends StatefulWidget {
-  /// Cria a página da tela [title] com os estados [variants].
+  /// Cria a página da tela [title] com os estados [variants], aberta no
+  /// estado [initialIndex].
   const new({
     required this.title,
     required this.lead,
     required this.variants,
+    this.initialIndex = 0,
     super.key,
   });
 
@@ -26,6 +28,10 @@ class ScreenStatePage extends StatefulWidget {
   /// Os estados, na ordem do seletor.
   final List<ScreenVariant> variants;
 
+  /// O estado aberto ao entrar. Quem chega pela vitrine de estados cai
+  /// direto no que tocou, e não no primeiro da lista.
+  final int initialIndex;
+
   /// A chave do seletor: com ela o teste separa os chips de estado dos
   /// chips que a própria tela mostra, como as sugestões da Juju.
   static const ValueKey<String> selectorKey = ValueKey('screen-variants');
@@ -35,7 +41,17 @@ class ScreenStatePage extends StatefulWidget {
 }
 
 class _ScreenStatePageState extends State<ScreenStatePage> {
-  int _index = 0;
+  late int _index = widget.initialIndex;
+
+  /// A mesma página pedida de novo em outro estado — outro toque na
+  /// vitrine — troca o estado; sem isto, o estado antigo ficaria preso.
+  @override
+  void didUpdateWidget(ScreenStatePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) {
+      _index = widget.initialIndex;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

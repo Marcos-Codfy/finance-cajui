@@ -11,39 +11,54 @@ import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
 /// monta: o esqueleto de tela do design system com a rolagem em
 /// profundidade e a entrada cinematográfica ligadas.
 class HomePage extends StatelessWidget {
-  /// Cria a página do Início.
-  const new({super.key});
+  /// Cria a página do Início, aberta no estado [initialIndex].
+  const new({this.initialIndex = 0, super.key});
+
+  /// O estado aberto ao entrar: a vitrine de estados abre direto no que
+  /// foi tocado.
+  final int initialIndex;
+
+  /// O nome da tela, o mesmo do menu.
+  static const title = 'Início';
+
+  /// O papel da tela no app.
+  static const lead =
+      'O mês da planilha de relance e as portas para o resto do app. '
+      'Responde primeiro se o mês fecha — a sobra, ou quanto falta —, '
+      'com um aviso por vez, e só quando há o que fazer.';
 
   static const _month = 'Outubro';
 
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Início',
-      lead:
-          'O mês da planilha de relance e as portas para o resto do app. '
-          'Responde primeiro se o mês fecha — a sobra, ou quanto falta —, '
-          'com um aviso por vez, e só quando há o que fazer.',
-      variants: [
-        _ready(
-          'Com dados',
-          'Outubro andando. A sobra vem na frente do carrossel; arraste de '
-              'lado para o que entra, o que sai do bolso e o vale.',
-          HomeNumbers.closing(),
-        ),
-        _party(),
-        CommonVariants.loading('Início'),
-        CommonVariants.serverError('Início'),
-        CommonVariants.offline(_month, _cached()),
-        _firstUse(),
-        _noIncome(),
-        _short(),
-        _toReview(),
-        _readOnly(),
-        _webEmpty(),
-      ],
+      title: title,
+      lead: lead,
+      variants: variants(),
+      initialIndex: initialIndex,
     );
   }
+
+  /// Os estados, na ordem do seletor. Ficam fora do `build` para que a
+  /// vitrine de estados mostre exatamente os mesmos, lado a lado.
+  static List<ScreenVariant> variants() => [
+    _ready(
+      'Com dados',
+      'Outubro andando. A sobra vem na frente do carrossel; arraste de '
+          'lado para o que entra, o que sai do bolso e o vale.',
+      HomeNumbers.closing(),
+    ),
+    _party(),
+    CommonVariants.loading('Início'),
+    CommonVariants.serverError('Início'),
+    CommonVariants.offline(_month, _cached()),
+    _firstUse(),
+    _noIncome(),
+    _short(),
+    _toReview(),
+    _readOnly(),
+    _webEmpty(),
+  ];
 
   static ScreenVariant _party() => _ready(
     'Mês no verde, primeira vez',

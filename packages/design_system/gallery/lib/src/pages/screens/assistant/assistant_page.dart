@@ -17,8 +17,21 @@ import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
 /// Quando a IA não está disponível, o aviso fica dentro da conversa e diz
 /// por quê: o resto do app não depende dela.
 class AssistantPage extends StatelessWidget {
-  /// Cria a página da Juju.
-  const new({super.key});
+  /// Cria a página da Juju, aberta no estado [initialIndex].
+  const new({this.initialIndex = 0, super.key});
+
+  /// O estado aberto ao entrar: a vitrine de estados abre direto no que
+  /// foi tocado.
+  final int initialIndex;
+
+  /// O nome da tela, o mesmo do menu.
+  static const title = 'Juju, a assistente';
+
+  /// O papel da tela no app.
+  static const lead =
+      'A tela principal do app: diga o que gastou e ela lança; pergunte '
+      'e ela responde com os números do mês na mão. Recebe só totais e '
+      'categorias, e responde sem julgar o gasto de ninguém.';
 
   static const String _juju = JujuScreen.speaker;
   static const _spoken = 'Gastei 35 no mercado';
@@ -34,28 +47,30 @@ class AssistantPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Juju',
-      lead:
-          'A tela principal do app: diga o que gastou e ela lança; pergunte '
-          'e ela responde com os números do mês na mão. Recebe só totais e '
-          'categorias, e responde sem julgar o gasto de ninguém.',
-      variants: [
-        _conversation(),
-        _firstTalk(),
-        _answering(),
-        CommonVariants.loading('Juju'),
-        CommonVariants.serverError('Juju'),
-        _failed('IA fora do ar', 'E-AI-01', AssistantFailures.aiDown()),
-        _failed('Muitas perguntas', 'E-AI-02', AssistantFailures.rateLimited()),
-        _failed('Tokens esgotados', 'E-AI-03', AssistantFailures.outOfTokens()),
-        _failed('Sem rede', 'E-NET-01', AssistantFailures.offline()),
-        _readOnly(),
-        _reading(),
-        _statement,
-        _launched,
-      ],
+      title: title,
+      lead: lead,
+      variants: variants(),
+      initialIndex: initialIndex,
     );
   }
+
+  /// Os estados, na ordem do seletor. Ficam fora do `build` para que a
+  /// vitrine de estados mostre exatamente os mesmos, lado a lado.
+  static List<ScreenVariant> variants() => [
+    _conversation(),
+    _firstTalk(),
+    _answering(),
+    CommonVariants.loading('Juju'),
+    CommonVariants.serverError('Juju'),
+    _failed('IA fora do ar', 'E-AI-01', AssistantFailures.aiDown()),
+    _failed('Muitas perguntas', 'E-AI-02', AssistantFailures.rateLimited()),
+    _failed('Tokens esgotados', 'E-AI-03', AssistantFailures.outOfTokens()),
+    _failed('Sem rede', 'E-NET-01', AssistantFailures.offline()),
+    _readOnly(),
+    _reading(),
+    _statement,
+    _launched,
+  ];
 
   static final _statement = ScreenVariant(
     label: 'Extrato pela Juju',
