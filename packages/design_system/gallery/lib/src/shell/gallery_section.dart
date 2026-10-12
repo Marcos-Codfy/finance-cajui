@@ -20,6 +20,8 @@ class GallerySection extends StatelessWidget {
   /// O conteúdo.
   final Widget child;
 
+  static const double _noteWidth = 640;
+
   Widget _heading(CajuiThemeData theme) {
     return Semantics(
       header: true,
@@ -44,10 +46,15 @@ class GallerySection extends StatelessWidget {
           _heading(theme),
           if (note != null) ...[
             const SizedBox(height: CajuiSpacing.xs),
-            Text(
-              note,
-              style: theme.typography.caption.copyWith(
-                color: theme.colors.text.muted,
+            // Linha de até ~90 caracteres: na largura toda da página (960)
+            // a explicação virava uma faixa de 180 que ninguém lia.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _noteWidth),
+              child: Text(
+                note,
+                style: theme.typography.caption.copyWith(
+                  color: theme.colors.text.muted,
+                ),
               ),
             ),
           ],
