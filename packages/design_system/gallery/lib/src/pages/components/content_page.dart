@@ -116,9 +116,12 @@ class ContentPage extends StatelessWidget {
     );
   }
 
+  /// O corpo estica até a largura do exemplar: o cartão tocável passa pelo
+  /// `CajuiPressable`, que centraliza e afrouxa a largura, e com o corpo
+  /// encolhido ele ficava menor que os outros e solto no meio da caixa.
   Widget _cardBody(CajuiThemeData theme, String title, int cents) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           title,

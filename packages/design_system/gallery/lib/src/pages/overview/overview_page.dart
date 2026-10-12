@@ -79,7 +79,7 @@ class _Showcase extends StatelessWidget {
         caption: 'Depois de pagar tudo, pelo que está lançado.',
         onNumber: pager == null
             ? null
-            : () => pager.onSelect(GalleryDestination.homeWidget),
+            : () => pager.onOpen(GalleryDestination.homeWidget),
       ),
     );
     return Padding(

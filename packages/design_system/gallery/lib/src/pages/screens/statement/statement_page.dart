@@ -8,10 +8,22 @@ import 'package:gallery/src/pages/screens/statement/statement_blocks.dart';
 
 /// A fatura do cartão, em todos os estados da matriz de telas.
 class StatementPage extends StatelessWidget {
-  /// Cria a página da fatura.
-  const new({super.key});
+  /// Cria a página da fatura, aberta no estado [initialIndex].
+  const new({this.initialIndex = 0, super.key});
 
-  static const _title = 'Fatura de outubro';
+  /// O estado aberto ao entrar: a vitrine de estados abre direto no que
+  /// foi tocado.
+  final int initialIndex;
+
+  /// O nome da tela, o mesmo do menu.
+  static const title = 'Fatura do cartão';
+
+  /// O papel da tela no app.
+  static const lead =
+      'A fatura é uma visão calculada, nunca uma despesa: cada compra já '
+      'contou no mês em que foi feita. Pagar a fatura é uma liquidação.';
+
+  static const _screenTitle = 'Fatura de outubro';
   static const _gap = SizedBox(height: CajuiSpacing.lg);
 
   static String _brl(int cents) => BrlFormatter.format(cents);
@@ -19,30 +31,33 @@ class StatementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Fatura do cartão',
-      lead:
-          'A fatura é uma visão calculada, nunca uma despesa: cada compra já '
-          'contou no mês em que foi feita. Pagar a fatura é uma liquidação.',
-      variants: [
-        _variant(
-          'Com dados',
-          'RN-330 e RN-331: total calculado, vencimento e composição.',
-          StatementBlocks.open(),
-          action: 'Registrar o pagamento',
-        ),
-        CommonVariants.loading(_title),
-        CommonVariants.serverError(_title),
-        CommonVariants.offline(_title, StatementBlocks.open()),
-        _empty(),
-        _unidentified(),
-        _paid(),
-        _partlyPaid(),
-        _overpaid(),
-      ],
+      title: title,
+      lead: lead,
+      variants: variants(),
+      initialIndex: initialIndex,
     );
   }
 
-  ScreenVariant _variant(
+  /// Os estados, na ordem do seletor. Ficam fora do `build` para que a
+  /// vitrine de estados mostre exatamente os mesmos, lado a lado.
+  static List<ScreenVariant> variants() => [
+    _variant(
+      'Com dados',
+      'RN-330 e RN-331: total calculado, vencimento e composição.',
+      StatementBlocks.open(),
+      action: 'Registrar o pagamento',
+    ),
+    CommonVariants.loading(_screenTitle),
+    CommonVariants.serverError(_screenTitle),
+    CommonVariants.offline(_screenTitle, StatementBlocks.open()),
+    _empty(),
+    _unidentified(),
+    _paid(),
+    _partlyPaid(),
+    _overpaid(),
+  ];
+
+  static ScreenVariant _variant(
     String label,
     String note,
     List<Widget> children, {
@@ -52,7 +67,7 @@ class StatementPage extends StatelessWidget {
       label: label,
       note: note,
       builder: (_) => MockScreen(
-        title: _title,
+        title: _screenTitle,
         overline: 'Cartão roxo · ciclo de 29/08 a 28/09',
         footer: action == null
             ? null
@@ -62,7 +77,7 @@ class StatementPage extends StatelessWidget {
     );
   }
 
-  Widget _notice(
+  static Widget _notice(
     CajuiNoticeIntent intent,
     String what,
     String meaning, {
@@ -82,20 +97,20 @@ class StatementPage extends StatelessWidget {
     );
   }
 
-  ScreenVariant _empty() => _variant(
+  static ScreenVariant _empty() => _variant(
     'Sem compras no ciclo',
     'Fatura zerada não é erro: é um ciclo sem uso do cartão.',
     const [
       CajuiEmptyState(
         title: 'Nenhuma compra neste ciclo',
         message:
-            'O que for comprado no cartão até 28/09 aparece aqui, já '
-            'separado por bloco.',
+            'O cartão não foi usado entre 29/08 e 28/09, e não há nada a '
+            'pagar em 05/10.',
       ),
     ],
   );
 
-  ScreenVariant _unidentified() => _variant(
+  static ScreenVariant _unidentified() => _variant(
     'Com valor não identificado',
     'RN-332: a diferença vira busca. O app nunca cria despesa de ajuste.',
     [
@@ -112,7 +127,7 @@ class StatementPage extends StatelessWidget {
     ],
   );
 
-  ScreenVariant _paid() => _variant(
+  static ScreenVariant _paid() => _variant(
     'Paga',
     'RN-340 e RN-341: liquidação não é despesa, e zera a reserva.',
     [
@@ -129,7 +144,7 @@ class StatementPage extends StatelessWidget {
     ],
   );
 
-  ScreenVariant _partlyPaid() => _variant(
+  static ScreenVariant _partlyPaid() => _variant(
     'Paga em parte',
     'RN-342: o saldo vira dívida, com o que foi combinado com o banco.',
     [
@@ -147,7 +162,7 @@ class StatementPage extends StatelessWidget {
     ],
   );
 
-  ScreenVariant _overpaid() => _variant(
+  static ScreenVariant _overpaid() => _variant(
     'Pago a mais',
     'RN-344: aceito com aviso; a diferença alimenta a busca da RN-332.',
     [

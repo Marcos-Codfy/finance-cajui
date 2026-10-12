@@ -5,8 +5,9 @@ import 'package:flutter/widgets.dart';
 /// Um painel por cima da página: o menu do celular e os ajustes.
 ///
 /// Fecha pelo X, tocando fora, pelo Esc e pelo Voltar do Android. Enquanto
-/// aberto, o leitor de tela só lê o painel: a página atrás fica calada.
-class GalleryPanel extends StatelessWidget {
+/// aberto, o leitor de tela só lê o painel, e o foco do teclado fica nele;
+/// ao fechar, o foco volta para o botão que o abriu.
+class GalleryPanel extends StatefulWidget {
   /// Cria o painel [title] com [child], fechado por [onClose].
   ///
   /// Com [fill], ocupa a altura toda, do alto para baixo (o menu); sem ele,
@@ -37,20 +38,55 @@ class GalleryPanel extends StatelessWidget {
   final double? width;
 
   @override
+  State<GalleryPanel> createState() => _GalleryPanelState();
+}
+
+class _GalleryPanelState extends State<GalleryPanel> {
+  final _scope = FocusScopeNode(debugLabel: 'Painel da gallery');
+
+  /// Quem tinha o foco antes de abrir: o botão "Ajustes" ou "Páginas".
+  FocusNode? _before;
+
+  /// O foco é pedido de propósito, e não com `autofocus`: o `autofocus` é
+  /// ignorado quando já há algo focado — justamente o caso de quem abriu
+  /// pelo teclado —, e aí o Esc não fechava e o Tab fugia para trás do véu.
+  @override
+  void initState() {
+    super.initState();
+    _before = FocusManager.instance.primaryFocus;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scope.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scope.dispose();
+    final before = _before;
+    // No quadro seguinte: neste, a casca ainda mantém o fundo sem foco.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (before != null && before.context != null) before.requestFocus();
+    });
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = CajuiTheme.of(context).colors;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) onClose();
+        if (!didPop) widget.onClose();
       },
       child: CallbackShortcuts(
-        bindings: {const SingleActivator(LogicalKeyboardKey.escape): onClose},
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+        },
         child: Stack(
           fit: StackFit.expand,
           children: [
             GestureDetector(
-              onTap: onClose,
+              onTap: widget.onClose,
               child: ColoredBox(color: colors.surface.scrim),
             ),
             Align(
@@ -63,9 +99,9 @@ class GalleryPanel extends StatelessWidget {
     );
   }
 
-  AlignmentGeometry get _where => fill
+  AlignmentGeometry get _where => widget.fill
       ? Alignment.topCenter
-      : width == null
+      : widget.width == null
       ? Alignment.bottomCenter
       : Alignment.bottomLeft;
 
@@ -75,13 +111,13 @@ class GalleryPanel extends StatelessWidget {
       scopesRoute: true,
       namesRoute: true,
       explicitChildNodes: true,
-      label: title,
-      child: Focus(
-        autofocus: true,
+      label: widget.title,
+      child: FocusScope(
+        node: _scope,
         child: Container(
-          width: width ?? double.infinity,
-          height: fill ? double.infinity : null,
-          margin: EdgeInsets.all(width == null ? 0 : CajuiSpacing.lg),
+          width: widget.width ?? double.infinity,
+          height: widget.fill ? double.infinity : null,
+          margin: EdgeInsets.all(widget.width == null ? 0 : CajuiSpacing.lg),
           decoration: BoxDecoration(
             color: theme.colors.surface.elevated,
             borderRadius: const BorderRadius.all(CajuiRadius.xl),
@@ -92,7 +128,7 @@ class GalleryPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _header(theme),
-              Flexible(child: child),
+              Flexible(child: widget.child),
             ],
           ),
         ),
@@ -111,7 +147,7 @@ class GalleryPanel extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            title,
+            widget.title,
             style: theme.typography.title.copyWith(
               color: theme.colors.text.primary,
             ),
@@ -119,8 +155,8 @@ class GalleryPanel extends StatelessWidget {
         ),
         CajuiIconButton(
           icon: CajuiIconData.close,
-          semanticLabel: 'Fechar $title',
-          onPressed: onClose,
+          semanticLabel: 'Fechar ${widget.title}',
+          onPressed: widget.onClose,
         ),
       ],
     ),

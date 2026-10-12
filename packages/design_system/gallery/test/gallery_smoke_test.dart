@@ -43,7 +43,8 @@ void main() {
 
   testWidgets('cada estado de cada tela abre sem erro', (tester) async {
     await openGallery(tester);
-    final screens = GalleryDestination.inGroup(GalleryGroup.app);
+    final screens = GalleryDestination.inGroup(GalleryGroup.app)
+        .where((page) => page != GalleryDestination.screenStates);
 
     for (final destination in screens) {
       await goTo(tester, destination);
