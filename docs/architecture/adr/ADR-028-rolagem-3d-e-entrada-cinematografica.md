@@ -6,7 +6,7 @@ O dono cobrou: "coloque alguma outra coisa em 3d, esqueceu que eu te pedi um 3d 
 
 **Relacionada:**
 - [ADR-026](ADR-026-ux-viva.md): os efeitos moram no design system; o app só liga.
-- [ADR-016](ADR-016-motor-de-audio.md): o som é token; o carrossel usa o `swipe`, que já existia sem uso.
+- [ADR-016](ADR-016-motor-de-audio.md): o som é token; o carrossel usa o `card`, o pop dos cards (era o `swipe` até 12/10/2026; ver o item 9).
 - RNF-PERF-01 e RNF-PERF-02 (60 quadros; o nível cai por medição), RNF-A11Y-04, -06, -07, -08 e -10.
 
 ## Contexto
@@ -51,7 +51,7 @@ E quatro limites que não se negociam: 60 quadros num celular médio, nada passa
    A forma da árvore de widgets é a mesma nos três: o nível pode cair no meio da sessão (quadros perdidos viram `lite`) sem remontar a tela, e a rolagem não volta ao topo.
 
 8. **O desfoque é uma exceção com nome.** O orçamento de performance proíbe animar desfoque quadro a quadro. A entrada o faz, e só assim: no `full`, por no máximo 600 ms, em até seis blocos com a cascata, e com o filtro **desligado** (sem camada) ao fim. Se o aparelho perder quadros, o monitor baixa para `lite`, e o desfoque some.
-9. **O retorno sensorial.** `CajuiFeedback.pageTurned()`: o som `swipe` (família ambiente, que se cala sozinha) e o pulso de tecla. Toca no soltar do dedo, não no fim da mola — a resposta vem antes do espetáculo.
+9. **O retorno sensorial.** `CajuiFeedback.pageTurned()`: o pop do card (família de toques) e o pulso de tecla. *Revisto em 12/10/2026, a pedido do dono:* era o `swipe`, um deslize de ambiente; o carrossel é feito de cards e passou a soar como eles, e o `swipe` saiu. Toca no soltar do dedo, não no fim da mola — a resposta vem antes do espetáculo.
 10. **Uma vez, e só à vista.** A entrada roda uma vez por montagem e de novo só quando a chave muda (o mês). Montada atrás de outra aba, espera a tela aparecer (`TickerMode`).
 
 ## Custo por quadro

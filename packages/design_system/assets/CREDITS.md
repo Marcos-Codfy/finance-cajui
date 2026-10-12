@@ -28,7 +28,7 @@ Tratamento comum aos quatro:
 
 O tratamento foi feito decodificando os MP3 pela Web Audio API do navegador, porque esta máquina não tem ffmpeg. Para refazer, basta seguir os números da tabela.
 
-### Sintetizados — os outros nove
+### Sintetizados — os outros oito
 
 Gerados por `tool/sound/build_sounds.py`, só com a biblioteca padrão do Python (`wave`, `math`, `random`, `struct`). A semente do gerador é fixa (2026), então rodar o script de novo reproduz os mesmos arquivos, byte a byte. O script não sobrescreve os gravados (lista `RECORDED`).
 
@@ -37,7 +37,6 @@ Tratamento comum: filtro passa-baixa em 5,2 kHz (tira a aspereza do agudo), fade
 | Arquivo | Token | Como foi feito | Duração |
 |---|---|---|---|
 | `open.wav` | `open` | Ruído filtrado em 2,4 kHz, decaindo devagar: papel deslizando | 180 ms |
-| `swipe.wav` | `swipe` | Ruído filtrado em 3,2 kHz, mais curto: palha | 140 ms |
 | `receipt_in.wav` | `receiptIn` | Ruído de papel e uma madeira baixa, de leve | 130 ms |
 | `saved.wav` | `saved` | Cinco grãos em sequência e uma batida macia em 392 Hz | 220 ms |
 | `notice.wav` | `notice` | Duas madeiras graves, 233 Hz e 349 Hz, decaindo devagar | 260 ms |
@@ -56,3 +55,22 @@ Som novo só entra com a origem registrada nesta página: sintetizado aqui, grav
 |---|---|---|
 | `Fraunces.ttf` | Fraunces (variável) | SIL Open Font License 1.1 — texto em `OFL-Fraunces.txt` |
 | `Geist.ttf` | Geist (variável) | SIL Open Font License 1.1 — texto em `OFL-Geist.txt` |
+
+## Masterização para o celular (12/10/2026)
+
+Pedido do dono: "os sons estão muito baixos, tenho que colocar no máximo para ouvir". O volume do app já nasce no máximo e os arquivos já batiam no pico; o problema era onde estava a energia. O alto-falante do celular quase não toca abaixo de 300–400 Hz, e o clique do botão tinha 99% da energia entre 150 e 300 Hz; a nota do aviso, 86%. O card e a tecla gastam a energia em 4 ms.
+
+Todo arquivo desta pasta passa por `tool/sound/level_sounds.py`, depois do tratamento acima:
+1. harmônicos dos graves: a parte abaixo de 400 Hz passa por uma saturação macia, e só os harmônicos que ela cria voltam ao som — o ouvido reconstrói a nota grave a partir deles;
+2. corte do subgrave abaixo de 120 Hz;
+3. saturação macia até o alvo da família, medido como o celular ouve (ponderação K da ITU-R BS.1770 e corte em 400 Hz, no trecho mais alto de 50 ms), com o pico em −0,9 dBFS.
+
+| Família | Alvo | Antes → depois (LUFS no celular) |
+|---|---|---|
+| Botão e chaves | −7,5 | botão −16,0 → −7,5 · chaves −10,5/−11,2 → −7,5 |
+| Card | −10,0 | −15,1 → −10,0 |
+| Tecla, que soa a cada letra | −11,5 | −22,0 → −11,5 |
+| Confirmações | −6,5 | de −10,6 a −6,4 → −6,5 |
+| Aviso, a nota grave e macia | −9,5 | −13,6 → −9,7 (mais saturação a deixaria áspera) |
+
+O teste `sound_levels_test.dart` reprova o arquivo que voltar a sumir no alto-falante.
