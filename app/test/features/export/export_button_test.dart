@@ -23,7 +23,41 @@ final class _Exporter implements MonthExporter {
   Future<void> export(MonthExport month) async => received.add(month);
 }
 
+Future<_Exporter> _withEntries(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(400, 1800);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  final exporter = _Exporter();
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        ...testOverrides(
+          journal: MemoryLedgerJournal([
+            EntryRecorded(reviewEntry('padaria', categoryId: 'groceries')),
+          ]),
+        ),
+        monthExporterProvider.overrideWithValue(exporter),
+      ],
+      child: const CajuiApp(),
+    ),
+  );
+  await tester.pump();
+  return exporter;
+}
+
 void main() {
+  testWidgets('RN-1090 · a porta "Planilha do mês" no Início vai direto ao '
+      'compartilhar, com o mês aberto', (tester) async {
+    final exporter = await _withEntries(tester);
+
+    await openFromHome(tester, 'Planilha do mês');
+
+    expect(exporter.received.single.month, testToday.budgetMonth);
+    expect(exporter.received.single.rows, hasLength(1));
+    // Não abre tela: o Início continua ali.
+    expect(find.text('Seu dinheiro'), findsOneWidget);
+  });
+
   testWidgets('RN-1090 · "Levar para planilha" no Meu mês entrega o mês '
       'aberto, com os lançamentos dele', (tester) async {
     tester.view.physicalSize = const Size(400, 1800);
