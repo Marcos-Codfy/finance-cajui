@@ -69,7 +69,11 @@ abstract final class StatementLineResolver {
   /// sem caixa, acento e partículas (RN-1071), com prefixo próprio para não
   /// cruzar com um estabelecimento de mesmo nome.
   static String personKey(String person) =>
-      'pessoa:${PersonName.of(person).words.join(' ')}';
+      '$personPrefix${PersonName.of(person).words.join(' ')}';
+
+  /// O começo de toda chave de pessoa. Exemplo com ele nunca vai à IA
+  /// (RN-1107): o servidor confere de novo, sem confiar no celular.
+  static const personPrefix = 'pessoa:';
 
   static LineTreatment? _household(String? person, HouseholdNames household) =>
       household.whoIs(person) == null ? null : LineTreatment.household;

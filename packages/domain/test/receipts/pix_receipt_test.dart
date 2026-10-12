@@ -76,10 +76,18 @@ void main() {
       expect(redacted, contains('[CPF]'));
     });
 
-    test('RN-732 · o nome do pagador, em duas linhas, vira um [NOME] só', () {
+    // Antes as duas linhas viravam um [NOME] só. O extrato vai à IA com as
+    // linhas numeradas (RN-1106), e juntar linhas deslocaria a numeração:
+    // agora cada linha do nome vira o seu marcador.
+    test('RN-732 · o nome do pagador, em duas linhas, vira [NOME] linha a '
+        'linha', () {
       expect(redacted, isNot(contains('FULANO')));
       expect(redacted, isNot(contains('DA SILVA')));
-      expect(redacted, contains('De\n[NOME]\n[CPF]'));
+      expect(redacted, contains('De\n[NOME]\n[NOME]\n[CPF]'));
+    });
+
+    test('RN-1106 · o texto mascarado tem o mesmo número de linhas', () {
+      expect(redacted.split('\n'), hasLength(text.split('\n').length));
     });
 
     test('RN-734 · o estabelecimento, ligado a CNPJ, fica', () {

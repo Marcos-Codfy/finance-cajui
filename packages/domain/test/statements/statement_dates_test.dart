@@ -89,4 +89,30 @@ void main() {
       expect(StatementDates.writtenIn('05/100', day: 5, month: 10), isFalse);
     });
   });
+
+  group('RN-1105 · o período de um extrato que não o escreve', () {
+    final today = LocalDate(2026, 10, 11);
+
+    test('vale o mês da maioria das linhas', () {
+      expect(
+        StatementDates.prevailing([9, 10, 10, 10, 9], today: today),
+        const BudgetMonth(2026, 10),
+      );
+    });
+
+    test('mês depois de hoje é do ano anterior: dezembro lido em janeiro', () {
+      expect(
+        StatementDates.prevailing([12, 12, 1], today: LocalDate(2027, 1, 5)),
+        const BudgetMonth(2026, 12),
+      );
+    });
+
+    test('no empate, o mais recente; sem linha, nenhum', () {
+      expect(
+        StatementDates.prevailing([9, 10], today: today),
+        const BudgetMonth(2026, 10),
+      );
+      expect(StatementDates.prevailing(const [], today: today), isNull);
+    });
+  });
 }
