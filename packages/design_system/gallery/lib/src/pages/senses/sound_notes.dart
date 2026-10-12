@@ -40,11 +40,6 @@ abstract final class SoundNotes {
       use: 'Folha inferior e lista de opções abrindo',
       milliseconds: 180,
     ),
-    CajuiSound.swipe: (
-      timbre: 'Palha roçando',
-      use: 'Carrossel que encaixa numa página nova',
-      milliseconds: 140,
-    ),
     CajuiSound.receiptIn: (
       timbre: 'Folha de papel pousando',
       use: 'Comprovante recebido pelo compartilhamento',

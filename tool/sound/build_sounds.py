@@ -14,6 +14,9 @@ O caráter segue docs/brand/motion-and-sound.md: curto, baixo, sem agudo
 áspero, com timbre de material do Cerrado — madeira, semente, água, papel.
 Não existe som de erro; o aviso é uma nota grave e macia.
 
+Depois deste script vem `level_sounds.py`, que masteriza todos os arquivos
+para o alto-falante do celular (ver assets/CREDITS.md).
+
 Uso: python tool/sound/build_sounds.py
 """
 
@@ -28,6 +31,10 @@ from pathlib import Path
 RATE = 44_100
 # Sons que vêm de gravação (assets/CREDITS.md): o script não os sobrescreve.
 RECORDED = {"tap", "toggle_on", "toggle_off"}
+# Sons que saíram do design system. Continuam sendo gerados e descartados
+# pelo mesmo motivo dos gravados: o ruído é um só para todos. O `swipe` era
+# o deslize do carrossel, que passou a tocar o pop do card (12/10/2026).
+RETIRED = {"swipe"}
 # O pico do arquivo. Quem decide o quanto o som aparece é o volume do app
 # (`SoundSettings.volume`), e não o arquivo: gravar baixo demais só tira
 # alcance — no aparelho, com 0,22 o som sumia fora do volume máximo.
@@ -172,7 +179,7 @@ def write_wav(path: Path, samples: list[float]) -> None:
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for name, samples in build(random.Random(2026)).items():
-        if name in RECORDED:
+        if name in RECORDED or name in RETIRED:
             continue
         ready = finish(samples)
         write_wav(OUT_DIR / f"{name}.wav", ready)

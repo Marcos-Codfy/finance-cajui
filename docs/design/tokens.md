@@ -114,7 +114,9 @@ O **nível de movimento** (`MotionLevel`) é parte do tema: `full` libera tudo; 
 
 `entrySaved` (semente caindo na cuia) e `undone` (folha que vai e volta) são confirmações com o pulso leve de tecla: lançar se repete o dia inteiro, e um tranco médio a cada lançamento cansaria. Como todos, são sintetizados por `tool/sound/build_sounds.py`; a receita de cada arquivo está em `packages/design_system/assets/CREDITS.md`.
 
-`pageTurned` (o carrossel encaixando numa página) toca o `swipe`, a palha roçando, que é da família **ambiente**: quem folheia os números do mês várias vezes ao dia cala só ela, e o pulso de tecla continua.
+`pageTurned` (o carrossel encaixando numa página) toca o `card`, o pop dos cards: o carrossel é feito de cards, e o dono pediu o mesmo som deles (12/10/2026). Antes era o `swipe`, um deslize de ambiente que destoava e saiu do design system.
+
+Todo arquivo passa por `tool/sound/level_sounds.py`, que masteriza para o alto-falante do celular: harmônicos dos graves que ele não toca, corte do subgrave e saturação macia até o alvo de cada família. Um teste (`sound_levels_test.dart`) reprova o som que voltar a sumir no alto-falante.
 
 - O som **nasce desligado** (`SoundSettings`), com três famílias que ligam separadas: toques, confirmações, ambiente.
 - A velocidade varia até ±3% a cada disparo: o mesmo som nunca toca igual duas vezes seguidas.
