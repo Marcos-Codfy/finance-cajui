@@ -29,14 +29,14 @@ abstract final class AiStatementLines {
     Set<Money> inText,
   ) {
     if (item is! Map<String, Object?>) return null;
-    final amount = _amount(item['amountCents']);
+    final amount = amountOf(item['amountCents']);
     if (amount == null) return null;
     // Sem a foto, número fora do texto é número inventado (RN-774).
     if (!request.hasImages && !inText.contains(amount)) return null;
     final date = AiSuggestion.plausibleDate(item['occurredOn'], request);
     if (date == null) return null;
     final description = _description(item['description']);
-    final (kind, doubtful) = _kind(item['kind'], description);
+    final (kind, doubtful) = kindOf(item['kind'], description);
     return StatementLine(
       occurredOn: date,
       amount: amount,
@@ -53,9 +53,10 @@ abstract final class AiStatementLines {
   /// for (RN-756, RN-758, RN-759). Sem palavra, vale a IA, mas fatura e
   /// transferência que só ela viu ficam em dúvida (RN-757); e tipo que ela
   /// não deu, ou deu fora da lista, é despesa em dúvida: aparece, nunca vem
-  /// marcada.
-  static (StatementLineKind, bool) _kind(Object? raw, String description) {
-    final byWords = _byWords[ReceiptFieldReader.documentKindIn(description)];
+  /// marcada. [written] é o que a linha diz: o texto dela, ou a descrição
+  /// quando não há o texto. Serve também à leitura por página (RN-1110).
+  static (StatementLineKind, bool) kindOf(Object? raw, String written) {
+    final byWords = _byWords[ReceiptFieldReader.documentKindIn(written)];
     if (byWords != null) return (byWords, false);
     return switch (StatementLineKind.values.asNameMap()[raw]) {
       StatementLineKind.expense => (StatementLineKind.expense, false),
@@ -80,8 +81,9 @@ abstract final class AiStatementLines {
       id is String && request.categoryById(id) != null ? id : null;
 
   /// O valor sempre positivo: o extrato escreve saída com sinal de menos, e
-  /// o sentido da linha está no tipo dela, não no sinal.
-  static Money? _amount(Object? cents) {
+  /// o sentido da linha está no tipo dela, não no sinal. De R$ 0,01 a
+  /// R$ 1.000.000,00; fora disso, `null`.
+  static Money? amountOf(Object? cents) {
     // Número quebrado é a IA respondendo em reais, como no comprovante; e o
     // infinito não vira centavo nenhum.
     if (cents is! num || !cents.isFinite) return null;
