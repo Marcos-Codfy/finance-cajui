@@ -46,8 +46,7 @@ the veil.</sub>
 - **Sound as a token:** each control family has its own sound, mastered for a phone speaker. Sound starts off.
 - **Accessible by test:** every color pair in use has its WCAG contrast measured in both themes, every control has a
   minimum touch target and a name for the screen reader, and keyboard focus shows in a ring of its own.
-- **A gallery that is a product:** 26 pages, from foundations to the app's screens in every state, with a dark theme and
-  sound.
+- **A gallery that is a product:** a front door, the app's 7 screens in their 69 states side by side ([Estados das telas](https://cajui-teal.vercel.app/gallery/#/estados-das-telas)), the rules in pairs ([Faça e evite](https://cajui-teal.vercel.app/gallery/#/faca-e-evite)), a dark theme, sound and an address for every page.
 
 ## Visuals
 
@@ -92,8 +91,8 @@ saturation. A test fails any sound that drops back out of reach.
 
 ### A shortfall without alarm
 
-The month's shortfall shows in clay, not red. The side-by-side comparison lives in the gallery itself (the "Falta:
-barro × vermelho" page), and red is kept for actual errors.
+The month's shortfall shows in clay, not red. The side-by-side comparison lives in the gallery itself (the
+[Cor da falta](https://cajui-teal.vercel.app/gallery/#/cor-da-falta) page), and red is kept for actual errors.
 
 ### Motion you can measure
 

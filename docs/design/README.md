@@ -23,18 +23,17 @@ cd packages/design_system/gallery
 flutter run -d chrome
 ```
 
-O menu tem seis grupos:
+Publicada em <https://cajui-teal.vercel.app/gallery/>. Cada página tem endereço próprio (`#/estados-das-telas`, `#/inicio?estado=sem-rede`), e o menu tem cinco grupos, na ordem de quem chega frio:
 
 | Grupo | O que mostra |
 |---|---|
-| Fundação | Cores por papel, tabela de contraste calculada ao vivo, escala tipográfica, espaço, raio e sombra |
-| Componentes | Ação, conteúdo, campos, estados e efeitos vivos — cada componente em todos os estados, com o nome do estado escrito |
-| Profundidade | Rolagem em profundidade, carrossel 3D, entrada cinematográfica e pilha de carteira, cada um num palco do tamanho de um celular, com as regras ao lado e os três níveis de movimento à mão |
-| Telas | Painel, captura, fatura, fechamento, dívidas e assistente, em cada estado da [matriz de telas](../spec/use-cases.md#telas-e-seus-estados): 62 estados ao todo |
-| Decisões | O que ainda espera escolha, com as opções lado a lado — hoje, a falta do mês em barro × em vermelho |
-| Sentidos | Mesa de som (ouvir cada som) e mesa de movimento (curvas, durações e os três níveis de qualidade) |
+| Comece aqui | A visão geral: o que é o Cajui, o widget de vidro de verdade, os atalhos para o que o projeto tem de diferente e os números contados do código |
+| O app | Estados das telas (as 7 telas nos 69 estados da [matriz de telas](../spec/use-cases.md#telas-e-seus-estados), lado a lado, em miniaturas que abrem a tela grande) e cada tela: Início, Juju, Comprovante, Fatura do cartão, Fechamento do mês, Dívidas e Widget da tela inicial |
+| Movimento e som | Rolagem em profundidade, carrossel 3D, entrada cinematográfica, pilha de cartões e troca de tela, cada um num aparelho; as microinterações; a mesa de movimento (curvas, durações e os três níveis) e a mesa de som |
+| Componentes | Botões e controles, valores e cartões, campos, aviso/vazio/carregando e conversa — cada componente em todos os estados, com o nome do estado em português e o da API ao lado |
+| Fundamentos | Faça e evite (as regras do Cajui em pares), cores por papel, a cor da falta (barro, a escolhida, ao lado do vermelho), contraste calculado ao vivo, tipografia, espaço, raio e sombra, e ícones |
 
-Os chips "Tema escuro" e "Som" valem para a gallery inteira: qualquer estado pode ser conferido nos dois temas em dois toques.
+Tema, som, nível de movimento e cor da falta ficam em **Ajustes** (no pé do menu, ou no botão do alto no celular) e valem para a gallery inteira: qualquer estado pode ser conferido nos dois temas em dois toques.
 
 ## Como se garante que continua certo
 
@@ -54,5 +53,5 @@ Os chips "Tema escuro" e "Som" valem para a gallery inteira: qualquer estado pod
 
 - **Um token**: no arquivo do grupo em `lib/src/tokens/`. Se for cor, incluir os pares em `ContrastAudit` — cor sem par medido não entra.
 - **Um componente**: pasta em `lib/src/components/`, sobre `CajuiPressable` se for tocável; export em `lib/design_system.dart`; teste; exemplares na página do grupo na gallery, com todos os estados.
-- **Uma página da gallery**: um valor em `GalleryDestination` e um caso no `switch` de `gallery_pages.dart`. Sem os dois, não compila.
-- **Uma tela de estado**: pasta em `gallery/lib/src/pages/screens/`, devolvendo um `ScreenStatePage`. O teste de fumaça passa a percorrer os estados dela sozinho.
+- **Uma página da gallery**: um valor em `GalleryDestination` (nome, grupo e endereço) e uma entrada no mapa de `gallery_pages.dart`. Um teste confere que todo destino tem página.
+- **Uma tela de estado**: pasta em `gallery/lib/src/pages/screens/`, devolvendo um `ScreenStatePage`, com os estados num `variants()` estático e a tela no `ScreenCatalog`. O teste de fumaça passa a percorrer os estados dela sozinho, e a vitrine Estados das telas a mostra. A nota de cada estado começa pela regra ("RN-441: …"); a página mostra a frase limpa e a regra à parte.

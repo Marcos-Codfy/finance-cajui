@@ -46,7 +46,7 @@ duração à mão: pede ao design system, e a esteira reprova quem tentar.
   desligado.
 - **Acessível por teste:** cada par de cor em uso tem o contraste da WCAG medido nos dois temas, cada controle tem área
   de toque mínima e nome para o leitor de tela, e o foco do teclado aparece num anel próprio.
-- **Uma gallery que é produto:** 26 páginas, das fundações às telas do app em todos os estados, com tema escuro e som.
+- **Uma gallery que é produto:** uma porta de entrada, as 7 telas do app nos 69 estados lado a lado ([Estados das telas](https://cajui-teal.vercel.app/gallery/#/estados-das-telas)), as regras em pares ([Faça e evite](https://cajui-teal.vercel.app/gallery/#/faca-e-evite)), tema escuro, som e um endereço para cada página.
 
 ## Visual
 
@@ -91,8 +91,8 @@ saturação. Um teste reprova o som que voltar a sumir.
 
 ### Falta sem alarme
 
-A falta do mês aparece em barro, e não em vermelho. A comparação lado a lado está na própria gallery (página "Falta:
-barro × vermelho"), e o vermelho ficou reservado para o que é erro de verdade.
+A falta do mês aparece em barro, e não em vermelho. A comparação lado a lado está na própria gallery (página
+[Cor da falta](https://cajui-teal.vercel.app/gallery/#/cor-da-falta)), e o vermelho ficou reservado para o que é erro de verdade.
 
 ### Movimento que se mede
 
