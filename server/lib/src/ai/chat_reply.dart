@@ -11,7 +11,13 @@ final class ChatReply {
     required this.promptTokens,
     required this.completionTokens,
     this.toolCalls = const [],
+    this.truncated = false,
   });
+
+  /// Se o modelo parou porque bateu no teto de tokens da resposta
+  /// (`finish_reason` "length"): o texto acabou no meio, e um JSON cortado
+  /// não se lê inteiro (RN-1103, BL-078).
+  final bool truncated;
 
   /// O texto devolvido. É **entrada não confiável**: só vira alguma coisa
   /// depois de passar por quem o lê.

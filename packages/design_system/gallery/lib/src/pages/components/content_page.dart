@@ -8,8 +8,8 @@ import 'package:gallery/src/shell/gallery_specimens.dart';
 /// A página dos componentes de conteúdo: valor, cartão, linha de lista,
 /// medidor e indicador de confiança.
 ///
-/// Os números são os do exemplo único da especificação (setembro de 2026),
-/// para a gallery contar a mesma história que os documentos.
+/// Os números são os do outubro do Início da gallery, para cada página
+/// contar a mesma história.
 class ContentPage extends StatelessWidget {
   /// Cria a página de conteúdo.
   const new({super.key});
@@ -37,11 +37,11 @@ class ContentPage extends StatelessWidget {
 
   Widget _amounts() {
     const samples = {
-      CajuiAmountTone.neutral: 19600,
+      CajuiAmountTone.neutral: 312000,
       CajuiAmountTone.muted: 3840,
-      CajuiAmountTone.positive: 55800,
-      CajuiAmountTone.shortfall: -12000,
-      CajuiAmountTone.accent: 65000,
+      CajuiAmountTone.positive: 131240,
+      CajuiAmountTone.shortfall: -27050,
+      CajuiAmountTone.accent: 40000,
     };
     return GallerySection(
       title: 'Valor',
@@ -52,7 +52,7 @@ class ContentPage extends StatelessWidget {
         children: [
           const GallerySpecimen(
             state: 'Manchete',
-            child: CajuiAmountText(55800, large: true, hideZeroCents: true),
+            child: CajuiAmountText(312000, large: true, hideZeroCents: true),
           ),
           for (final MapEntry(key: tone, value: cents) in samples.entries)
             GallerySpecimen(
@@ -72,9 +72,15 @@ class ContentPage extends StatelessWidget {
           'sem competir com o que está por cima.',
       child: GallerySpecimens(
         children: [
-          _card(context, 'Padrão', 'Sobra de setembro'),
-          _card(context, 'Rebaixado', 'Vale alimentação', sunken: true),
-          _card(context, 'Tocável', 'Fatura de outubro', onPressed: _nothing),
+          _card(context, 'Padrão', 'Sobra de outubro', 131240),
+          _card(context, 'Rebaixado', 'Vale do mês', 40000, sunken: true),
+          _card(
+            context,
+            'Tocável',
+            'O que sai do bolso',
+            288760,
+            onPressed: _nothing,
+          ),
         ],
       ),
     );
@@ -83,7 +89,8 @@ class ContentPage extends StatelessWidget {
   Widget _card(
     BuildContext context,
     String state,
-    String title, {
+    String title,
+    int cents, {
     bool sunken = false,
     VoidCallback? onPressed,
   }) {
@@ -94,12 +101,12 @@ class ContentPage extends StatelessWidget {
         sunken: sunken,
         onPressed: onPressed,
         semanticLabel: onPressed == null ? null : title,
-        child: _cardBody(CajuiTheme.of(context), title),
+        child: _cardBody(CajuiTheme.of(context), title, cents),
       ),
     );
   }
 
-  Widget _cardBody(CajuiThemeData theme, String title) {
+  Widget _cardBody(CajuiThemeData theme, String title, int cents) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -110,7 +117,7 @@ class ContentPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: CajuiSpacing.xs),
-        const CajuiAmountText(55800),
+        CajuiAmountText(cents),
       ],
     );
   }
@@ -147,35 +154,42 @@ class ContentPage extends StatelessWidget {
     );
   }
 
+  /// O limite do Cartão Ipê (R$ 2.000,00), nos degraus da tela de cartões:
+  /// livre, metade, acima de 80% e passado. Cartão é forma de pagamento: o
+  /// medidor fala de limite em uso, nunca de gasto.
   Widget _meters(BuildContext context) {
-    final data = CajuiTheme.of(context).colors.data;
-    final used = BrlFormatter.format(18000);
-    final limit = BrlFormatter.format(19600);
-    final over = BrlFormatter.format(2375);
     return GallerySection(
       title: 'Medidor',
       description:
           'Passar do limite não pinta alarme: a barra enche, muda para a cor '
           'da falta, e o texto ao lado diz quanto passou.',
       child: GallerySpecimens(
-        children: [
-          _meter('Vazio', 0, 'Nada gasto', data.variable),
-          _meter('Em uso', 0.52, '52% da renda comprometida', data.fixed),
-          _meter('Quase no limite', 0.92, '$used de $limit', null),
-          _meter('Passou do limite', 1.12, 'Passou $over do limite', null),
-        ],
+        children: _meterSpecimens(CajuiTheme.of(context).colors),
       ),
     );
   }
 
-  Widget _meter(String state, double value, String reading, Color? fill) {
+  List<Widget> _meterSpecimens(CajuiColors colors) {
+    String brl(int cents) => BrlFormatter.format(cents);
+    String inUse(int cents) => '${brl(cents)} de ${brl(200000)} em uso';
+    final free = colors.intent.positive;
+    return [
+      _meter('Vazio', 0, 'Nada em uso', free),
+      _meter('Em uso', 0.21, inUse(41290), free),
+      _meter('Metade', 0.62, inUse(124000)),
+      _meter('Acima de 80%', 0.86, inUse(172000), colors.shortfall),
+      _meter('Passou do limite', 1.12, 'Passou ${brl(24000)} do limite'),
+    ];
+  }
+
+  Widget _meter(String state, double value, String reading, [Color? fill]) {
     return GallerySpecimen(
       state: '$state · $reading',
       width: _cardWidth,
       child: CajuiMeter(
         value: value,
         fill: fill,
-        semanticLabel: 'Limite da semana',
+        semanticLabel: 'Limite do Cartão Ipê',
         semanticValue: reading,
       ),
     );

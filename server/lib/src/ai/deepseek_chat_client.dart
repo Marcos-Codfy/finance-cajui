@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
 import 'package:server/src/ai/chat_client.dart';
 import 'package:server/src/ai/chat_message.dart';
 import 'package:server/src/ai/chat_reply.dart';
@@ -102,26 +103,30 @@ final class DeepSeekChatClient extends ChatClient {
         status: response.statusCode,
       );
     }
-    return _reply(await response.transform(utf8.decoder).join());
+    return replyOf(await response.transform(utf8.decoder).join());
   }
 
-  /// Com ferramentas pedidas o texto costuma vir nulo: vale vazio, e quem
-  /// lê olha os pedidos.
-  ChatReply _reply(String body) {
+  /// A resposta do provedor em [body]. Com ferramentas pedidas o texto
+  /// costuma vir nulo: vale vazio, e quem lê olha os pedidos.
+  /// `finish_reason` "length" diz que a resposta foi cortada pelo teto de
+  /// tokens (RN-1103).
+  @visibleForTesting
+  static ChatReply replyOf(String body) {
     try {
       final json = jsonDecode(body) as Map<String, Object?>;
-      final choice = (json['choices']! as List<Object?>).first;
-      final message = (choice! as Map<String, Object?>)['message'];
-      final fields = message! as Map<String, Object?>;
+      final choices = json['choices']! as List<Object?>;
+      final choice = choices.first! as Map<String, Object?>;
+      final message = choice['message']! as Map<String, Object?>;
       final usage = json['usage']! as Map<String, Object?>;
       return ChatReply(
-        content: '${fields['content'] ?? ''}',
+        content: '${message['content'] ?? ''}',
         toolCalls: [
-          for (final raw in fields['tool_calls'] as List<Object?>? ?? const [])
+          for (final raw in message['tool_calls'] as List<Object?>? ?? const [])
             ?ToolCall.tryParse(raw),
         ],
         promptTokens: usage['prompt_tokens']! as int,
         completionTokens: usage['completion_tokens']! as int,
+        truncated: choice['finish_reason'] == 'length',
       );
     } on Object {
       throw const ChatUnavailable();

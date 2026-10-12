@@ -64,7 +64,20 @@ final class EventStoreCaptureShelf implements CaptureShelf {
   }
 
   @override
-  Future<Map<String, String>> learnedRules() async {
+  Future<Map<String, String>> learnedRules() async => {
+    for (final MapEntry(:key, :value) in _rules().entries)
+      if (!LearnedRules.looksLikePerson(key)) key: value,
+  };
+
+  @override
+  Future<Map<String, String>> personalRules() async => {
+    for (final MapEntry(:key, :value) in _rules().entries)
+      if (LearnedRules.looksLikePerson(key)) key: value,
+  };
+
+  /// Todas as regras antigas. O evento não guardava se a chave era de
+  /// pessoa, então quem separa é o nome (RN-1107).
+  Map<String, String> _rules() {
     final rules = <String, String>{};
     for (final event in store.events) {
       if (event.type != _learned) continue;

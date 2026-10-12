@@ -31,12 +31,7 @@ class IncomeService {
     String? id,
   }) async {
     if (!amount.isPositive) return;
-    // Recebimento que nasce de um comprovante usa a chave dele: confirmar de
-    // novo, depois de adiar e reabrir, não registra a renda duas vezes.
-    if (id != null) {
-      final book = await ref.read(ledgerProvider.future);
-      if (book.receipts.any((receipt) => receipt.id == id)) return;
-    }
+    if (id != null && await _knows(id)) return;
     await _ledger.append(
       IncomeReceived(
         IncomeReceipt(
@@ -48,6 +43,34 @@ class IncomeService {
         ),
       ),
     );
+  }
+
+  /// Se o livro já conhece o recebimento [id]. Recebimento que nasce de um
+  /// comprovante usa a chave dele: confirmar de novo, depois de adiar e
+  /// reabrir, não registra a renda duas vezes. E o desfeito não volta com a
+  /// mesma chave (RN-1120): lançar de novo é com chave nova, e quem a
+  /// escolhe é quem lança (RN-1119).
+  Future<bool> _knows(String id) async {
+    final book = await ref.read(ledgerProvider.future);
+    return book.receipts.any((receipt) => receipt.id == id) ||
+        book.cancelledReceiptIds.contains(id);
+  }
+
+  /// Desfaz o recebimento [receiptId] (RN-1120): ele sai do mês, da renda,
+  /// da planilha e do Início, nos dois celulares e no servidor. Nada é
+  /// apagado — o registro guarda o recebimento e o desfazer, lado a lado.
+  /// Desfazer de novo, ou o que não existe, não grava nada. Devolve se
+  /// desfez agora.
+  Future<bool> cancelIncome(String receiptId) async {
+    final undone = await _ledger.appendFrom(
+      (book) => book.receipts.any((receipt) => receipt.id == receiptId)
+          ? IncomeCancelled(
+              receiptId: receiptId,
+              on: ref.read(clockProvider).today(),
+            )
+          : null,
+    );
+    return undone != null;
   }
 
   /// Corrige o saldo do vale para [actual], o que a operadora mostra

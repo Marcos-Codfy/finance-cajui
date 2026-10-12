@@ -2,6 +2,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/ledger/catalog_state.dart';
+import 'package:server/src/ledger/income_state.dart';
 
 /// As categorias e os lançamentos, reconstruídos a partir dos eventos.
 ///
@@ -58,8 +59,7 @@ final class LedgerState {
   final CatalogState _catalog = CatalogState();
   final List<Entry> _entries = [];
   final Set<String> _cancelled = {};
-  final Map<String, IncomeReceipt> _receipts = {};
-  final Map<String, Map<String, Object?>> _adjustments = {};
+  final IncomeState _income = IncomeState();
   final Map<String, Reversal> _reversals = {};
   final Map<String, DeviceFact> _facts = {};
   MonthSetup _plan = MonthSetup.empty;
@@ -99,21 +99,16 @@ final class LedgerState {
   /// Os estornos, por identificador.
   Map<String, Reversal> get reversals => Map.unmodifiable(_reversals);
 
-  /// Os recebimentos, por identificador.
-  Map<String, IncomeReceipt> get receipts => Map.unmodifiable(_receipts);
+  /// Os recebimentos em vigor, por identificador: o desfeito em algum
+  /// aparelho (RN-1120) não está aqui, nem nos números da Juju.
+  Map<String, IncomeReceipt> get receipts => _income.receipts;
 
   /// Os acertos de saldo do vale, por identificador, como foram gravados.
   Map<String, Map<String, Object?>> get voucherAdjustments =>
-      Map.unmodifiable(_adjustments);
+      _income.adjustments;
 
   /// O que entrou em [month], por moeda (RN-111).
-  TenderAmounts receivedIn(BudgetMonth month) => _receipts.values
-      .where((receipt) => month.contains(receipt.receivedOn))
-      .fold(
-        TenderAmounts.zero,
-        (total, receipt) =>
-            total + TenderAmounts.single(receipt.tender, receipt.amount),
-      );
+  TenderAmounts receivedIn(BudgetMonth month) => _income.receivedIn(month);
 
   /// O saldo do vale, **refeito a partir dos fatos**: créditos recebidos,
   /// menos o que os lançamentos vivos pagaram em vale, mais os acertos
@@ -130,10 +125,10 @@ final class LedgerState {
   /// (RN-211) — só o de lançamento vivo: cancelado leva os estornos junto.
   VoucherAccount get voucher {
     var account = VoucherAccount();
-    for (final raw in _adjustments.values) {
+    for (final raw in _income.adjustments.values) {
       account = account.adjust(Money.fromCents(raw['adjustmentCents']! as int));
     }
-    for (final receipt in _receipts.values) {
+    for (final receipt in _income.receipts.values) {
       if (receipt.tender != Tender.mealVoucher) continue;
       account = account.credit(receipt.amount);
     }
@@ -185,15 +180,18 @@ final class LedgerState {
         final incoming = MonthSetupCodec.decode(event.payload);
         if (!_plan.isNewerThan(incoming)) _plan = incoming;
       case incomeReceived:
-        final receipt = IncomeCodec.decode(event.payload);
-        _receipts[receipt.id] = receipt;
+        _income.receive(event.payload);
       case voucherAdjusted:
-        _adjustments['${event.payload['id']}'] = event.payload;
+        _income.adjust(event.payload);
       case entryCreated || entryRevised || entryCancelled || entryReversed:
         _applyEntry(event);
       case final type when DeviceFact.types.contains(type):
-        final id = '${event.payload['id']}';
-        _facts.putIfAbsent(id, () => _factOf(event));
+        final fact = _facts.putIfAbsent(
+          '${event.payload['id']}',
+          () => _factOf(event),
+        );
+        // O único fato do aparelho que muda conta aqui (RN-1120).
+        if (type == DeviceFact.incomeCancelled) _income.cancel(fact.payload);
       default:
         return false;
     }

@@ -99,11 +99,15 @@ class _GalleryShellState extends State<GalleryShell> {
     );
   }
 
-  /// A troca de página é uma fusão curta; com movimento reduzido, mais curta.
+  /// A troca de página é uma passagem, como a troca de tela do app
+  /// (`CameraMove`): a página que sai some na primeira metade, e a nova só
+  /// aparece na segunda. A fusão de antes mostrava as duas, uma através da
+  /// outra — o mesmo defeito que o dono apontou no app.
   Widget _page(BuildContext context) {
     final reduced = CajuiTheme.of(context).motionLevel == MotionLevel.reduced;
     return AnimatedSwitcher(
-      duration: reduced ? CajuiDurations.reducedFade : CajuiDurations.fast,
+      duration: reduced ? CajuiDurations.reducedFade : CajuiDurations.base,
+      transitionBuilder: _handOver,
       child: KeyedSubtree(
         key: ValueKey(_selected),
         child: galleryPageOf(_selected),
@@ -111,6 +115,13 @@ class _GalleryShellState extends State<GalleryShell> {
     );
   }
 }
+
+/// A que chega anda de 0 a 1; a que sai, de 1 a 0. Com o intervalo na
+/// metade de cima, cada uma só aparece enquanto a outra está apagada.
+Widget _handOver(Widget child, Animation<double> animation) => FadeTransition(
+  opacity: CurvedAnimation(parent: animation, curve: const Interval(0.5, 1)),
+  child: child,
+);
 
 class _Masthead extends StatelessWidget {
   const new();

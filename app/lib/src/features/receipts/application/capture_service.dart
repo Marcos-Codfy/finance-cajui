@@ -1,9 +1,11 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/features/ledger/application/answer_memory.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/application/capture_outcome.dart';
+import 'package:cajui/src/features/receipts/application/classification_memory.dart';
 import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/read_outcome.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
@@ -72,6 +74,7 @@ class CaptureService {
   /// do cache, sem pagar de novo. Sem isso, a foto que só a IA conseguiu ler
   /// voltava em branco.
   Future<Capture> reopen(PendingCapture pending) async {
+    if (StatementShape.looksLike(pending.text)) return statementOf(pending);
     final path = pending.filePath;
     if (path == null) return await _classify(pending);
     final read = await ref
@@ -97,6 +100,9 @@ class CaptureService {
     if (unreadable && clean.images.isEmpty) {
       return const CaptureRefused(ErrorCode.capt01);
     }
+    if (StatementShape.looksLike(clean.text)) {
+      return CaptureProposed(statementOf(clean));
+    }
     final capture = await _classify(clean);
     // O celular não leu, e a IA também não achou valor: aí não há o que
     // conferir, e a saída é a mesma de sempre — outra foto, ou digitar.
@@ -105,6 +111,24 @@ class CaptureService {
     }
     return CaptureProposed(capture);
   }
+
+  /// A captura de um extrato reconhecido no celular (RN-1100): não passa
+  /// pela leitura de comprovante, que o cortaria em 8.000 caracteres e o
+  /// mandaria à IA sem a máscara da ADR-030. Vai inteiro para a conversa
+  /// com a Juju, que o lê página a página.
+  static Capture statementOf(PendingCapture source) => Capture(
+    source: source,
+    proposal: const EntryProposal(
+      documentKind: ProposedField.resolved(
+        DocumentKind.statement,
+        source: FieldSource.fixedRule,
+      ),
+      amount: ProposedField.unread(),
+      occurredOn: ProposedField.unread(),
+      category: ProposedField.unread(),
+      paymentKind: ProposedField.unread(),
+    ),
+  );
 
   /// Menos que isso, lido de uma foto, não é comprovante: é ruído de foto
   /// escura.
@@ -118,6 +142,10 @@ class CaptureService {
 
   Future<Capture> _classify(PendingCapture source) async {
     final book = await ref.read(ledgerProvider.future);
+    final rules = await ClassificationMemory.of(
+      book,
+      ref.read(captureShelfProvider),
+    );
     final proposal = await ref
         .read(receiptClassifierProvider)
         .classify(
@@ -125,7 +153,8 @@ class CaptureService {
             text: source.text,
             categories: book.categories,
             today: ref.read(clockProvider).today(),
-            learnedRules: await ref.read(captureShelfProvider).learnedRules(),
+            learnedRules: rules.shared,
+            personalRules: rules.personal,
             categoryByMerchantKind: DefaultCatalog.categoryByMerchantKind,
             images: source.images,
           ),
@@ -164,9 +193,25 @@ class CaptureService {
     final alreadySure = capture.proposal.category.value == entry.categoryId;
     if (merchant != null && !alreadySure) {
       await shelf.learn(merchant: merchant, categoryId: entry.categoryId);
+      await _remember(merchant, entry.categoryId);
     }
     await shelf.close(capture.source.id);
     ref.invalidate(pendingCapturesProvider);
+  }
+
+  /// A mesma regra, como resposta lembrada: chega ao outro celular e vale
+  /// também no extrato (RN-1116). Pix para alguém fica marcado como de
+  /// pessoa, e nunca vira exemplo para a IA (RN-1107). A regra antiga
+  /// continua sendo gravada: é ela que vale enquanto a memória não chegou.
+  Future<void> _remember(String merchant, String categoryId) async {
+    final key = PossibleDuplicate.normalize(merchant);
+    await ref
+        .read(answerMemoryProvider)
+        .remember(
+          key: key,
+          categoryId: categoryId,
+          aboutPerson: LearnedRules.looksLikePerson(key),
+        );
   }
 
   /// Fecha a captura sem aprender nada: ela virou entrada, pagamento de

@@ -6,7 +6,8 @@ enum GalleryGroup {
   /// Os componentes, cada um com todos os estados.
   components('Componentes'),
 
-  /// O 3D: rolagem, carrossel, entrada e carteira, cada um num aparelho.
+  /// O 3D: rolagem, carrossel, entrada, carteira e a câmera entre telas,
+  /// cada um num aparelho.
   depth('Profundidade'),
 
   /// Telas inteiras em cada estado.

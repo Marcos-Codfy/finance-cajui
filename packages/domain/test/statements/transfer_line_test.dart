@@ -39,6 +39,12 @@ void main() {
       expect(TransferLine.personIn('COMPRA CARTAO PADARIA CENTRAL'), isNull);
     });
 
+    test('as palavras do banco depois do marcador não são nome de ninguém', () {
+      expect(TransferLine.personIn('PIX QR CODE ESTATICO 25,00'), isNull);
+      expect(TransferLine.personIn('PIX AGENDADO CONTA LUZ'), isNull);
+      expect(TransferLine.personIn('TED DEVOLVIDA 300,00'), isNull);
+    });
+
     test('"PIX" dentro de outra palavra não é marcador', () {
       expect(TransferLine.personIn('PIXAR ANIMATION STUDIOS'), isNull);
     });

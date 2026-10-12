@@ -7,6 +7,10 @@ import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
+import 'package:cajui/src/features/statements/presentation/statement_footer.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_state.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_view_model.dart';
+import 'package:cajui/src/features/statements/presentation/statement_thread.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -64,7 +68,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Widget build(BuildContext context) {
     // Pergunta enviada, resposta chegando ou erro: em qualquer troca, a
     // conversa desce sozinha.
-    ref.listen(assistantProvider, (_, _) => _followLatest());
+    ref
+      ..listen(assistantProvider, (_, _) => _followLatest())
+      ..listen(statementTalkProvider, (_, _) => _followLatest());
     final state = ref.watch(assistantProvider);
     return switch (state) {
       AssistantTalking() => _talking(ref, state),
@@ -75,18 +81,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final assistant = ref.read(assistantProvider.notifier);
     final pending = state.pending;
     final paired = ref.read(ledgerUplinkProvider).isPaired;
+    final talk = ref.watch(statementTalkProvider);
     return CajuiScreen(
       title: AssistantIdentity.name,
       overline: _month(ref.watch(homeViewProvider)),
       trailing: CaptureTools(readOnly: !paired),
       controller: _scroll,
-      footer: AssistantComposer(
-        enabled: !state.isWaiting,
-        onSend: assistant.ask,
-        onFocused: _followLatest,
-      ),
+      footer: _footer(state, talk),
       children: [
-        if (state.exchanges.isEmpty && pending == null)
+        if (state.exchanges.isEmpty &&
+            pending == null &&
+            talk is StatementTalkIdle)
           ..._firstTalk(assistant.ask),
         for (final (question, reply) in state.exchanges)
           ..._exchange(question, reply, canUndo: paired),
@@ -94,9 +99,22 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           CajuiChatBubble(pending, fromUser: true),
           const CajuiChatBubble('', thinking: true),
         ],
+        // O extrato conversa depois das trocas (RN-1100).
+        if (talk is! StatementTalkIdle) const StatementThread(),
       ],
     );
   }
+
+  /// Com o extrato aberto, o rodapé é o dele: "Pode lançar (N)" no lugar
+  /// do campo de pergunta (RN-1115).
+  Widget _footer(AssistantTalking state, StatementTalkState talk) =>
+      talk is StatementTalkOpen
+      ? StatementFooter(talk)
+      : AssistantComposer(
+          enabled: !state.isWaiting,
+          onSend: ref.read(assistantProvider.notifier).ask,
+          onFocused: _followLatest,
+        );
 
   List<Widget> _exchange(
     String question,

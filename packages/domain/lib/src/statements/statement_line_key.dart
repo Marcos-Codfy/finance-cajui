@@ -25,28 +25,23 @@ abstract final class StatementLineKey {
     ];
   }
 
-  /// O id com que a linha de chave [base] é gravada.
+  /// O id com que a linha de chave [base] é gravada na leitura [launch].
   ///
-  /// A primeira tentativa é a própria chave. Se ela já está no livro e
-  /// ativa, a linha já está lá (`alreadyThere`): ler de novo não lança. Se
-  /// está no livro mas foi desfeita, passa para a próxima tentativa — e
-  /// lançar de novo depois de desfazer grava, em vez de ser ignorado.
+  /// A linha já está lá (`alreadyThere`) quando algum lançamento ativo tem
+  /// a mesma chave — gravado por esta leitura ou por outra, neste celular ou
+  /// no outro: ler de novo não lança em dobro. Senão, o id é a chave mais o
+  /// carimbo da leitura. Assim, lançar de novo depois de desfazer grava com
+  /// um id que nunca foi desfeito em lugar nenhum — o celular que ainda não
+  /// soube do desfazer feito no outro não grava um id já cancelado, que o
+  /// servidor apagaria em silêncio (RN-1119).
   static ({String id, bool alreadyThere}) idFor(
     String base, {
-    required bool Function(String id) isKnown,
-    required bool Function(String id) isActive,
+    required String launch,
+    required Iterable<String> activeIds,
   }) {
-    for (var attempt = 0; attempt < _maxAttempts; attempt++) {
-      final id = attempt == 0 ? base : '$base-r$attempt';
-      if (!isKnown(id)) return (id: id, alreadyThere: false);
-      if (isActive(id)) return (id: id, alreadyThere: true);
-    }
-    return (id: '$base-r$_maxAttempts', alreadyThere: false);
+    final there = activeIds.any((id) => id == base || id.startsWith('$base~'));
+    return (id: there ? base : '$base~$launch', alreadyThere: there);
   }
-
-  /// Desfazer e lançar a mesma linha cinquenta vezes não é uso de verdade;
-  /// o teto só garante que o laço termina.
-  static const _maxAttempts = 50;
 
   /// FNV-1a de 32 bits, em hexadecimal: curto, estável entre versões do
   /// Dart (ao contrário de `hashCode`) e sem o nome do lugar no id. A

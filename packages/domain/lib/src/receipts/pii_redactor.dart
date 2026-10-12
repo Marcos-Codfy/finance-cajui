@@ -1,3 +1,5 @@
+import 'package:domain/src/statements/transfer_line.dart';
+
 /// Mascara os dados pessoais de um comprovante antes que o texto saia do
 /// aparelho — e de novo no servidor, antes de montar o pedido à IA (RN-730).
 ///
@@ -9,6 +11,11 @@
 /// As expressões são literais fixas, nunca montadas com texto de entrada, e
 /// sem quantificador aninhado: a entrada é limitada em tamanho, e o custo
 /// cresce em linha reta com ela (RN-733).
+///
+/// O texto mascarado tem **sempre o mesmo número de linhas** que o
+/// original. O extrato vai à IA com as linhas numeradas, e é pelo número
+/// que o celular volta ao texto sem máscara (RN-1106, ADR-030): um
+/// marcador que engolisse uma quebra de linha deslocaria todas as de baixo.
 abstract final class PiiRedactor {
   static final List<(RegExp, String)> _patterns = [
     // Linha digitável e código de barras: antes de tudo, porque contêm
@@ -37,13 +44,17 @@ abstract final class PiiRedactor {
     (RegExp(r'\b\d{2}\.?\d{3}\.?\d{3}/\d{4}-?\d{2}\b'), '[CNPJ]'),
     (
       // O hífen é opcional: a camada de texto de alguns PDFs o perde, e o
-      // CPF "meio mascarado" do banco (***.123.456-**) ainda traz seis dígitos
-      // de verdade — continua sendo dado pessoal.
+      // CPF "meio mascarado" do banco ainda traz seis dígitos de verdade —
+      // continua sendo dado pessoal. Cada banco esconde as pontas com um
+      // sinal: "***.123.456-**", "•••.123.456-••" (Nubank), "xxx.…-xx".
       RegExp(
-        r'(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})\.(?:\d{3}|\*{3})-?(?:\d{2}|\*{2})',
+        r'(?:\d{3}|[*•xX]{3})\.(?:\d{3}|[*•xX]{3})\.(?:\d{3}|[*•xX]{3})-?'
+        r'(?:\d{2}|[*•xX]{2})',
       ),
       '[CPF]',
     ),
+    // O mesmo CPF meio mascarado sem os pontos: "•••123456••".
+    (RegExp(r'[*•xX]{3}\d{6}-?[*•xX]{2}'), '[CPF]'),
     (RegExp(r'[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,4}'), '[EMAIL]'),
     (RegExp(r'\(\d{2}\)\s?9?\d{4}[-\s]?\d{4}\b'), '[TELEFONE]'),
     (RegExp(r'\b\d{5}-\d{3}\b'), '[ENDERECO]'),
@@ -70,8 +81,9 @@ abstract final class PiiRedactor {
       '[ID]',
     ),
     (
+      // "S A L D O": o PDF de alguns bancos espaça as letras do rótulo.
       RegExp(
-        r'\b(saldo[^\n\d]{0,40})R?\$?\s?[\d.]{1,12},\d{2}',
+        r'\b(s ?a ?l ?d ?o[^\n\d]{0,40})R?\$?\s?[\d.]{1,12},\d{2}',
         caseSensitive: false,
       ),
       '[SALDO]',
@@ -103,14 +115,88 @@ abstract final class PiiRedactor {
   static String redact(String text, {List<String> householdNames = const []}) {
     var result = text;
     for (final (pattern, marker) in _patterns) {
-      result = result.replaceAll(pattern, marker);
+      result = result.replaceAllMapped(
+        pattern,
+        (m) => _inPlace(m.group(0)!, marker),
+      );
     }
     for (final (pattern, marker) in _labelled) {
-      result = result.replaceAllMapped(pattern, (m) => '${m.group(1)}$marker');
+      result = result.replaceAllMapped(pattern, (m) {
+        final label = m.group(1)!;
+        return label + _inPlace(m.group(0)!.substring(label.length), marker);
+      });
     }
-    final lines = _maskBlockPeople(_maskPeople(result.split('\n')));
+    final people = _maskBlockPeople(_maskPeople(result.split('\n')));
+    final lines = _maskBalances(_maskTransfers(people));
     return householdNames.fold(lines.join('\n'), _maskName);
   }
+
+  /// As [lines] de uma página de extrato, mascaradas, cada uma na mesma
+  /// posição: é pelo número da linha que o celular volta ao texto sem
+  /// máscara (RN-1106). Mascarar o bloco inteiro pega o nome quebrado em
+  /// várias linhas; se a contagem não bater, cada linha vai sozinha, e a
+  /// numeração continua valendo de qualquer jeito.
+  static List<String> redactLines(
+    List<String> lines, {
+    List<String> householdNames = const [],
+  }) {
+    final masked = redact(
+      lines.join('\n'),
+      householdNames: householdNames,
+    ).split('\n');
+    if (masked.length == lines.length) return masked;
+    // Sozinha, a linha não vê o nome que mora na de baixo de "Transferência
+    // enviada pelo Pix": quem o acha é a página inteira.
+    final people = TransferLine.peopleIn(lines);
+    return [
+      for (final (index, line) in lines.indexed)
+        _maskPerson(
+          redact(line, householdNames: householdNames),
+          people[index],
+        ),
+    ];
+  }
+
+  /// [marker] no lugar de [matched], com as quebras de linha que havia
+  /// nele: o número numa linha e o resto na de baixo, como acontece com o
+  /// telefone partido pelo OCR, viram o marcador e uma linha vazia.
+  static String _inPlace(String matched, String marker) =>
+      marker + '\n' * '\n'.allMatches(matched).length;
+
+  /// O nome de quem recebeu ou mandou um Pix, solto na linha do extrato —
+  /// "PIX ENVIADO JOAO P SILVA 150,00", sem rótulo e sem CPF por perto, ou
+  /// na linha de baixo de "Transferência enviada pelo Pix" —, que a máscara
+  /// da RN-732 deixava passar (RN-1106). Linha por linha: o nome de uma
+  /// nunca se junta ao da outra, e o número de linhas não muda.
+  static List<String> _maskTransfers(List<String> lines) {
+    final people = TransferLine.peopleIn(lines);
+    return [
+      for (final (index, line) in lines.indexed)
+        _maskPerson(line, people[index]),
+    ];
+  }
+
+  static String _maskPerson(String line, String? person) =>
+      person == null ? line : line.replaceAll(person, '[NOME]');
+
+  /// A linha de saldo — "SALDO DO DIA", "SALDO ANTERIOR EM 30/09",
+  /// "S A L D O", com ou sem a data na frente — tem todo valor trocado por
+  /// `[SALDO]`. O rótulo sozinho não bastava: a data entre ele e o valor
+  /// deixava o valor passar.
+  static List<String> _maskBalances(List<String> lines) => [
+    for (final line in lines)
+      if (_balanceLine.hasMatch(line))
+        line.replaceAll(_amount, '[SALDO]')
+      else
+        line,
+  ];
+
+  static final _balanceLine = RegExp(
+    r'^\s*(?:\d{2}/\d{2}(?:/\d{2,4})?\s+)?s ?a ?l ?d ?o\b',
+    caseSensitive: false,
+  );
+
+  static final _amount = RegExp(r'-?(?:R\$ ?)?-?\d[\d.]{0,14},\d{2}');
 
   static final _blockLabel = RegExp(
     r'^\s*(?:de|para|pagador|recebedor|favorecido|origem|destino|'
@@ -124,15 +210,17 @@ abstract final class PiiRedactor {
 
   /// O nome em bloco dos bancos digitais: o rótulo sozinho numa linha ("De"),
   /// o nome quebrado nas de baixo e, depois, o documento. Se o documento é
-  /// CPF, as linhas do nome viram um `[NOME]` só; se é CNPJ, é o
-  /// estabelecimento, e fica (RN-732).
+  /// CPF, cada linha do nome vira um `[NOME]`; se é CNPJ, é o
+  /// estabelecimento, e fica (RN-732). Antes as linhas do nome viravam um
+  /// marcador só, e a numeração das linhas de baixo mudava (RN-1106).
   static List<String> _maskBlockPeople(List<String> lines) {
     final result = <String>[];
     var index = 0;
     while (index < lines.length) {
       final nameLines = _personBlockAfter(lines, index);
-      result.add(lines[index]);
-      if (nameLines > 0) result.add('[NOME]');
+      result
+        ..add(lines[index])
+        ..addAll(List.filled(nameLines, '[NOME]'));
       index += 1 + nameLines;
     }
     return result;
@@ -171,7 +259,9 @@ abstract final class PiiRedactor {
   /// expressão é montada com texto que não seja literal do código.
   static String _maskName(String text, String name) {
     final needle = name.trim().toLowerCase();
-    if (needle.length < 3) return text;
+    // Nome com quebra de linha não é nome de gente, e trocá-lo juntaria
+    // duas linhas numa só.
+    if (needle.length < 3 || needle.contains('\n')) return text;
     final buffer = StringBuffer();
     var from = 0;
     final haystack = text.toLowerCase();

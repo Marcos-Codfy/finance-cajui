@@ -44,34 +44,47 @@ void main() {
   group('RN-1119 · gravar, ler de novo, desfazer e lançar de novo', () {
     const base = 'st-2026-10-03-800-3a36b76c-1';
 
-    test('nunca gravada: a própria chave', () {
+    test('nunca gravada: a chave com o carimbo da leitura', () {
       final id = StatementLineKey.idFor(
         base,
-        isKnown: (_) => false,
-        isActive: (_) => false,
+        launch: 'L1',
+        activeIds: const [],
       );
 
-      expect(id, (id: base, alreadyThere: false));
+      expect(id, (id: '$base~L1', alreadyThere: false));
     });
 
-    test('gravada e ativa: já está lá, e ler de novo não lança', () {
-      final id = StatementLineKey.idFor(
-        base,
-        isKnown: (id) => id == base,
-        isActive: (id) => id == base,
-      );
+    test('gravada e ativa, por esta leitura ou por outra: já está lá', () {
+      for (final active in [base, '$base~L0']) {
+        final id = StatementLineKey.idFor(
+          base,
+          launch: 'L1',
+          activeIds: [active],
+        );
 
-      expect(id.alreadyThere, isTrue);
+        expect(id.alreadyThere, isTrue, reason: active);
+      }
     });
 
-    test('desfeita: lançar de novo grava com a próxima tentativa', () {
+    test('desfeita: lançar de novo grava com o carimbo novo, que nunca foi '
+        'desfeito em lugar nenhum', () {
       final id = StatementLineKey.idFor(
         base,
-        isKnown: (id) => id == base,
-        isActive: (_) => false,
+        launch: 'L2',
+        activeIds: const [],
       );
 
-      expect(id, (id: '$base-r1', alreadyThere: false));
+      expect(id, (id: '$base~L2', alreadyThere: false));
+    });
+
+    test('a ordem 1 não confunde com a ordem 10', () {
+      final id = StatementLineKey.idFor(
+        base,
+        launch: 'L1',
+        activeIds: ['${base}0~L0'],
+      );
+
+      expect(id.alreadyThere, isFalse);
     });
   });
 }

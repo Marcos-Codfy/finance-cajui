@@ -135,5 +135,29 @@ void main() {
         });
       },
     );
+
+    test('RN-1107 · a regra que fala de pessoa não sai do celular', () async {
+      server.bodies['/v1/receipts/classify'] = const {'warnings': <Object?>[]};
+
+      await classifier.classify(
+        ClassificationRequest(
+          text: pixReceiptText,
+          categories: DefaultCatalog.emptyBook.categories,
+          today: LocalDate(2026, 9, 22),
+          learnedRules: const {'padaria central': 'bakery'},
+          personalRules: const {
+            'joao p silva': 'services',
+            'pessoa:maria souza': 'groceries',
+          },
+        ),
+      );
+
+      final pedido = server.requests.firstWhere(
+        (r) => r.path == '/v1/receipts/classify',
+      );
+      expect(pedido.body['examples'], [
+        {'merchant': 'padaria central', 'categoryId': 'bakery'},
+      ]);
+    });
   });
 }

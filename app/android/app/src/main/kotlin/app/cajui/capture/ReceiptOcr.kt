@@ -25,6 +25,10 @@ class ReadFailure(val code: String) : Exception(code)
  * do ML Kit, com o modelo embutido no APK. Quando pedido, sai junto a imagem
  * já reduzida que a IA vai ver (ADR-022): a foto, ou as primeiras páginas.
  *
+ * Sai também o texto de cada página, separado, e quantas páginas o PDF tem
+ * de verdade: o extrato é lido uma página por vez, e o que ficou de fora é
+ * dito — "Li as páginas 1 a 20 de 24" (RN-1101, ADR-030).
+ *
  * Roda fora da thread principal; quem chama cuida disso.
  */
 class ReceiptOcr(private val context: Context) {
@@ -45,6 +49,11 @@ class ReceiptOcr(private val context: Context) {
      *
      * Sem texto legível, mas com imagem, a leitura **não** falha: a foto
      * escura ou amassada que o celular não leu ainda pode ser lida pela IA.
+     *
+     * Volta o texto juntado, que o comprovante lê, e também o de cada
+     * página (`pageTexts`), o total real de páginas (`pageCount`) e a página
+     * de cada imagem (`imagePages`, a partir de 1): imagem que não saiu não
+     * desloca as outras.
      */
     fun read(
         path: String,
@@ -53,29 +62,39 @@ class ReceiptOcr(private val context: Context) {
         onPage: (Int, Int) -> Unit,
     ): Map<String, Any> {
         val file = File(path)
-        val images = mutableListOf<ByteArray>()
-        val pages = if (kind == "pdf") {
-            readPdf(file, if (withImages) images else null, onPage)
+        val images = AiPages(withImages)
+        val (pages, pageCount) = if (kind == "pdf") {
+            readPdf(file, images, onPage)
         } else {
-            if (withImages) forAi { AiImage.fromFile(file) }?.let(images::add)
-            listOf(orForAi(images) { readImage(file) })
+            images.add(1) { AiImage.fromFile(file) }
+            listOf(orForAi(images.bytes) { readImage(file) }) to 1
         }
         val text = pages.joinToString("\n").trim()
-        if (text.length < MIN_READABLE_CHARS && images.isEmpty()) {
+        if (text.length < MIN_READABLE_CHARS && images.bytes.isEmpty()) {
             throw ReadFailure("E-CAPT-01")
         }
-        return mapOf("text" to text, "pages" to pages.size, "images" to images)
+        return mapOf(
+            "text" to text,
+            "pages" to pages.size,
+            "pageTexts" to pages,
+            "pageCount" to pageCount,
+            "images" to images.bytes,
+            "imagePages" to images.pages,
+        )
     }
 
     private fun readImage(file: File): String =
         recognize(InputImage.fromFilePath(context, Uri.fromFile(file)))
 
-    /** O texto de cada página; as primeiras [MAX_AI_PAGES] vão também para [images]. */
+    /**
+     * O texto de cada página lida e o total de páginas do arquivo; as
+     * primeiras [MAX_AI_PAGES] vão também para [images].
+     */
     private fun readPdf(
         file: File,
-        images: MutableList<ByteArray>?,
+        images: AiPages,
         onPage: (Int, Int) -> Unit,
-    ): List<String> {
+    ): Pair<List<String>, Int> {
         val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         val renderer = try {
             PdfRenderer(descriptor)
@@ -86,21 +105,36 @@ class ReceiptOcr(private val context: Context) {
         }
         return renderer.use { pdf ->
             val total = minOf(pdf.pageCount, MAX_PAGES)
-            (0 until total).map { index ->
+            val texts = (0 until total).map { index ->
                 onPage(index + 1, total)
                 pdf.openPage(index).use { page ->
                     val bitmap = render(page)
-                    if (images != null && index < MAX_AI_PAGES) {
-                        forAi { AiImage.fromBitmap(bitmap) }?.let(images::add)
-                    }
+                    if (index < MAX_AI_PAGES) images.add(index + 1) { AiImage.fromBitmap(bitmap) }
                     try {
-                        orForAi(images.orEmpty()) { recognize(InputImage.fromBitmap(bitmap, 0)) }
+                        orForAi(images.bytes) { recognize(InputImage.fromBitmap(bitmap, 0)) }
                     } finally {
                         // Uma página desenhada tem dezenas de MB: não espera o coletor.
                         bitmap.recycle()
                     }
                 }
             }
+            texts to pdf.pageCount
+        }
+    }
+
+    /**
+     * As imagens que vão para a IA, e a página de cada uma. Sem [enabled]
+     * nada entra: a leitura pediu só o texto.
+     */
+    private inner class AiPages(private val enabled: Boolean) {
+        val bytes = mutableListOf<ByteArray>()
+        val pages = mutableListOf<Int>()
+
+        fun add(page: Int, make: () -> ByteArray) {
+            if (!enabled) return
+            val image = forAi(make) ?: return
+            bytes.add(image)
+            pages.add(page)
         }
     }
 
@@ -152,8 +186,11 @@ class ReceiptOcr(private val context: Context) {
         /** Menos que isso não é comprovante lido: é ruído de imagem escura ou pequena. */
         const val MIN_READABLE_CHARS = 8
 
-        /** Extrato comprido é conferido por partes; ler 40 páginas travaria a tela de leitura. */
-        const val MAX_PAGES = 10
+        /**
+         * Um extrato de um mês cabe em 20 páginas (RN-1101). O que passar disso não é lido, e o
+         * total real volta junto, para a conversa dizer o que ficou de fora.
+         */
+        const val MAX_PAGES = 20
 
         const val RENDER_SIDE = 2000
 

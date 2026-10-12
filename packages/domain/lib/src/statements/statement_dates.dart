@@ -24,6 +24,28 @@ abstract final class StatementDates {
     return date.isAfter(today) ? null : date;
   }
 
+  /// O mês de um extrato que não escreve o período: o da maioria das linhas
+  /// ([months], de 1 a 12), no ano que não o deixa depois de [today]. No
+  /// empate, o mais recente — o extrato de 15/09 a 14/10 é o de outubro.
+  /// `null` sem linha nenhuma.
+  static BudgetMonth? prevailing(
+    Iterable<int> months, {
+    required LocalDate today,
+  }) {
+    final counts = <BudgetMonth, int>{};
+    for (final month in months.where((m) => m >= 1 && m <= 12)) {
+      final year = month > today.month ? today.year - 1 : today.year;
+      counts.update(BudgetMonth(year, month), (n) => n + 1, ifAbsent: () => 1);
+    }
+    if (counts.isEmpty) return null;
+    return counts.entries.reduce((best, next) {
+      final more = next.value.compareTo(best.value);
+      return more > 0 || (more == 0 && next.key.isAfter(best.key))
+          ? next
+          : best;
+    }).key;
+  }
+
   /// O ano que deixa [month] mais perto de [period]: setembro num extrato
   /// de outubro é do mesmo ano; dezembro num de janeiro, do anterior.
   static int _nearest(int month, BudgetMonth period) {

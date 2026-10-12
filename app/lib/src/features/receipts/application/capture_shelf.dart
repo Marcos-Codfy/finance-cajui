@@ -15,8 +15,17 @@ abstract interface class CaptureShelf {
   /// Tira a captura [id] da lista: virou lançamento ou foi descartada.
   Future<void> close(String id);
 
-  /// As regras aprendidas: estabelecimento normalizado → categoria.
+  /// As regras aprendidas neste aparelho que podem ir à IA como exemplo:
+  /// estabelecimento normalizado → categoria. Nunca as de pessoa (RN-1107).
+  ///
+  /// São as antigas, só deste celular. A classificação usa a memória das
+  /// respostas por cima delas (`LearnedRules`, RN-1116).
   Future<Map<String, String>> learnedRules();
+
+  /// As regras aprendidas neste aparelho cuja chave é o nome de uma pessoa
+  /// — o Pix para alguém. Valem nas regras do celular e nunca saem dele
+  /// (RN-1107).
+  Future<Map<String, String>> personalRules();
 
   /// Aprende que [merchant] é da categoria [categoryId] (RN-763). Aprender
   /// de novo o mesmo estabelecimento troca a regra anterior.

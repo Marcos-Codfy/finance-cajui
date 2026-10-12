@@ -26,6 +26,10 @@ class ScreenStatePage extends StatefulWidget {
   /// Os estados, na ordem do seletor.
   final List<ScreenVariant> variants;
 
+  /// A chave do seletor: com ela o teste separa os chips de estado dos
+  /// chips que a própria tela mostra, como as sugestões da Juju.
+  static const ValueKey<String> selectorKey = ValueKey('screen-variants');
+
   @override
   State<ScreenStatePage> createState() => _ScreenStatePageState();
 }
@@ -56,6 +60,7 @@ class _ScreenStatePageState extends State<ScreenStatePage> {
 
   Widget _selector() {
     return Wrap(
+      key: ScreenStatePage.selectorKey,
       spacing: CajuiSpacing.sm,
       runSpacing: CajuiSpacing.sm,
       children: [
