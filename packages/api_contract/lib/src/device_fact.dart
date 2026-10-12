@@ -2,7 +2,9 @@ import 'package:api_contract/src/budget_plan_codec.dart';
 import 'package:api_contract/src/card_codec.dart';
 import 'package:api_contract/src/debt_codec.dart';
 import 'package:api_contract/src/household_codec.dart';
+import 'package:api_contract/src/income_cancellation_codec.dart';
 import 'package:api_contract/src/json_reader.dart';
+import 'package:api_contract/src/learned_answer_codec.dart';
 import 'package:api_contract/src/month_close_codec.dart';
 import 'package:meta/meta.dart';
 
@@ -61,6 +63,13 @@ final class DeviceFact {
   /// O tipo do fato "nomes da casa definidos" (RN-1070).
   static const householdNamed = 'household.named';
 
+  /// O tipo do fato "resposta lembrada" (RN-1116, ADR-030).
+  static const merchantLearned = 'merchant.learned';
+
+  /// O tipo do fato "recebimento desfeito" (RN-1120). É o único destes que
+  /// muda conta no servidor: o recebimento desfeito sai dos números da Juju.
+  static const incomeCancelled = 'income.cancelled';
+
   /// Os tipos que o servidor aceita guardar assim, e só eles.
   static const Set<String> types = {
     statementSettled,
@@ -70,6 +79,8 @@ final class DeviceFact {
     budgetDefined,
     debtOrdered,
     householdNamed,
+    merchantLearned,
+    incomeCancelled,
   };
 
   /// O identificador do fato: o mesmo do registro do aparelho que o gravou.
@@ -103,6 +114,12 @@ final class DeviceFact {
           DebtCodec.decodeOrdering(payload),
         ),
         householdNamed => HouseholdCodec.encode(HouseholdCodec.decode(payload)),
+        merchantLearned => LearnedAnswerCodec.encode(
+          LearnedAnswerCodec.decode(payload),
+        ),
+        incomeCancelled => IncomeCancellationCodec.encode(
+          IncomeCancellationCodec.decode(payload),
+        ),
         _ => _close(payload),
       };
       return _bounded(normalized);
