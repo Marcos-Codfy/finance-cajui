@@ -1,5 +1,6 @@
 import 'package:domain/src/receipts/statement_line.dart';
 import 'package:domain/src/receipts/statement_line_kind.dart';
+import 'package:domain/src/statements/installment_mark.dart';
 import 'package:domain/src/statements/line_doubt.dart';
 import 'package:domain/src/statements/line_treatment.dart';
 import 'package:meta/meta.dart';
@@ -13,18 +14,33 @@ final class ResolvedLine {
   const new({
     required this.line,
     required this.merchantKey,
+    String? contentKey,
     this.person,
+    this.installment,
     this.treatment,
     this.guess,
     this.doubts = const {},
-  });
+  }) : contentKey = contentKey ?? merchantKey;
 
   /// A linha com o nome final e a categoria decidida — `null` quando a
   /// categoria é dúvida.
   final StatementLine line;
 
   /// A chave do estabelecimento, pela qual a resposta é lembrada (RN-1116).
+  /// Vazia quando a linha não tem nome que sirva de chave — "Movimentação",
+  /// um nome mascarado sem o original: aí a resposta vale só para ela.
   final String merchantKey;
+
+  /// A chave do conteúdo, para a chave da linha gravada (RN-1117): sai do
+  /// texto que o celular leu, e não da descrição da IA, que pode mudar de
+  /// uma leitura para outra.
+  final String contentKey;
+
+  /// A parcela escrita na linha, quando é parcela (RN-1111).
+  final InstallmentMark? installment;
+
+  /// Se a resposta sobre esta linha pode ser lembrada para as próximas.
+  bool get rememberable => merchantKey.isNotEmpty;
 
   /// O nome da pessoa, como o banco escreveu, num Pix ou transferência. Só
   /// existe no celular: para a IA ele foi `[NOME]` (RN-1106).

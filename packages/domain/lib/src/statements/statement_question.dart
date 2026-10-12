@@ -23,6 +23,8 @@ sealed class StatementQuestion {
     ResolvedLine resolved, {
     required List<String> ranked,
   }) {
+    // A parcela é perguntada de uma vez, para todas (RN-1111).
+    if (resolved.doubts.contains(LineDoubt.installment)) return null;
     if (resolved.doubts.contains(LineDoubt.kind)) {
       return KindQuestion._(index, _kindsFor(resolved));
     }

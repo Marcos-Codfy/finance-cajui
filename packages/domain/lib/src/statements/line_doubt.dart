@@ -7,4 +7,8 @@ enum LineDoubt {
   /// É gasto, mas a categoria não está certa: ninguém ensinou, não é marca
   /// conhecida, e a IA não teve confiança alta.
   category,
+
+  /// É a parcela de uma compra de outro mês (RN-1111): a pessoa decide se
+  /// entra como gasto deste mês — de uma vez, para todas as parcelas.
+  installment,
 }

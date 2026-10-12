@@ -32,7 +32,11 @@ final class StatementDigest {
       blocks: _blocks(lines, sureExpenses),
       questions: [
         for (final i in open)
-          if (!lines[i].isSure) i,
+          if (!lines[i].isSure && !_isInstallment(lines[i])) i,
+      ],
+      installments: [
+        for (final i in open)
+          if (_isInstallment(lines[i])) i,
       ],
       incomes: [
         for (final i in open)
@@ -48,6 +52,7 @@ final class StatementDigest {
     required this.blocks,
     required this.questions,
     required this.incomes,
+    required this.installments,
     required this.alreadyThere,
     required this.skipped,
   });
@@ -63,6 +68,10 @@ final class StatementDigest {
 
   /// As entradas certas, que viram dinheiro que entrou.
   final List<int> incomes;
+
+  /// As parcelas de compras de outros meses (RN-1111): uma pergunta só,
+  /// para todas.
+  final List<int> installments;
 
   /// As que já estavam no Cajui.
   final Set<int> alreadyThere;
@@ -105,6 +114,13 @@ final class StatementDigest {
       line.treatment == LineTreatment.ownAccount ||
       (line.treatment == null &&
           line.line.kind == StatementLineKind.ownTransfer);
+
+  static bool _isInstallment(ResolvedLine line) =>
+      line.doubts.contains(LineDoubt.installment) && line.isExpense;
+
+  /// Quanto as parcelas somam, por moeda.
+  ({Money cash, Money voucher}) get installmentTotal =>
+      _byTender(lines, installments);
 
   static bool _sureExpense(ResolvedLine line) =>
       line.isExpense && line.isSure && line.line.categoryId != null;
@@ -171,7 +187,8 @@ final class StatementDigest {
       for (final (i, line) in lines.indexed)
         if (_counts(i) &&
             line.isExpense &&
-            !line.doubts.contains(LineDoubt.kind))
+            !line.doubts.contains(LineDoubt.kind) &&
+            !_isInstallment(line))
           i,
     ];
     final (:cash, :voucher) = _byTender(lines, ids);

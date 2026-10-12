@@ -109,8 +109,12 @@ void main() {
         StatementWords.summary(digest),
         for (final block in digest.blocks)
           StatementWords.block(block, 'Mercado', digest.lines),
-        StatementWords.done(58),
-        StatementWords.done(0),
+        StatementWords.done(recorded: 58),
+        StatementWords.done(recorded: 0),
+        StatementWords.done(recorded: 56, already: 2, refused: 1),
+        StatementWords.already(10),
+        StatementWords.whichCard,
+        StatementWords.installments(digest),
         StatementWords.ready(58),
         StatementWords.ready(0),
         StatementWords.opening,
@@ -137,6 +141,34 @@ void main() {
       'Mercado — 5 compras, ${_brl('500,00')}: Assaí, Atacadão, '
       'Pão de Açúcar e mais 2. Confere?',
     );
+  });
+
+  test('RN-1111 · as parcelas saem dos gastos e das dúvidas, e viram uma '
+      'pergunta só', () {
+    final digest = StatementDigest.of([
+      _line('Assaí', 41230),
+      _line('Loja Móveis', 30000, doubts: {LineDoubt.installment}),
+    ]);
+
+    expect(digest.installments, [1]);
+    expect(digest.questions, isEmpty);
+    expect(digest.spending.count, 1);
+    expect(
+      StatementWords.installments(digest),
+      '1 parcela de compras de outros meses, ${_brl('300,00')} — lanço como '
+      'gasto deste mês?',
+    );
+  });
+
+  test('RN-1118 · o fim diz quantos entraram, quantos já estavam e quantos '
+      'não entraram', () {
+    expect(
+      StatementWords.done(recorded: 56, already: 2, refused: 1),
+      'Lancei 56 lançamentos. 2 já estavam no Cajui e não entraram de novo. '
+      '1 não entrou: o motivo vem abaixo. Se algo não estiver certo, dá para '
+      'desfazer tudo.',
+    );
+    expect(StatementWords.done(recorded: 0), 'Nada novo para lançar.');
   });
 
   test('RN-1101 a RN-1103 · as páginas que ficaram de fora são ditas', () {

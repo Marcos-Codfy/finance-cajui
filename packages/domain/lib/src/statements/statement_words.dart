@@ -30,8 +30,33 @@ abstract final class StatementWords {
       ?_leftOut(digest),
       ?_already(digest.alreadyThere.length),
       ?_doubts(digest.questions.length),
+      ?_installmentsNote(digest.installments.length),
     ].join(' ');
   }
+
+  static String? _installmentsNote(int count) => count == 0
+      ? null
+      : '${_count(count, 'parcela', 'parcelas')} de compras de outros meses: '
+            'pergunto no fim.';
+
+  /// A pergunta das parcelas (RN-1111): "8 parcelas de compras de outros
+  /// meses, R$ 640,00 — lanço como gasto deste mês?"
+  static String installments(StatementDigest digest) {
+    final total = digest.installmentTotal;
+    final count = digest.installments.length;
+    return '${_count(count, 'parcela', 'parcelas')} de compras de outros '
+        'meses, ${_tenders(total.cash, total.voucher)} — lanço como gasto '
+        'deste mês?';
+  }
+
+  /// O que já estava no Cajui e ficou de fora (RN-1112).
+  static String already(int count) =>
+      '${_count(count, 'movimentação já estava', 'movimentações já estavam')} '
+      'no Cajui e ${count == 1 ? 'ficou' : 'ficaram'} de fora. Confere?';
+
+  /// A pergunta do cartão, quando há mais de um cadastrado (RN-1114).
+  static const whichCard =
+      'As compras no cartão deste extrato são de qual cartão?';
 
   static String? _already(int count) => count == 0
       ? null
@@ -150,10 +175,29 @@ abstract final class StatementWords {
 
   /// Depois de gravar (RN-1118). Os que o domínio recusou vêm à parte, com
   /// o texto do catálogo.
-  static String done(int recorded) => recorded == 0
-      ? 'Nada novo para lançar: tudo já estava no Cajui.'
-      : 'Lancei ${_count(recorded, 'lançamento', 'lançamentos')}. Se algo '
-            'não estiver certo, dá para desfazer tudo de uma vez.';
+  static String done({
+    required int recorded,
+    int already = 0,
+    int refused = 0,
+  }) => [
+    if (recorded > 0)
+      'Lancei ${_count(recorded, 'lançamento', 'lançamentos')}.'
+    else if (refused == 0)
+      'Nada novo para lançar.',
+    ?_stayedOut(already),
+    ?_refused(refused),
+    if (recorded > 0) 'Se algo não estiver certo, dá para desfazer tudo.',
+  ].join(' ');
+
+  static String? _stayedOut(int count) => switch (count) {
+    0 => null,
+    1 => '1 já estava no Cajui e não entrou de novo.',
+    _ => '$count já estavam no Cajui e não entraram de novo.',
+  };
+
+  static String? _refused(int count) => count == 0
+      ? null
+      : '${_count(count, 'não entrou', 'não entraram')}: o motivo vem abaixo.';
 
   /// Depois de desfazer o lote (RN-1119).
   static String undone(int count) =>

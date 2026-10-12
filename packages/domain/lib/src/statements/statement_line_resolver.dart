@@ -5,23 +5,32 @@ import 'package:domain/src/receipts/merchant_kind.dart';
 import 'package:domain/src/receipts/merchant_name.dart';
 import 'package:domain/src/receipts/statement_line.dart';
 import 'package:domain/src/receipts/statement_line_kind.dart';
+import 'package:domain/src/statements/income_line.dart';
+import 'package:domain/src/statements/installment_mark.dart';
 import 'package:domain/src/statements/learned_answer.dart';
 import 'package:domain/src/statements/learned_answers.dart';
 import 'package:domain/src/statements/line_doubt.dart';
 import 'package:domain/src/statements/line_treatment.dart';
 import 'package:domain/src/statements/merchant_brand.dart';
 import 'package:domain/src/statements/resolved_line.dart';
+import 'package:domain/src/statements/statement_line_keys.dart';
 import 'package:domain/src/statements/transfer_line.dart';
 
 /// Decide, no celular, o que cada linha lida de um extrato é (RN-1109,
-/// RN-1110; ADR-030).
+/// RN-1110, RN-1111; ADR-030).
 ///
 /// Roda aqui, e não no servidor, porque é aqui que estão o texto original
 /// sem máscara e a memória das respostas. A precedência da categoria é:
 /// resposta lembrada, marca conhecida, IA com confiança alta. A do tipo:
-/// resposta lembrada, lista da casa, palavra escrita na linha; o que só a
-/// IA disse — e todo Pix para alguém que ninguém ensinou — vira pergunta.
+/// palavra escrita de fatura ou de conta sua, resposta lembrada que combine
+/// com o sentido da linha, lista da casa. O que só a IA disse — todo Pix
+/// para alguém que ninguém ensinou, e toda entrada sem palavra clara de
+/// dinheiro chegando — vira pergunta.
 abstract final class StatementLineResolver {
+  /// O prefixo da chave de uma pessoa, para não cruzar com um
+  /// estabelecimento de mesmo nome.
+  static const String personPrefix = StatementLineKeys.personPrefix;
+
   /// Resolve [raw]. [original] é a linha como estava no texto do celular,
   /// antes da máscara; [categoryOfKind] traduz o ramo de uma marca na
   /// categoria do cadastro.
@@ -36,23 +45,83 @@ abstract final class StatementLineResolver {
     final person = TransferLine.personIn(written);
     final brand =
         MerchantBrand.of(written) ?? MerchantBrand.of(raw.description);
-    final key = person != null
-        ? personKey(person)
-        : MerchantBrand.keyOf(brand?.name ?? raw.description);
-    final known = memory.forKey(key);
-    final treatment = known?.treatment ?? _household(person, household);
-    final kindDoubt = treatment == null && (raw.doubtful || person != null);
+    final keys = StatementLineKeys.of(raw, original, person, brand);
+    final known = keys.memory.isEmpty ? null : memory.forKey(keys.memory);
+    final treatment =
+        _compatible(known?.treatment, raw) ?? _household(person, household);
+    final mark = _installment(raw, written);
+    final kindDoubt = treatment == null && _kindInDoubt(raw, original, person);
     final category = _category(raw, known, brand, categoryOfKind);
     final resolved = ResolvedLine(
       line: _line(raw, person, brand?.name, category, kindDoubt),
-      merchantKey: key,
+      merchantKey: keys.memory,
+      contentKey: keys.content,
       person: person,
       treatment: treatment,
+      installment: mark,
       guess: raw.categoryId,
-      doubts: {if (kindDoubt) LineDoubt.kind},
+      doubts: _doubts(kindDoubt: kindDoubt, mark: mark),
     );
     return _withCategoryDoubt(resolved, known);
   }
+
+  /// A parcela só interessa em saída: entrada com "3/10" é outra coisa.
+  static InstallmentMark? _installment(StatementLine raw, String written) =>
+      raw.kind == StatementLineKind.expense
+      ? InstallmentMark.of(written)
+      : null;
+
+  /// A primeira parcela é compra deste mês; a partir da segunda, é compra de
+  /// outro mês, e pergunta (RN-1111).
+  static Set<LineDoubt> _doubts({
+    required bool kindDoubt,
+    InstallmentMark? mark,
+  }) => {
+    if (kindDoubt) LineDoubt.kind,
+    if (mark != null && mark.number > 1) LineDoubt.installment,
+  };
+
+  /// A chave da memória para um Pix ou transferência com pessoa: o nome
+  /// sem caixa, acento e partículas (RN-1071).
+  static String personKey(String person) =>
+      '$personPrefix${PersonName.of(person).words.join(' ')}';
+
+  /// A resposta lembrada só vale quando combina com a linha (RN-1110):
+  /// "é um gasto" não faz um Pix recebido virar despesa, nem "é dinheiro
+  /// que entrou" faz um Pix enviado virar renda. Fatura e conta sua escritas
+  /// na linha vencem a memória. Casa, conta sua e "não lançar" valem nos
+  /// dois sentidos: dizem quem é, e não para onde foi o dinheiro.
+  static LineTreatment? _compatible(
+    LineTreatment? treatment,
+    StatementLine raw,
+  ) {
+    final written =
+        !raw.doubtful &&
+        (raw.kind == StatementLineKind.cardPayment ||
+            raw.kind == StatementLineKind.ownTransfer);
+    if (treatment == null || written) return null;
+    final income = raw.kind == StatementLineKind.income;
+    return switch (treatment) {
+      LineTreatment.expense => income ? null : treatment,
+      LineTreatment.income => income ? treatment : null,
+      _ => treatment,
+    };
+  }
+
+  /// O tipo é dúvida quando só a IA disse, quando é Pix para alguém, e
+  /// quando é entrada sem palavra clara de dinheiro chegando.
+  static bool _kindInDoubt(
+    StatementLine raw,
+    String? original,
+    String? person,
+  ) {
+    if (raw.doubtful || person != null) return true;
+    if (raw.kind != StatementLineKind.income) return false;
+    return original != null && !IncomeLine.isClear(original);
+  }
+
+  static LineTreatment? _household(String? person, HouseholdNames household) =>
+      household.whoIs(person) == null ? null : LineTreatment.household;
 
   /// Resposta lembrada, marca conhecida, IA com confiança alta (RN-1109).
   static String? _category(
@@ -64,19 +133,6 @@ abstract final class StatementLineResolver {
       known?.categoryId ??
       (brand == null ? null : categoryOfKind?.call(brand.kind)) ??
       (raw.confidence == Confidence.high ? raw.categoryId : null);
-
-  /// A chave da memória para um Pix ou transferência com pessoa: o nome
-  /// sem caixa, acento e partículas (RN-1071), com prefixo próprio para não
-  /// cruzar com um estabelecimento de mesmo nome.
-  static String personKey(String person) =>
-      '$personPrefix${PersonName.of(person).words.join(' ')}';
-
-  /// O começo de toda chave de pessoa. Exemplo com ele nunca vai à IA
-  /// (RN-1107): o servidor confere de novo, sem confiar no celular.
-  static const personPrefix = 'pessoa:';
-
-  static LineTreatment? _household(String? person, HouseholdNames household) =>
-      household.whoIs(person) == null ? null : LineTreatment.household;
 
   /// O nome que a pessoa reconhece: a marca, "Pix para" quem foi, ou o que
   /// a IA escreveu.
@@ -121,8 +177,10 @@ abstract final class StatementLineResolver {
     return ResolvedLine(
       line: resolved.line,
       merchantKey: resolved.merchantKey,
+      contentKey: resolved.contentKey,
       person: resolved.person,
       treatment: resolved.treatment,
+      installment: resolved.installment,
       guess: resolved.guess,
       doubts: {...resolved.doubts, LineDoubt.category},
     );
