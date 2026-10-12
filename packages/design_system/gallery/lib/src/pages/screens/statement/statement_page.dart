@@ -104,8 +104,8 @@ class StatementPage extends StatelessWidget {
       CajuiEmptyState(
         title: 'Nenhuma compra neste ciclo',
         message:
-            'O que for comprado no cartão até 28/09 aparece aqui, já '
-            'separado por bloco.',
+            'O cartão não foi usado entre 29/08 e 28/09, e não há nada a '
+            'pagar em 05/10.',
       ),
     ],
   );
