@@ -81,6 +81,9 @@ enum GalleryDestination {
   /// A fala comum e a fala que pede resposta, com botões ou opções.
   conversation('Conversa', GalleryGroup.components, 'conversa'),
 
+  /// As regras próprias do Cajui, em pares: o certo e o que evitar.
+  doDont('Faça e evite', GalleryGroup.foundations, 'faca-e-evite'),
+
   /// Os papéis de cor, no tema em vigor.
   colors('Cores', GalleryGroup.foundations, 'cores'),
 

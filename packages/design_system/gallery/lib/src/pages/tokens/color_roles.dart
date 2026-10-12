@@ -114,8 +114,8 @@ abstract final class ColorRoles {
   static ColorRoleGroup _shortfall(CajuiColors c) => (
     title: 'Falta do mês',
     note:
-        'Um papel só, com duas versões em avaliação. O componente pede '
-        'colors.shortfall e não sabe qual está em vigor.',
+        'Um papel só, com duas versões: barro, a escolhida, e vermelho. O '
+        'componente pede colors.shortfall e não sabe qual está em vigor.',
     roles: {'shortfall': c.shortfall, 'shortfallSubtle': c.shortfallSubtle},
   );
 }

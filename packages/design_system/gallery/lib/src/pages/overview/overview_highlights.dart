@@ -38,9 +38,9 @@ class OverviewHighlights extends StatelessWidget {
       'Cada som masterizado para o alto-falante do celular.',
     ),
     (
-      GalleryDestination.shortfall,
-      'Cor da falta',
-      'Por que o dinheiro que falta é barro, e não vermelho de alarme.',
+      GalleryDestination.doDont,
+      'Faça e evite',
+      'As regras próprias do Cajui: a falta sem bronca, o cartão, o vale.',
     ),
   ];
 
