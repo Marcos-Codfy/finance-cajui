@@ -43,14 +43,14 @@ abstract final class StatementLineResolver {
   }) {
     final written = original ?? raw.description;
     final person = TransferLine.personIn(written);
-    final brand =
-        MerchantBrand.of(written) ?? MerchantBrand.of(raw.description);
+    final brand = _brand(written, raw);
     final keys = StatementLineKeys.of(raw, original, person, brand);
     final known = keys.memory.isEmpty ? null : memory.forKey(keys.memory);
     final treatment =
         _compatible(known?.treatment, raw) ?? _household(person, household);
     final mark = _installment(raw, written);
-    final kindDoubt = treatment == null && _kindInDoubt(raw, original, person);
+    final kindDoubt =
+        treatment == null && _kindInDoubt(raw, original, person, brand);
     final category = _category(raw, known, brand, categoryOfKind);
     final resolved = ResolvedLine(
       line: _line(raw, person, brand?.name, category, kindDoubt),
@@ -64,6 +64,11 @@ abstract final class StatementLineResolver {
     );
     return _withCategoryDoubt(resolved, known);
   }
+
+  /// A marca, pela linha escrita ou, se a máscara a escondeu, pelo que a IA
+  /// devolveu.
+  static MerchantBrand? _brand(String written, StatementLine raw) =>
+      MerchantBrand.of(written) ?? MerchantBrand.of(raw.description);
 
   /// A parcela só interessa em saída: entrada com "3/10" é outra coisa.
   static InstallmentMark? _installment(StatementLine raw, String written) =>
@@ -108,16 +113,27 @@ abstract final class StatementLineResolver {
     };
   }
 
-  /// O tipo é dúvida quando só a IA disse, quando é Pix para alguém, e
+  /// O tipo é dúvida quando só a IA disse, quando é Pix para alguém,
+  /// quando é Pix ou transferência sem ninguém reconhecido e sem certeza da
+  /// IA — o banco corta o nome, e "PIX ENVIADO JOAO" pode ser de tudo —, e
   /// quando é entrada sem palavra clara de dinheiro chegando.
   static bool _kindInDoubt(
     StatementLine raw,
     String? original,
     String? person,
+    MerchantBrand? brand,
   ) {
     if (raw.doubtful || person != null) return true;
-    if (raw.kind != StatementLineKind.income) return false;
-    return original != null && !IncomeLine.isClear(original);
+    final written = original ?? raw.description;
+    return switch (raw.kind) {
+      StatementLineKind.income =>
+        original != null && !IncomeLine.isClear(original),
+      StatementLineKind.expense =>
+        TransferLine.isTransfer(written) &&
+            brand == null &&
+            raw.confidence != Confidence.high,
+      _ => false,
+    };
   }
 
   static LineTreatment? _household(String? person, HouseholdNames household) =>

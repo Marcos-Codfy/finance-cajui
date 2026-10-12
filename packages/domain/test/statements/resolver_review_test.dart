@@ -96,6 +96,40 @@ void main() {
     });
   });
 
+  group('RN-1110 · Pix ou transferência sem ninguém reconhecido', () {
+    test('o nome que o banco cortou vira pergunta', () {
+      final line = StatementLineResolver.resolve(
+        _raw('Pix enviado', category: 'other'),
+        original: '05/10 PIX ENVIADO JOAO 30,00',
+      );
+
+      expect(line.doubts, contains(LineDoubt.kind));
+    });
+
+    test('Pix para uma loja com a categoria certa da IA não pergunta', () {
+      final line = StatementLineResolver.resolve(
+        _raw(
+          'Mercado Boa Vista',
+          category: 'groceries',
+          confidence: Confidence.high,
+        ),
+        original: '05/10 PIX ENVIADO MERCADO BOA VISTA LTDA 80,00',
+      );
+
+      expect(line.isSure, isTrue);
+    });
+
+    test('a transferência entre contas escrita não pergunta (RN-759)', () {
+      final line = StatementLineResolver.resolve(
+        _raw('Transferência entre contas', kind: StatementLineKind.ownTransfer),
+        original: '10/10 TRANSFERENCIA ENTRE CONTAS 500,00',
+      );
+
+      expect(line.isLeftOut, isTrue);
+      expect(line.isSure, isTrue);
+    });
+  });
+
   group('RN-1116 · a linha sem nome não leva as outras junto', () {
     test('"Movimentação" com o texto original: a chave é a do texto', () {
       final amazon = StatementLineResolver.resolve(
