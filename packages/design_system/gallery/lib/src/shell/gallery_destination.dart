@@ -48,8 +48,8 @@ enum GalleryDestination {
   /// Os cartões que saem do maço e se empilham ao rolar.
   wallet('Pilha de carteira', GalleryGroup.depth),
 
-  /// O painel, em todos os estados.
-  dashboard('Painel', GalleryGroup.screens),
+  /// O Início, em todos os estados.
+  home('Início', GalleryGroup.screens),
 
   /// A confirmação de captura, nos 17 estados do compartilhamento.
   capture('Captura', GalleryGroup.screens),
@@ -63,8 +63,8 @@ enum GalleryDestination {
   /// As dívidas e o marco de quitação.
   debts('Dívidas', GalleryGroup.screens),
 
-  /// A conversa com o assistente e as falhas da IA.
-  assistant('Assistente', GalleryGroup.screens),
+  /// A conversa com a Juju, o extrato conferido com ela e as falhas da IA.
+  assistant('Juju', GalleryGroup.screens),
 
   /// A falta do mês em barro e em vermelho, lado a lado.
   shortfall('Falta: barro × vermelho', GalleryGroup.decisions),
