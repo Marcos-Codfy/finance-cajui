@@ -88,6 +88,27 @@ void main() {
     expect(find.textContaining('Saldo acertado'), findsOneWidget);
   });
 
+  testWidgets(r'RN-123 · a operadora diz R$ 0,00: dá para zerar, e a tela '
+      'passa a dizer que o vale foi todo usado', (tester) async {
+    final container = await _openVoucher(tester);
+
+    await tester.enterText(_field('O app da operadora diz'), '0');
+    await tester.pump();
+    await tester.tap(find.text('Acertar o saldo'));
+    await settleAfterTap(tester);
+
+    final book = await container.read(ledgerProvider.future);
+    expect(
+      book.voucherAdjustments.single.amount,
+      const Money.fromCents(-17000),
+    );
+    expect(book.voucher.balance, Money.zero);
+    expect(
+      find.text('O vale foi todo usado, pelo que está lançado.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('na consulta pela web, o vale só se lê: sem acerto', (
     tester,
   ) async {

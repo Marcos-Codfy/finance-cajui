@@ -1,6 +1,7 @@
 import 'package:domain/src/ledger/possible_duplicate.dart';
 import 'package:domain/src/money/money.dart';
 import 'package:domain/src/money/money_format.dart';
+import 'package:domain/src/receipts/spoken_amount.dart';
 
 /// Reconhece a fala que **conta um gasto** — "gastei 40 no mercado no Pix" —
 /// e não uma pergunta (RN-1091).
@@ -37,15 +38,10 @@ abstract final class SpokenExpense {
     return words.any(_verbs.contains) && _number.hasMatch(text);
   }
 
-  /// O primeiro valor dito em [text]: "40" é R$ 40,00, "8,50" é R$ 8,50, e
-  /// "1.200" é mil e duzentos. `null` sem número.
-  static Money? amountOf(String text) {
-    final match = _amount.firstMatch(text);
-    if (match == null) return null;
-    final reais = match.group(1)!.replaceAll('.', '');
-    final cents = (match.group(2) ?? '').padRight(2, '0');
-    return Money.fromCents(int.parse(reais) * 100 + int.parse(cents));
-  }
+  /// O valor dito em [text] (`SpokenAmount`): o número ao lado de "R$" ou
+  /// de "reais", senão o primeiro que não seja dia, hora ou data. `null`
+  /// quando não há valor seguro.
+  static Money? amountOf(String text) => SpokenAmount.of(text);
 
   /// [said] do jeito que o leitor de comprovante entende: a frase, e o valor
   /// com o rótulo de total (RN-753). Sem ele, "gastei 40" chegava à
@@ -54,10 +50,4 @@ abstract final class SpokenExpense {
     final amount = amountOf(said);
     return amount == null ? said : '$said\nTotal ${MoneyFormat.brl(amount)}';
   }
-
-  /// Milhar com ponto e centavos com vírgula ou ponto: "1.200", "8,50",
-  /// "8.50", "40".
-  static final _amount = RegExp(
-    r'(\d{1,3}(?:\.\d{3})+|\d+)(?:[,.](\d{1,2}))?(?!\d)',
-  );
 }

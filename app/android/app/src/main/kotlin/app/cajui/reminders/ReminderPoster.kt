@@ -23,16 +23,30 @@ class ReminderPoster(private val context: Context) {
 
     private val manager = NotificationManagerCompat.from(context)
 
-    /** Mostra [reminder]. Sem permissão de notificar, não tenta. */
-    fun post(reminder: Reminder) {
-        if (!manager.areNotificationsEnabled()) return
+    /**
+     * Mostra [reminder] e diz se ele apareceu de fato. Sem permissão de
+     * notificar, com o canal "Contas a vencer" desligado ou recusado pelo
+     * sistema, não aparece — e quem chama não pode contá-lo como mostrado:
+     * no mês com falta, o aviso do dia seria calado por um que ninguém viu
+     * (RN-1086).
+     */
+    fun post(reminder: Reminder): Boolean {
+        if (!manager.areNotificationsEnabled()) return false
         ensureChannel()
-        try {
+        if (channelOff()) return false
+        return try {
             manager.notify(TAG, reminder.notificationId, build(reminder))
+            true
         } catch (denied: SecurityException) {
-            return
+            false
         }
     }
+
+    /** Se a pessoa desligou o canal dos lembretes nas configurações. */
+    private fun channelOff(): Boolean =
+        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+            manager.getNotificationChannel(CHANNEL)?.importance ==
+            NotificationManager.IMPORTANCE_NONE
 
     /**
      * Tira da bandeja os lembretes que não estão mais em [current]: a conta

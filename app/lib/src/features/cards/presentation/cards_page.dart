@@ -63,6 +63,8 @@ class CardsPage extends ConsumerWidget {
     CardMonthUsage? Function(CreditCard card) usageOf,
     CajuiTilt? tilt,
   ) => CajuiWalletStack(
+    // A chave guarda o leque aberto quando um aviso de limite aparece acima.
+    key: const ValueKey('carteira'),
     children: [
       for (final card in cards)
         Column(

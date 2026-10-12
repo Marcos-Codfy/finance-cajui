@@ -23,6 +23,9 @@ abstract final class XlsxParts {
   /// Número inteiro.
   static const countStyle = 5;
 
+  /// Percentual: "72%".
+  static const percentStyle = 6;
+
   /// A primeira linha de todo XML do arquivo.
   static const declaration =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
@@ -83,7 +86,9 @@ ${links.join('\n')}
   }
 
   /// Os estilos. A ordem de `cellXfs` é a das constantes acima: o formato
-  /// 164 é o real, com o sinal antes do "R$"; o 165, a data brasileira.
+  /// 164 é o real, com o sinal antes do "R$"; o 165, a data brasileira. O
+  /// estilo "Normal" no fim é o que todo leitor espera achar; sem ele, há
+  /// leitor que avisa e aplica um padrão próprio.
   static const String styles =
       '''
 $declaration
@@ -102,25 +107,32 @@ $declaration
 </fills>
 <borders count="1"><border/></borders>
 <cellStyleXfs count="1"><xf/></cellStyleXfs>
-<cellXfs count="6">
+<cellXfs count="7">
 <xf/>
 <xf fontId="1" applyFont="1"/>
 <xf numFmtId="164" applyNumberFormat="1"/>
 <xf numFmtId="164" fontId="1" applyNumberFormat="1" applyFont="1"/>
 <xf numFmtId="165" applyNumberFormat="1"/>
 <xf numFmtId="1" applyNumberFormat="1"/>
+<xf numFmtId="9" applyNumberFormat="1"/>
 </cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>''';
 
   /// O espaço de nomes das planilhas.
   static const String mainNs = _mainNs;
 
-  /// [text] seguro dentro de XML.
+  /// [text] seguro dentro de XML. Os caracteres de controle que o XML 1.0
+  /// não aceita nem como referência saem antes: uma descrição colada com um
+  /// deles fazia o Excel recusar o arquivo inteiro.
   static String escape(String text) => text
+      .replaceAll(_illegal, '')
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;');
+
+  static final _illegal = RegExp('[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]');
 
   static const _mainNs =
       'http://schemas.openxmlformats.org/spreadsheetml/2006/main';

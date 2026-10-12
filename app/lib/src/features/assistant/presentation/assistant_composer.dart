@@ -60,12 +60,14 @@ class _AssistantComposerState extends ConsumerState<AssistantComposer> {
   /// da frase ouvida para o lançamento feito.
   Future<void> _dictate() async {
     setState(() => _listening = true);
-    final heard = await ref.read(speechInputProvider).listen();
+    final heard = (await ref.read(speechInputProvider).listen())?.trim();
     if (!mounted) return;
-    setState(() {
-      _listening = false;
-      if (heard != null && heard.isNotEmpty) _text.text = heard;
-    });
+    setState(() => _listening = false);
+    // Desistiu, não falou ou o reconhecedor não entendeu: nada sai. Mandar
+    // aqui levaria o rascunho que estava no campo, e a Juju o lançaria
+    // sozinha sem a pessoa ter confirmado nada.
+    if (heard == null || heard.isEmpty) return;
+    _text.text = heard;
     _send();
   }
 

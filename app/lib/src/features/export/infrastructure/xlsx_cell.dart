@@ -51,6 +51,15 @@ final class XlsxCount extends XlsxCell {
   final int value;
 }
 
+/// Um percentual inteiro, que a planilha mostra como "72%".
+final class XlsxPercent extends XlsxCell {
+  /// Cria a célula com [percent], de 0 a 100 (ou mais).
+  const new(this.percent);
+
+  /// O percentual.
+  final int percent;
+}
+
 /// A célula vazia.
 final class XlsxEmpty extends XlsxCell {
   /// Cria a célula vazia.

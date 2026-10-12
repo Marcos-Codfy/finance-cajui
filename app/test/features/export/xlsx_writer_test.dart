@@ -51,6 +51,11 @@ void main() {
       );
       expect(parts['xl/workbook.xml'], contains('name="Lançamentos"'));
       expect(parts['xl/workbook.xml'], contains('name="Resumo"'));
+      expect(
+        parts['xl/styles.xml'],
+        contains('<cellStyle name="Normal" xfId="0" builtinId="0"/>'),
+        reason: 'sem o estilo padrão, há leitor que avisa e troca o estilo',
+      );
     });
 
     test('dinheiro é número exato com o formato de real; data é número de '
@@ -70,6 +75,40 @@ void main() {
       expect(sheet, contains('Pão &amp; café &lt;manhã&gt;'));
       expect(sheet, contains('state="frozen"'));
       expect(sheet, contains('<c r="A1" t="inlineStr" s="1">'));
+    });
+
+    test('caractere de controle colado na descrição sai, e o XML continua '
+        'válido', () {
+      final sheet = _unzip(
+        XlsxWriter.write([
+          const XlsxSheet(
+            name: 'Lançamentos',
+            widths: [30],
+            rows: [
+              [XlsxText('Pão e café')],
+            ],
+          ),
+        ]),
+      )['xl/worksheets/sheet1.xml']!;
+
+      expect(sheet, contains('Pão e café</t>'));
+      expect(sheet.contains('') || sheet.contains(''), isFalse);
+    });
+
+    test('o percentual vai como número com o formato de %', () {
+      final sheet = _unzip(
+        XlsxWriter.write([
+          const XlsxSheet(
+            name: 'Resumo',
+            widths: [30],
+            rows: [
+              [XlsxPercent(72)],
+            ],
+          ),
+        ]),
+      )['xl/worksheets/sheet1.xml']!;
+
+      expect(sheet, contains('<c r="A1" s="6"><v>0.72</v></c>'));
     });
 
     test('as colunas passam do Z como no Excel', () {

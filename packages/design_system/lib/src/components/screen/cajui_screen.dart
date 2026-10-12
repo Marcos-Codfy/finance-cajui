@@ -128,8 +128,15 @@ class CajuiScreen extends StatelessWidget {
     final blocks = [_top(context), ...children];
     final scenes = cinematic
         ? [
+            // A chave da seção vai para a tomada que a embrulha: sem ela,
+            // um aviso que aparece no alto recriava as seções de baixo, e o
+            // carrossel voltava à primeira página.
             for (final (index, block) in blocks.indexed)
-              CajuiCinematicShot(index: index, child: block),
+              CajuiCinematicShot(
+                key: block.key == null ? null : ValueKey(('shot', block.key)),
+                index: index,
+                child: block,
+              ),
           ]
         : blocks;
     // A margem da rolagem em profundidade já é a mesma da tela comum.

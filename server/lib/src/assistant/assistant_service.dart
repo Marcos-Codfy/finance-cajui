@@ -61,18 +61,20 @@ final class AssistantService {
 
   /// Responde [message] da sessão [sessionId], com o [context] do mês, o
   /// [catalog] de categorias e cartões, e as [tools] que mexem no livro.
+  /// [householdNames] são mascarados na pergunta antes de ela sair (RN-732):
+  /// "mandei 500 para o Marcos" vai sem o Marcos.
   Future<AssistantOutcome> ask({
     required String sessionId,
     required String message,
     required AssistantContext context,
     required Map<String, Object?> catalog,
     required AssistantTools tools,
+    List<String> householdNames = const [],
   }) async {
     // O limite é conferido antes de qualquer chamada sair (RN-962).
     if (!budget.hasRoomIn(context.month)) return _failed(ErrorCode.ai03);
     if (!breaker.allowsCall) return _failed(ErrorCode.ai01);
-    // A pergunta é mascarada antes de ser guardada ou enviada (RN-952).
-    final question = PiiRedactor.redact(ReceiptText.clean(message));
+    final question = _masked(message, householdNames);
     final messages = AssistantPrompt.messages(
       context: context,
       catalog: catalog,
@@ -89,6 +91,14 @@ final class AssistantService {
       return _down(null);
     }
   }
+
+  /// A pergunta mascarada antes de ser guardada ou enviada (RN-952), sem os
+  /// nomes da casa (RN-732).
+  static String _masked(String message, List<String> householdNames) =>
+      PiiRedactor.redact(
+        ReceiptText.clean(message),
+        householdNames: householdNames,
+      );
 
   /// A IA não respondeu. O provedor pedindo uma pausa é outro erro, com a
   /// contagem (E-AI-02); o resto é "fora do ar" (E-AI-01).

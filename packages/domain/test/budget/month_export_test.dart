@@ -49,8 +49,9 @@ String _name(String id) => switch (id) {
 MonthExport _export({
   List<Entry> entries = const [],
   List<Reversal> reversals = const [],
+  Set<String> excluded = const {},
 }) {
-  final finances = household(entries: entries);
+  final finances = household(entries: entries, excluded: excluded);
   return MonthExport.of(
     month: october,
     budget: finances.budgetFor(october),
@@ -58,6 +59,7 @@ MonthExport _export({
     reversals: reversals,
     categories: householdCategories,
     methodName: _name,
+    excluded: excluded,
   );
 }
 
@@ -126,6 +128,40 @@ void main() {
         isEmpty,
         reason: 'nada de déficit nem de palavra de banco',
       );
+    });
+
+    test('o grupo de cada linha é o do Meu mês: a tarifa solta numa categoria '
+        'de dívida é dia a dia, e a parcela ligada à dívida é parcela', () {
+      final fee = spend(
+        3990,
+        id: 'anuidade',
+        category: 'interest-and-fees',
+        on: LocalDate(2026, 10, 8),
+      );
+      final installment = spend(
+        12000,
+        id: 'parcela',
+        category: 'interest-and-fees',
+        on: LocalDate(2026, 10, 10),
+      );
+
+      final rows = _export(
+        entries: [fee, installment],
+        excluded: {'parcela'},
+      ).rows;
+
+      expect(
+        rows.firstWhere((r) => r.description == 'Compra anuidade').group,
+        'Dia a dia',
+      );
+      expect(
+        rows.firstWhere((r) => r.description == 'Compra parcela').group,
+        'Parcelas de dívida',
+      );
+    });
+
+    test('RN-1016 · o Resumo traz o já está gasto: 2.380 ÷ 3.300 = 72%', () {
+      expect(_export().spentPercent, 72);
     });
   });
 }

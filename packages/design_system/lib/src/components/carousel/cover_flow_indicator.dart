@@ -64,13 +64,21 @@ class _CoverFlowIndicatorState extends State<CoverFlowIndicator> {
     if (next != widget.current) widget.onSelect(next);
   }
 
-  /// O toque escolhe o ponto mais perto: a pílula ocupa o lugar de um ponto
-  /// largo, e os outros ficam em passo fixo.
+  /// O toque escolhe o ponto mais perto, pela mesma conta da pintura
+  /// (`_dotsLayout`): a pílula alarga o ponto da página atual e empurra os
+  /// outros. Em passo fixo, o toque no segundo ponto levava ao terceiro.
   void _tapAt(Offset local, double boxWidth) {
-    final start = (boxWidth - _width) / 2;
-    final pitch = _width / widget.count;
-    final index = ((local.dx - start) / pitch).floor();
-    widget.onSelect(index.clamp(0, widget.count - 1));
+    final dots = _dotsLayout(widget.count, widget.current.toDouble(), boxWidth);
+    var nearest = 0;
+    for (var i = 1; i < dots.length; i++) {
+      final (x, width) = dots[i];
+      final (bestX, bestWidth) = dots[nearest];
+      if ((local.dx - (x + width / 2)).abs() <
+          (local.dx - (bestX + bestWidth / 2)).abs()) {
+        nearest = i;
+      }
+    }
+    widget.onSelect(nearest);
   }
 
   String? _spoken(int index) => index >= 0 && index < widget.count
@@ -157,20 +165,18 @@ class _DotsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const dot = _CoverFlowIndicatorState._dot;
-    const pill = _CoverFlowIndicatorState._pill;
-    const gap = _CoverFlowIndicatorState._gap;
-    final total = count * dot + (pill - dot) + (count - 1) * gap;
-    var x = (size.width - total) / 2;
     final y = size.height / 2;
-    for (var i = 0; i < count; i++) {
+    for (final (i, (x, width)) in _dotsLayout(
+      count,
+      page.value,
+      size.width,
+    ).indexed) {
       final near = (1 - (page.value - i).abs()).clamp(0.0, 1.0);
-      final width = lerpDouble(dot, pill, near)!;
       final rect = Rect.fromLTWH(x, y - dot / 2, width, dot);
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(dot / 2)),
         Paint()..color = Color.lerp(off, on, near)!,
       );
-      x += width + gap;
     }
   }
 
@@ -180,4 +186,23 @@ class _DotsPainter extends CustomPainter {
       oldDelegate.on != on ||
       oldDelegate.off != off ||
       oldDelegate.page != page;
+}
+
+/// Onde fica cada ponto — o começo e a largura — com o carrossel em [page],
+/// numa caixa de largura [boxWidth]. A pintura e o toque usam esta mesma
+/// conta: o ponto que se vê é o que o dedo escolhe.
+List<(double, double)> _dotsLayout(int count, double page, double boxWidth) {
+  const dot = _CoverFlowIndicatorState._dot;
+  const pill = _CoverFlowIndicatorState._pill;
+  const gap = _CoverFlowIndicatorState._gap;
+  final total = count * dot + (pill - dot) + (count - 1) * gap;
+  var x = (boxWidth - total) / 2;
+  final dots = <(double, double)>[];
+  for (var i = 0; i < count; i++) {
+    final near = (1 - (page - i).abs()).clamp(0.0, 1.0);
+    final width = lerpDouble(dot, pill, near)!;
+    dots.add((x, width));
+    x += width + gap;
+  }
+  return dots;
 }

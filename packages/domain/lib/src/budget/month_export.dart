@@ -22,11 +22,17 @@ typedef ExportLine = ({String label, Money amount});
 /// porque quem monta o arquivo não calcula nada.
 @immutable
 final class MonthExport {
-  const new _({required this.month, required this.summary, required this.rows});
+  const new _({
+    required this.month,
+    required this.summary,
+    required this.rows,
+    this.spentPercent,
+  });
 
   /// O mês [month] de [budget], com os lançamentos de [entries] que caem
   /// nele e os estornos de [reversals] que voltaram nele. [methodName] dá o
-  /// nome de cada forma de pagamento pelo identificador.
+  /// nome de cada forma de pagamento pelo identificador. [excluded] são os
+  /// pagamentos de parcela ligados a uma dívida: contam pela dívida.
   factory of({
     required BudgetMonth month,
     required MonthBudget budget,
@@ -34,12 +40,14 @@ final class MonthExport {
     required Iterable<Reversal> reversals,
     required Map<String, Category> categories,
     required String Function(String methodId) methodName,
+    Set<String> excluded = const {},
   }) {
-    final rows = _Rows(categories, methodName);
+    final rows = _Rows(categories, methodName, budget, excluded);
     final byId = {for (final entry in entries) entry.id: entry};
     return MonthExport._(
       month: month,
       summary: _summary(budget),
+      spentPercent: budget.spentPercent,
       rows: [
         for (final entry in entries)
           if (entry.occurredOn.budgetMonth == month) rows.entry(entry),
@@ -60,6 +68,10 @@ final class MonthExport {
 
   /// Os lançamentos e estornos do mês, por dia.
   final List<ExportRow> rows;
+
+  /// O quanto da renda já está gasto, em percentual (RN-1016); `null` sem
+  /// renda em dinheiro (RN-604).
+  final int? spentPercent;
 
   /// O total da coluna do dinheiro.
   Money get cashTotal => rows.fold(Money.zero, (sum, row) => sum + row.cash);
@@ -98,11 +110,20 @@ final class MonthExport {
 }
 
 /// Monta as linhas, com os nomes que a planilha mostra.
+///
+/// O grupo de cada linha é o do Meu mês, e não o bloco cru da categoria: o
+/// plano pode pôr a categoria em outro grupo, e a tarifa solta numa
+/// categoria de dívida conta no dia a dia (RN-1007). Com o bloco cru, a
+/// planilha somava uma anuidade como parcela de dívida, e o Resumo do mesmo
+/// arquivo não batia.
 final class _Rows {
-  const new(this._categories, this._methodName);
+  new(this._categories, this._methodName, MonthBudget budget, this._excluded)
+    : _blockOf = {for (final item in budget.items) item.categoryId: item.block};
 
   final Map<String, Category> _categories;
   final String Function(String methodId) _methodName;
+  final Map<String, Block> _blockOf;
+  final Set<String> _excluded;
 
   static const Map<Block, String> _groups = {
     Block.fixed: 'Contas fixas',
@@ -117,7 +138,7 @@ final class _Rows {
       on: entry.occurredOn,
       description: entry.description,
       category: category?.name ?? entry.categoryId,
-      group: category == null ? '' : _groups[category.block]!,
+      group: _groupOf(entry.id, entry.categoryId),
       method: {
         for (final line in entry.paymentLines)
           _methodName(line.paymentMethodId),
@@ -138,12 +159,22 @@ final class _Rows {
       on: reversal.occurredOn,
       description: 'Estorno: ${original.description}',
       category: category?.name ?? original.categoryId,
-      group: category == null ? '' : _groups[category.block]!,
+      group: _groupOf(original.id, original.categoryId),
       method: _methodName(line.paymentMethodId),
       cash: line.tender == Tender.cash ? back : Money.zero,
       voucher: line.tender == Tender.mealVoucher ? back : Money.zero,
       isReversal: true,
     );
+  }
+
+  /// O grupo do Meu mês para o lançamento [entryId] da categoria
+  /// [categoryId].
+  String _groupOf(String entryId, String categoryId) {
+    if (_excluded.contains(entryId)) return _groups[Block.debt]!;
+    final block = _blockOf[categoryId] ?? _categories[categoryId]?.block;
+    if (block == null) return '';
+    // Gasto solto em categoria de dívida é dia a dia (RN-1007).
+    return _groups[block == Block.debt ? Block.variable : block]!;
   }
 
   static Money _sum(List<PaymentLine> lines, Tender tender) => lines

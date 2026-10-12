@@ -71,4 +71,38 @@ void main() {
         if (row.first case XlsxText(:final text)) text,
     ], contains('Sai do bolso'));
   });
+
+  test('RN-1016 · com renda, o Resumo fecha com o já está gasto em %', () {
+    final categories = DefaultCatalog.emptyBook.categoriesById;
+    final finances = Finances(
+      categories: categories,
+      plans: [
+        BudgetPlan(
+          salaries: const [
+            IncomeSource(
+              id: 'ana',
+              name: 'Ana',
+              tender: Tender.cash,
+              expectedAmount: Money.fromCents(300000),
+              expectedDay: 5,
+            ),
+          ],
+          definedAt: DateTime.utc(2026, 9),
+        ),
+      ],
+    );
+    final export = MonthExport.of(
+      month: _october,
+      budget: finances.budgetFor(_october),
+      entries: const [],
+      reversals: const [],
+      categories: categories,
+      methodName: (id) => id,
+    );
+
+    final summary = MonthWorkbook.of(export).first.rows;
+
+    expect(summary.last.first, isA<XlsxText>());
+    expect(summary.last.last, isA<XlsxPercent>());
+  });
 }

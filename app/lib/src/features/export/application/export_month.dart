@@ -28,6 +28,7 @@ class ExportMonth {
       reversals: finances.reversals,
       categories: book.categoriesById,
       methodName: (id) => names[id] ?? id,
+      excluded: finances.excluded,
     );
     await ref.read(monthExporterProvider).export(export);
   }

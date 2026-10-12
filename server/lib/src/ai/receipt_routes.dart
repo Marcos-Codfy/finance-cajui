@@ -7,6 +7,7 @@ import 'package:server/src/ai/classification_prompt.dart';
 import 'package:server/src/ai/receipt_image.dart';
 import 'package:server/src/http/error_response.dart';
 import 'package:server/src/http/json_body.dart';
+import 'package:server/src/ledger/household_facts.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -63,6 +64,8 @@ final class ReceiptRoutes {
         today: clock.today(),
         learnedRules: _examples(json),
         images: images,
+        // Os nomes da casa saem do texto antes da IA (RN-732, BL-093).
+        householdNames: HouseholdFacts.namesIn(state),
       ),
     );
     return Responses.json(ProposalCodec.encode(proposal));

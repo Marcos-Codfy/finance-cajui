@@ -79,6 +79,11 @@ abstract final class XlsxWriter {
       XlsxParts.dateStyle,
     ),
     XlsxCount(:final value) => _number(ref, '$value', XlsxParts.countStyle),
+    XlsxPercent(:final percent) => _number(
+      ref,
+      '${percent / 100}',
+      XlsxParts.percentStyle,
+    ),
     XlsxEmpty() => '',
   };
 
