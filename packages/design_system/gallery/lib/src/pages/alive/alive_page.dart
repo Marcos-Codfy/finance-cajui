@@ -33,7 +33,7 @@ class _AlivePageState extends State<AlivePage> {
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
-      title: 'Efeitos vivos',
+      title: 'Microinterações',
       lead:
           'Cartão que inclina, número que rola e voa, '
           'semente que cai. Tudo respeita o movimento reduzido do sistema, '

@@ -10,6 +10,7 @@ import 'package:gallery/src/pages/depth/cinematic_page.dart';
 import 'package:gallery/src/pages/depth/cover_flow_page.dart';
 import 'package:gallery/src/pages/depth/depth_scroll_page.dart';
 import 'package:gallery/src/pages/depth/wallet_page.dart';
+import 'package:gallery/src/pages/overview/overview_page.dart';
 import 'package:gallery/src/pages/screens/assistant/assistant_page.dart';
 import 'package:gallery/src/pages/screens/capture/capture_page.dart';
 import 'package:gallery/src/pages/screens/closing/closing_page.dart';
@@ -30,6 +31,7 @@ import 'package:gallery/src/shell/gallery_destination.dart';
 /// A página de cada destino. O `switch` é exaustivo: destino novo sem página
 /// não compila.
 Widget galleryPageOf(GalleryDestination destination) => switch (destination) {
+  GalleryDestination.overview => const OverviewPage(),
   GalleryDestination.colors => const ColorsPage(),
   GalleryDestination.contrast => const ContrastPage(),
   GalleryDestination.typography => const TypographyPage(),

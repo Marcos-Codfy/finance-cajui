@@ -4,8 +4,10 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/app/gallery_controller.dart';
+import 'package:gallery/src/app/gallery_location.dart';
+import 'package:gallery/src/app/gallery_route_parser.dart';
+import 'package:gallery/src/app/gallery_router.dart';
 import 'package:gallery/src/app/gallery_scope.dart';
-import 'package:gallery/src/shell/gallery_shell.dart';
 
 /// A raiz da gallery: liga as escolhas de quem olha ao tema e ao som.
 ///
@@ -26,6 +28,23 @@ class _GalleryAppState extends State<GalleryApp> {
   final _controller = GalleryController();
   late final SoundPlayer _player = widget.player ?? AudioplayersSoundPlayer();
   late final _feedback = SoundAndHapticFeedback(player: _player);
+  final _router = GalleryRouter();
+
+  /// O endereço do navegador: de onde vem a página ao abrir, e para onde vai
+  /// cada troca de página.
+  final _address = PlatformRouteInformationProvider(
+    initialRouteInformation: RouteInformation(
+      uri: Uri.parse(
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName,
+      ),
+    ),
+  );
+  late final _routes = RouterConfig<GalleryLocation>(
+    routeInformationProvider: _address,
+    routeInformationParser: const GalleryRouteParser(),
+    routerDelegate: _router,
+    backButtonDispatcher: RootBackButtonDispatcher(),
+  );
 
   @override
   void initState() {
@@ -54,13 +73,15 @@ class _GalleryAppState extends State<GalleryApp> {
     _controller
       ..removeListener(_syncSound)
       ..dispose();
+    _router.dispose();
+    _address.dispose();
     unawaited(_player.dispose());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WidgetsApp(
+    return WidgetsApp.router(
       title: 'Cajui · design system',
       color: const Color(0xFFFBF6EE),
       debugShowCheckedModeBanner: false,
@@ -69,16 +90,12 @@ class _GalleryAppState extends State<GalleryApp> {
         DefaultMaterialLocalizations.delegate,
         DefaultWidgetsLocalizations.delegate,
       ],
-      pageRouteBuilder: <T>(settings, builder) => PageRouteBuilder<T>(
-        settings: settings,
-        pageBuilder: (context, _, _) => builder(context),
-      ),
+      routerConfig: _routes,
       builder: (context, child) => GalleryScope(
         controller: _controller,
         player: _player,
         child: _Themed(feedback: _feedback, child: child!),
       ),
-      home: const GalleryShell(),
     );
   }
 }

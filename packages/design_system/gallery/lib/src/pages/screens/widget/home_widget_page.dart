@@ -11,7 +11,7 @@ class HomeWidgetPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenStatePage(
-      title: 'Widget',
+      title: 'Widget da tela inicial',
       lead:
           'A sobra do mês na tela inicial, num painel de vidro sobre a aurora '
           'do Cerrado à noite, com duas esferas de luz flutuando por fora. '

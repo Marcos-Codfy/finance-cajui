@@ -4,95 +4,119 @@ import 'package:gallery/src/shell/gallery_group.dart';
 ///
 /// É um enum, e não uma lista, para que o `switch` que monta a página seja
 /// exaustivo: acrescentar um destino sem acrescentar a página não compila.
+/// A ordem dos valores é a ordem do menu e do "anterior · próxima".
 enum GalleryDestination {
-  /// Os papéis de cor, no tema em vigor.
-  colors('Cores', GalleryGroup.foundations),
+  /// O que é o Cajui, por onde começar e os números.
+  overview('Visão geral', GalleryGroup.start, 'visao-geral'),
 
-  /// A tabela de contraste, calculada ao vivo.
-  contrast('Contraste', GalleryGroup.foundations),
+  /// O Início, em todos os estados.
+  home('Início', GalleryGroup.app, 'inicio'),
 
-  /// A escala tipográfica.
-  typography('Tipografia', GalleryGroup.foundations),
+  /// A conversa com a Juju, o extrato conferido com ela e as falhas da IA.
+  assistant('Juju, a assistente', GalleryGroup.app, 'juju'),
 
-  /// Espaçamento, raio e elevação.
-  layout('Espaço, raio e sombra', GalleryGroup.foundations),
+  /// O comprovante que vira lançamento, nos estados do compartilhamento.
+  capture('Comprovante', GalleryGroup.app, 'comprovante'),
 
-  /// Todos os ícones, percorrendo o enum.
-  icons('Ícones', GalleryGroup.foundations),
+  /// A fatura do cartão: visão calculada, nunca despesa.
+  statement('Fatura do cartão', GalleryGroup.app, 'fatura'),
 
-  /// Botão, botão de ícone, chip e chave.
-  action('Ação', GalleryGroup.components),
+  /// O fechamento do mês, com sobra e com falta.
+  closing('Fechamento do mês', GalleryGroup.app, 'fechamento'),
 
-  /// Valor, cartão, linha de lista, medidor e confiança.
-  content('Conteúdo', GalleryGroup.components),
+  /// As dívidas e o marco de quitação.
+  debts('Dívidas', GalleryGroup.app, 'dividas'),
 
-  /// Campo de texto, de valor e de escolha.
-  fields('Campos', GalleryGroup.components),
+  /// O widget da tela inicial, de vidro, e o app que nasce dele.
+  homeWidget('Widget da tela inicial', GalleryGroup.app, 'widget'),
 
-  /// Aviso, vazio, esqueleto, carregando e ícone-herói.
-  states('Estados', GalleryGroup.components),
+  /// A rolagem que curva nas bordas como a face de um tambor.
+  depthScroll('Rolagem em profundidade', GalleryGroup.motion, 'rolagem-3d'),
 
-  /// A fala comum e a fala que pede resposta, com botões ou opções.
-  conversation('Conversa', GalleryGroup.components),
+  /// Os números do mês num carrossel 3D.
+  coverFlow('Carrossel 3D', GalleryGroup.motion, 'carrossel-3d'),
+
+  /// O travelling de câmera ao abrir a tela.
+  cinematic(
+    'Entrada cinematográfica',
+    GalleryGroup.motion,
+    'entrada-cinematografica',
+  ),
+
+  /// Os cartões que saem do maço e se empilham ao rolar.
+  wallet('Pilha de cartões', GalleryGroup.motion, 'pilha-de-cartoes'),
+
+  /// A câmera que avança para a tela nova e orbita entre as abas.
+  camera('Troca de tela', GalleryGroup.motion, 'troca-de-tela'),
 
   /// Cartão em 3D, número que rola e voa, semente e folha, brilho, mês a
   /// mês e resposta palavra por palavra.
-  alive('Efeitos vivos', GalleryGroup.components),
-
-  /// A rolagem que curva nas bordas como a face de um tambor.
-  depthScroll('Rolagem em profundidade', GalleryGroup.depth),
-
-  /// Os números do mês num carrossel 3D.
-  coverFlow('Carrossel 3D', GalleryGroup.depth),
-
-  /// O travelling de câmera ao abrir a tela.
-  cinematic('Entrada cinematográfica', GalleryGroup.depth),
-
-  /// Os cartões que saem do maço e se empilham ao rolar.
-  wallet('Pilha de carteira', GalleryGroup.depth),
-
-  /// A câmera que avança para a tela nova e orbita entre as abas.
-  camera('Câmera entre telas', GalleryGroup.depth),
-
-  /// O Início, em todos os estados.
-  home('Início', GalleryGroup.screens),
-
-  /// O widget da tela inicial, de vidro, e o app que nasce dele.
-  homeWidget('Widget', GalleryGroup.screens),
-
-  /// A confirmação de captura, nos 17 estados do compartilhamento.
-  capture('Captura', GalleryGroup.screens),
-
-  /// A fatura do cartão: visão calculada, nunca despesa.
-  statement('Fatura', GalleryGroup.screens),
-
-  /// O fechamento do mês, com sobra e com falta.
-  closing('Fechamento', GalleryGroup.screens),
-
-  /// As dívidas e o marco de quitação.
-  debts('Dívidas', GalleryGroup.screens),
-
-  /// A conversa com a Juju, o extrato conferido com ela e as falhas da IA.
-  assistant('Juju', GalleryGroup.screens),
-
-  /// A falta do mês em barro e em vermelho, lado a lado.
-  shortfall('Falta: barro × vermelho', GalleryGroup.decisions),
-
-  /// A mesa de som: ouvir e aprovar cada som.
-  soundDesk('Mesa de som', GalleryGroup.senses),
+  alive('Microinterações', GalleryGroup.motion, 'microinteracoes'),
 
   /// A mesa de movimento: curvas, durações e os três níveis.
-  motionDesk('Mesa de movimento', GalleryGroup.senses);
+  motionDesk('Mesa de movimento', GalleryGroup.motion, 'mesa-de-movimento'),
 
-  new(this.title, this.group);
+  /// A mesa de som: ouvir e aprovar cada som.
+  soundDesk('Mesa de som', GalleryGroup.motion, 'mesa-de-som'),
 
-  /// O nome da página no menu.
+  /// Botão, botão de ícone, chip, chave e barra de navegação.
+  action('Botões e controles', GalleryGroup.components, 'botoes'),
+
+  /// Valor, cartão, linha de lista, medidor e confiança.
+  content('Valores e cartões', GalleryGroup.components, 'valores-e-cartoes'),
+
+  /// Campo de texto, de valor e de escolha.
+  fields('Campos', GalleryGroup.components, 'campos'),
+
+  /// Aviso, vazio, esqueleto, carregando e ícone-herói.
+  states(
+    'Aviso, vazio e carregando',
+    GalleryGroup.components,
+    'aviso-vazio-e-carregando',
+  ),
+
+  /// A fala comum e a fala que pede resposta, com botões ou opções.
+  conversation('Conversa', GalleryGroup.components, 'conversa'),
+
+  /// Os papéis de cor, no tema em vigor.
+  colors('Cores', GalleryGroup.foundations, 'cores'),
+
+  /// A falta do mês em barro e em vermelho, lado a lado.
+  shortfall('Cor da falta', GalleryGroup.foundations, 'cor-da-falta'),
+
+  /// A tabela de contraste, calculada ao vivo.
+  contrast('Contraste', GalleryGroup.foundations, 'contraste'),
+
+  /// A escala tipográfica.
+  typography('Tipografia', GalleryGroup.foundations, 'tipografia'),
+
+  /// Espaçamento, raio e elevação.
+  layout('Espaço, raio e sombra', GalleryGroup.foundations, 'espaco'),
+
+  /// Todos os ícones, percorrendo o enum.
+  icons('Ícones', GalleryGroup.foundations, 'icones');
+
+  new(this.title, this.group, this.slug);
+
+  /// O nome da página no menu, igual ao título dela.
   final String title;
 
   /// O grupo do menu a que a página pertence.
   final GalleryGroup group;
 
+  /// O pedaço do endereço: `/gallery/#/widget`. Curto, sem acento e fixo —
+  /// é o que vai no README e no currículo.
+  final String slug;
+
   /// As páginas de um [group], na ordem do menu.
   static Iterable<GalleryDestination> inGroup(GalleryGroup group) =>
       values.where((destination) => destination.group == group);
+
+  /// A página do endereço [slug], se houver.
+  static GalleryDestination? bySlug(String slug) {
+    for (final destination in values) {
+      if (destination.slug == slug) return destination;
+    }
+    return null;
+  }
 }

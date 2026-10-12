@@ -33,7 +33,7 @@ class ShortfallComparePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GalleryPage(
-      title: 'Falta do mês',
+      title: 'Cor da falta',
       lead:
           'Uma decisão em aberto: como o Cajui pinta o mês que não fechou. '
           'Só o token `shortfall` muda entre as duas telas — texto, '

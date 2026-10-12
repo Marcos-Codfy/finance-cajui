@@ -30,7 +30,7 @@ void main() {
     for (final destination in GalleryDestination.values) {
       await goTo(tester, destination);
       _expectNoWeek(tester, destination.title);
-      if (destination.group != GalleryGroup.screens) continue;
+      if (destination.group != GalleryGroup.app) continue;
       for (final label in variantLabels(tester)) {
         await pickVariant(tester, label);
         _expectNoWeek(tester, '${destination.title} · $label');
