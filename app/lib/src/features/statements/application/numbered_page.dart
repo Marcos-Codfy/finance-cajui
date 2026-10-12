@@ -11,12 +11,13 @@ import 'package:meta/meta.dart';
 /// para João P Silva" na pergunta, onde a IA só viu `[NOME]`.
 @immutable
 final class NumberedPage {
-  /// Numera [text], sem as linhas em branco, e mascara cada linha com os
-  /// nomes de [household].
+  /// Numera [text], sem as linhas em branco e com os números que o OCR
+  /// quebrou consertados (`OcrLine`), e mascara cada linha com os nomes de
+  /// [household].
   factory of(String text, {HouseholdNames household = HouseholdNames.empty}) {
     final original = [
       for (final line in text.split(_lineBreak))
-        if (line.trim().isNotEmpty) line.trim(),
+        if (line.trim().isNotEmpty) OcrLine.tidy(line.trim()),
     ].take(StatementPageRequest.maxLines).toList();
     final masked = PiiRedactor.redactLines([
       for (final line in original) ReceiptText.clean(line),

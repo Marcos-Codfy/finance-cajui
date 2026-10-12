@@ -20,6 +20,7 @@ final class StatementReading {
     this.failedPages = const [],
     this.partialPages = const [],
     this.beyondLimit = 0,
+    this.unreadLines = 0,
     this.failure,
   });
 
@@ -54,6 +55,10 @@ final class StatementReading {
   /// (RN-1104).
   final int beyondLimit;
 
+  /// Quantas linhas com data e valor a leitura não trouxe, nem pedindo de
+  /// novo: ditas, para a pessoa conferir no extrato (RN-1104).
+  final int unreadLines;
+
   /// Por que a última página que falhou falhou: sem rede, IA fora do ar,
   /// teto de tokens.
   final ErrorCode? failure;
@@ -72,5 +77,6 @@ final class StatementReading {
       pagesRead >= pageCount &&
       failedPages.isEmpty &&
       partialPages.isEmpty &&
-      beyondLimit == 0;
+      beyondLimit == 0 &&
+      unreadLines == 0;
 }

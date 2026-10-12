@@ -45,9 +45,9 @@ final class NativeReceiptReader implements ReceiptReader {
   }
 
   /// O que o lado nativo devolveu: o texto juntado, que o comprovante lê,
-  /// e o de cada página com o total real, que o extrato lê (ADR-030). Lado
-  /// nativo antigo, sem as páginas, ainda serve: o texto vira a página
-  /// única.
+  /// e o de cada página, em linhas pela posição, com o total real, que o
+  /// extrato lê (ADR-030). Lado nativo antigo, sem as páginas, ainda serve:
+  /// o texto vira a página única.
   static ReadText _text(Map<String, Object?> read) => ReadText(
     read['text'] as String? ?? '',
     images: [
@@ -56,6 +56,10 @@ final class NativeReceiptReader implements ReceiptReader {
     ],
     pages: [
       for (final page in read['pageTexts'] as List? ?? const [])
+        if (page is String) page,
+    ],
+    rows: [
+      for (final page in read['pageRows'] as List? ?? const [])
         if (page is String) page,
     ],
     pageCount: read['pageCount'] as int?,

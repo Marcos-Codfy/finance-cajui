@@ -18,6 +18,7 @@ final class ReadText extends ReadOutcome {
     this.text, {
     this.images = const [],
     this.pages = const [],
+    this.rows = const [],
     this.pageCount,
     this.imagePages = const [],
   });
@@ -34,6 +35,13 @@ final class ReadText extends ReadOutcome {
   /// a página única.
   final List<String> pages;
 
+  /// O texto de cada página remontado em linhas pela posição na página.
+  /// O OCR devolve por blocos, e numa página em forma de tabela cada coluna
+  /// pode ser um bloco: a data de uma linha chega longe do valor dela. O
+  /// extrato precisa da linha inteira; o comprovante lê [text], que as
+  /// regras dele já conhecem. Vazio quando o leitor não remontou.
+  final List<String> rows;
+
   /// Quantas páginas o arquivo tem de verdade, mesmo as que não foram
   /// lidas: "Li as páginas 1 a 20 de 24" (RN-1101).
   final int? pageCount;
@@ -42,8 +50,17 @@ final class ReadText extends ReadOutcome {
   /// leitor não disse, e aí a ordem das imagens é a das páginas.
   final List<int> imagePages;
 
-  /// O texto de cada página, nunca vazio.
-  List<String> get pageTexts => pages.isEmpty ? [text] : pages;
+  /// O texto de cada página para o extrato, nunca vazio: em linhas, quando
+  /// o leitor as remontou.
+  List<String> get pageTexts => rows.isNotEmpty
+      ? rows
+      : pages.isEmpty
+      ? [text]
+      : pages;
+
+  /// As linhas de todas as páginas juntas, ou `null` quando o leitor não as
+  /// remontou.
+  String? get rowsText => rows.isEmpty ? null : rows.join('\n');
 
   /// A imagem da página [page] (a partir de 1), quando ela foi para a IA.
   Uint8List? imageOf(int page) {
