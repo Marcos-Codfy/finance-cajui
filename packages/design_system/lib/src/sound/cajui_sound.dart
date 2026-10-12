@@ -8,13 +8,20 @@ import 'package:design_system/src/sound/sound_category.dart';
 /// Repare na ausência: **não existe som de erro.** O aviso é uma nota grave e
 /// macia de madeira, que informa sem assustar.
 enum CajuiSound {
-  /// Toque num controle: batida leve em madeira.
+  /// Toque num botão de ação: um clique moderno, com cauda curta.
   tap('tap', SoundCategory.touches),
 
-  /// Chave ligada: duas notas de madeira, subindo.
+  /// Toque num card, numa linha de lista ou numa opção: um pop mínimo.
+  card('card', SoundCategory.touches),
+
+  /// Tecla digitada num campo: um tique de poucos milissegundos, baixo, para
+  /// não cansar numa frase inteira.
+  key('key', SoundCategory.touches),
+
+  /// Chave ou chip ligado: dois toques curtos, brilhantes.
   toggleOn('toggle_on', SoundCategory.touches),
 
-  /// Chave desligada: as mesmas duas notas, descendo.
+  /// Chave ou chip desligado: os mesmos dois toques, mais graves.
   toggleOff('toggle_off', SoundCategory.touches),
 
   /// Folha ou aviso abrindo: papel deslizando.

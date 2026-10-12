@@ -87,6 +87,11 @@ Não existe `sound.error`. O aviso (`sound.notice`) é uma nota grave e macia de
 
 ### Origem e licença
 
-Os sons atuais são **sintetizados pelo próprio projeto**: `tool/sound/build_sounds.py` monta cada um com seno e ruído filtrado — batida de madeira, grão de semente, gota d'água —, com semente fixa, de modo que rodar o script reproduz exatamente os mesmos arquivos. Não há amostra de terceiros, então não há licença externa a cumprir.
+Desde 11/10/2026 há duas origens:
 
-Se um som gravado vier a substituir um sintetizado, só entra material em domínio público (CC0) ou gravado para o projeto, registrado em `assets/CREDITS.md` com autor, endereço de origem e licença antes de entrar no repositório. O tratamento é o mesmo do script: fade nas pontas, filtro passa-baixa e pico normalizado bem abaixo do volume de uma notificação.
+- **Os sons de toque são gravações escolhidas pelo dono**: um clique para botão de ação, um pop para card e linha de lista, um tique para cada tecla digitada, e dois toques curtos para chave e chip (o desligar é o mesmo, mais grave). Vêm do Pixabay, sob a Pixabay Content License, e entram tratados como os sintetizados: sem o silêncio do começo, cauda fechada em cosseno e volume nivelado pelo ataque. O tique da tecla fica mais baixo de propósito, porque soa a cada letra.
+- **O resto é sintetizado pelo próprio projeto**: `tool/sound/build_sounds.py` monta cada um com seno e ruído filtrado — grão de semente, gota d'água, papel —, com semente fixa, de modo que rodar o script reproduz exatamente os mesmos arquivos.
+
+Autor, código, licença e tratamento de cada arquivo ficam em `packages/design_system/assets/CREDITS.md`, e nenhum som entra sem essa linha. A licença do Pixabay permite usar e modificar dentro do app, mas não distribuir o arquivo sozinho: por isso o repositório guarda só o resultado tratado, e não o MP3 original.
+
+Com a troca, toque e chave deixaram de soar como madeira; a paleta acima continua valendo para os outros sons.

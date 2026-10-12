@@ -52,6 +52,19 @@ class SoundAndHapticFeedback implements CajuiFeedback {
     _haptic(HapticFeedback.lightImpact);
   }
 
+  /// O card responde com o mesmo pulso do botão: o que muda entre os dois
+  /// é o som, e não a mão.
+  @override
+  void cardTapped() {
+    _sound(CajuiSound.card);
+    _haptic(HapticFeedback.lightImpact);
+  }
+
+  /// Só o som: o teclado do telefone já vibra a cada tecla, e um segundo
+  /// pulso por cima viraria tremor.
+  @override
+  void keyTyped() => _sound(CajuiSound.key);
+
   @override
   void toggle({required bool on}) {
     _sound(on ? CajuiSound.toggleOn : CajuiSound.toggleOff);

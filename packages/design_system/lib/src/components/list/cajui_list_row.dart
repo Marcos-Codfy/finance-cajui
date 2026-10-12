@@ -1,4 +1,5 @@
 import 'package:design_system/src/interaction/cajui_pressable.dart';
+import 'package:design_system/src/interaction/cajui_touch.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/tokens/primitives/cajui_radius.dart';
 import 'package:design_system/src/tokens/primitives/cajui_spacing.dart';
@@ -51,6 +52,7 @@ class CajuiListRow extends StatelessWidget {
     if (tap == null) return _row(context);
     return CajuiPressable(
       onPressed: tap,
+      touch: CajuiTouch.card,
       radius: _radius,
       semanticLabel: semanticLabel!,
       builder: (context, _) => _row(context),
