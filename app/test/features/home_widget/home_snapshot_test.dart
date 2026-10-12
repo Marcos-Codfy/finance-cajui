@@ -3,6 +3,7 @@ import 'package:cajui/src/features/home_widget/application/home_screen.dart';
 import 'package:cajui/src/features/home_widget/application/home_snapshot.dart';
 import 'package:cajui/src/features/home_widget/application/home_snapshot_provider.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
+import 'package:cajui/src/features/home_widget/application/widget_placement.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/review/application/review_providers.dart';
@@ -20,6 +21,12 @@ final class _CountingScreen implements HomeScreen {
 
   @override
   Future<void> publish(HomeSnapshot snapshot) async => published.add(snapshot);
+
+  @override
+  Future<WidgetPlacement> placement() async => WidgetPlacement.unavailable;
+
+  @override
+  Future<void> pin() async {}
 }
 
 String _brl(int cents) => MoneyFormat.brl(Money.fromCents(cents));

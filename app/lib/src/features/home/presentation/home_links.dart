@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/presentation/month_history_page.dart';
 import 'package:cajui/src/features/budget/presentation/month_page.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
@@ -14,12 +15,31 @@ import 'package:flutter/widgets.dart';
 /// o mês, os lançamentos, minhas contas, os cartões, as dívidas e o mês a
 /// mês. Cada uma diz numa frase o que tem lá dentro.
 abstract final class HomeLinks {
-  /// As linhas de [view].
-  static List<Widget> of(BuildContext context, HomeView view) => [
+  /// As linhas de [view]. [export] leva o mês para planilha.
+  static List<Widget> of(
+    BuildContext context,
+    HomeView view, {
+    required VoidCallback export,
+  }) => [
     const CajuiSectionTitle('Seu dinheiro'),
     ..._month(context, view),
     ..._commitments(context, view),
+    _spreadsheet(view, export),
   ];
+
+  /// A planilha do mês (RN-1090) também mora aqui, e não só no rodapé do
+  /// Meu mês: o dono pediu o botão sem saber que ele existia lá. Não abre
+  /// tela — vai direto para o compartilhar —, e por isso o ícone é o de
+  /// compartilhar, e não a seta das outras portas.
+  static Widget _spreadsheet(HomeView view, VoidCallback export) {
+    final month = DateLabels.month(view.budget.month).split(' ').first;
+    return _row(
+      title: 'Planilha do mês',
+      subtitle: 'Leva $month para o Excel ou o Planilhas Google',
+      open: export,
+      icon: CajuiIconData.share,
+    );
+  }
 
   static String _brl(int cents) => BrlFormatter.format(cents);
 
@@ -99,10 +119,11 @@ abstract final class HomeLinks {
     required String title,
     required String subtitle,
     required VoidCallback open,
+    CajuiIconData icon = CajuiIconData.chevronRight,
   }) => CajuiListRow(
     title: title,
     subtitle: subtitle,
-    trailing: const CajuiIcon(CajuiIconData.chevronRight),
+    trailing: CajuiIcon(icon),
     semanticLabel: title,
     onPressed: open,
   );
