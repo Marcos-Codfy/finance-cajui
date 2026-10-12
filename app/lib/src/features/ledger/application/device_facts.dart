@@ -17,7 +17,9 @@ abstract final class DeviceFacts {
     MonthClosed() ||
     BudgetDefined() ||
     DebtOrdered() ||
-    HouseholdNamed() => true,
+    HouseholdNamed() ||
+    IncomeCancelled() ||
+    AnswerLearned() => true,
     _ => false,
   };
 
@@ -44,6 +46,22 @@ abstract final class DeviceFacts {
       payload: MonthCloseCodec.encode(close),
     ),
     BudgetDefined() || DebtOrdered() || HouseholdNamed() => _budget(event),
+    IncomeCancelled() || AnswerLearned() => _statement(event),
+    _ => null,
+  };
+
+  /// O recebimento desfeito (RN-1120) e a resposta lembrada (RN-1116).
+  static DeviceFact? _statement(LedgerEvent event) => switch (event) {
+    IncomeCancelled(:final receiptId, :final on) => DeviceFact(
+      id: event.id,
+      type: DeviceFact.incomeCancelled,
+      payload: IncomeCancellationCodec.encode((receiptId: receiptId, on: on)),
+    ),
+    AnswerLearned(:final answer) => DeviceFact(
+      id: event.id,
+      type: DeviceFact.merchantLearned,
+      payload: LearnedAnswerCodec.encode(answer),
+    ),
     _ => null,
   };
 
@@ -87,8 +105,25 @@ abstract final class DeviceFacts {
     DeviceFact.householdNamed => HouseholdNamed(
       HouseholdCodec.decode(fact.payload),
     ),
-    _ => null,
+    _ => _statementEvent(fact),
   };
+
+  /// O recebimento desfeito e a resposta lembrada, vindos do servidor. A
+  /// resposta guarda o identificador do fato: é ele que diz ao servidor
+  /// que ela já está lá.
+  static LedgerEvent? _statementEvent(DeviceFact fact) {
+    switch (fact.type) {
+      case DeviceFact.incomeCancelled:
+        final (:receiptId, :on) = IncomeCancellationCodec.decode(fact.payload);
+        return IncomeCancelled(receiptId: receiptId, on: on);
+      case DeviceFact.merchantLearned:
+        return AnswerLearned(
+          id: fact.id,
+          answer: LearnedAnswerCodec.decode(fact.payload),
+        );
+    }
+    return null;
+  }
 
   static DebtOrdered _ordering(Map<String, Object?> payload) {
     final (:ids, :definedAt) = DebtCodec.decodeOrdering(payload);

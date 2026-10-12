@@ -81,6 +81,40 @@ final class IncomeReceived extends LedgerEvent {
   final IncomeReceipt receipt;
 }
 
+/// Um recebimento foi desfeito (RN-1120): o salário lido do extrato que não
+/// era salário, a entrada lançada em dobro.
+///
+/// Como o cancelamento de um lançamento, não apaga nada: o recebimento fica
+/// no registro, e sai do mês, da renda, da planilha e do Início. Viaja como
+/// fato do aparelho, e o servidor o desconta dos números da Juju.
+final class IncomeCancelled extends LedgerEvent {
+  /// Registra que o recebimento [receiptId] foi desfeito em [on]. O
+  /// identificador sai do recebimento: desfazer duas vezes, ou nos dois
+  /// celulares, é um fato só.
+  const new({required this.receiptId, required this.on})
+    : super(id: 'income-cancel-$receiptId');
+
+  /// O recebimento desfeito.
+  final String receiptId;
+
+  /// O dia em que foi desfeito.
+  final LocalDate on;
+}
+
+/// Uma resposta da pessoa foi lembrada, ou esquecida (RN-1116): "PADARIA
+/// BOA VISTA é Padaria", "João P Silva é alguém da casa".
+///
+/// Cada resposta é um fato próprio, com a resposta **inteira** — a de agora
+/// somada ao que já se sabia —, e a mais nova pelo carimbo vale, venha do
+/// celular que vier. Viaja como fato do aparelho, como os nomes da casa.
+final class AnswerLearned extends LedgerEvent {
+  /// Registra [answer]; esquecer é gravar uma resposta vazia.
+  const new({required super.id, required this.answer});
+
+  /// A resposta, já somada à anterior.
+  final LearnedAnswer answer;
+}
+
 /// O saldo do vale foi corrigido para bater com o da operadora (RN-123).
 ///
 /// Não é renda nem despesa, e não entra em indicador: é só o app admitindo

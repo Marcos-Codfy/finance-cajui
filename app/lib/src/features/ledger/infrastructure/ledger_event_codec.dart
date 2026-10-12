@@ -60,6 +60,12 @@ final class LedgerEventCodec {
   /// O tipo do fato "nomes da casa definidos" (RN-1070).
   static const String householdNamed = DeviceFact.householdNamed;
 
+  /// O tipo do fato "recebimento desfeito" (RN-1120).
+  static const String incomeCancelled = DeviceFact.incomeCancelled;
+
+  /// O tipo do fato "resposta lembrada" (RN-1116).
+  static const String answerLearned = DeviceFact.merchantLearned;
+
   /// Acha a categoria pelo identificador.
   final Category Function(String id) categoryOf;
 
@@ -87,6 +93,8 @@ final class LedgerEventCodec {
     BudgetDefined() => budgetDefined,
     DebtOrdered() => debtOrdered,
     HouseholdNamed() => householdNamed,
+    IncomeCancelled() => incomeCancelled,
+    AnswerLearned() => answerLearned,
   };
 
   static Map<String, Object?> _payloadOf(LedgerEvent event) => switch (event) {
@@ -113,11 +121,16 @@ final class LedgerEventCodec {
       on: adjustment.on,
       reason: adjustment.reason,
     ),
-    BudgetDefined() || DebtOrdered() || HouseholdNamed() => _planPayload(event),
+    BudgetDefined() ||
+    DebtOrdered() ||
+    HouseholdNamed() ||
+    IncomeCancelled() ||
+    AnswerLearned() => _planPayload(event),
   };
 
-  /// O plano da planilha, a ordem das dívidas (ADR-023) e os nomes da casa
-  /// (RN-1070).
+  /// O plano da planilha, a ordem das dívidas (ADR-023), os nomes da casa
+  /// (RN-1070), o recebimento desfeito (RN-1120) e a resposta lembrada
+  /// (RN-1116).
   static Map<String, Object?> _planPayload(LedgerEvent event) =>
       switch (event) {
         BudgetDefined(:final plan) => BudgetPlanCodec.encode(plan),
@@ -126,6 +139,9 @@ final class LedgerEventCodec {
           definedAt: definedAt,
         )),
         HouseholdNamed(:final names) => HouseholdCodec.encode(names),
+        IncomeCancelled(:final receiptId, :final on) =>
+          IncomeCancellationCodec.encode((receiptId: receiptId, on: on)),
+        AnswerLearned(:final answer) => LearnedAnswerCodec.encode(answer),
         _ => const {},
       };
 
@@ -181,8 +197,28 @@ final class LedgerEventCodec {
       budgetDefined => BudgetDefined(BudgetPlanCodec.decode(payload)),
       debtOrdered => _decodeOrdering(payload),
       householdNamed => HouseholdNamed(HouseholdCodec.decode(payload)),
-      _ => null,
+      _ => _decodeStatementFact(id, type, payload),
     };
+  }
+
+  /// O recebimento desfeito e a resposta lembrada (ADR-030); `null` para
+  /// qualquer outro tipo.
+  static LedgerEvent? _decodeStatementFact(
+    String id,
+    String type,
+    Map<String, Object?> payload,
+  ) {
+    switch (type) {
+      case incomeCancelled:
+        final (:receiptId, :on) = IncomeCancellationCodec.decode(payload);
+        return IncomeCancelled(receiptId: receiptId, on: on);
+      case answerLearned:
+        return AnswerLearned(
+          id: id,
+          answer: LearnedAnswerCodec.decode(payload),
+        );
+    }
+    return null;
   }
 
   static DebtOrdered _decodeOrdering(Map<String, Object?> payload) {

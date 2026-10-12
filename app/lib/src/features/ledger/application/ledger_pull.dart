@@ -62,9 +62,7 @@ final class LedgerPull {
     EntryCancelled(:final entryId) => book.entryOf(entryId) != null,
     PlanDefined(:final setup) => setup.isNewerThan(book.setup),
     CardDefined() => _replacesCard(book, event),
-    IncomeReceived(:final receipt) => !book.receipts.any(
-      (r) => r.id == receipt.id,
-    ),
+    IncomeReceived(:final receipt) => _isNewReceipt(book, receipt.id),
     VoucherBalanceAdjusted(:final adjustment) => !book.voucherAdjustments.any(
       (a) => a.id == adjustment.id,
     ),
@@ -82,7 +80,9 @@ final class LedgerPull {
     MonthClosed() ||
     BudgetDefined() ||
     DebtOrdered() ||
-    HouseholdNamed() => !book.factIds.contains(event.id),
+    HouseholdNamed() ||
+    IncomeCancelled() ||
+    AnswerLearned() => !book.factIds.contains(event.id),
   };
 
   /// O cartão do servidor entra quando o daqui não existe, ou quando diz
@@ -99,6 +99,12 @@ final class LedgerPull {
 
   static CatalogVersion _versionOf(CreditCard card, DateTime? at) =>
       CatalogVersion.of(CatalogVersion.stamped(CardCodec.encodeCard(card), at));
+
+  /// O recebimento desfeito (RN-1120) não volta pela descida, nem quando o
+  /// servidor ainda o tem.
+  static bool _isNewReceipt(LedgerBook book, String id) =>
+      !book.receipts.any((r) => r.id == id) &&
+      !book.cancelledReceiptIds.contains(id);
 
   /// O que foi cancelado **aqui** não volta pela descida, nem quando o
   /// cancelamento ainda não conseguiu subir: sumiria e reapareceria.

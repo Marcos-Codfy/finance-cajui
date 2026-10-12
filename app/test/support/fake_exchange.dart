@@ -88,12 +88,17 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
     null,
   );
 
+  /// O recebimento desfeito não volta, como no servidor de verdade
+  /// (RN-1120).
   @override
   Future<ErrorCode?> sendIncome(Map<String, Object?> receipt) async {
     final decoded = IncomeCodec.decode(receipt);
+    if (_undone.contains(decoded.id)) return null;
     _receipts[decoded.id] = decoded;
     return null;
   }
+
+  final Set<String> _undone = {};
 
   @override
   Future<ErrorCode?> sendVoucherAdjustment(
@@ -184,8 +189,20 @@ final class FakeExchange implements LedgerUplink, LedgerDownlink {
   Future<ErrorCode?> sendFact(DeviceFact fact) async {
     final kept = DeviceFact.read(fact.toJson());
     _facts.putIfAbsent(kept.id, () => kept);
+    // O único fato do aparelho que muda conta no servidor (RN-1120).
+    if (kept.type == DeviceFact.incomeCancelled) {
+      final (:receiptId, on: _) = IncomeCancellationCodec.decode(kept.payload);
+      _undone.add(receiptId);
+      _receipts.remove(receiptId);
+    }
     return null;
   }
+
+  /// Os fatos que o servidor guarda, como chegaram.
+  List<DeviceFact> get facts => List.unmodifiable(_facts.values);
+
+  /// Os recebimentos em vigor no servidor, por identificador.
+  Map<String, IncomeReceipt> get receipts => Map.unmodifiable(_receipts);
 
   List<Reversal> _reversalsOn(List<Entry> entries) {
     final byId = {for (final entry in entries) entry.id: entry};
