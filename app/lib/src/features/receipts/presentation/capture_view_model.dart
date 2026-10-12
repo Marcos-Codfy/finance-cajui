@@ -11,6 +11,8 @@ import 'package:cajui/src/features/receipts/application/pending_capture.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/application/shared_item.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_state.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_view_model.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -67,6 +69,10 @@ class CaptureViewModel extends Notifier<CaptureState> {
     final outcome = await ref
         .read(captureServiceProvider)
         .open(item, onPage: _onPage);
+    if (outcome case CaptureProposed(:final capture) when _talks(capture)) {
+      await _handOver(capture);
+      return;
+    }
     state = switch (outcome) {
       CaptureProposed(:final capture) => CaptureReady(
         capture,
@@ -79,6 +85,23 @@ class CaptureViewModel extends Notifier<CaptureState> {
     };
   }
 
+  /// O extrato vai para a conversa da Juju (RN-1100), e não para a tela de
+  /// lista — a não ser que outra conversa de extrato esteja aberta: aí ele
+  /// cai na lista de sempre, em vez de interromper a que está no meio.
+  bool _talks(Capture capture) =>
+      capture.proposal.isStatement &&
+      capture.source.filePath != null &&
+      ref.read(statementTalkProvider) is StatementTalkIdle;
+
+  /// Guarda a captura em "Para conferir" — se o app fechar no meio da
+  /// conversa, nada se perde — e entrega o extrato à Juju. A captura só
+  /// fecha quando a conversa lança (RN-1115).
+  Future<void> _handOver(Capture capture) async {
+    await ref.read(captureServiceProvider).defer(capture);
+    unawaited(ref.read(statementTalkProvider.notifier).start(capture));
+    await _next();
+  }
+
   void _onPage(int page, int of) {
     if (state is! CaptureReading) return;
     state = CaptureReading(page: page, of: of, waiting: _queue.length);
@@ -88,6 +111,10 @@ class CaptureViewModel extends Notifier<CaptureState> {
   Future<void> reopen(PendingCapture pending) async {
     state = const CaptureReading();
     final capture = await ref.read(captureServiceProvider).reopen(pending);
+    if (_talks(capture)) {
+      await _handOver(capture);
+      return;
+    }
     state = CaptureReady(capture, waiting: _queue.length);
   }
 

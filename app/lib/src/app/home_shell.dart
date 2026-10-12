@@ -5,6 +5,8 @@ import 'package:cajui/src/features/home/presentation/home_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_state.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_state.dart';
+import 'package:cajui/src/features/statements/presentation/statement_talk_view_model.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,15 +19,7 @@ class HomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(captureProvider, (before, now) {
-      // A conferência mora na casca, e as telas abertas pelo Início ficam
-      // empilhadas por cima dela: sem fechá-las, a foto tirada em
-      // "Lançamentos" abriria a conferência escondida atrás da tela.
-      if (now is CaptureIdle || (before != null && before is! CaptureIdle)) {
-        return;
-      }
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    });
+    _follow(context, ref);
     final capturing = ref.watch(captureProvider) is! CaptureIdle;
     return Stack(
       children: [
@@ -44,6 +38,26 @@ class HomeShell extends ConsumerWidget {
           ),
       ],
     );
+  }
+
+  /// O que leva a pessoa até a tela certa quando algo chega.
+  void _follow(BuildContext context, WidgetRef ref) {
+    ref.listen(captureProvider, (before, now) {
+      // A conferência mora na casca, e as telas abertas pelo Início ficam
+      // empilhadas por cima dela: sem fechá-las, a foto tirada em
+      // "Lançamentos" abriria a conferência escondida atrás da tela.
+      if (now is CaptureIdle || (before != null && before is! CaptureIdle)) {
+        return;
+      }
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    });
+    // O extrato que chega abre na conversa da Juju (RN-1100): a casca leva
+    // a pessoa até lá, de qualquer aba e de qualquer tela empilhada.
+    ref.listen(statementTalkProvider, (before, now) {
+      if (before is! StatementTalkIdle || now is StatementTalkIdle) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      ref.read(homeTabProvider.notifier).select(HomeTab.conversar);
+    });
   }
 
   Widget _areas(
