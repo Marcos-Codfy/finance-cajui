@@ -101,8 +101,34 @@ abstract final class TransferLine {
     final words = _plain(name).split(' ').where((w) => w.isNotEmpty);
     if (words.length < 2) return false;
     if (words.any(_companyWords.contains)) return false;
+    if (words.any(_bankWords.contains)) return false;
     return MerchantReader.kindIn(name) == null;
   }
+
+  /// Palavras do próprio banco que vêm depois do marcador e não são nome de
+  /// ninguém: "PIX QR CODE ESTATICO", "PIX AGENDADO", "TED DEVOLVIDA". Sem
+  /// elas, a máscara escondia o que a IA precisa para entender a linha.
+  static const _bankWords = {
+    'QR',
+    'CODE',
+    'CODIGO',
+    'ESTATICO',
+    'DINAMICO',
+    'AGENDADO',
+    'AGENDADA',
+    'AGENDAMENTO',
+    'DEVOLVIDO',
+    'DEVOLVIDA',
+    'DEVOLUCAO',
+    'ESTORNO',
+    'CHAVE',
+    'COBRANCA',
+    'SAQUE',
+    'PAGAMENTO',
+    'TARIFA',
+    'CANCELADO',
+    'CANCELADA',
+  };
 
   static const _companyWords = {
     'LTDA',

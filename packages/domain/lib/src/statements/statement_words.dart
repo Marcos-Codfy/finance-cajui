@@ -135,6 +135,19 @@ abstract final class StatementWords {
   /// "Pode lançar (58)" (RN-1115).
   static String launch(int count) => 'Pode lançar ($count)';
 
+  /// Enquanto o arquivo abre, antes de se saber quantas páginas há.
+  static const opening = 'Abrindo o extrato…';
+
+  /// Enquanto o lote é gravado.
+  static const saving = 'Lançando…';
+
+  /// Tudo conferido: falta só lançar (RN-1115).
+  static String ready(int count) => count == 0
+      ? 'Conferido. Nada novo para lançar deste extrato.'
+      : 'Tudo conferido: '
+            '${_count(count, 'lançamento pronto', 'lançamentos prontos')} '
+            'para entrar.';
+
   /// Depois de gravar (RN-1118). Os que o domínio recusou vêm à parte, com
   /// o texto do catálogo.
   static String done(int recorded) => recorded == 0

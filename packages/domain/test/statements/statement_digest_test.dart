@@ -111,6 +111,10 @@ void main() {
           StatementWords.block(block, 'Mercado', digest.lines),
         StatementWords.done(58),
         StatementWords.done(0),
+        StatementWords.ready(58),
+        StatementWords.ready(0),
+        StatementWords.opening,
+        StatementWords.saving,
         StatementWords.undone(58),
         StatementWords.pages(read: 20, total: 24, failed: [4], partial: [2])!,
       ];
