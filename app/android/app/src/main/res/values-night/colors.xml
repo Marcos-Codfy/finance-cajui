@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- O tema escuro das mesmas cores (`cajui_palette.dart`). -->
 <resources>
-    <!-- nightRaised -->
-    <color name="cajui_widget_surface">#FF17262C</color>
-    <!-- moon -->
-    <color name="cajui_widget_text">#FFF4ECE0</color>
-    <!-- moonSoft -->
-    <color name="cajui_widget_text_muted">#FFB9AFA3</color>
     <!-- cajuiLight -->
     <color name="cajui_accent">#FFFF8A5C</color>
     <!-- night, sobre o cajuiLight -->

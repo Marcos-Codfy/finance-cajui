@@ -14,6 +14,11 @@ import app.cajui.R
  * O widget da tela inicial (ADR-025): o número do mês — a sobra, ou o que
  * já saiu —, e a câmera e a galeria a um toque.
  *
+ * É de vidro sobre a aurora (pedido do dono, 12/10). Tocar no número, ou
+ * em qualquer parte do vidro, abre o app com a chegada pelo widget: o
+ * Android 12+ faz o app crescer de dentro dele, e o Início recebe o número
+ * saindo do vidro (`CajuiGlassArrival`).
+ *
  * O número é o último que o app publicou. Passado o mês a que ele se
  * refere, o widget não o mostra: pede para abrir o app, que publica o novo.
  */
@@ -43,13 +48,15 @@ class HomeWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.home_amount, context.getString(R.string.home_widget_stale_amount))
                 views.setTextViewText(R.id.home_caption, context.getString(R.string.home_widget_stale_caption))
             }
-            views.setOnClickPendingIntent(R.id.home_root, open(context, Intent.ACTION_MAIN, 0))
+            val arrival = open(context, MainActivity.ACTION_WIDGET, 0)
+            views.setOnClickPendingIntent(android.R.id.background, arrival)
+            views.setOnClickPendingIntent(R.id.home_balance, arrival)
             views.setOnClickPendingIntent(R.id.home_camera, open(context, MainActivity.ACTION_PHOTO, 1))
             views.setOnClickPendingIntent(R.id.home_gallery, open(context, MainActivity.ACTION_PICK, 2))
             return views
         }
 
-        /** Abre o app já na câmera, já na galeria, ou só abre. */
+        /** Abre o app já na câmera, já na galeria, ou no Início, chegando pelo widget. */
         private fun open(context: Context, action: String, requestCode: Int): PendingIntent {
             val intent = Intent(context, MainActivity::class.java)
                 .setAction(action)

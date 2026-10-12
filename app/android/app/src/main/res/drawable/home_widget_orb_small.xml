@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A esfera menor, da vereda: o par da grande, mais longe, em verde-água. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- O tamanho da esfera é o da própria camada de baixo: sem ele, a
+         camada do reflexo dava a proporção ao desenho, e a esfera saía
+         achatada no aparelho. -->
+    <item
+        android:width="22dp"
+        android:height="22dp">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#FF6FCBA6"
+                android:centerX="0.35"
+                android:centerY="0.3"
+                android:endColor="#FF15302A"
+                android:gradientRadius="70%"
+                android:startColor="#FFE3EFE9"
+                android:type="radial" />
+        </shape>
+    </item>
+    <item
+        android:width="8dp"
+        android:height="6dp"
+        android:gravity="top|start"
+        android:left="6dp"
+        android:top="4dp">
+        <shape android:shape="oval">
+            <gradient
+                android:endColor="#00FFFFFF"
+                android:gradientRadius="50%"
+                android:startColor="#CCFFFFFF"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,76 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- O widget da tela inicial (ADR-025): o rótulo, o número em destaque, a
-     frase de baixo e os dois atalhos. Só o que o RemoteViews sabe desenhar:
-     LinearLayout, TextView e ImageButton. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/home_root"
+<!-- O widget da tela inicial (ADR-025), de vidro sobre a aurora: o rótulo,
+     o número em destaque, a frase de baixo e os dois atalhos, num painel
+     translúcido, com duas esferas de luz flutuando por fora dele.
+
+     A raiz tem o id `@android:id/background` e recorta pelo contorno: é por
+     ela que o Android 12+ faz o app nascer crescendo de dentro do widget ao
+     toque. Só o que o RemoteViews sabe desenhar: FrameLayout, LinearLayout,
+     TextView, ImageView e ImageButton. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/home_widget_background"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="16dp">
+    android:background="@drawable/home_widget_aurora"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="18dp"
+        android:layout_marginBottom="4dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/home_widget_orb_small" />
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:id="@+id/home_glass"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="12dp"
+        android:background="@drawable/home_widget_glass"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="14dp">
 
-        <TextView
-            android:id="@+id/home_label"
+        <LinearLayout
+            android:id="@+id/home_balance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/home_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.06"
+                android:maxLines="1"
+                android:text="@string/home_widget_stale_label"
+                android:textAllCaps="true"
+                android:textColor="@color/cajui_glass_text_muted"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/home_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:shadowColor="#66000000"
+                android:shadowDy="2"
+                android:shadowRadius="8"
+                android:text="@string/home_widget_stale_amount"
+                android:textColor="@color/cajui_glass_text"
+                android:textSize="30sp" />
+
+            <TextView
+                android:id="@+id/home_caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="@string/home_widget_stale_caption"
+                android:textColor="@color/cajui_glass_text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:text="@string/home_widget_stale_label"
-            android:textColor="@color/cajui_widget_text_muted"
-            android:textSize="13sp" />
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/home_amount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:maxLines="1"
-            android:text="@string/home_widget_stale_amount"
-            android:textColor="@color/cajui_widget_text"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            <ImageButton
+                android:id="@+id/home_camera"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/home_widget_glass_button"
+                android:contentDescription="@string/home_widget_camera"
+                android:src="@drawable/ic_widget_camera"
+                android:tint="@color/cajui_glass_text" />
 
-        <TextView
-            android:id="@+id/home_caption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:text="@string/home_widget_stale_caption"
-            android:textColor="@color/cajui_widget_text_muted"
-            android:textSize="12sp" />
+            <ImageButton
+                android:id="@+id/home_gallery"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/home_widget_glass_button"
+                android:contentDescription="@string/home_widget_gallery"
+                android:src="@drawable/ic_widget_gallery"
+                android:tint="@color/cajui_glass_text" />
+        </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:orientation="vertical">
-
-        <ImageButton
-            android:id="@+id/home_camera"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/home_widget_button"
-            android:contentDescription="@string/home_widget_camera"
-            android:src="@drawable/ic_widget_camera" />
-
-        <ImageButton
-            android:id="@+id/home_gallery"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/home_widget_button"
-            android:contentDescription="@string/home_widget_gallery"
-            android:src="@drawable/ic_widget_gallery" />
-    </LinearLayout>
-</LinearLayout>
+    <!-- A esfera grande vem por último: flutua por cima da borda do vidro,
+         no alto, entre o número e os botões. -->
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="64dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/home_widget_orb" />
+</FrameLayout>

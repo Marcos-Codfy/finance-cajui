@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O fundo do widget: a aurora do Cerrado à noite. Uma base de noite
+     (`CajuiPalette.night` → `nightRaised`) com três luzes difusas por cima —
+     o cajuí, o capim dourado e a vereda —, que somem nas bordas: nenhuma tem
+     contorno, e é isso que faz o vidro por cima parecer fosco. Os cantos
+     são os mesmos 28 dp que o raiz recorta (clipToOutline). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:endColor="#FF241B2E"
+                android:startColor="#FF0F1A1E" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <!-- O cajuí, alto à esquerda. -->
+    <item
+        android:width="260dp"
+        android:height="260dp"
+        android:gravity="top|start"
+        android:left="-70dp"
+        android:top="-110dp">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#66E4572E"
+                android:endColor="#00E4572E"
+                android:gradientRadius="50%"
+                android:startColor="#CCE4572E"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- O capim dourado, à direita. -->
+    <item
+        android:width="220dp"
+        android:height="220dp"
+        android:gravity="center_vertical|end"
+        android:right="-60dp">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#4DD9A441"
+                android:endColor="#00D9A441"
+                android:gradientRadius="50%"
+                android:startColor="#B3D9A441"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- A vereda, embaixo. -->
+    <item
+        android:width="240dp"
+        android:height="200dp"
+        android:bottom="-110dp"
+        android:gravity="bottom|center_horizontal">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#406FCBA6"
+                android:endColor="#006FCBA6"
+                android:gradientRadius="50%"
+                android:startColor="#996FCBA6"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>
