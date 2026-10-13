@@ -104,7 +104,7 @@ lowers the level on its own if the device can't keep up.
 
 | Item | Status |
 | --- | --- |
-| Tests | **213** in the package and **35** in the gallery, including the contrast of every pair in both themes and the level of every sound |
+| Tests | **213** in the package and **76** in the gallery, including the contrast of every pair in both themes and the level of every sound |
 | Coverage | 87.7% of lines, with a 75% floor in CI |
 | Analyzer | `very_good_analysis`, zero warnings |
 | Limits | 300 lines per file, 30 per function, one public type per file, checked on every commit |

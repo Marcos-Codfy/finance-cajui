@@ -104,7 +104,7 @@ rebaixa o nível sozinho se o aparelho não acompanhar.
 
 | Item | Situação |
 | --- | --- |
-| Testes | **213** no pacote e **35** na gallery, incluindo contraste de cada par nos dois temas e o nível de cada som |
+| Testes | **213** no pacote e **76** na gallery, incluindo contraste de cada par nos dois temas e o nível de cada som |
 | Cobertura | 87,7% de linhas, com piso de 75% na esteira |
 | Analisador | `very_good_analysis`, zero aviso |
 | Limites | 300 linhas por arquivo, 30 por função, um tipo público por arquivo, conferidos a cada commit |
