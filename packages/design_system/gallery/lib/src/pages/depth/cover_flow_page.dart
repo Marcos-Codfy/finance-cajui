@@ -32,9 +32,8 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
       title: 'Carrossel 3D',
       lead:
           'Os números do mês num tambor deitado: o do centro de frente, os '
-          'vizinhos girando para longe. Arraste de lado, toque num vizinho '
-          'ou nos pontos. Cada encaixe tem o deslize e o pulso de tecla — '
-          'ligue o som para ouvir.',
+          'vizinhos girando para longe. Arraste de lado ou toque num '
+          'vizinho.',
       sections: [
         GallerySection(
           title: 'Os números do mês',

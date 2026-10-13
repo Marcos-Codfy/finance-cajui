@@ -18,9 +18,7 @@ class DepthScrollPage extends StatelessWidget {
       title: 'Rolagem em profundidade',
       lead:
           'A tela como a face de um tambor: plana no meio, curvando para '
-          'longe nas bordas. O que entra por baixo vem deitado e assenta; o '
-          'que sai por cima recua e é coberto pelo seguinte. Role dentro do '
-          'aparelho.',
+          'longe nas bordas. Role dentro do aparelho.',
       sections: [
         _live(context),
         const GallerySection(

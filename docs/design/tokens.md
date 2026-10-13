@@ -49,7 +49,7 @@ Regras:
 1. **Cor nunca é o único sinal** (WCAG 1.4.1). Selecionado tem ícone; aviso tem ícone e texto; o veredito de contraste vem escrito.
 2. **Contraste medido, não estimado.** Texto comum ≥ 4,5:1; texto grande, ícone e borda de componente ≥ 3:1. O que o teste já corrigiu está em [../brand/color.md](../brand/color.md).
 3. **O tema escuro é um tema**, não o claro invertido: azul-petróleo, sem sombra, profundidade pela cor da superfície.
-4. **Vermelho é reservado.** `intent.danger` marca erro que impede algo. Dinheiro faltando não é erro — é `shortfall`, e a sua cor é uma [decisão em aberto](#decisão-em-aberto).
+4. **Vermelho é reservado.** `intent.danger` marca erro que impede algo. Dinheiro faltando não é erro — é `shortfall`, e a sua cor é [barro](#a-falta-do-mês-barro).
 
 ## Tipografia
 
@@ -122,7 +122,7 @@ Todo arquivo passa por `tool/sound/level_sounds.py`, que masteriza para o alto-f
 - A velocidade varia até ±3% a cada disparo: o mesmo som nunca toca igual duas vezes seguidas.
 - **Não existe `sound.error`.** O aviso é uma nota grave e macia.
 
-## Decisão em aberto
+## A falta do mês: barro
 
 A falta do mês tem duas versões, e o app inteiro troca de uma para a outra por um único valor (`ShortfallStyle`):
 
@@ -131,4 +131,4 @@ A falta do mês tem duas versões, e o app inteiro troca de uma para a outra por
 | `calm` — "barro" | Tom de terra, mesmo peso visual da sobra | Falta é fato e distância a percorrer, não bronca (D-UX-22) |
 | `alarm` — vermelho | O padrão do mercado | Leitura imediata para quem vem de banco e planilha |
 
-As duas aparecem lado a lado na página **Decisões › Falta** da gallery, com o contraste medido. A escolha é do dono do produto, no checkpoint da Fase 3.
+A escolhida é o barro, aprovado com o design system na Fase 3 (20/09/2026). O vermelho continua no código como alternativa, e as duas aparecem lado a lado na página **Fundamentos › Cor da falta** da gallery, com o contraste medido; a página **Faça e evite** mostra a regra em par.

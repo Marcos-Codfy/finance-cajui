@@ -56,7 +56,7 @@ class ContentPage extends StatelessWidget {
       title: 'Valor',
       description:
           'O tom diz o papel do número, não se ele é bom ou ruim. A falta '
-          'usa o sinal de menos tipográfico e a cor em avaliação.',
+          'usa o sinal de menos tipográfico e a cor da falta (barro).',
       child: GallerySpecimens(
         children: [
           const GallerySpecimen(

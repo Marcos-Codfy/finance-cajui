@@ -8,9 +8,19 @@ import 'package:gallery/src/shell/gallery_section.dart';
 ///
 /// Usa a mesma lista de pares do teste automatizado (`ContrastAudit`): a
 /// página não pode dizer uma coisa e o teste outra.
-class ContrastPage extends StatelessWidget {
+class ContrastPage extends StatefulWidget {
   /// Cria a página de contraste.
   const new({super.key});
+
+  @override
+  State<ContrastPage> createState() => _ContrastPageState();
+}
+
+class _ContrastPageState extends State<ContrastPage> {
+  /// A lista inteira abre sob pedido. Aberta de cara, eram 90 linhas iguais
+  /// com "passa" em verde, e o recado já está no aviso do alto. Par
+  /// reprovado, se houver, aparece sempre, fora da lista.
+  bool _all = false;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +34,7 @@ class ContrastPage extends StatelessWidget {
       sections: [
         _summary(pairs.length, failing.length),
         if (failing.isNotEmpty) _table('Pares abaixo do mínimo', failing),
-        _table('Todos os pares', pairs),
+        _everyPair(pairs),
       ],
     );
   }
@@ -42,6 +52,30 @@ class ContrastPage extends StatelessWidget {
             ? 'Texto comum pede 4,5:1; texto grande e borda de componente, '
                   '3:1.'
             : 'Ajuste o token na paleta e rode o teste de contraste.',
+      ),
+    );
+  }
+
+  Widget _everyPair(List<ContrastPair> pairs) {
+    return GallerySection(
+      title: 'Todos os pares',
+      description: 'Texto, ação, borda e aviso sobre cada superfície.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CajuiButton(
+            label: _all
+                ? 'Esconder os ${pairs.length} pares'
+                : 'Mostrar os ${pairs.length} pares',
+            variant: CajuiButtonVariant.secondary,
+            size: CajuiButtonSize.compact,
+            onPressed: () => setState(() => _all = !_all),
+          ),
+          if (_all) ...[
+            const SizedBox(height: CajuiSpacing.lg),
+            for (final pair in pairs) ContrastRow(pair),
+          ],
+        ],
       ),
     );
   }

@@ -26,7 +26,7 @@ class GalleryMasthead extends StatelessWidget {
             ),
           ),
           Text(
-            'Design system · gallery navegável',
+            'Design system · por Marcos Vinicius',
             style: theme.typography.caption.copyWith(
               color: theme.colors.text.faint,
             ),

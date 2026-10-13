@@ -222,9 +222,12 @@ enum CaptureState {
   /// As ações, da principal para a menos importante.
   final List<String> actions;
 
-  /// A nota da página: de onde o estado vem.
+  /// A nota da página: de onde o estado vem. O código do erro vai na
+  /// frente, como nas outras notas, e a página o mostra à parte.
   String get note {
-    const source = 'Texto de docs/spec/sharing-flow.md';
-    return code == null ? source : '$code · $source';
+    const source =
+        'o texto é o da especificação do compartilhamento, palavra por '
+        'palavra.';
+    return code == null ? source : '$code: $source';
   }
 }

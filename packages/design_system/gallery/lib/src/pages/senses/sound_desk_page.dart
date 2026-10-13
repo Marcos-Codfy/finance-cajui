@@ -22,10 +22,8 @@ class SoundDeskPage extends StatelessWidget {
     return GalleryPage(
       title: 'Mesa de som',
       lead:
-          'Os sons do Cajui: curtos, secos e baixos, gravados e tratados ou '
-          'sintetizados pelo próprio projeto. O botão Tocar sempre toca, '
-          'mesmo com o som do app desligado: aqui é audição. Não existe som '
-          'de erro.',
+          'Os sons do Cajui, curtos e baixos, cada um com um papel. O botão '
+          'Tocar sempre toca, mesmo com o som desligado: aqui é audição.',
       sections: [
         _preferences(context),
         const TouchFamilies(),

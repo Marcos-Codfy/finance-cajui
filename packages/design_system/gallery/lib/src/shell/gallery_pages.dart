@@ -26,6 +26,7 @@ import 'package:gallery/src/pages/senses/motion_desk_page.dart';
 import 'package:gallery/src/pages/senses/sound_desk_page.dart';
 import 'package:gallery/src/pages/tokens/colors_page.dart';
 import 'package:gallery/src/pages/tokens/contrast_page.dart';
+import 'package:gallery/src/pages/tokens/do_dont_page.dart';
 import 'package:gallery/src/pages/tokens/icons_page.dart';
 import 'package:gallery/src/pages/tokens/layout_page.dart';
 import 'package:gallery/src/pages/tokens/typography_page.dart';
@@ -78,6 +79,7 @@ final Map<GalleryDestination, Widget Function(String? state)> _pages = {
   GalleryDestination.fields: (_) => const FieldPage(),
   GalleryDestination.states: (_) => const StatePage(),
   GalleryDestination.conversation: (_) => const ConversationPage(),
+  GalleryDestination.doDont: (_) => const DoDontPage(),
   GalleryDestination.colors: (_) => const ColorsPage(),
   GalleryDestination.shortfall: (_) => const ShortfallComparePage(),
   GalleryDestination.contrast: (_) => const ContrastPage(),

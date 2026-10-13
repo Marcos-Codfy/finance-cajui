@@ -4,6 +4,7 @@ import 'package:gallery/src/pages/overview/overview_figures.dart';
 import 'package:gallery/src/pages/overview/overview_highlights.dart';
 import 'package:gallery/src/pages/screens/home/home_numbers.dart';
 import 'package:gallery/src/pages/screens/widget/glass_widget.dart';
+import 'package:gallery/src/shell/gallery_author.dart';
 import 'package:gallery/src/shell/gallery_destination.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_pager.dart';
@@ -41,6 +42,7 @@ class OverviewPage extends StatelessWidget {
           child: OverviewFigures(),
         ),
         GallerySection(title: 'Como usar', child: _HowTo()),
+        GallerySection(title: 'Quem fez', child: GalleryAuthor()),
       ],
     );
   }

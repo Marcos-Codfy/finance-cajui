@@ -66,6 +66,7 @@ class _CinematicPageState extends State<CinematicPage> {
         action: CajuiButton(
           label: 'Rodar de novo',
           size: CajuiButtonSize.compact,
+          variant: CajuiButtonVariant.secondary,
           onPressed: _replay,
         ),
       ),

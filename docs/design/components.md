@@ -91,7 +91,7 @@ Os efeitos consultam o nível de movimento do tema e aparecem prontos em `reduce
 
 ## Efeitos vivos
 
-Pedidos do dono em 11/10/2026, para o app ficar simples e gostoso de usar. Na gallery, página **Componentes › Efeitos vivos**. Todos seguem as mesmas três regras: **respeitam o movimento reduzido** (viram uma versão parada e completa), **assentam sozinhos** — nada em laço (RNF-A11Y-08) — e **nunca disputam o dedo** com o que a pessoa quer fazer.
+Pedidos do dono em 11/10/2026, para o app ficar simples e gostoso de usar. Na gallery, página **Movimento e som › Microinterações**. Todos seguem as mesmas três regras: **respeitam o movimento reduzido** (viram uma versão parada e completa), **assentam sozinhos** — nada em laço (RNF-A11Y-08) — e **nunca disputam o dedo** com o que a pessoa quer fazer.
 
 A inclinação do aparelho entra de fora, como `CajuiTilt` (um `ValueListenable<Offset>` de -1 a 1): o design system não lê sensor nem tem plugin. Quem alimenta é o app, a partir do acelerômetro; sem fonte, os componentes ficam parados e continuam completos.
 
@@ -108,7 +108,7 @@ Som e toque novos: `feedback.entrySaved()` (semente caindo na cuia) e `feedback.
 
 ## Profundidade
 
-Pedido do dono em 11/10/2026: "3D scrolling, com animações cinematográficas". Na gallery, grupo **Profundidade**, uma página por componente, cada uma num palco do tamanho de um celular. As escolhas e o custo estão na [ADR-028](../architecture/adr/ADR-028-rolagem-3d-e-entrada-cinematografica.md).
+Pedido do dono em 11/10/2026: "3D scrolling, com animações cinematográficas". Na gallery, grupo **Movimento e som**, uma página por componente, cada uma num palco do tamanho de um celular. As escolhas e o custo estão na [ADR-028](../architecture/adr/ADR-028-rolagem-3d-e-entrada-cinematografica.md).
 
 Todos usam a mesma lente (`CajuiDepth.perspective`) e a mesma geometria: **a superfície é a face de um tambor** — de frente no meio, curvando para longe nas bordas. Tudo é matriz aplicada na pintura: o texto continua texto, e o toque e o leitor de tela acompanham a matriz.
 
@@ -124,7 +124,7 @@ O `CajuiScreen` liga os dois efeitos de tela sem montagem à mão: `depth: true`
 
 ## Vidro
 
-Pedido do dono em 12/10/2026: o widget da tela inicial "mais surrealista, com glassmorfismo", e um efeito ao abrir o app por ele. Na gallery, página **Telas › Widget**, com o gesto inteiro: o widget na tela inicial, o app crescendo de dentro dele e a chegada no Início.
+Pedido do dono em 12/10/2026: o widget da tela inicial "mais surrealista, com glassmorfismo", e um efeito ao abrir o app por ele. Na gallery, página **O app › Widget da tela inicial**, com o gesto inteiro: o widget na tela inicial, o app crescendo de dentro dele e a chegada no Início.
 
 O widget Android é desenhado por outro processo (`RemoteViews`): não desfoca o papel de parede, não tem sombreador nem animação própria. Por isso o vidro **não desfoca nada**, nem na réplica: a aurora já é difusa, e o véu sobre ela parece fosco sem desfoque. Os desenháveis do Android (`home_widget_aurora.xml`, `home_widget_glass.xml`, `home_widget_orb.xml`) usam os mesmos valores dos componentes.
 

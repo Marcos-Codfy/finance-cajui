@@ -59,13 +59,17 @@ class _WidgetDemoState extends State<WidgetDemo>
     );
   }
 
-  /// A tela inicial: um papel de parede calmo e o widget no alto.
+  /// A tela inicial: um papel de parede de noite e o widget no alto.
+  ///
+  /// Num fundo claro o vidro não tinha o que mostrar, e a página prometia
+  /// "a aurora do Cerrado à noite" sobre um bege. O céu é o mesmo da aurora
+  /// (`brand.auroraSky`), de baixo para cima, como um céu escurecendo.
   Widget _homeScreen(CajuiColors colors) => DecoratedBox(
     decoration: BoxDecoration(
       gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [colors.surface.sunken, colors.surface.base],
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: colors.brand.auroraSky,
       ),
     ),
     child: Padding(
