@@ -23,7 +23,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-1%2C594-2E7D32)
+![Tests](https://img.shields.io/badge/tests-1%2C635-2E7D32)
 ![Domain coverage](https://img.shields.io/badge/domain-92.8%25-2E7D32)
 ![Cost](https://img.shields.io/badge/fixed%20cost-R%24%200.00-B33A16)
 
@@ -63,7 +63,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
   discipline.
 - **Privacy:** what goes to the AI leaves the phone with people's names, tax IDs and account numbers masked. The AI's
   answer is treated as untrusted input: every amount it returns must be written in the document.
-- **Engineering:** clean architecture with the layers locked by a custom checker, 1,594 tests named after the rule
+- **Engineering:** clean architecture with the layers locked by a custom checker, 1,635 tests named after the rule
   they prove, 85% to 95% coverage per package, 30 ADRs and a GitHub Actions pipeline.
 
 ## Visuals
@@ -299,7 +299,7 @@ statement, [020](docs/architecture/adr/ADR-020-chave-da-casa.md) access, and
 
 | Item              | Status                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Tests             | **1,594**: app 489 · domain 491 · server 222 · design system 213 · contract 93 · gallery 35 · persistence 25 · checker 26 |
+| Tests             | **1,635**: app 489 · domain 491 · server 222 · design system 213 · contract 93 · gallery 76 · persistence 25 · checker 26 |
 | Coverage          | contract 94.7% · domain 92.8% · persistence 91.5% · server 90.7% · design system 87.7% · app 85.1%       |
 | Rule ↔ test       | Every rule has a number (`RN-xxx`) and a test with the same number. A numeric example in the spec becomes a test, to the cent |
 | Texts             | Every error a person reads comes from a catalog of 46 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |

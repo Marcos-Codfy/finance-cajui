@@ -23,7 +23,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-1.594-2E7D32)
+![Testes](https://img.shields.io/badge/testes-1.635-2E7D32)
 ![Cobertura do domínio](https://img.shields.io/badge/domínio-92,8%25-2E7D32)
 ![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
 
@@ -59,7 +59,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
   não por disciplina.
 - **Privacidade:** o que vai para a IA sai do celular com nome de pessoa, CPF e conta mascarados. A resposta da IA é
   tratada como entrada não confiável: todo valor que ela devolve precisa estar escrito no documento.
-- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.594 testes nomeados pela
+- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.635 testes nomeados pela
   regra que provam, cobertura de 85% a 95% por pacote, 30 ADRs e esteira no GitHub Actions.
 
 ## Visual
@@ -298,7 +298,7 @@ extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso,
 
 | Item                | Situação                                                                                                  |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Testes              | **1.594**: app 489 · domínio 491 · servidor 222 · design system 213 · contrato 93 · gallery 35 · persistência 25 · verificador 26 |
+| Testes              | **1.635**: app 489 · domínio 491 · servidor 222 · design system 213 · contrato 93 · gallery 76 · persistência 25 · verificador 26 |
 | Cobertura           | contrato 94,7% · domínio 92,8% · persistência 91,5% · servidor 90,7% · design system 87,7% · app 85,1%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
 | Textos              | Todo erro que a pessoa lê vem de um catálogo de 46 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
