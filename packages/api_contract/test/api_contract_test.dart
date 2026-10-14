@@ -32,7 +32,7 @@ void main() {
     test('ADR-015 o enum e o catálogo em Markdown dizem a mesma coisa', () {
       final catalog = _catalog();
 
-      expect(catalog, hasLength(46));
+      expect(catalog, hasLength(47));
       expect({for (final code in ErrorCode.values) code.code}, catalog.keys);
       for (final code in ErrorCode.values) {
         expect(code.httpStatus, catalog[code.code], reason: code.code);

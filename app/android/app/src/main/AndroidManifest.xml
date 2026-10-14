@@ -15,10 +15,19 @@
         android:allowBackup="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!--
+          singleTask: o app existe em uma cópia só. Com singleTop, o extrato
+          compartilhado do app do banco abria uma segunda cópia do Cajui
+          dentro da tarefa do banco, com o próprio motor do Flutter — e, com
+          o app já aberto (pelo widget, por exemplo), duas cópias gravavam no
+          mesmo registro ao mesmo tempo. O registro aceita um escritor só
+          (ADR-004): a cadeia quebrava, e o app não abria mais. Agora o
+          compartilhamento chega à cópia que existe, por onNewIntent.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"

@@ -40,3 +40,15 @@ Há um detalhe que decide o desenho: o endereço recebido (`content://`) vem com
 
 - Roteiro em aparelho real com ao menos três origens: galeria, um app de banco e um leitor de PDF.
 - Teste instrumentado do módulo nativo: intenção com endereço sem permissão, arquivo de 22 MB, tipo declarado diferente do conteúdo.
+
+## Revisão de 14/10/2026: uma cópia só do app
+
+No Poco X7, o dono compartilhou um extrato do app do banco e o Cajui ficou numa tela preta que não saía nem reiniciando. A causa provável estava no modo de abertura da atividade. Com `singleTop`, o compartilhamento abria **uma segunda cópia** do Cajui dentro da tarefa do app que compartilhou, com o próprio motor do Flutter. Com o app já aberto (pelo widget, por exemplo), as duas cópias gravavam no mesmo registro, que só aceita um escritor (ADR-004). A cadeia quebrava, e a abertura seguinte falhava antes da primeira tela, sem nenhuma proteção: tela preta.
+
+Decisões:
+
+- **`launchMode="singleTask"`:** existe uma cópia só, e o compartilhamento chega a ela por `onNewIntent`, o mesmo caminho do app aberto.
+- **Reabrir pelos recentes não repete o pedido:** intenção com `FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY` não é lida de novo (o arquivo já foi copiado, e a permissão de lê-lo já venceu).
+- **A abertura do registro é protegida:** se ele não abrir, o app mostra o `E-DATA-03` e oferece recomeçar pelo servidor, guardando o registro antigo de lado (`ledger-guardado-<hora>`), sem apagar nada.
+
+Não confirmado no aparelho: o Poco não entra em modo de desenvolvedor (os apps de banco recusam), então não houve registro de falha para ler. A correção cobre a causa provável e, de qualquer forma, acaba com a tela preta.

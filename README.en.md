@@ -302,7 +302,7 @@ statement, [020](docs/architecture/adr/ADR-020-chave-da-casa.md) access, and
 | Tests             | **1,635**: app 489 · domain 491 · server 222 · design system 213 · contract 93 · gallery 76 · persistence 25 · checker 26 |
 | Coverage          | contract 94.7% · domain 92.8% · persistence 91.5% · server 90.7% · design system 87.7% · app 85.1%       |
 | Rule ↔ test       | Every rule has a number (`RN-xxx`) and a test with the same number. A numeric example in the spec becomes a test, to the cent |
-| Texts             | Every error a person reads comes from a catalog of 46 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
+| Texts             | Every error a person reads comes from a catalog of 47 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
 | Voice             | Banned terms ("déficit", "estourou", exclamation marks) are rejected by a test across every sentence in the app |
 | Analyzer          | `very_good_analysis`, zero warnings                                                                       |
 | Custom checker    | 1,007 files, no limit broken                                                                                |

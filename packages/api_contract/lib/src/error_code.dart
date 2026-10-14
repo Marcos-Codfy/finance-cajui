@@ -105,7 +105,7 @@ enum ErrorCode {
   /// Sessão, aparelho ou pino recusado.
   auth03('E-AUTH-03', ErrorClass.security, 401),
 
-  /// Código de pareamento vencido, usado ou errado.
+  /// Código do autenticador errado, já usado ou com a entrada em espera (ADR-027).
   auth04('E-AUTH-04', ErrorClass.security, 401),
 
   /// Limite de taxa do servidor (RNF-API-04).
@@ -113,6 +113,9 @@ enum ErrorCode {
 
   /// Cadeia do registro de eventos quebrada.
   data01('E-DATA-01', ErrorClass.data, 503),
+
+  /// O registro deste aparelho não abre ao abrir o app: um trecho não confere.
+  data03('E-DATA-03', ErrorClass.data, null),
 
   /// Resumo guardado e registro de eventos discordam.
   data02('E-DATA-02', ErrorClass.data, 503),

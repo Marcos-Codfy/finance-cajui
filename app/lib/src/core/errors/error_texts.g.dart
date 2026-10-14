@@ -146,6 +146,10 @@ abstract final class ErrorTexts {
       'O registro dos seus dados tem um trecho que não confere, a partir do evento {número}. Parei de gravar para não piorar; ler continua funcionando. O último backup íntegro é de {data}.',
       actions: ['Ver o roteiro de restauração'],
     ),
+    ErrorCode.data03 => const ErrorText(
+      'O registro deste aparelho tem um trecho que não confere, e o Cajui não abriu com ele. O que já chegou ao servidor está a salvo lá, e o registro antigo fica guardado no aparelho. Dá para recomeçar com os dados do servidor.',
+      actions: ['Recomeçar pelo servidor', 'Copiar o código'],
+    ),
     ErrorCode.data02 => const ErrorText(
       'Os totais guardados não batem com o histórico. Vou refazer os totais a partir do histórico, que é a fonte da verdade; leva cerca de {tempo}.',
       actions: ['Refazer agora'],

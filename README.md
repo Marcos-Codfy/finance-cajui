@@ -301,7 +301,7 @@ extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso,
 | Testes              | **1.635**: app 489 · domínio 491 · servidor 222 · design system 213 · contrato 93 · gallery 76 · persistência 25 · verificador 26 |
 | Cobertura           | contrato 94,7% · domínio 92,8% · persistência 91,5% · servidor 90,7% · design system 87,7% · app 85,1%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
-| Textos              | Todo erro que a pessoa lê vem de um catálogo de 46 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
+| Textos              | Todo erro que a pessoa lê vem de um catálogo de 47 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
 | Voz                 | Termos proibidos ("déficit", "estourou", exclamação) são reprovados por teste em todas as frases do app |
 | Analisador          | `very_good_analysis`, zero aviso                                                                          |
 | Verificador próprio | 1.007 arquivos, nenhum limite estourado                                                                     |

@@ -61,9 +61,19 @@ class MainActivity : FlutterActivity() {
         DeviceKeyChannel(messenger)
         FileShareChannel(this, messenger)
         configureOutside(messenger)
+        if (fromHistory(intent)) return
         capture?.handle(intent)
         if (!restored) handleShortcut(intent, appIsRunning = false)
     }
+
+    /**
+     * Reaberto pela lista de apps recentes, o app recebe de novo a intenção
+     * que o criou — o extrato compartilhado horas antes, o botão de câmera
+     * do widget. Nada disso é pedido novo: o arquivo já foi lido (e a
+     * permissão de lê-lo nem vale mais), e a câmera não deve abrir sozinha.
+     */
+    private fun fromHistory(intent: Intent?): Boolean =
+        intent != null && (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
 
     /**
      * O que liga o app aberto ao que acontece fora dele (ADR-025): a fila das
