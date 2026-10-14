@@ -141,6 +141,7 @@ Vagos de propósito (RNF-SEC-18): não revelam se o aparelho existe, se o token 
 |---|---|---|---|---|
 | `E-RATE-01` | Limite de taxa do servidor (RNF-API-04) | api 429 | Foram muitos pedidos em pouco tempo. Nada se perdeu. Dá para tentar de novo em {segundos} segundos. | (aguarda a contagem) |
 | `E-DATA-01` | Cadeia do registro de eventos quebrada | api 503 | O registro dos seus dados tem um trecho que não confere, a partir do evento {número}. Parei de gravar para não piorar; ler continua funcionando. O último backup íntegro é de {data}. | Ver o roteiro de restauração |
+| `E-DATA-03` | O registro deste aparelho não abre ao abrir o app: um trecho não confere | app | O registro deste aparelho tem um trecho que não confere, e o Cajui não abriu com ele. O que já chegou ao servidor está a salvo lá, e o registro antigo fica guardado no aparelho. Dá para recomeçar com os dados do servidor. | Recomeçar pelo servidor · Copiar o código |
 | `E-DATA-02` | Resumo guardado e registro de eventos discordam | api 503 | Os totais guardados não batem com o histórico. Vou refazer os totais a partir do histórico, que é a fonte da verdade; leva cerca de {tempo}. | Refazer agora |
 | `E-STORAGE-01` | Armazenamento do aparelho cheio | app | O aparelho está sem espaço, e não deu para guardar {item}. O que já estava salvo continua salvo. | Abrir armazenamento |
 
