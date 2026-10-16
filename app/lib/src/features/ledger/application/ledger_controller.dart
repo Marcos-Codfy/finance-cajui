@@ -160,6 +160,7 @@ class LedgerController extends AsyncNotifier<LedgerBook> with LedgerReload {
     required int dueDay,
     String? id,
     Money? creditLimit,
+    String? skin,
   }) async {
     final book = await future;
     final result = CreditCard.create(
@@ -168,22 +169,20 @@ class LedgerController extends AsyncNotifier<LedgerBook> with LedgerReload {
       closingDay: closingDay,
       dueDay: dueDay,
       creditLimit: creditLimit,
+      skin: skin,
     );
     final card = result.valueOrNull;
-    if (card == null) return result;
-    await _commit(
-      book,
-      CardDefined(
-        id: 'card-fact-${ref.read(newIdProvider)()}',
-        card: card,
-        definedAt: book.trail.nextCardStamp(
-          card.id,
-          ref.read(clockProvider).now(),
-        ),
-      ),
-    );
+    if (card != null) await _commit(book, _cardFact(book, card));
     return result;
   }
+
+  /// O fato do cartão, com o carimbo que decide entre dois celulares que o
+  /// alteraram (ADR-024).
+  CardDefined _cardFact(LedgerBook book, CreditCard card) => CardDefined(
+    id: 'card-fact-${ref.read(newIdProvider)()}',
+    card: card,
+    definedAt: book.trail.nextCardStamp(card.id, ref.read(clockProvider).now()),
+  );
 
   /// Registra o pagamento da fatura de [card] que vence em [dueMonth]. É uma
   /// liquidação, não um lançamento (RN-340): as compras já contaram quando
