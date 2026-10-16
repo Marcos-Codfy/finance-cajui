@@ -96,8 +96,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             pending == null &&
             talk is StatementTalkIdle)
           ..._firstTalk(assistant.ask),
-        for (final (question, reply) in state.exchanges)
-          ..._exchange(question, reply, canUndo: paired),
+        ..._exchanges(state, canUndo: paired, waiting: pending != null),
         if (pending != null) ...[
           CajuiChatBubble(pending, fromUser: true),
           const CajuiChatBubble('', thinking: true),
@@ -119,10 +118,26 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           onFocused: _followLatest,
         );
 
+  /// As trocas da conversa; só a última, já respondida, ganha "Pode/Não".
+  List<Widget> _exchanges(
+    AssistantTalking state, {
+    required bool canUndo,
+    required bool waiting,
+  }) => [
+    for (final (index, (question, reply)) in state.exchanges.indexed)
+      ..._exchange(
+        question,
+        reply,
+        canUndo: canUndo,
+        last: !waiting && index == state.exchanges.length - 1,
+      ),
+  ];
+
   List<Widget> _exchange(
     String question,
     AssistantReply reply, {
     required bool canUndo,
+    bool last = false,
   }) {
     final assistant = ref.read(assistantProvider.notifier);
     return [
@@ -132,6 +147,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         onRetry: assistant.retry,
         onUndo: assistant.undo,
         canUndo: canUndo,
+        onQuickReply: last ? assistant.ask : null,
         onLink: (link) => switch (link) {
           AnswerLink.month => MonthPage.open(context),
           AnswerLink.debts => DebtsPage.open(context),

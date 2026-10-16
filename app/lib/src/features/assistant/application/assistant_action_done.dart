@@ -11,6 +11,7 @@ final class AssistantActionDone {
     required this.id,
     required this.label,
     required this.amountCents,
+    this.debtId,
   });
 
   /// Lê a ação de [json], como vem da API.
@@ -19,6 +20,7 @@ final class AssistantActionDone {
     id: json['id'] as String? ?? '',
     label: json['label'] as String? ?? '',
     amountCents: json['amountCents'] as int? ?? 0,
+    debtId: json['debtId'] as String?,
   );
 
   /// `recorded`, `cancelled` ou `income`.
@@ -35,5 +37,9 @@ final class AssistantActionDone {
 
   /// Se dá para desfazer daqui: só o que foi lançado. Cancelar não se
   /// desfaz (RN-208), e renda se corrige no plano.
-  bool get isUndoable => kind == 'recorded';
+  bool get isUndoable => kind == 'recorded' || kind == 'paidDown';
+
+  /// A dívida que o lançamento abateu, no `paidDown`: desfazer devolve o
+  /// saldo dela também (BL-117).
+  final String? debtId;
 }
