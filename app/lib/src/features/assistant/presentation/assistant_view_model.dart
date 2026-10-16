@@ -1,9 +1,12 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/assistant/application/assistant_action_done.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// O ViewModel da conversa com o assistente (ADR-002).
@@ -27,7 +30,9 @@ class AssistantViewModel extends Notifier<AssistantState> {
     if (question.isEmpty) return;
     state = current.asking(question);
     await _syncLedger();
-    final reply = await ref.read(assistantGatewayProvider).ask(question);
+    final reply = await ref
+        .read(assistantGatewayProvider)
+        .ask(question, month: _month());
     if (reply is AssistantAnswered && reply.actions.isNotEmpty) {
       await _refreshLedger();
     }
@@ -68,6 +73,14 @@ class AssistantViewModel extends Notifier<AssistantState> {
     final (question, _) = current.exchanges.last;
     state = current.withoutLast();
     await ask(question);
+  }
+
+  /// Os números do mês como o Início mostra, feitos pelo domínio: vão junto
+  /// da pergunta para a Juju não dizer outra sobra (15/10/2026).
+  MonthFigures? _month() {
+    final finances = ref.read(financesProvider);
+    if (finances == null) return null;
+    return MonthFigures.of(finances, ref.read(todayProvider));
   }
 }
 

@@ -4,8 +4,10 @@ import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/features/assistant/application/assistant_action_done.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/default_catalog.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -13,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/memory_ledger_journal.dart';
+import '../../support/sample_plan.dart';
 import '../../support/scripted_assistant.dart';
 import '../../support/test_scope.dart';
 
@@ -79,6 +82,26 @@ void main() {
 
     expect(assistant.asked, ['Quanto sobra neste mês?']);
     expect(find.text(r'Sobram R$ 920,00 neste mês.'), findsOneWidget);
+  });
+
+  testWidgets('a pergunta leva os números do mês da tela, para a Juju não '
+      'dizer outra sobra que a do Início', (tester) async {
+    final assistant = ScriptedAssistant(const [AssistantAnswered('Certo.')]);
+    await _open(tester, assistant: assistant, events: samplePlanEvents);
+
+    await tester.tap(find.widgetWithText(CajuiChip, 'Quanto sobra neste mês?'));
+    await _settle(tester);
+
+    final scope = ProviderScope.containerOf(
+      tester.element(find.byType(CajuiApp)),
+    );
+    final shown = MonthFigures.of(
+      scope.read(financesProvider)!,
+      scope.read(todayProvider),
+    );
+    final sent = assistant.months.single!;
+    expect(sent.hasPlan, isTrue);
+    expect(sent.toJson(), shown.toJson());
   });
 
   testWidgets('RN-946 · a tela espera, e a resposta só aparece inteira', (

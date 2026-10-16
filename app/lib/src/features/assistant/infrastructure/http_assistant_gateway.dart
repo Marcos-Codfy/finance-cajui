@@ -16,10 +16,10 @@ final class HttpAssistantGateway implements AssistantGateway {
   final CajuiApi _api;
 
   @override
-  Future<AssistantReply> ask(String message) async {
+  Future<AssistantReply> ask(String message, {MonthFigures? month}) async {
+    final body = {'message': message, 'month': ?month?.toJson()};
     final outcome = await _api.authenticated(
-      (token) =>
-          _api.post('/v1/assistant/ask', {'message': message}, token: token),
+      (token) => _api.post('/v1/assistant/ask', body, token: token),
     );
     if (outcome.body case final answer?) return _answer(answer);
     // O tempo de espera vem do servidor, que é quem sabe quanto falta do

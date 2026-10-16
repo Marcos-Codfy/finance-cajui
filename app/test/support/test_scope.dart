@@ -230,6 +230,6 @@ final class _SilentGateway implements AssistantGateway {
   const new();
 
   @override
-  Future<AssistantReply> ask(String message) async =>
+  Future<AssistantReply> ask(String message, {MonthFigures? month}) async =>
       const AssistantFailed(ErrorCode.net01);
 }

@@ -45,13 +45,17 @@ final class AssistantRoutes {
   final AssistantService? service;
 
   /// O contexto do mês de hoje, montado a cada pergunta: um lançamento feito
-  /// um minuto atrás já conta na resposta.
-  AssistantContext get _context => AssistantContext.build(
+  /// um minuto atrás já conta na resposta. Os números do mês são os que o
+  /// celular mandou, quando mandou — os da tela dele, mesmo com algo ainda
+  /// por sincronizar; sem eles, os que o servidor tem.
+  AssistantContext _contextWith(MonthFigures? month) => AssistantContext.build(
     today: clock.today(),
     entries: state.entries,
     categories: state.categories,
     reversals: state.reversals.values,
-    sheet: SheetNumbers.of(ServerFinances.of(state), clock.today()),
+    sheet: month == null
+        ? SheetNumbers.of(ServerFinances.of(state), clock.today())
+        : SheetNumbers.from(month, clock.today()),
     received: state.receivedIn(clock.today().budgetMonth),
   );
 
@@ -96,10 +100,8 @@ final class AssistantRoutes {
   Router get router => Router()..post('/ask', _ask);
 
   Future<Response> _ask(Request request) async {
-    final body = JsonReader(
-      await JsonBody.read(request),
-      allowed: const {'message'},
-    );
+    final raw = await JsonBody.read(request);
+    final body = JsonReader(raw, allowed: const {'message', 'month'});
     final message = body.string(
       'message',
       maxLength: AssistantPrompt.maxMessageLength,
@@ -111,7 +113,9 @@ final class AssistantRoutes {
     final outcome = await assistant.ask(
       sessionId: session.deviceId,
       message: message,
-      context: _context,
+      context: _contextWith(
+        MonthFigures.fromJson(raw is Map ? raw['month'] : null),
+      ),
       catalog: {..._catalog, if (readOnly) 'acesso': _consultOnly},
       tools: _tools(readOnly: readOnly),
       householdNames: HouseholdFacts.namesIn(state),
