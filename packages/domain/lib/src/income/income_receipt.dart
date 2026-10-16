@@ -18,6 +18,7 @@ final class IncomeReceipt {
     required this.amount,
     required this.receivedOn,
     this.sourceId,
+    this.note,
   });
 
   /// O identificador do recebimento.
@@ -37,4 +38,9 @@ final class IncomeReceipt {
 
   /// É uma entrada avulsa, sem fonte.
   bool get isOneOff => sourceId == null;
+
+  /// O que foi, na entrada avulsa: "Saldo da conta", "Venda do sofá". Dá
+  /// nome ao dinheiro que não é salário (16/10/2026); não muda conta
+  /// nenhuma — saldo e extra entram igual no dinheiro do mês.
+  final String? note;
 }

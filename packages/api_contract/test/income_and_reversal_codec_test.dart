@@ -64,6 +64,28 @@ void main() {
       expect(volta.isOneOff, isFalse);
     });
 
+    test('a entrada avulsa leva o nome dela; sem nome, viaja como antes', () {
+      final named = IncomeCodec.read({
+        ..._receiptJson(),
+        'sourceId': null,
+        'note': 'Saldo da conta',
+      });
+
+      expect(named.note, 'Saldo da conta');
+      expect(IncomeCodec.encode(named)['note'], 'Saldo da conta');
+      expect(
+        IncomeCodec.encode(IncomeCodec.decode(_receiptJson()))
+            .containsKey('note'),
+        isFalse,
+      );
+      // Nome longo demais é descartado, como todo texto opcional do
+      // contrato: o dinheiro entra, sem o nome.
+      expect(
+        IncomeCodec.read({..._receiptJson(), 'note': 'x' * 41}).note,
+        isNull,
+      );
+    });
+
     test('T-05 · campo a mais, valor não positivo e moeda inventada são '
         'recusados', () {
       expect(

@@ -15,6 +15,8 @@ abstract final class IncomeCodec {
     'tender': receipt.tender.name,
     'amountCents': receipt.amount.cents,
     'receivedOn': '${receipt.receivedOn}',
+    // Só quando há nome: a entrada de antes viaja igual.
+    'note': ?receipt.note,
   };
 
   /// O recebimento gravado em [payload].
@@ -24,13 +26,21 @@ abstract final class IncomeCodec {
     tender: EntryCodec.named(Tender.values, payload['tender']! as String),
     amount: Money.fromCents(payload['amountCents']! as int),
     receivedOn: EntryCodec.parseDate(payload['receivedOn']! as String),
+    note: payload['note'] as String?,
   );
 
   /// O recebimento vindo **de fora**, campo a campo (T-05).
   static IncomeReceipt read(Object? json) {
     final body = JsonReader(
       json,
-      allowed: const {'id', 'sourceId', 'tender', 'amountCents', 'receivedOn'},
+      allowed: const {
+        'id',
+        'sourceId',
+        'tender',
+        'amountCents',
+        'receivedOn',
+        'note',
+      },
     );
     final cents = body.integer('amountCents');
     if (cents <= 0) {
@@ -42,6 +52,7 @@ abstract final class IncomeCodec {
       tender: EntryCodec.named(Tender.values, body.string('tender')),
       amount: Money.fromCents(cents),
       receivedOn: EntryCodec.parseDate(body.string('receivedOn')),
+      note: body.optionalString('note', maxLength: 40),
     );
   }
 

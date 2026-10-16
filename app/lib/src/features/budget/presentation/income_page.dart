@@ -44,6 +44,25 @@ class _IncomePageState extends ConsumerState<IncomePage> {
   String? _salaryId;
   bool _saving = false;
 
+  /// Se o extra é o saldo que já estava na conta, e não renda nova: conta
+  /// igual no mês, com outro nome (16/10/2026).
+  bool _balance = false;
+  final _note = TextEditingController();
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  /// O nome da entrada avulsa: o saldo tem o dele; o extra, o que a pessoa
+  /// escrever.
+  String? get _noteText => _salaryId != null || _tender != Tender.cash
+      ? null
+      : _balance
+      ? 'Saldo da conta'
+      : _note.text;
+
   List<IncomeSource> get _salaries =>
       ref.read(financesProvider)?.plan.salaries ?? const [];
 
@@ -58,6 +77,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
           amount: Money.fromCents(_cents),
           receivedOn: _receivedOn,
           salaryId: _salaryId,
+          note: _noteText,
         );
     feedback.saved();
     navigator.pop();
@@ -125,12 +145,27 @@ class _IncomePageState extends ConsumerState<IncomePage> {
             selected: _salaryId == salary.id,
             onSelected: (_) => setState(() => _salaryId = salary.id),
           ),
-        CajuiChip(
-          label: 'Dinheiro extra',
-          selected: _salaryId == null,
-          onSelected: (_) => setState(() => _salaryId = null),
-        ),
+        _oneOff('Dinheiro extra', balance: false),
+        _oneOff('Saldo da conta', balance: true),
       ],
     ),
+    if (_salaryId == null && !_balance) ...[
+      const SizedBox(height: CajuiSpacing.lg),
+      CajuiTextField(
+        label: 'O que foi (opcional)',
+        hint: 'Venda, presente, reembolso',
+        controller: _note,
+      ),
+    ],
   ];
+
+  /// A entrada avulsa: o extra do mês, ou o saldo que já estava na conta.
+  Widget _oneOff(String label, {required bool balance}) => CajuiChip(
+    label: label,
+    selected: _salaryId == null && _balance == balance,
+    onSelected: (_) => setState(() {
+      _salaryId = null;
+      _balance = balance;
+    }),
+  );
 }
