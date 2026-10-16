@@ -1,19 +1,22 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
-/// O widget da tela inicial, como o Android o desenha: o vidro sobre a
-/// aurora, as duas esferas de luz, o número e os três atalhos.
+/// O widget grande da tela inicial (4×2), como o Android o desenha: o vidro
+/// sobre a aurora, as duas esferas de luz, o número, as próximas contas a
+/// vencer e os três atalhos.
 ///
 /// É a réplica do `home_widget.xml`, feita só com os componentes do design
 /// system: a aurora (`CajuiAurora`), o vidro (`CajuiGlassPanel`) e as
 /// esferas (`CajuiOrb`). O número é tocável — no aparelho, ele abre o app
 /// com a chegada pelo vidro.
 class GlassWidget extends StatelessWidget {
-  /// Cria o widget com [label], [amount] e [caption], como o app publica.
+  /// Cria o widget com [label], [amount], [caption] e [bills], como o app
+  /// publica.
   const new({
     required this.label,
     required this.amount,
     required this.caption,
+    this.bills,
     this.onNumber,
     super.key,
   });
@@ -27,27 +30,34 @@ class GlassWidget extends StatelessWidget {
   /// A frase de baixo.
   final String caption;
 
+  /// As contas a vencer, nome e dia: ("Aluguel", "vence dia 10"). Vazia, o
+  /// widget diz que não há conta a vencer; nula, é o widget de mês novo, que
+  /// só pede para abrir o app.
+  final List<(String, String)>? bills;
+
   /// O toque no número.
   final VoidCallback? onNumber;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 172,
-      child: CajuiAurora(
-        child: Stack(
-          children: [
-            const Positioned(
-              left: 18,
-              bottom: 4,
-              child: CajuiOrb(size: 22, tone: CajuiOrbTone.vereda),
-            ),
-            Positioned.fill(child: _glass(context)),
-            // No canto de cima do vidro, do lado dos atalhos: entre o
-            // número e os botões ela cobria o fim do rótulo.
-            const Positioned(top: 2, right: 4, child: CajuiOrb()),
-          ],
-        ),
+    // A altura mínima é a de duas células; com as contas, o vidro cresce
+    // com o que tem dentro, em vez de cortar a última linha.
+    return CajuiAurora(
+      child: Stack(
+        children: [
+          const Positioned(
+            left: 18,
+            bottom: 4,
+            child: CajuiOrb(size: 22, tone: CajuiOrbTone.vereda),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 172),
+            child: _glass(context),
+          ),
+          // No canto de cima do vidro, do lado dos atalhos: entre o
+          // número e os botões ela cobria o fim do rótulo.
+          const Positioned(top: 2, right: 4, child: CajuiOrb()),
+        ],
       ),
     );
   }
@@ -56,19 +66,85 @@ class GlassWidget extends StatelessWidget {
   /// O conteúdo vem centrado na altura, como o `center_vertical` do layout
   /// do Android: sem isso, a réplica o colava no alto do vidro.
   Widget _glass(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(CajuiSpacing.sm),
+    padding: const EdgeInsets.all(10),
     child: CajuiGlassPanel(
-      padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(18, 12, 14, 12),
       child: Center(
         child: Row(
           children: [
-            Expanded(child: _number(context)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [_number(context), ..._bills(context)],
+              ),
+            ),
             _shortcuts(context),
           ],
         ),
       ),
     ),
   );
+
+  /// O fio e as contas a vencer, uma por linha; sem conta, a frase que diz
+  /// isso. O widget de mês novo não tem a seção.
+  List<Widget> _bills(BuildContext context) {
+    final bills = this.bills;
+    if (bills == null) return const [];
+    final light = CajuiTheme.of(context).colors.brand.sheen;
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: CajuiSpacing.sm, bottom: 4),
+        child: SizedBox(
+          height: 1,
+          child: ColoredBox(color: light.withValues(alpha: 0.2)),
+        ),
+      ),
+      if (bills.isEmpty)
+        Text('Nenhuma conta a vencer por agora.', style: _muted(context)),
+      for (final (name, day) in bills) _bill(context, name, day),
+    ];
+  }
+
+  /// Uma conta: o nome à esquerda e o dia à direita.
+  Widget _bill(BuildContext context, String name, String day) {
+    final muted = _muted(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: muted.copyWith(
+              color: CajuiTheme.of(context).colors.brand.sheen,
+            ),
+          ),
+        ),
+        const SizedBox(width: CajuiSpacing.sm),
+        // O dia tem teto: num widget estreito, o nome encolhe primeiro,
+        // como o `layout_weight` do Android, mas o dia não empurra a linha
+        // para fora do vidro.
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 110),
+          child: Text(
+            day,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: muted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// O texto miúdo sobre o vidro: a luz a 80%.
+  TextStyle _muted(BuildContext context) {
+    final theme = CajuiTheme.of(context);
+    return theme.typography.caption.copyWith(
+      color: theme.colors.brand.sheen.withValues(alpha: 0.8),
+    );
+  }
 
   Widget _number(BuildContext context) {
     final theme = CajuiTheme.of(context);
@@ -88,9 +164,10 @@ class GlassWidget extends StatelessWidget {
             style: type.overline.copyWith(color: muted),
           ),
           Text(amount, style: type.amountLarge.copyWith(color: light)),
+          // Uma linha, como no aparelho: a segunda ficou para as contas.
           Text(
             caption,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: type.caption.copyWith(color: muted),
           ),
