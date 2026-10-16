@@ -5,10 +5,15 @@ import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/presentation/entries_empty.dart';
+import 'package:cajui/src/features/ledger/presentation/entries_filter_chips.dart';
+import 'package:cajui/src/features/ledger/presentation/entries_search_field.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
+import 'package:cajui/src/features/ledger/presentation/entries_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_row.dart';
 import 'package:cajui/src/features/ledger/presentation/month_spending_card.dart';
+import 'package:cajui/src/features/ledger/presentation/month_stepper.dart';
 import 'package:cajui/src/features/receipts/application/capture_service.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/pending_captures_card.dart';
@@ -17,8 +22,8 @@ import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Os lançamentos do mês, e as portas para acrescentar um: fotografar o
-/// comprovante, receber um compartilhado ou lançar à mão.
+/// Os lançamentos do mês, com busca e filtros, e as portas para acrescentar
+/// um: fotografar o comprovante, receber um compartilhado ou lançar à mão.
 class EntriesPage extends ConsumerWidget {
   /// Cria a tela de lançamentos.
   const new({super.key});
@@ -33,7 +38,6 @@ class EntriesPage extends ConsumerWidget {
     final state = ref.watch(entriesStateProvider);
     return CajuiScreen(
       title: 'Lançamentos',
-      overline: state is EntriesReady ? DateLabels.month(state.month) : null,
       onBack: Navigator.of(context).maybePop,
       // A rolagem em profundidade e a entrada de câmera (ADR-028).
       depth: true,
@@ -42,7 +46,7 @@ class EntriesPage extends ConsumerWidget {
       children: switch (state) {
         EntriesLoading() => _loading,
         EntriesFailed(:final code) => [_failure(ref, code)],
-        EntriesReady() => _ready(state),
+        EntriesReady() => _ready(state, ref),
       },
     );
   }
@@ -170,23 +174,43 @@ class EntriesPage extends ConsumerWidget {
     );
   }
 
-  List<Widget> _ready(EntriesReady state) {
+  /// O mês com as setas logo abaixo do título: o gasto do cartão de cima e
+  /// a lista de baixo são os do mês que elas mostram. A busca e os chips
+  /// têm chave própria — a lista embaixo deles muda a cada letra, e sem
+  /// chave o campo perdia o foco no meio da digitação.
+  List<Widget> _ready(EntriesReady state, WidgetRef ref) {
+    final filters = ref.read(entriesViewModelProvider.notifier);
     return [
       const PendingCapturesCard(),
+      MonthStepper(
+        key: const ValueKey('entries-month'),
+        label: DateLabels.month(state.month),
+        onPrevious: filters.previousMonth,
+        onNext: state.isCurrentMonth ? null : filters.nextMonth,
+      ),
+      const SizedBox(height: CajuiSpacing.lg),
       MonthSpendingCard(spent: state.spent, voucher: state.voucher),
       const SizedBox(height: CajuiSpacing.xl),
-      if (state.entries.isEmpty)
-        const CajuiEmptyState(
-          title: 'Nada lançado ainda',
-          message:
-              'Fotografe o comprovante, escolha um print ou o PDF de um '
-              'extrato da galeria, ou lance o primeiro à mão.',
-        ),
+      _filters(state),
+      const SizedBox(height: CajuiSpacing.xl),
+      if (state.entries.isEmpty) EntriesEmpty(state: state),
       for (final (index, entry) in state.entries.indexed)
         CajuiEntrance(
+          key: ValueKey(entry.id),
           index: index,
           child: EntryRow(entry: entry, book: state.book, today: state.today),
         ),
     ];
   }
+
+  /// A busca e os chips, num bloco só.
+  static Widget _filters(EntriesReady state) => Column(
+    key: const ValueKey('entries-filters'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const EntriesSearchField(),
+      const SizedBox(height: CajuiSpacing.md),
+      EntriesFilterChips(state: state),
+    ],
+  );
 }
