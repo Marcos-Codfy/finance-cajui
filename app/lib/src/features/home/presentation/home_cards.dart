@@ -84,6 +84,7 @@ abstract final class HomeCards {
       large: true,
       tone: CajuiAmountTone.shortfall,
       caption: '$percent% da renda já está gasto. É a meta de corte do mês.',
+      meter: _fill(percent),
       heroTag: MonthPage.resultTag,
     );
   }
@@ -103,10 +104,16 @@ abstract final class HomeCards {
     large: true,
     tone: CajuiAmountTone.positive,
     caption: 'Depois de pagar tudo · $percent% da renda já está gasto',
+    meter: _fill(percent),
     heroTag: MonthPage.resultTag,
     glowing: true,
     celebrate: party,
   );
+
+  /// A barra do quanto da renda já tem destino (16/10/2026): lê-se de
+  /// relance, e a frase embaixo dela diz o mesmo em texto (RN-862). Passar
+  /// de 100% enche a barra, sem alarme.
+  static double _fill(int percent) => (percent / 100).clamp(0.0, 1.0);
 
   static Widget _voucher(HomeView view) {
     final budget = view.budget;
