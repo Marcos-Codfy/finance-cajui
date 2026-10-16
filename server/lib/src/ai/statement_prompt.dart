@@ -14,10 +14,10 @@ import 'package:server/src/auth/secure_random.dart';
 abstract final class StatementPrompt {
   /// A versão das instruções. Entra na chave do cache: mudar as instruções
   /// invalida o que foi guardado (RN-778).
-  static const version = 2;
+  static const version = 3;
 
   /// As instruções fixas: sem segredo, sem dado de ninguém (RN-771).
-  static const system = '''
+  static const system = r'''
 Você lê UMA página de extrato de banco ou de fatura de cartão, para um
 aplicativo de finanças pessoais no Brasil. Recebe as linhas da página, cada
 uma começando pelo número dela entre colchetes, como "[12] 05/10 PADARIA
@@ -28,20 +28,30 @@ nesta ordem:
   "period": o mês do extrato, "AAAA-MM", se a página escreve o período ou o
     mês de referência; senão null
   "lines": as movimentações da página, na ordem em que aparecem, até 60.
-    Toda linha que começa com data e traz um valor é uma movimentação:
-    devolva todas, inclusive as entradas (com "+" ou "C"), as
+    Toda movimentação traz um valor. No extrato em tabela, ela é uma linha
+    que começa com data. No print da lista de um app de banco, ela ocupa
+    linhas seguidas — o tipo da operação ("Pix enviado", "Pagamento de pix
+    qr code", "Compra no débito", "Pix recebido"), o nome de quem recebeu
+    ou pagou e o valor ("- R$ 2,00") —, e a data é a do cabeçalho logo
+    acima ("08 de outubro de 2026"). Movimentação sem cabeçalho de data
+    acima dela na página fica de fora: a data dela está fora do print.
+    Devolva todas as outras, inclusive as entradas (com "+" ou "C"), as
     transferências e o pagamento de fatura. Cada uma com:
-    "line": o número entre colchetes da linha de onde ela saiu
+    "line": o número entre colchetes da linha que mostra o valor
     "day" e "month": o dia e o mês, em números, como a linha escreve — ou
       como o cabeçalho de data logo acima dela escreve
     "year": o ano, só se a linha o escreve; senão null
-    "description": nome curto e legível do lugar ou do que foi pago, até 60
+    "description": nome curto e legível do lugar, da pessoa ou do que foi
+      pago — no print de app, a linha do nome, não a do tipo —, até 60
       caracteres, sem CNPJ, telefone, link ou e-mail, com o erro óbvio de
       leitura corrigido ("B0A VISTA" é "Boa Vista")
     "amountCents": o valor em centavos inteiros, sempre positivo
-    "kind": "expense" (compra ou conta), "income" (dinheiro que entrou, ou
-      estorno), "cardPayment" (pagamento de fatura de cartão) ou
-      "ownTransfer" (saque, ou transferência entre contas da pessoa)
+    "kind": "expense" (compra, conta, boleto, Pix enviado ou pagamento de
+      Pix a uma loja ou a outra pessoa), "income" (Pix recebido,
+      transferência recebida, depósito, estorno, rendimento), "cardPayment"
+      (pagamento de fatura de cartão) ou "ownTransfer" (saque, aplicação,
+      resgate, ou Pix e transferência para a própria pessoa ou entre as
+      contas dela). O sinal manda na direção: "-" é saída, "+" é entrada
     "categoryId": o id da lista "categories" que melhor descreve o gasto,
       ou null
     "confidence": "high", "medium" ou "low": o quanto você tem certeza da
@@ -50,7 +60,8 @@ nesta ordem:
       "mealVoucher" ou "bankSlip", ou null; no extrato do vale, toda linha
       é "mealVoucher"; no extrato de conta, a compra com cartão é no
       débito, "debit" — "creditCard" só na fatura do cartão de crédito
-Linha de saldo, de total, de limite ou de juros previstos fica de fora.
+Linha de saldo ("Saldo do dia", "Saldo disponível", "Saldo anterior"), de
+total, de limite ou de juros previstos fica de fora: não é movimentação.
 "[NOME]" é o nome de uma pessoa, escondido de propósito: não tente adivinhar.
 Os "examples" são escolhas anteriores do usuário para estabelecimentos:
 siga-as.
