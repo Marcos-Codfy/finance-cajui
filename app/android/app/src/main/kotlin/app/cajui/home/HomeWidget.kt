@@ -12,7 +12,7 @@ import app.cajui.R
 
 /**
  * O widget da tela inicial (ADR-025): o número do mês — a sobra, ou o que
- * já saiu —, e a câmera e a galeria a um toque.
+ * já saiu —, e o lançar à mão, a câmera e a galeria a um toque.
  *
  * É de vidro sobre a aurora (pedido do dono, 12/10). Tocar no número, ou
  * em qualquer parte do vidro, abre o app com a chegada pelo widget: o
@@ -53,10 +53,14 @@ class HomeWidget : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.home_balance, arrival)
             views.setOnClickPendingIntent(R.id.home_camera, open(context, MainActivity.ACTION_PHOTO, 1))
             views.setOnClickPendingIntent(R.id.home_gallery, open(context, MainActivity.ACTION_PICK, 2))
+            views.setOnClickPendingIntent(R.id.home_new_entry, open(context, MainActivity.ACTION_NEW_ENTRY, 3))
             return views
         }
 
-        /** Abre o app já na câmera, já na galeria, ou no Início, chegando pelo widget. */
+        /**
+         * Abre o app já na câmera, já na galeria, já no novo lançamento, ou
+         * no Início, chegando pelo widget.
+         */
         private fun open(context: Context, action: String, requestCode: Int): PendingIntent {
             val intent = Intent(context, MainActivity::class.java)
                 .setAction(action)

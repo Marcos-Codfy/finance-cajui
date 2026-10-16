@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- O widget da tela inicial (ADR-025), de vidro sobre a aurora: o rótulo,
-     o número em destaque, a frase de baixo e os dois atalhos, num painel
+     o número em destaque, a frase de baixo e os três atalhos, num painel
      translúcido, com duas esferas de luz flutuando por fora dele.
 
      A raiz tem o id `@android:id/background` e recorta pelo contorno: é por
@@ -82,41 +82,66 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- Os atalhos na ordem do rodapé de Lançamentos: câmera e galeria
+             lado a lado, e o lançar à mão embaixo, na largura das duas. A
+             altura é a mesma de quando eram só duas, uma em cima da outra:
+             no widget de duas linhas, o que falta é altura, e não largura. -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:orientation="vertical">
 
-            <ImageButton
-                android:id="@+id/home_camera"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/home_widget_glass_button"
-                android:contentDescription="@string/home_widget_camera"
-                android:src="@drawable/ic_widget_camera"
-                android:tint="@color/cajui_glass_text" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
+                <ImageButton
+                    android:id="@+id/home_camera"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/home_widget_glass_button"
+                    android:contentDescription="@string/home_widget_camera"
+                    android:src="@drawable/ic_widget_camera"
+                    android:tint="@color/cajui_glass_text" />
+
+                <ImageButton
+                    android:id="@+id/home_gallery"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/home_widget_glass_button"
+                    android:contentDescription="@string/home_widget_gallery"
+                    android:src="@drawable/ic_widget_gallery"
+                    android:tint="@color/cajui_glass_text" />
+            </LinearLayout>
+
+            <!-- O "+": a ação principal, cheia na cor de ação. O
+                 contentDescription é o que o TalkBack lê, já que o botão
+                 não tem texto. -->
             <ImageButton
-                android:id="@+id/home_gallery"
-                android:layout_width="44dp"
+                android:id="@+id/home_new_entry"
+                android:layout_width="96dp"
                 android:layout_height="44dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/home_widget_glass_button"
-                android:contentDescription="@string/home_widget_gallery"
-                android:src="@drawable/ic_widget_gallery"
-                android:tint="@color/cajui_glass_text" />
+                android:background="@drawable/home_widget_accent_button"
+                android:contentDescription="@string/home_widget_new_entry"
+                android:src="@drawable/ic_widget_plus"
+                android:tint="@color/cajui_on_accent" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- A esfera grande vem por último: flutua por cima da borda do vidro,
-         no alto, entre o número e os botões. -->
+    <!-- A esfera grande vem por último: flutua por cima do canto de cima do
+         vidro, do lado dos atalhos. Entre o número e os botões, onde ficava,
+         ela cobria o fim do rótulo desde que os botões ficaram mais largos;
+         sobre os atalhos, cobria a câmera e a galeria. -->
     <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
         android:layout_marginTop="2dp"
-        android:layout_marginEnd="64dp"
+        android:layout_marginEnd="4dp"
         android:importantForAccessibility="no"
         android:src="@drawable/home_widget_orb" />
 </FrameLayout>
