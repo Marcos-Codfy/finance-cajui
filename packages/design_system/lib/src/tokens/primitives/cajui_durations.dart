@@ -31,4 +31,8 @@ abstract final class CajuiDurations {
   /// que seja o tamanho. Abaixo dos 5 s em que a WCAG 2.2.2 pede um jeito de
   /// pausar o que se move sozinho — e, mesmo assim, um toque já mostra tudo.
   static const streamCap = Duration(seconds: 4);
+
+  /// A janela do Desfazer depois de cancelar deslizando: dá tempo de ler e
+  /// tocar, e não deixa o cancelamento pendurado.
+  static const undo = Duration(seconds: 5);
 }
