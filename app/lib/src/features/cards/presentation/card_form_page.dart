@@ -127,7 +127,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
         const SizedBox(height: CajuiSpacing.lg),
         _limitField,
         const SizedBox(height: CajuiSpacing.lg),
-        _skinField,
+        ..._skinField,
       ],
     );
   }
@@ -139,22 +139,31 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     onChanged: (cents) => _limitCents = cents,
   );
 
-  /// A cor do plástico, entre os tons do cerrado (pedido do dono).
-  Widget get _skinField => CajuiSelectField(
-    label: 'Cor do cartão',
-    value: _skin.label,
-    helper: 'Só a aparência do cartão em 3D, sem efeito nas contas',
-    onPressed: () async {
-      final picked = await OptionPickerPage.open<CajuiCardSkin>(
-        context,
-        title: 'Cor do cartão',
-        options: CajuiCardSkin.values,
-        labelOf: (skin) => skin.label,
+  /// A cor do plástico, escolhida vendo: o cartão em 3D com o nome e os
+  /// dias que já foram preenchidos, e as bolinhas dos tons do cerrado.
+  List<Widget> get _skinField {
+    final theme = CajuiTheme.of(context);
+    final name = _name.text.trim();
+    return [
+      Text(
+        'Cor do cartão',
+        style: theme.typography.label.copyWith(color: theme.colors.text.muted),
+      ),
+      const SizedBox(height: CajuiSpacing.md),
+      CajuiCreditCard3D(
+        name: name.isEmpty ? 'Seu cartão' : name,
+        detail: 'fecha dia ${_closingDay ?? '–'} · vence dia ${_dueDay ?? '–'}',
+        usedCents: 0,
+        limitCents: _limitCents > 0 ? _limitCents : 1,
+        skin: _skin,
+      ),
+      const SizedBox(height: CajuiSpacing.lg),
+      CajuiCardSkinPicker(
         selected: _skin,
-      );
-      if (picked != null) setState(() => _skin = picked);
-    },
-  );
+        onChanged: (skin) => setState(() => _skin = skin),
+      ),
+    ];
+  }
 
   List<Widget> _days() {
     const gap = SizedBox(height: CajuiSpacing.lg);

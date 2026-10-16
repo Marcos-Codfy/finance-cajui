@@ -7,6 +7,7 @@ import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home/presentation/home_cards.dart';
 import 'package:cajui/src/features/home/presentation/home_links.dart';
+import 'package:cajui/src/features/home/presentation/home_setup_card.dart';
 import 'package:cajui/src/features/home/presentation/home_state.dart';
 import 'package:cajui/src/features/home/presentation/month_celebration.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
@@ -88,6 +89,7 @@ class HomePage extends ConsumerWidget {
         ..._notice(context, ref, state),
         _cards(ref, view, visible: visible),
         const SizedBox(height: CajuiSpacing.xl),
+        if (!state.readOnly) const HomeSetupCard(),
         ..._links(context, ref, view),
       ],
     );

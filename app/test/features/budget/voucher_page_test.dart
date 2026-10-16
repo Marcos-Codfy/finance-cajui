@@ -141,6 +141,9 @@ void main() {
     await tester.pump();
     await tester.tap(find.bySemanticsLabel('Início'));
     await settleAfterTap(tester);
+    await tester.ensureVisible(find.bySemanticsLabel('Mais'));
+    await tester.tap(find.bySemanticsLabel('Mais'));
+    await settleAfterTap(tester);
 
     expect(
       find.text('Vale do mês ${_brl('500,00')} · conferir com a operadora'),
