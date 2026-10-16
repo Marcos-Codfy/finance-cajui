@@ -35,6 +35,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
   int? _closingDay;
   int? _dueDay;
   int _limitCents = 0;
+  CajuiCardSkin _skin = CajuiCardSkin.cajui;
   String? _dayError;
   bool _saving = false;
 
@@ -47,6 +48,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     _closingDay = card.closingDay;
     _dueDay = card.dueDay;
     _limitCents = card.creditLimit?.cents ?? 0;
+    _skin = CajuiCardSkin.of(card.skin);
   }
 
   @override
@@ -84,6 +86,8 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
           closingDay: closingDay,
           dueDay: dueDay,
           creditLimit: _limitCents > 0 ? Money.fromCents(_limitCents) : null,
+          // O tom de sempre não se grava: o cartão viaja como antes.
+          skin: _skin == CajuiCardSkin.cajui ? null : _skin.slug,
         );
     if (!mounted) return;
     switch (result) {
@@ -122,6 +126,8 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
         ..._days(),
         const SizedBox(height: CajuiSpacing.lg),
         _limitField,
+        const SizedBox(height: CajuiSpacing.lg),
+        _skinField,
       ],
     );
   }
@@ -131,6 +137,23 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     helper: 'Serve só para mostrar quanto do limite está tomado',
     initialCents: _limitCents,
     onChanged: (cents) => _limitCents = cents,
+  );
+
+  /// A cor do plástico, entre os tons do cerrado (pedido do dono).
+  Widget get _skinField => CajuiSelectField(
+    label: 'Cor do cartão',
+    value: _skin.label,
+    helper: 'Só a aparência do cartão em 3D, sem efeito nas contas',
+    onPressed: () async {
+      final picked = await OptionPickerPage.open<CajuiCardSkin>(
+        context,
+        title: 'Cor do cartão',
+        options: CajuiCardSkin.values,
+        labelOf: (skin) => skin.label,
+        selected: _skin,
+      );
+      if (picked != null) setState(() => _skin = picked);
+    },
   );
 
   List<Widget> _days() {

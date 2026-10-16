@@ -15,6 +15,8 @@ abstract final class CardCodec {
     'closingDay': card.closingDay,
     'dueDay': card.dueDay,
     'creditLimitCents': card.creditLimit?.cents,
+    // Só quando há cor escolhida: o cartão de sempre viaja igual a antes.
+    'skin': ?card.skin,
   };
 
   /// O cartão gravado em [payload]. Já foi aceito pelo domínio quando foi
@@ -27,6 +29,7 @@ abstract final class CardCodec {
       closingDay: payload['closingDay']! as int,
       dueDay: payload['dueDay']! as int,
       creditLimit: limit == null ? null : Money.fromCents(limit),
+      skin: payload['skin'] as String?,
     ).valueOrNull!;
   }
 

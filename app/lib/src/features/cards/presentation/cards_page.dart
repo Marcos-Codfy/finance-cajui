@@ -136,6 +136,7 @@ class CardsPage extends ConsumerWidget {
         usedCents: usage.used.cents,
         limitCents: usage.limit.cents,
         tilt: tilt,
+        skin: CajuiCardSkin.of(card.skin),
       ),
     );
   }

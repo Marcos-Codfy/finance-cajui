@@ -1,3 +1,4 @@
+import 'package:design_system/src/components/credit_card/cajui_card_skin.dart';
 import 'package:design_system/src/components/credit_card/card_sheen.dart';
 import 'package:design_system/src/icons/cajui_icon.dart';
 import 'package:design_system/src/icons/cajui_icon_data.dart';
@@ -18,6 +19,7 @@ class CreditCardFront extends StatelessWidget {
     required this.name,
     required this.detail,
     required this.light,
+    this.skin = CajuiCardSkin.cajui,
     super.key,
   });
 
@@ -29,6 +31,9 @@ class CreditCardFront extends StatelessWidget {
 
   /// Onde a luz bate.
   final Alignment light;
+
+  /// A cor do plástico.
+  final CajuiCardSkin skin;
 
   /// O raio de canto dos dois lados do cartão.
   static const radius = BorderRadius.all(CajuiRadius.lg);
@@ -51,7 +56,10 @@ class CreditCardFront extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colors.action.primary, colors.action.primaryPressed],
+          colors: [
+            skin.top ?? colors.action.primary,
+            skin.bottom ?? colors.action.primaryPressed,
+          ],
         ),
       ),
       child: ClipRRect(
@@ -70,7 +78,10 @@ class CreditCardFront extends StatelessWidget {
   }
 
   Widget _content(CajuiThemeData theme) {
-    final ink = theme.colors.text.onAction;
+    // O tom de sempre segue o tema; os do cerrado têm o texto claro deles.
+    final ink = skin == CajuiCardSkin.cajui
+        ? theme.colors.text.onAction
+        : CajuiCardSkin.ink;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
