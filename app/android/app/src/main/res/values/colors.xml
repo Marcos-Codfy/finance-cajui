@@ -9,6 +9,8 @@
     <color name="cajui_glass_text">#FFFFFFFF</color>
     <!-- moon, a 80% -->
     <color name="cajui_glass_text_muted">#CCF4ECE0</color>
+    <!-- O fio entre o número e as contas: a borda do vidro, mais fraca. -->
+    <color name="cajui_glass_divider">#33FFFFFF</color>
     <!-- cajuiStrong -->
     <color name="cajui_accent">#FFB93D17</color>
     <!-- paper, sobre o cajuiStrong -->
