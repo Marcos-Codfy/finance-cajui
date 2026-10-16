@@ -98,6 +98,9 @@ void main() {
       find.text('Depois de pagar tudo · 60% da renda já está gasto'),
       findsOneWidget,
     );
+    // A mesma conta em barra, para ler de relance (16/10/2026).
+    final meter = tester.widget<CajuiMeter>(find.byType(CajuiMeter).first);
+    expect(meter.value, closeTo(0.6, 1e-9));
   });
 
   testWidgets('RN-1005 · o mercado abaixo do previsto não mexe na sobra; '
