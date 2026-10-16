@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -49,8 +50,9 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
   Widget build(BuildContext context) {
     final book = ref.watch(ledgerProvider).value;
     final entry = book?.entryOf(widget.entryId);
+    if (book == null) return const LoadingPage(title: 'Despesa');
     // Cancelado: não há mais o que mostrar, e a tela já está fechando.
-    if (book == null || entry == null) return const SizedBox.shrink();
+    if (entry == null) return const SizedBox.shrink();
     final today = ref.watch(todayProvider);
     final category = book.categoryOf(entry.categoryId).name;
     final day = DateLabels.day(entry.occurredOn, today: today);

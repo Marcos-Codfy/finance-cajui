@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -40,7 +41,9 @@ class _CaptureConfirmPageState extends ConsumerState<CaptureConfirmPage> {
   @override
   Widget build(BuildContext context) {
     final book = ref.watch(ledgerProvider).value;
-    if (book == null) return const SizedBox.shrink();
+    if (book == null) {
+      return const LoadingPage(title: 'Conferir comprovante');
+    }
     // Montado uma vez só: se o rascunho inicial mudasse a cada reconstrução
     // da tela, o formulário recomeçaria e apagaria o que a pessoa corrigiu.
     final today = ref.read(clockProvider).today();
