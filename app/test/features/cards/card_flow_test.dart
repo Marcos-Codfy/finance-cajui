@@ -1,4 +1,5 @@
 import 'package:cajui/src/app/cajui_app.dart';
+import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,5 +95,46 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Registrar pagamento'), findsOneWidget);
+  });
+
+  testWidgets('alterar o cartão: a tela abre com os dados dele, o limite '
+      'novo vale na fatura e continua existindo um cartão só', (tester) async {
+    tester.view.physicalSize = const Size(390, 2600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(
+          journal: MemoryLedgerJournal(samplePlanEvents),
+        ),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+    await openFromHome(tester, 'Cartões');
+    await _tap(tester, find.text('Cadastrar cartão'));
+    await tester.enterText(_field('Nome do cartão'), 'Cartão da casa');
+    await _tap(tester, find.text('Fecha em'));
+    await _tap(tester, find.text('dia 25'));
+    await _tap(tester, find.text('Vence em'));
+    await _tap(tester, find.text('dia 5'));
+    await _tap(tester, find.text('Guardar'));
+    await _tap(tester, find.text('Cartão da casa').first);
+
+    await _tap(tester, find.text('Alterar cartão'));
+    final name = tester.widget<EditableText>(_field('Nome do cartão'));
+    expect(name.controller.text, 'Cartão da casa');
+    expect(find.text('dia 25'), findsOneWidget);
+    await tester.enterText(_field('Limite do cartão (opcional)'), '100000');
+    await _tap(tester, find.text('Guardar'));
+
+    // De volta à fatura, já com o limite que acabou de ser informado.
+    expect(find.textContaining('1.000,00'), findsWidgets);
+    final scope = ProviderScope.containerOf(
+      tester.element(find.byType(CajuiApp)),
+    );
+    final cards = scope.read(ledgerProvider).value!.cards;
+    expect(cards.where((card) => card.name == 'Cartão da casa'), hasLength(1));
+    expect(cards.single.creditLimit?.cents, 100000);
   });
 }
