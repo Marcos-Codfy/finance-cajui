@@ -23,6 +23,9 @@ abstract final class AssistantToolCatalog {
   /// O nome da ferramenta que troca a categoria de um lançamento.
   static const recategorize = 'mudar_categoria';
 
+  /// O nome da ferramenta que abate um valor de uma dívida (BL-117).
+  static const payDownDebt = 'abater_divida';
+
   /// As ferramentas, como vão para o modelo.
   static const List<ChatTool> tools = [
     ChatTool(
@@ -146,6 +149,36 @@ abstract final class AssistantToolCatalog {
           },
         },
         'required': ['id', 'categoria_id'],
+      },
+    ),
+    ChatTool(
+      name: payDownDebt,
+      description:
+          'Abate um valor de uma dívida de "dividas": lança o pagamento no '
+          'bloco de dívidas e baixa o saldo dela. Use quando a pessoa disser '
+          'que pagou, quitou ou abateu parte de uma dívida. Não serve para '
+          'parcela no cartão, que se paga pela fatura.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'divida_id': {
+            'type': 'string',
+            'description': 'O id de uma dívida de "dividas".',
+          },
+          'valor_centavos': {
+            'type': 'integer',
+            'description': 'Quanto foi pago, em centavos.',
+          },
+          'forma': {
+            'type': 'string',
+            'description': 'Por onde foi pago: ${PaymentChoice.options}.',
+          },
+          'data': {
+            'type': 'string',
+            'description': 'AAAA-MM-DD. Omita para hoje.',
+          },
+        },
+        'required': ['divida_id', 'valor_centavos'],
       },
     ),
   ];

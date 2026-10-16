@@ -84,8 +84,27 @@ final class AssistantRoutes {
           'dia': salary.expectedDay,
         },
     ],
+    'dividas': _debts,
     'formas_de_pagamento': PaymentChoice.options,
   };
+
+  /// As dívidas que a Juju pode abater (`abater_divida`), com o que ainda se
+  /// deve hoje. Parcela no cartão fica de fora: ela se paga pela fatura.
+  List<Map<String, Object?>> get _debts {
+    final today = clock.today();
+    return [
+      for (final debt in ServerFinances.of(state).debts)
+        if (debt.kind != DebtKind.cardInstallment)
+          {
+            'id': debt.id,
+            'credor': debt.creditor,
+            'ainda_deve_centavos': DebtCalendar.outstandingOn(
+              debt,
+              today,
+            ).cents,
+          },
+    ];
+  }
 
   /// O aviso que vai no cadastro quando a conversa vem da consulta pela web
   /// (RN-906). As instruções fixas não mudam — são o começo que a IA guarda
