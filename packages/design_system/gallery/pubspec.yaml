@@ -14,6 +14,7 @@ dependencies:
     path: ../
   flutter:
     sdk: flutter
+  sensors_plus: ^7.1.1
   url_launcher: ^6.3.3
 
 dev_dependencies:

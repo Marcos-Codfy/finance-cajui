@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:cajui/src/core/motion/tilt_source.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -26,14 +26,9 @@ final class _Reading {
     _resume();
   }
 
-  /// A pose de repouso: o celular na mão fica a uns 40° da horizontal.
-  static const double _restPitch = 40 * math.pi / 180;
-
   /// Quanto cada amostra puxa o valor: o sensor treme, e a água não pode
   /// tremer junto.
   static const double _smoothing = 0.15;
-
-  static const double _gravity = 9.81;
 
   final ValueNotifier<Offset> tilt = ValueNotifier(Offset.zero);
   StreamSubscription<AccelerometerEvent>? _subscription;
@@ -62,10 +57,6 @@ final class _Reading {
 
   /// O lado é o seno do giro; a frente, o quanto o topo veio na direção de
   /// quem segura, a partir da pose de repouso.
-  static Offset _offsetOf(AccelerometerEvent event) {
-    final side = (-event.x / _gravity).clamp(-1, 1).toDouble();
-    final pitch = math.atan2(event.y, event.z);
-    final front = math.sin(pitch - _restPitch).clamp(-1, 1).toDouble();
-    return Offset(side, front);
-  }
+  static Offset _offsetOf(AccelerometerEvent event) =>
+      GravityTilt.of(x: event.x, y: event.y, z: event.z);
 }

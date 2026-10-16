@@ -87,6 +87,7 @@ export 'src/motion/cajui_tilt.dart';
 export 'src/motion/camera_move.dart';
 export 'src/motion/frame_budget_monitor.dart';
 export 'src/motion/frame_budget_window.dart';
+export 'src/motion/gravity_tilt.dart';
 export 'src/motion/motion_level.dart';
 export 'src/motion/motion_level_resolver.dart';
 export 'src/sound/audioplayers_sound_player.dart';
