@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:design_system/src/icons/icon_strokes.dart';
+
 /// Os ícones de traço da interface, desenhados numa grade de 24.
 ///
 /// São caminhos, e não uma fonte de ícones nem SVG: o design system fica sem
@@ -69,11 +71,14 @@ enum CajuiIconData {
   /// ali é regular, não consertar.
   sliders(_sliders),
 
+  /// Repete todo mês: as assinaturas. Duas setas num círculo.
+  repeat(drawRepeat),
+
   /// Informação e aviso.
   info(_info),
 
   /// Sem rede.
-  offline(_offline);
+  offline(drawOffline);
 
   new(this.build);
 
@@ -281,20 +286,4 @@ void _info(Path p) {
   p.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 9));
   _line(p, 12, 11, 12, 16.5);
   _line(p, 12, 7.6, 12, 7.7);
-}
-
-void _offline(Path p) {
-  p
-    ..addArc(
-      Rect.fromCircle(center: const Offset(12, 18), radius: 11),
-      -math.pi * 0.78,
-      math.pi * 0.56,
-    )
-    ..addArc(
-      Rect.fromCircle(center: const Offset(12, 18), radius: 6.5),
-      -math.pi * 0.78,
-      math.pi * 0.56,
-    );
-  _line(p, 12, 18, 12, 18.1);
-  _line(p, 4, 4, 20, 20);
 }
