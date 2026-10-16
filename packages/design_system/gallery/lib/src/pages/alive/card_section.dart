@@ -51,13 +51,18 @@ class CardSection extends StatelessWidget {
           'baixo continua rolando a tela —, e o brilho anda ao contrário, '
           'como luz de teto. Um toque vira o cartão e mostra o limite: a '
           'barra muda de tom na metade e nos 80%, e a frase descreve o fato, '
-          'sem alarme. Cartão é forma de pagamento — nada aqui diz "gasto".',
+          'sem alarme. Cartão é forma de pagamento — nada aqui diz "gasto". '
+          'A pessoa escolhe a cor do plástico entre os tons do cerrado.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TiltPad(tilt: drag),
           const SizedBox(height: CajuiSpacing.xxl),
           GallerySpecimens(children: [for (final card in _cards) _card(card)]),
+          const SizedBox(height: CajuiSpacing.xxl),
+          GallerySpecimens(
+            children: [for (final skin in CajuiCardSkin.values) _skin(skin)],
+          ),
         ],
       ),
     );
@@ -77,4 +82,18 @@ class CardSection extends StatelessWidget {
       ),
     );
   }
+
+  /// Um tom do cerrado, no mesmo cartão, para comparar só a cor.
+  Widget _skin(CajuiCardSkin skin) => GallerySpecimen(
+    state: skin.label,
+    width: 320,
+    child: CajuiCreditCard3D(
+      name: 'Cartão ${skin.label}',
+      detail: 'fecha dia 3 · vence dia 10',
+      usedCents: 120000,
+      limitCents: 350000,
+      tilt: tilt,
+      skin: skin,
+    ),
+  );
 }
