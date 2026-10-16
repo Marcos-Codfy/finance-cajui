@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_actions.dart';
 import 'package:cajui/src/features/debts/presentation/debt_kind_label.dart';
 import 'package:cajui/src/features/debts/presentation/debt_payoff_section.dart';
@@ -32,7 +33,10 @@ class DebtDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final saved = ref.watch(ledgerProvider).value?.debtOf(debtId);
+    final book = ref.watch(ledgerProvider).value;
+    if (book == null) return const LoadingPage(title: 'Dívida');
+    // Apagada: não há mais o que mostrar, e a tela já está fechando.
+    final saved = book.debtOf(debtId);
     if (saved == null) return const SizedBox.shrink();
     final today = ref.watch(todayProvider);
     // A dívida como está hoje: na parcelada, o calendário já venceu parcelas

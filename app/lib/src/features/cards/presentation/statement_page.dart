@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/cards/application/statement_view.dart';
 import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
 import 'package:cajui/src/features/cards/presentation/statement_section.dart';
@@ -32,7 +33,7 @@ class StatementPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final book = ref.watch(ledgerProvider).value;
-    if (book == null) return const SizedBox.shrink();
+    if (book == null) return LoadingPage(title: this.card.name);
     final today = ref.watch(todayProvider);
     final card = _latestIn(book);
     final views = StatementView.current(book, card, today);

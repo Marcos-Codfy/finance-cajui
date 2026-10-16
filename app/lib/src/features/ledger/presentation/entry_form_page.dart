@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -162,7 +163,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     ref.listen(entryFormProvider, _closeWhenSaved);
     final state = ref.watch(entryFormProvider);
     final book = ref.watch(ledgerProvider).value;
-    if (book == null) return const SizedBox.shrink();
+    if (book == null) return const LoadingPage(title: 'Novo lançamento');
     final problem = switch (state) {
       EntryFormEditing(:final problem) => problem,
       EntryFormSaving() || EntryFormSaved() => null,
