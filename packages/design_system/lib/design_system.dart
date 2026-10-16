@@ -90,6 +90,7 @@ export 'src/motion/frame_budget_window.dart';
 export 'src/motion/gravity_tilt.dart';
 export 'src/motion/motion_level.dart';
 export 'src/motion/motion_level_resolver.dart';
+export 'src/motion/tilt_filter.dart';
 export 'src/sound/audioplayers_sound_player.dart';
 export 'src/sound/cajui_sound.dart';
 export 'src/sound/sound_and_haptic_feedback.dart';
