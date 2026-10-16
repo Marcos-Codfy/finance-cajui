@@ -5,6 +5,7 @@ import 'package:server/src/ai/tool_call.dart';
 import 'package:server/src/assistant/assistant_actions.dart';
 import 'package:server/src/assistant/assistant_tool_catalog.dart';
 import 'package:server/src/assistant/debt_paydown.dart';
+import 'package:server/src/assistant/due_bills_listing.dart';
 import 'package:server/src/assistant/entry_listing.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
@@ -56,14 +57,14 @@ final class AssistantTools {
   List<ChatTool> get offered => readOnly
       ? [
           for (final tool in AssistantToolCatalog.tools)
-            if (tool.name == AssistantToolCatalog.listEntries) tool,
+            if (AssistantToolCatalog.readOnly.contains(tool.name)) tool,
         ]
       : AssistantToolCatalog.tools;
 
   /// Atende [call]. Na sessão só de leitura, o que grava é recusado aqui
   /// também, para o caso de o modelo pedir o que não lhe foi oferecido.
   Future<ToolOutcome> run(ToolCall call) async {
-    if (readOnly && call.name != AssistantToolCatalog.listEntries) {
+    if (readOnly && !AssistantToolCatalog.readOnly.contains(call.name)) {
       return ToolOutcome.failed(readOnlyRefusal);
     }
     try {
@@ -85,6 +86,9 @@ final class AssistantTools {
     AssistantToolCatalog.recategorize => _actions.recategorize(call.arguments),
     AssistantToolCatalog.payDownDebt => _paydown.pay(call.arguments),
     AssistantToolCatalog.listEntries => _list(call.arguments),
+    AssistantToolCatalog.dueBills => Future.value(
+      ToolOutcome.done({'contas': DueBillsListing.of(state, clock.today())}),
+    ),
     _ => Future.value(
       ToolOutcome.failed('ferramenta desconhecida: ${call.name}'),
     ),

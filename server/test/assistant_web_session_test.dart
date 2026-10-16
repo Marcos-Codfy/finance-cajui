@@ -87,7 +87,7 @@ void main() {
     expect(entries['entries'], isEmpty);
     expect(
       [for (final tool in client.offered.first) tool.name],
-      [AssistantToolCatalog.listEntries],
+      [AssistantToolCatalog.listEntries, AssistantToolCatalog.dueBills],
     );
     final result = client.conversations[1].lastWhere(
       (message) => message.role == ChatRole.tool,

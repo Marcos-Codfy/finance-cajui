@@ -17,6 +17,14 @@ abstract final class AssistantToolCatalog {
   /// O nome da ferramenta que lista os lançamentos de um mês.
   static const listEntries = 'listar_lancamentos';
 
+  /// O nome da ferramenta que lista as contas do mês ainda não pagas. É
+  /// consulta, e não cadastro fixo: o contexto não cresce com o tamanho
+  /// da planilha (RN-912).
+  static const dueBills = 'contas_a_pagar';
+
+  /// As ferramentas que só leem — as únicas da consulta pela web.
+  static const Set<String> readOnly = {listEntries, dueBills};
+
   /// O nome da ferramenta que registra uma renda.
   static const recordIncome = 'registrar_renda';
 
@@ -96,6 +104,14 @@ abstract final class AssistantToolCatalog {
           },
         },
       },
+    ),
+    ChatTool(
+      name: dueBills,
+      description:
+          'As contas do mês ainda não pagas: nome, categoria_id, valor, '
+          'quando vence e se já venceu. Use para "o que falta pagar?" e para '
+          'achar a categoria de uma conta antes de pagá-la.',
+      parameters: {'type': 'object', 'properties': <String, Object?>{}},
     ),
     ChatTool(
       name: recordIncome,
