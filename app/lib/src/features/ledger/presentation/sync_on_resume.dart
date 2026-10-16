@@ -1,7 +1,7 @@
-import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/live_sync.dart';
 import 'package:cajui/src/features/ledger/application/server_head.dart';
+import 'package:cajui/src/features/ledger/application/sync_now.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,14 +57,8 @@ class _SyncOnResumeState extends ConsumerState<SyncOnResume> {
   /// No celular, a sincronização de sempre, na mesma fila da que acontece
   /// depois de cada lançamento. Na web, o livro relido no lugar.
   Future<bool> _refresh() async {
-    // No arranque o livro ainda está abrindo quando o app resume. Esperar
-    // por ele é o que faz a subida acontecer também na primeira abertura
-    // do dia — que é justamente quando há mais coisa esperando.
-    final book = await ref.read(ledgerProvider.future);
-    if (!mounted) return false;
-    final ledger = ref.read(ledgerProvider.notifier);
-    if (!_onPhone) return await ledger.reload();
-    return await ledger.quietSync.request(book);
+    final done = await ref.read(syncNowProvider)();
+    return mounted && done;
   }
 
   @override

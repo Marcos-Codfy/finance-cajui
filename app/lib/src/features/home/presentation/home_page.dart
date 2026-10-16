@@ -10,6 +10,7 @@ import 'package:cajui/src/features/home/presentation/home_state.dart';
 import 'package:cajui/src/features/home/presentation/month_celebration.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
+import 'package:cajui/src/features/ledger/application/sync_now.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
@@ -46,7 +47,11 @@ class HomePage extends ConsumerWidget {
         trailing: _tools(context, readOnly: true),
         children: const [WebEmptyState()],
       ),
-      HomeReady(:final view) => _ready(context, ref, state, view),
+      // Do topo, puxar para baixo força a sincronização (16/10/2026).
+      HomeReady(:final view) => CajuiPullToRefresh(
+        onRefresh: () => ref.read(syncNowProvider)(),
+        child: _ready(context, ref, state, view),
+      ),
     };
   }
 
