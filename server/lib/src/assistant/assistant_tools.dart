@@ -4,6 +4,7 @@ import 'package:server/src/ai/chat_tool.dart';
 import 'package:server/src/ai/tool_call.dart';
 import 'package:server/src/assistant/assistant_actions.dart';
 import 'package:server/src/assistant/assistant_tool_catalog.dart';
+import 'package:server/src/assistant/debt_paydown.dart';
 import 'package:server/src/assistant/entry_listing.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
@@ -26,6 +27,13 @@ final class AssistantTools {
     required this.clock,
     this.readOnly = false,
   }) : _actions = AssistantActions(state: state, store: store, clock: clock);
+
+  late final DebtPaydown _paydown = DebtPaydown(
+    state: state,
+    store: store,
+    clock: clock,
+    actions: _actions,
+  );
 
   /// A projeção do livro.
   final LedgerState state;
@@ -68,13 +76,14 @@ final class AssistantTools {
   /// O motivo, nas palavras que o modelo lê, de não gravar nada na consulta.
   static const readOnlyRefusal =
       'esta conversa vem da consulta pela web, que só lê: lançar, cancelar, '
-      'registrar renda e mudar categoria se fazem no celular';
+      'registrar renda, mudar categoria e abater dívida se fazem no celular';
 
   Future<ToolOutcome> _dispatch(ToolCall call) => switch (call.name) {
     AssistantToolCatalog.recordExpense => _actions.record(call.arguments),
     AssistantToolCatalog.cancelEntry => _actions.cancel(call.arguments),
     AssistantToolCatalog.recordIncome => _actions.income(call.arguments),
     AssistantToolCatalog.recategorize => _actions.recategorize(call.arguments),
+    AssistantToolCatalog.payDownDebt => _paydown.pay(call.arguments),
     AssistantToolCatalog.listEntries => _list(call.arguments),
     _ => Future.value(
       ToolOutcome.failed('ferramenta desconhecida: ${call.name}'),
