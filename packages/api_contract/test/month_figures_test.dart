@@ -5,18 +5,18 @@ import 'package:test/test.dart';
 MonthFigures _sample({Money? result}) => MonthFigures(
   period: '2026-10',
   hasPlan: true,
-  cashIncome: Money.fromCents(300000),
-  voucher: Money.fromCents(40000),
-  fixedBills: Money.fromCents(150000),
-  subscriptions: Money.fromCents(5000),
-  dayToDay: Money.fromCents(160000),
+  cashIncome: const Money.fromCents(300000),
+  voucher: const Money.fromCents(40000),
+  fixedBills: const Money.fromCents(150000),
+  subscriptions: const Money.fromCents(5000),
+  dayToDay: const Money.fromCents(160000),
   debtInstallments: Money.zero,
   tithe: Money.zero,
-  totalOut: Money.fromCents(315000),
-  voucherCovered: Money.fromCents(40000),
-  outOfPocket: Money.fromCents(275000),
-  result: result ?? Money.fromCents(25000),
-  owed: Money.fromCents(80000),
+  totalOut: const Money.fromCents(315000),
+  voucherCovered: const Money.fromCents(40000),
+  outOfPocket: const Money.fromCents(275000),
+  result: result ?? const Money.fromCents(25000),
+  owed: const Money.fromCents(80000),
 );
 
 void main() {
@@ -45,7 +45,7 @@ void main() {
     );
 
     test('mês que não fecha: a falta é o contrário da sobra', () {
-      final short = _sample(result: Money.fromCents(-1500));
+      final short = _sample(result: const Money.fromCents(-1500));
 
       expect(short.closes, isFalse);
       expect(short.shortfall.cents, 1500);
