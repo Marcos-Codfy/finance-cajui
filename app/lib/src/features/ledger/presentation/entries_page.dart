@@ -18,6 +18,7 @@ import 'package:cajui/src/features/receipts/application/capture_service.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/pending_captures_card.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,10 +29,26 @@ class EntriesPage extends ConsumerWidget {
   /// Cria a tela de lançamentos.
   const new({super.key});
 
-  /// Abre a tela, a partir do Início.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const EntriesPage()));
+  /// Abre a tela, a partir do Início. Com [categoryId] e [month], já abre
+  /// filtrada — é o que o anel do Meu mês faz ao tocar uma categoria.
+  static Future<void> open(
+    BuildContext context, {
+    String? categoryId,
+    BudgetMonth? month,
+  }) {
+    final container = ProviderScope.containerOf(context);
+    final shown = Navigator.of(context)
+        .push<void>(CajuiPageRoute(builder: (_) => const EntriesPage()));
+    if (categoryId != null || month != null) {
+      // Depois do primeiro quadro a tela já existe, e o filtro dela também.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final filters = container.read(entriesViewModelProvider.notifier);
+        if (month != null) filters.showMonth(month);
+        if (categoryId != null) filters.filterCategory(categoryId);
+      });
+    }
+    return shown;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

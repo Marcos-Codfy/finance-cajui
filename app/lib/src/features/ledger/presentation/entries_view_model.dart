@@ -1,5 +1,6 @@
 import 'package:cajui/src/features/ledger/application/entry_filter.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// O ViewModel da tela de lançamentos (ADR-002): guarda os filtros que a
@@ -33,6 +34,9 @@ class EntriesViewModel extends Notifier<EntryFilter> {
 
   /// Mostra só a categoria [id]; `null` volta a todas.
   void filterCategory(String? id) => state = state.withCategory(id);
+
+  /// Mostra o mês [month] (o anel do Meu mês abre no mês dele).
+  void showMonth(BudgetMonth month) => state = state.withMonth(month);
 
   /// Mostra só o que foi pago por [id]; `null` volta a todas.
   void filterPaymentMethod(String? id) => state = state.withPaymentMethod(id);
