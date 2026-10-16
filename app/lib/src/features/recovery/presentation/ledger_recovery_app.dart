@@ -99,13 +99,30 @@ class _LedgerRecoveryAppState extends State<LedgerRecoveryApp> {
                 ),
               ),
               if (_busy)
-                Center(child: CajuiLoadingDots(color: theme.colors.text.muted)),
-              ErrorNotice(error: _presented(), onAction: _act),
+                _progress(theme)
+              else
+                ErrorNotice(error: _presented(), onAction: _act),
             ],
           ),
         ),
       );
     },
+  );
+
+  /// Depois do toque, o que está acontecendo — sem isso a tela parecia
+  /// parada enquanto o app guardava o registro e descia tudo do servidor.
+  Widget _progress(CajuiThemeData theme) => Column(
+    spacing: CajuiSpacing.md,
+    children: [
+      CajuiLoadingDots(color: theme.colors.action.primary),
+      Text(
+        _code == ErrorCode.data03
+            ? 'Guardando o registro antigo e trazendo seus dados do servidor…'
+            : 'Abrindo de novo…',
+        textAlign: TextAlign.center,
+        style: theme.typography.body.copyWith(color: theme.colors.text.muted),
+      ),
+    ],
   );
 
   /// O texto do catálogo, com a fila vazia: na abertura nada ficou na fila.

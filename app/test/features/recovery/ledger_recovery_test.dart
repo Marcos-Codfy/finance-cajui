@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -92,6 +94,28 @@ void main() {
 
       expect(startedOver, 1);
       expect(retried, 0);
+    });
+
+    testWidgets('depois do toque, a tela diz o que está fazendo', (
+      tester,
+    ) async {
+      final done = Completer<void>();
+      await tester.pumpWidget(
+        LedgerRecoveryApp(
+          error: const LogIntegrityException(seq: 2, reason: 'seq repetido'),
+          onRetry: () async {},
+          onStartOver: () => done.future,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Recomeçar pelo servidor'));
+      await tester.pump();
+
+      expect(find.textContaining('trazendo seus dados do servidor'), findsOne);
+      expect(find.text('Recomeçar pelo servidor'), findsNothing);
+      done.complete();
+      await tester.pump();
     });
 
     testWidgets('outra falha oferece tentar abrir de novo', (tester) async {
