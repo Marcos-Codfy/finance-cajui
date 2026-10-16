@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/features/assistant/application/assistant_gateway.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 
@@ -15,6 +16,9 @@ class ScriptedAssistant implements AssistantGateway {
   /// As perguntas recebidas.
   final List<String> asked = [];
 
+  /// Os números do mês que vieram com cada pergunta.
+  final List<MonthFigures?> months = [];
+
   Completer<void>? _gate;
 
   /// Faz a próxima resposta esperar até [release] ser chamado.
@@ -24,8 +28,9 @@ class ScriptedAssistant implements AssistantGateway {
   void release() => _gate?.complete();
 
   @override
-  Future<AssistantReply> ask(String message) async {
+  Future<AssistantReply> ask(String message, {MonthFigures? month}) async {
     asked.add(message);
+    months.add(month);
     await _gate?.future;
     _gate = null;
     return replies[asked.length <= replies.length
