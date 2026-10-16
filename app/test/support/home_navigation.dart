@@ -15,6 +15,13 @@ Future<void> openFromHome(WidgetTester tester, String label) async {
   await backToTabs(tester);
   await tester.tap(find.bySemanticsLabel('Início'));
   await settleAfterTap(tester);
+  // As portas de menos uso ficam guardadas no "Mais" do Início.
+  if (find.bySemanticsLabel(label).evaluate().isEmpty) {
+    final more = find.bySemanticsLabel('Mais');
+    await tester.ensureVisible(more.first);
+    await tester.tap(more.first);
+    await settleAfterTap(tester);
+  }
   final target = find.bySemanticsLabel(label).first;
   await tester.ensureVisible(target);
   await tester.pump();
