@@ -1,14 +1,14 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
-/// Uma tela para escolher um item de uma lista: categoria, forma de
-/// pagamento, dia.
+/// Escolher um item de uma lista: categoria, forma de pagamento, dia.
 ///
-/// É tela cheia, e não menu suspenso: em celular, lista comprida dentro de
-/// um balão é difícil de rolar e de ler com fonte ampliada. Fecha devolvendo
-/// o item escolhido; voltar sem escolher devolve `null`.
+/// Abre num painel que sobe de baixo (`CajuiSheet`), e não em menu
+/// suspenso: lista comprida dentro de um balão é difícil de rolar e de ler
+/// com fonte ampliada, e o painel rola com até quatro quintos da tela. Fecha
+/// devolvendo o item escolhido; tocar fora, ou voltar, devolve `null`.
 class OptionPickerPage<T> extends StatelessWidget {
-  /// Cria a tela [title] com as opções [options].
+  /// Cria a escolha [title] com as opções [options].
   const new({
     required this.title,
     required this.options,
@@ -37,8 +37,10 @@ class OptionPickerPage<T> extends StatelessWidget {
     required String Function(T option) labelOf,
     T? selected,
   }) {
+    // Painel que sobe de baixo, e não tela inteira (17/10/2026): a escolha
+    // é curta, e o valor que a pessoa digitou continua à vista atrás.
     return Navigator.of(context).push<T>(
-      CajuiPageRoute(
+      CajuiSheetRoute(
         builder: (_) => OptionPickerPage<T>(
           title: title,
           options: options,
@@ -52,9 +54,8 @@ class OptionPickerPage<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final navigator = Navigator.of(context);
-    return CajuiScreen(
+    return CajuiSheet(
       title: title,
-      onBack: navigator.pop,
       children: [
         CajuiOptionList<T>(
           options: options,
