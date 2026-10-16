@@ -2,6 +2,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/error_text.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
+import 'package:cajui/src/features/assistant/application/answer_link.dart';
 import 'package:cajui/src/features/assistant/application/assistant_action_done.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:design_system/design_system.dart';
@@ -19,6 +20,7 @@ class AssistantReplyView extends StatefulWidget {
     required this.onUndo,
     this.canUndo = true,
     this.onCapture,
+    this.onLink,
     super.key,
   });
 
@@ -39,6 +41,10 @@ class AssistantReplyView extends StatefulWidget {
   /// IA fora do ar, a frase abre a conferência, que funciona no aparelho.
   /// `null` quando a frase não conta um gasto.
   final VoidCallback? onCapture;
+
+  /// Abre o lugar para onde a resposta aponta (`AnswerLink`); sem ele, a
+  /// resposta não ganha atalho.
+  final ValueChanged<AnswerLink>? onLink;
 
   /// A frase do assistente para [code]. O catálogo traz, em alguns códigos,
   /// uma frase por tela; aqui vale a do assistente, e só a saída que faz
@@ -104,6 +110,7 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
         CajuiChatBubble(text, streamed: true),
         for (final action in actions)
           if (widget.canUndo && action.isUndoable) _undoRow(context, action),
+        if (actions.isEmpty) ?_link(text),
       ],
     ),
     AssistantFailed(:final code, :final retryAfterSeconds) => Padding(
@@ -128,6 +135,24 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
       retryAfterSeconds: retryAfterSeconds,
     );
     return _used ? ErrorText(text.message) : text;
+  }
+
+  /// O atalho para conferir o número na tela dele.
+  Widget? _link(String text) {
+    final link = AnswerLink.of(text);
+    final open = widget.onLink;
+    if (link == null || open == null) return null;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: CajuiButton(
+        label: switch (link) {
+          AnswerLink.month => 'Ver no Meu mês',
+          AnswerLink.debts => 'Ver as dívidas',
+        },
+        variant: CajuiButtonVariant.ghost,
+        onPressed: () => open(link),
+      ),
+    );
   }
 
   /// "Lançar pela conferência", quando a frase é um gasto dito.
