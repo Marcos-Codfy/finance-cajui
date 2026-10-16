@@ -44,4 +44,10 @@ abstract final class DateLabels {
   /// "setembro de 2026"
   static String month(BudgetMonth month) =>
       '${_months[month.month - 1]} de ${month.year}';
+
+  /// A hora de [moment] no fuso da casa, como se fala: "9h05", "14h32".
+  static String time(DateTime moment) {
+    final local = moment.toUtc().add(BusinessTime.offset);
+    return '${local.hour}h${local.minute.toString().padLeft(2, '0')}';
+  }
 }

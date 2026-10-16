@@ -10,6 +10,7 @@ import 'package:cajui/src/features/home/presentation/home_links.dart';
 import 'package:cajui/src/features/home/presentation/home_setup_card.dart';
 import 'package:cajui/src/features/home/presentation/home_state.dart';
 import 'package:cajui/src/features/home/presentation/month_celebration.dart';
+import 'package:cajui/src/features/home/presentation/sync_badge.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
 import 'package:cajui/src/features/ledger/application/sync_now.dart';
@@ -86,6 +87,7 @@ class HomePage extends ConsumerWidget {
       cinematic: true,
       replayKey: view.budget.month,
       children: [
+        if (!state.readOnly) const SyncBadge(),
         ..._notice(context, ref, state),
         _cards(ref, view, visible: visible),
         const SizedBox(height: CajuiSpacing.xl),
