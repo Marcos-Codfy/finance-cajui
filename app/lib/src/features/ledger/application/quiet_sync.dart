@@ -5,6 +5,8 @@ import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/application/ledger_pull.dart';
 import 'package:cajui/src/features/ledger/application/ledger_sync.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/sync_status_controller.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A subida que acontece sozinha, depois de cada lançamento (RN-781).
@@ -24,7 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// lançar. O que não subiu sobe na próxima.
 final class QuietSync {
   /// Cria a subida silenciosa sobre [_sync].
-  new(this._sync);
+  new(this._sync, {this._status, this._clock});
 
   /// A subida e a descida das portas que a raiz do app ligou, gravando o
   /// que desce por [absorb] — o do controlador do livro, que confere de
@@ -33,6 +35,8 @@ final class QuietSync {
     Ref ref, {
     required Future<bool> Function(LedgerEvent event) absorb,
   }) => QuietSync(
+    status: ref.read(syncStatusProvider.notifier),
+    clock: ref.read(clockProvider),
     LedgerSync(
       ref.read(ledgerUplinkProvider),
       pull: LedgerPull(
@@ -44,6 +48,8 @@ final class QuietSync {
   );
 
   final LedgerSync _sync;
+  final SyncStatusController? _status;
+  final Clock? _clock;
   Future<void>? _running;
   LedgerBook? _queued;
   SyncOutcome? _last;
@@ -84,14 +90,20 @@ final class QuietSync {
   }
 
   Future<void> _run(LedgerBook book) async {
+    var started = false;
     try {
       _last = null;
       if (!await _sync.uplink.canSendQuietly()) return;
+      _status?.started();
+      started = true;
       _last = await _sync.run(book);
     } on Object {
       // Sem rede, sem servidor, sessão vencida no meio: nada disso é assunto
-      // de quem acabou de lançar.
+      // de quem acabou de lançar — só o selo do Início muda de tom.
     }
+    final (clock, last) = (_clock, _last);
+    if (!started || clock == null) return;
+    _status?.finished(ok: last != null && last.error == null, at: clock.now());
   }
 
   void _afterRun() {
