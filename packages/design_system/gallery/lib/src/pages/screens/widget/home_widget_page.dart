@@ -19,7 +19,7 @@ class HomeWidgetPage extends StatelessWidget {
   static const lead =
       'A sobra do mês na tela inicial, num painel de vidro sobre a aurora '
       'do Cerrado à noite. Tocar no número abre o Cajui de dentro do '
-      'widget.';
+      'widget; o "+" abre direto o novo lançamento.';
 
   @override
   Widget build(BuildContext context) {

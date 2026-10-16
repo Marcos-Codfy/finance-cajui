@@ -2,7 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
 /// O widget da tela inicial, como o Android o desenha: o vidro sobre a
-/// aurora, as duas esferas de luz, o número e os dois atalhos.
+/// aurora, as duas esferas de luz, o número e os três atalhos.
 ///
 /// É a réplica do `home_widget.xml`, feita só com os componentes do design
 /// system: a aurora (`CajuiAurora`), o vidro (`CajuiGlassPanel`) e as
@@ -43,7 +43,9 @@ class GlassWidget extends StatelessWidget {
               child: CajuiOrb(size: 22, tone: CajuiOrbTone.vereda),
             ),
             Positioned.fill(child: _glass(context)),
-            const Positioned(top: 2, right: 64, child: CajuiOrb()),
+            // No canto de cima do vidro, do lado dos atalhos: entre o
+            // número e os botões ela cobria o fim do rótulo.
+            const Positioned(top: 2, right: 4, child: CajuiOrb()),
           ],
         ),
       ),
@@ -51,15 +53,19 @@ class GlassWidget extends StatelessWidget {
   }
 
   /// O vidro, a uma margem da aurora, com o número e os atalhos.
+  /// O conteúdo vem centrado na altura, como o `center_vertical` do layout
+  /// do Android: sem isso, a réplica o colava no alto do vidro.
   Widget _glass(BuildContext context) => Padding(
     padding: const EdgeInsets.all(CajuiSpacing.sm),
     child: CajuiGlassPanel(
       padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
-      child: Row(
-        children: [
-          Expanded(child: _number(context)),
-          _shortcuts(context),
-        ],
+      child: Center(
+        child: Row(
+          children: [
+            Expanded(child: _number(context)),
+            _shortcuts(context),
+          ],
+        ),
       ),
     ),
   );
@@ -93,6 +99,8 @@ class GlassWidget extends StatelessWidget {
     );
   }
 
+  /// Na ordem do rodapé de Lançamentos: câmera e galeria lado a lado, e o
+  /// lançar à mão embaixo, na largura das duas.
   Widget _shortcuts(BuildContext context) {
     final light = CajuiTheme.of(context).colors.brand.sheen;
     Widget button(CajuiIconData icon, String name) => Semantics(
@@ -110,10 +118,38 @@ class GlassWidget extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        button(CajuiIconData.camera, 'Fotografar comprovante'),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            button(CajuiIconData.camera, 'Fotografar comprovante'),
+            const SizedBox(width: CajuiSpacing.sm),
+            button(CajuiIconData.image, 'Escolher da galeria'),
+          ],
+        ),
         const SizedBox(height: CajuiSpacing.sm),
-        button(CajuiIconData.image, 'Escolher da galeria'),
+        _newEntry(context),
       ],
+    );
+  }
+
+  /// O "+": a ação principal, cheia na cor de ação, como o "Lançar" do app,
+  /// com a borda de luz dos botões de vidro.
+  Widget _newEntry(BuildContext context) {
+    final colors = CajuiTheme.of(context).colors;
+    return Semantics(
+      button: true,
+      label: 'Novo lançamento',
+      child: Container(
+        width: 96,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: colors.action.primary,
+          borderRadius: const BorderRadius.all(CajuiRadius.pill),
+          border: Border.all(color: colors.brand.sheen.withValues(alpha: 0.45)),
+        ),
+        child: CajuiIcon(CajuiIconData.plus, color: colors.text.onAction),
+      ),
     );
   }
 }
