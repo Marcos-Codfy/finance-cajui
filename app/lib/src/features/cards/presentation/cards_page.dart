@@ -71,7 +71,7 @@ class CardsPage extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ?_plastic(card, usageOf(card), tilt),
+            _plastic(context, card, usageOf(card), tilt),
             _row(context, card, usageOf(card)),
           ],
         ),
@@ -121,13 +121,22 @@ class CardsPage extends ConsumerWidget {
 
   /// O cartão em 3D, que inclina com o celular e vira com um toque para
   /// mostrar o limite (escolha 2 do dono). Só com limite informado: sem ele
-  /// não há o que mostrar no verso.
-  static Widget? _plastic(
+  /// não há o que mostrar no verso — e, no lugar, o convite para informar,
+  /// senão ninguém descobre que o cartão existe (16/10/2026).
+  static Widget _plastic(
+    BuildContext context,
     CreditCard card,
     CardMonthUsage? usage,
     CajuiTilt? tilt,
   ) {
-    if (usage == null || !usage.limit.isPositive) return null;
+    if (usage == null || !usage.limit.isPositive) {
+      return CajuiButton(
+        label: 'Informe o limite do cartão',
+        icon: CajuiIconData.card,
+        variant: CajuiButtonVariant.ghost,
+        onPressed: () => CardFormPage.open(context, card: card),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: CajuiSpacing.sm),
       child: CajuiCreditCard3D(
