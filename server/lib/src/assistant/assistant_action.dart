@@ -13,6 +13,7 @@ final class AssistantAction {
     required this.id,
     required this.label,
     required this.amountCents,
+    this.debtId,
   });
 
   /// Uma despesa lançada.
@@ -41,7 +42,22 @@ final class AssistantAction {
     required int amountCents,
   }) : this._(kind: 'income', id: id, label: label, amountCents: amountCents);
 
-  /// `recorded`, `cancelled` ou `income`.
+  /// Um abatimento de dívida: o lançamento [id], que pagou a dívida
+  /// [debtId]. Desfazer cancela o lançamento e devolve o saldo (BL-117).
+  const new paidDown({
+    required String id,
+    required String label,
+    required int amountCents,
+    required String debtId,
+  }) : this._(
+         kind: 'paidDown',
+         id: id,
+         label: label,
+         amountCents: amountCents,
+         debtId: debtId,
+       );
+
+  /// `recorded`, `cancelled`, `income` ou `paidDown`.
   final String kind;
 
   /// O identificador do lançamento ou do recebimento.
@@ -53,11 +69,15 @@ final class AssistantAction {
   /// O valor, em centavos.
   final int amountCents;
 
+  /// A dívida abatida, só no `paidDown`.
+  final String? debtId;
+
   /// A ação como vai para o app.
   Map<String, Object?> toJson() => {
     'kind': kind,
     'id': id,
     'label': label,
     'amountCents': amountCents,
+    'debtId': ?debtId,
   };
 }

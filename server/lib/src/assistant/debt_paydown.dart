@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
+import 'package:server/src/assistant/assistant_action.dart';
 import 'package:server/src/assistant/assistant_actions.dart';
 import 'package:server/src/assistant/server_finances.dart';
 import 'package:server/src/assistant/tool_args.dart';
@@ -68,8 +69,20 @@ final class DebtPaydown {
       ...recorded.result,
       'divida': debt.creditor,
       'ainda_deve_centavos': left.cents,
-    }, action: recorded.action);
+    }, action: _paidDown(recorded.action, debt));
   }
+
+  /// A ação do lançamento, agora dizendo que ele abateu [debt]: o Desfazer
+  /// do celular devolve o saldo junto (BL-117).
+  static AssistantAction? _paidDown(AssistantAction? recorded, Debt debt) =>
+      recorded == null
+      ? null
+      : AssistantAction.paidDown(
+          id: recorded.id,
+          label: recorded.label,
+          amountCents: recorded.amountCents,
+          debtId: debt.id,
+        );
 
   /// A dívida de [args], na versão que vale hoje. Parcela no cartão não se
   /// abate aqui: ela é cobrada na fatura, e lançar de novo contaria duas
