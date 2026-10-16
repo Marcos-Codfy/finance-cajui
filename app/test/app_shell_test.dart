@@ -54,6 +54,11 @@ void main() {
     await settleAfterTap(tester);
 
     expect(_screen('Setembro'), findsOneWidget);
+    // As de menos uso moram no "Mais" (16/10/2026).
+    expect(find.text('Minhas contas'), findsNothing);
+    await tester.ensureVisible(find.bySemanticsLabel('Mais'));
+    await tester.tap(find.bySemanticsLabel('Mais'));
+    await settleAfterTap(tester);
     for (final door in [
       'Meu mês',
       'Lançamentos',
