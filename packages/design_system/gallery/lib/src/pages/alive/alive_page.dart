@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/alive/card_section.dart';
 import 'package:gallery/src/pages/alive/chart_section.dart';
+import 'package:gallery/src/pages/alive/device_tilt.dart';
 import 'package:gallery/src/pages/alive/glow_section.dart';
 import 'package:gallery/src/pages/alive/numbers_section.dart';
 import 'package:gallery/src/pages/alive/seed_leaf_section.dart';
@@ -20,12 +21,39 @@ class AlivePage extends StatefulWidget {
 }
 
 class _AlivePageState extends State<AlivePage> {
-  /// A inclinação de mentira do cartão: no app, é o acelerômetro que
-  /// escreve aqui.
+  /// O que o arrasto escreve.
+  final ValueNotifier<Offset> _drag = ValueNotifier(Offset.zero);
+
+  /// O que move o cartão: o arrasto somado ao celular de quem visita.
   final ValueNotifier<Offset> _tilt = ValueNotifier(Offset.zero);
+
+  late final DeviceTilt _device = DeviceTilt(_heard);
+  Offset _phone = Offset.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _drag.addListener(_mix);
+    _device.start();
+  }
+
+  void _heard(Offset phone) {
+    _phone = phone;
+    _mix();
+  }
+
+  void _mix() {
+    final sum = _drag.value + _phone;
+    _tilt.value = Offset(
+      sum.dx.clamp(-1, 1).toDouble(),
+      sum.dy.clamp(-1, 1).toDouble(),
+    );
+  }
 
   @override
   void dispose() {
+    _device.stop();
+    _drag.dispose();
     _tilt.dispose();
     super.dispose();
   }
@@ -39,7 +67,7 @@ class _AlivePageState extends State<AlivePage> {
           'semente que cai. Tudo respeita o movimento reduzido do sistema, '
           'assenta sozinho e nunca fica no caminho de quem usa.',
       sections: [
-        CardSection(tilt: _tilt),
+        CardSection(tilt: _tilt, drag: _drag),
         const NumbersSection(),
         const SeedLeafSection(),
         const GlowSection(),

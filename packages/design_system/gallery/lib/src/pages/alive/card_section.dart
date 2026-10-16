@@ -7,11 +7,14 @@ import 'package:gallery/src/shell/gallery_specimens.dart';
 
 /// O cartão em 3D, nos três degraus do limite.
 class CardSection extends StatelessWidget {
-  /// Cria a seção, ligada à inclinação de mentira [tilt].
-  const new({required this.tilt, super.key});
+  /// Cria a seção: o cartão segue [tilt]; o arrasto escreve em [drag].
+  const new({required this.tilt, required this.drag, super.key});
 
-  /// A inclinação de mentira, escrita pelo celular de arrasto (`TiltPad`).
-  final ValueNotifier<Offset> tilt;
+  /// A inclinação que move o cartão: o arrasto somado ao celular.
+  final CajuiTilt tilt;
+
+  /// O que o celular de arrasto (`TiltPad`) escreve.
+  final ValueNotifier<Offset> drag;
 
   /// Cartões fictícios, com nomes de árvore do Cerrado: limite de
   /// R$ 2.000,00 a R$ 3.500,00, em cada degrau do medidor.
@@ -52,7 +55,7 @@ class CardSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TiltPad(tilt: tilt),
+          TiltPad(tilt: drag),
           const SizedBox(height: CajuiSpacing.xxl),
           GallerySpecimens(children: [for (final card in _cards) _card(card)]),
         ],
