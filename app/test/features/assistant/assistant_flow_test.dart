@@ -104,6 +104,23 @@ void main() {
     expect(sent.toJson(), shown.toJson());
   });
 
+  testWidgets('resposta com a sobra ganha o atalho para conferir no Meu mês', (
+    tester,
+  ) async {
+    final assistant = ScriptedAssistant(const [
+      AssistantAnswered(r'Sobram R$ 920,00 neste mês.'),
+    ]);
+    await _open(tester, assistant: assistant, events: samplePlanEvents);
+
+    await tester.tap(find.widgetWithText(CajuiChip, 'Quanto sobra neste mês?'));
+    await _settle(tester);
+    await tester.tap(find.text('Ver no Meu mês'));
+    await _settle(tester);
+
+    expect(find.bySemanticsLabel('Voltar'), findsWidgets);
+    expect(find.text('Ver no Meu mês'), findsNothing);
+  });
+
   testWidgets('RN-946 · a tela espera, e a resposta só aparece inteira', (
     tester,
   ) async {
