@@ -26,9 +26,9 @@ final class _Reading {
     _resume();
   }
 
-  /// Quanto cada amostra puxa o valor: o sensor treme, e a água não pode
-  /// tremer junto.
-  static const double _smoothing = 0.15;
+  /// Ganho e pose de quem segura: sem isso o cartão quase não se mexia
+  /// (15/10/2026).
+  final TiltFilter _filter = TiltFilter();
 
   final ValueNotifier<Offset> tilt = ValueNotifier(Offset.zero);
   StreamSubscription<AccelerometerEvent>? _subscription;
@@ -46,7 +46,7 @@ final class _Reading {
   }
 
   void _heard(AccelerometerEvent event) {
-    tilt.value = Offset.lerp(tilt.value, _offsetOf(event), _smoothing)!;
+    tilt.value = _filter.next(_offsetOf(event));
   }
 
   void close() {
