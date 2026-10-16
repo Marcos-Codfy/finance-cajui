@@ -1,6 +1,8 @@
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/cards/application/statement_view.dart';
+import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
 import 'package:cajui/src/features/cards/presentation/statement_section.dart';
+import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
@@ -32,6 +34,7 @@ class StatementPage extends ConsumerWidget {
     final book = ref.watch(ledgerProvider).value;
     if (book == null) return const SizedBox.shrink();
     final today = ref.watch(todayProvider);
+    final card = _latestIn(book);
     final views = StatementView.current(book, card, today);
     final nothingYet = views.every((view) => view.statement.total.isZero);
     final limit = StatementView.limitOf(book, card, today);
@@ -53,9 +56,25 @@ class StatementPage extends ConsumerWidget {
               title: _titleOf(view, today),
               onSettle: (amount) => _settle(ref, view, amount),
             ),
+        ..._edit(context, card),
       ],
     );
   }
+
+  /// A versão mais nova do cartão: alterado pela tela de edição, o nome e o
+  /// limite mudam aqui sem precisar voltar e abrir a fatura de novo.
+  CreditCard _latestIn(LedgerBook book) =>
+      book.cards.firstWhere((each) => each.id == card.id, orElse: () => card);
+
+  /// O caminho para alterar o cartão — o limite muda com o banco.
+  static List<Widget> _edit(BuildContext context, CreditCard card) => [
+    const SizedBox(height: CajuiSpacing.lg),
+    CajuiButton(
+      label: 'Alterar cartão',
+      variant: CajuiButtonVariant.ghost,
+      onPressed: () => CardFormPage.open(context, card: card),
+    ),
+  ];
 
   /// O limite livre, com o medidor do que está tomado (RN-305). Passar do
   /// limite não vira alarme: o medidor enche, e a frase diz quanto passou.

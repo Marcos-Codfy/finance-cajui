@@ -7,18 +7,23 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// O cadastro de um cartão de crédito (RN-302): nome, dia de fechamento, dia
-/// de vencimento e, se a pessoa quiser, o limite.
+/// de vencimento e, se a pessoa quiser, o limite. Aberta com [card], é a
+/// mesma tela para alterar um cartão que já existe — o limite muda com o
+/// banco, e o dono pediu para poder acompanhar.
 ///
 /// **Não há campo de número de cartão, e não vai haver.** O app calcula a
 /// fatura pelas compras lançadas; o número não serve para nada disso.
 class CardFormPage extends ConsumerStatefulWidget {
   /// Cria a tela de cadastro.
-  const new({super.key});
+  const new({this.card, super.key});
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) {
+  /// O cartão que está sendo alterado; nulo num cadastro novo.
+  final CreditCard? card;
+
+  /// Abre a tela; com [card], para alterá-lo.
+  static Future<void> open(BuildContext context, {CreditCard? card}) {
     return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => const CardFormPage()));
+        .push<void>(CajuiPageRoute(builder: (_) => CardFormPage(card: card)));
   }
 
   @override
@@ -32,6 +37,17 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
   int _limitCents = 0;
   String? _dayError;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final card = widget.card;
+    if (card == null) return;
+    _name.text = card.name;
+    _closingDay = card.closingDay;
+    _dueDay = card.dueDay;
+    _limitCents = card.creditLimit?.cents ?? 0;
+  }
 
   @override
   void dispose() {
@@ -63,6 +79,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     final result = await ref
         .read(ledgerProvider.notifier)
         .defineCard(
+          id: widget.card?.id,
           name: _name.text,
           closingDay: closingDay,
           dueDay: dueDay,
@@ -87,7 +104,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     final ready =
         _name.text.trim().isNotEmpty && closing != null && due != null;
     return CajuiScreen(
-      title: 'Novo cartão',
+      title: widget.card == null ? 'Novo cartão' : 'Alterar cartão',
       onBack: Navigator.of(context).pop,
       footer: CajuiButton(
         label: 'Guardar',
@@ -104,14 +121,17 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
         ),
         ..._days(),
         const SizedBox(height: CajuiSpacing.lg),
-        CajuiAmountField(
-          label: 'Limite do cartão (opcional)',
-          helper: 'Serve só para mostrar quanto do limite está tomado',
-          onChanged: (cents) => _limitCents = cents,
-        ),
+        _limitField,
       ],
     );
   }
+
+  Widget get _limitField => CajuiAmountField(
+    label: 'Limite do cartão (opcional)',
+    helper: 'Serve só para mostrar quanto do limite está tomado',
+    initialCents: _limitCents,
+    onChanged: (cents) => _limitCents = cents,
+  );
 
   List<Widget> _days() {
     const gap = SizedBox(height: CajuiSpacing.lg);
