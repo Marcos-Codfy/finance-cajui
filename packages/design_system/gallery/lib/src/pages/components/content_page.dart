@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/components/doors_sections.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
 import 'package:gallery/src/shell/gallery_specimen.dart';
@@ -31,6 +32,7 @@ class ContentPage extends StatelessWidget {
         _rows(),
         _meters(context),
         _confidence(),
+        ...DoorsSections.all,
       ],
     );
   }
