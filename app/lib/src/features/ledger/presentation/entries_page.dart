@@ -5,13 +5,13 @@ import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/presentation/entries_day_list.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_empty.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_filter_chips.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_search_field.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_row.dart';
 import 'package:cajui/src/features/ledger/presentation/month_spending_card.dart';
 import 'package:cajui/src/features/ledger/presentation/month_stepper.dart';
 import 'package:cajui/src/features/receipts/application/capture_service.dart';
@@ -193,13 +193,10 @@ class EntriesPage extends ConsumerWidget {
       const SizedBox(height: CajuiSpacing.xl),
       _filters(state),
       const SizedBox(height: CajuiSpacing.xl),
-      if (state.entries.isEmpty) EntriesEmpty(state: state),
-      for (final (index, entry) in state.entries.indexed)
-        CajuiEntrance(
-          key: ValueKey(entry.id),
-          index: index,
-          child: EntryRow(entry: entry, book: state.book, today: state.today),
-        ),
+      if (state.entries.isEmpty)
+        EntriesEmpty(state: state)
+      else
+        EntriesDayList(state: state),
     ];
   }
 
