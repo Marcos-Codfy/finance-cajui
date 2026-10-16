@@ -33,6 +33,7 @@ export 'src/components/chip/cajui_chip.dart';
 export 'src/components/confidence/cajui_confidence_indicator.dart';
 export 'src/components/confidence/cajui_confidence_level.dart';
 export 'src/components/credit_card/cajui_card_skin.dart';
+export 'src/components/credit_card/cajui_card_skin_picker.dart';
 export 'src/components/credit_card/cajui_credit_card_3d.dart';
 export 'src/components/depth/cajui_depth_scroll.dart';
 export 'src/components/depth/cajui_parallax.dart';
