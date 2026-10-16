@@ -106,6 +106,21 @@ class DebtsService {
     await _save(debt.withPayoffQuote(quote));
   }
 
+  /// Volta a dívida [debtId] à versão de antes da última, carimbada agora:
+  /// é o Desfazer de um abatimento feito pela Juju (BL-117) — cancelar o
+  /// lançamento devolve o dinheiro, e isto devolve o saldo.
+  Future<void> revertLatest(String debtId) async {
+    final book = await ref.read(ledgerProvider.future);
+    DateTime at(Debt debt) =>
+        debt.definedAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    final versions = [
+      for (final debt in book.budget.debtVersions)
+        if (debt.id == debtId) debt,
+    ]..sort((a, b) => at(a).compareTo(at(b)));
+    if (versions.length < 2) return;
+    await _save(versions[versions.length - 2]);
+  }
+
   /// Grava a versão [debt], carimbada (ADR-024): agora, ou logo depois da
   /// versão que o aparelho já tem, se o relógio daqui estiver atrás. Quem
   /// muda a dívida depois de ver a mudança do outro vence, mesmo com o

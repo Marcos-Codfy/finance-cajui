@@ -4,6 +4,7 @@ import 'package:cajui/src/features/assistant/application/assistant_gateway.dart'
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
+import 'package:cajui/src/features/debts/application/debts_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
@@ -62,9 +63,16 @@ class AssistantViewModel extends Notifier<AssistantState> {
 
   /// Desfaz o que o assistente lançou: cancela aqui, e o cancelamento sobe
   /// na sequência (RN-208). O lançamento já desceu com a resposta.
-  Future<void> undo(AssistantActionDone action) => ref
-      .read(ledgerProvider.notifier)
-      .cancel(action.id, reason: 'Desfeito na conversa com o assistente');
+  Future<void> undo(AssistantActionDone action) async {
+    await ref
+        .read(ledgerProvider.notifier)
+        .cancel(action.id, reason: 'Desfeito na conversa com o assistente');
+    // O abatimento de dívida volta inteiro: o dinheiro e o saldo (BL-117).
+    final debtId = action.debtId;
+    if (debtId != null) {
+      await ref.read(debtsServiceProvider).revertLatest(debtId);
+    }
+  }
 
   /// Pergunta de novo a última pergunta, depois de uma falha.
   Future<void> retry() async {

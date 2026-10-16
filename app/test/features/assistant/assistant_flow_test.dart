@@ -177,6 +177,72 @@ void main() {
     expect(cancelled.single.entryId, 'ia-despesa-1');
   });
 
+  testWidgets('pergunta da Juju ganha "Pode" e "Não"; o toque responde, e a '
+      'resposta seguinte, sem pergunta, não tem botão', (tester) async {
+    final assistant = ScriptedAssistant(const [
+      AssistantAnswered(r'Lanço R$ 800,00 como parcela da dívida?'),
+      AssistantAnswered('Pronto.'),
+    ]);
+    await _open(tester, assistant: assistant);
+
+    await _ask(tester, 'abate 800 da dívida');
+    await _settle(tester);
+    await tester.tap(find.widgetWithText(CajuiChip, 'Pode'));
+    await _settle(tester);
+
+    expect(assistant.asked, ['abate 800 da dívida', 'Pode']);
+    expect(find.widgetWithText(CajuiChip, 'Pode'), findsNothing);
+  });
+
+  testWidgets('BL-117 · desfazer o abatimento cancela o lançamento e devolve '
+      'o saldo da dívida', (tester) async {
+    Debt version(int cents, int minute) => Debt.withBalance(
+      id: 'debt-1',
+      creditor: 'Banco do bairro',
+      kind: DebtKind.loan,
+      balance: Money.fromCents(cents),
+      monthlyPayment: const Money.fromCents(10000),
+      dueDay: 10,
+      informedOn: LocalDate(2026, 9, 1),
+      definedAt: DateTime.utc(2026, 9, 1, 12, minute),
+    ).valueOrNull!;
+    final assistant = ScriptedAssistant(const [
+      AssistantAnswered(
+        r'Abati R$ 50,00 da dívida.',
+        actions: [
+          AssistantActionDone(
+            kind: 'paidDown',
+            id: 'ia-despesa-1',
+            label: 'Banco do bairro · abatimento',
+            amountCents: 5000,
+            debtId: 'debt-1',
+          ),
+        ],
+      ),
+    ]);
+    final journal = await _open(
+      tester,
+      assistant: assistant,
+      events: [
+        DebtDefined(id: 'f1', debt: version(100000, 0)),
+        DebtDefined(id: 'f2', debt: version(95000, 5)),
+        EntryRecorded(_padaria),
+      ],
+    );
+
+    await _ask(tester, 'abate 50 da dívida');
+    await _settle(tester);
+    await tester.tap(find.text('Desfazer'));
+    await _settle(tester);
+
+    final events = await journal.readAll();
+    expect(events.whereType<EntryCancelled>().single.entryId, 'ia-despesa-1');
+    expect(
+      events.whereType<DebtDefined>().last.debt.informedBalance,
+      const Money.fromCents(100000),
+    );
+  });
+
   testWidgets('E-AI-01 · IA fora do ar: a frase do assistente, e perguntar de '
       'novo refaz a mesma pergunta', (tester) async {
     final assistant = ScriptedAssistant(const [

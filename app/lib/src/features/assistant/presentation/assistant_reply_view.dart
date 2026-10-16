@@ -21,6 +21,7 @@ class AssistantReplyView extends StatefulWidget {
     this.canUndo = true,
     this.onCapture,
     this.onLink,
+    this.onQuickReply,
     super.key,
   });
 
@@ -45,6 +46,10 @@ class AssistantReplyView extends StatefulWidget {
   /// Abre o lugar para onde a resposta aponta (`AnswerLink`); sem ele, a
   /// resposta não ganha atalho.
   final ValueChanged<AnswerLink>? onLink;
+
+  /// Responde à pergunta da Juju com um toque ("Pode", "Não"); só a
+  /// última resposta recebe, para pergunta velha não ganhar botão.
+  final ValueChanged<String>? onQuickReply;
 
   /// A frase do assistente para [code]. O catálogo traz, em alguns códigos,
   /// uma frase por tela; aqui vale a do assistente, e só a saída que faz
@@ -111,6 +116,7 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
         for (final action in actions)
           if (widget.canUndo && action.isUndoable) _undoRow(context, action),
         if (actions.isEmpty) ?_link(text),
+        if (actions.isEmpty) ?_quickReplies(text),
       ],
     ),
     AssistantFailed(:final code, :final retryAfterSeconds) => Padding(
@@ -135,6 +141,28 @@ class _AssistantReplyViewState extends State<AssistantReplyView> {
       retryAfterSeconds: retryAfterSeconds,
     );
     return _used ? ErrorText(text.message) : text;
+  }
+
+  /// "Pode" e "Não" debaixo da pergunta da Juju: ela propõe, e a pessoa
+  /// confirma com um toque, sem digitar (16/10/2026 — a conversa travou
+  /// esperando um "pode" digitado).
+  Widget? _quickReplies(String text) {
+    final reply = widget.onQuickReply;
+    if (reply == null || !text.trimRight().endsWith('?')) return null;
+    return Padding(
+      padding: const EdgeInsets.only(top: CajuiSpacing.sm),
+      child: Wrap(
+        spacing: CajuiSpacing.sm,
+        children: [
+          for (final answer in const ['Pode', 'Não'])
+            CajuiChip(
+              label: answer,
+              selected: false,
+              onSelected: (_) => reply(answer),
+            ),
+        ],
+      ),
+    );
   }
 
   /// O atalho para conferir o número na tela dele.

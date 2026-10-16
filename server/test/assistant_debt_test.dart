@@ -52,10 +52,21 @@ void main() {
       ]);
       final (server, token) = await _withDebt(client);
 
-      await askJuju(server, token, 'paguei 500 do empréstimo');
+      final (_, body) = await server.call(
+        'POST',
+        '/v1/assistant/ask',
+        body: {'message': 'paguei 500 do empréstimo'},
+        token: token,
+      );
       // O resultado da ferramenta, que o modelo lê: 1.272 − 500 = 772.
       expect(_said(client, 1), contains('"ainda_deve_centavos":77200'));
       expect(_said(client, 1), contains('Banco do bairro · abatimento'));
+      // O celular recebe a ação que sabe devolver o saldo no Desfazer.
+      expect(body['actions'], [containsPair('kind', 'paidDown')]);
+      expect(
+        (body['actions']! as List).single,
+        containsPair('debtId', 'debt-1'),
+      );
 
       await askJuju(server, token, 'quanto eu devo?');
       // A pergunta seguinte já sai com o saldo novo no contexto.
