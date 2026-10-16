@@ -90,7 +90,8 @@ final class CatalogRoutes {
   });
 
   /// O cartão como forma de pagamento, e **nada de número de cartão**: só
-  /// nome, dias e limite, que é o que a conta da fatura pede.
+  /// nome, dias e limite, que é o que a conta da fatura pede — e a cor do
+  /// plástico, que é só aparência.
   Future<Response> _defineCard(Request request) async {
     final body = JsonReader(
       await JsonBody.read(request),
@@ -100,6 +101,7 @@ final class CatalogRoutes {
         'closingDay',
         'dueDay',
         'creditLimitCents',
+        'skin',
         CatalogVersion.stampField,
       },
     );
@@ -109,6 +111,7 @@ final class CatalogRoutes {
       'closingDay': body.integer('closingDay'),
       'dueDay': body.integer('dueDay'),
       'creditLimitCents': body.optionalInteger('creditLimitCents'),
+      'skin': body.optionalString('skin', maxLength: 20),
     });
     return await _keep(
       request,
