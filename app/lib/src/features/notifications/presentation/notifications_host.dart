@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cajui/src/features/home_widget/application/home_snapshot_provider.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
+import 'package:cajui/src/features/home_widget/presentation/new_entry_shortcut.dart';
 import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
 import 'package:cajui/src/features/notifications/application/notification_providers.dart';
 import 'package:cajui/src/features/reminders/application/due_reminders_provider.dart';
@@ -79,6 +80,7 @@ class _NotificationsHostState extends ConsumerState<NotificationsHost> {
   void _open(String route) {
     if (!mounted || ReminderPages.open(context, route)) return;
     if (WidgetArrival.open(ref, route)) return;
+    if (NewEntryShortcut.open(context, route)) return;
     if (route != NotificationsHost.reviewRoute) return;
     unawaited(ReviewPage.open(context));
   }

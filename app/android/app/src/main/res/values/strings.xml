@@ -4,12 +4,13 @@
      prontas do Dart; aqui fica só o que nasce sem Dart rodando. -->
 <resources>
     <string name="home_widget_label">Cajui: o mês</string>
-    <string name="home_widget_description">A sobra do mês, com a câmera e a galeria a um toque.</string>
+    <string name="home_widget_description">A sobra do mês, com lançar, a câmera e a galeria a um toque.</string>
     <string name="home_widget_stale_label">Mês novo</string>
     <string name="home_widget_stale_amount">R$ —</string>
     <string name="home_widget_stale_caption">Abra o Cajui para ver o mês.</string>
     <string name="home_widget_camera">Fotografar comprovante</string>
     <string name="home_widget_gallery">Escolher da galeria</string>
+    <string name="home_widget_new_entry">Novo lançamento</string>
 
     <string name="channel_auto">Lançamentos automáticos</string>
     <string name="channel_review">Revisão da semana</string>
