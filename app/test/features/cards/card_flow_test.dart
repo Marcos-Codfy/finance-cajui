@@ -137,4 +137,36 @@ void main() {
     expect(cards.where((card) => card.name == 'Cartão da casa'), hasLength(1));
     expect(cards.single.creditLimit?.cents, 100000);
   });
+
+  testWidgets('a cor se escolhe nas bolinhas, vendo o cartão, e fica '
+      'guardada no cartão', (tester) async {
+    tester.view.physicalSize = const Size(390, 2600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(
+          journal: MemoryLedgerJournal(samplePlanEvents),
+        ),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+    await openFromHome(tester, 'Cartões');
+    await _tap(tester, find.text('Cadastrar cartão'));
+    await tester.enterText(_field('Nome do cartão'), 'Cartão da casa');
+    await _tap(tester, find.text('Fecha em'));
+    await _tap(tester, find.text('dia 25'));
+    await _tap(tester, find.text('Vence em'));
+    await _tap(tester, find.text('dia 5'));
+
+    expect(find.byType(CajuiCreditCard3D), findsOneWidget);
+    await _tap(tester, find.bySemanticsLabel('Ipê-roxo'));
+    await _tap(tester, find.text('Guardar'));
+
+    final scope = ProviderScope.containerOf(
+      tester.element(find.byType(CajuiApp)),
+    );
+    expect(scope.read(ledgerProvider).value!.cards.single.skin, 'ipe-roxo');
+  });
 }
