@@ -71,6 +71,9 @@ abstract final class StatementDates {
         '$d-$mm',
         '$d.$mm',
         '$d $name',
+        // O cabeçalho do print de app de banco: "08 de outubro de 2026".
+        // Sem esta forma, a lista inteira do print caía (15/10/2026).
+        '$d DE $name',
         '$d/$name',
         '$d$name',
       ],

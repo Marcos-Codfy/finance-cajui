@@ -74,6 +74,8 @@ void main() {
         '05/OUT',
         '05OUT',
         'em 2026-10-05',
+        '05 de outubro de 2026',
+        '5 de outubro',
       ]) {
         expect(
           StatementDates.writtenIn(text, day: 5, month: 10),
@@ -87,6 +89,14 @@ void main() {
       expect(StatementDates.writtenIn('15/10', day: 5, month: 10), isFalse);
       expect(StatementDates.writtenIn('05/11', day: 5, month: 10), isFalse);
       expect(StatementDates.writtenIn('05/100', day: 5, month: 10), isFalse);
+      expect(
+        StatementDates.writtenIn('15 de outubro', day: 5, month: 10),
+        isFalse,
+      );
+      expect(
+        StatementDates.writtenIn('05 de novembro', day: 5, month: 10),
+        isFalse,
+      );
     });
   });
 
