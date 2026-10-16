@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:design_system/src/components/credit_card/cajui_card_skin.dart';
 import 'package:design_system/src/components/credit_card/card_limit_usage.dart';
 import 'package:design_system/src/components/credit_card/card_tilt_motion.dart';
 import 'package:design_system/src/components/credit_card/credit_card_back.dart';
@@ -38,6 +39,7 @@ class CajuiCreditCard3D extends StatefulWidget {
     required this.limitCents,
     this.tilt,
     this.onFlip,
+    this.skin = CajuiCardSkin.cajui,
     super.key,
   });
 
@@ -59,6 +61,9 @@ class CajuiCreditCard3D extends StatefulWidget {
 
   /// Avisa quando o cartão vira: `true` ao mostrar o verso.
   final ValueChanged<bool>? onFlip;
+
+  /// A cor do plástico, escolhida pela pessoa.
+  final CajuiCardSkin skin;
 
   @override
   State<CajuiCreditCard3D> createState() => _CajuiCreditCard3DState();
@@ -215,8 +220,12 @@ class _CajuiCreditCard3DState extends State<CajuiCreditCard3D>
     ),
   );
 
-  Widget _front(Alignment light) =>
-      CreditCardFront(name: widget.name, detail: widget.detail, light: light);
+  Widget _front(Alignment light) => CreditCardFront(
+    name: widget.name,
+    detail: widget.detail,
+    light: light,
+    skin: widget.skin,
+  );
 
   Widget _backFace(CardLimitUsage usage, Alignment light) =>
       CreditCardBack(name: widget.name, usage: usage, light: light);
