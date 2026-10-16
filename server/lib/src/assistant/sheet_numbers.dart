@@ -1,3 +1,4 @@
+import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:server/src/assistant/context_number.dart';
 import 'package:server/src/assistant/context_number_kind.dart';
@@ -13,18 +14,23 @@ import 'package:server/src/assistant/context_number_kind.dart';
 abstract final class SheetNumbers {
   /// Os números de [finances] em [today]. Sem plano, só o que se deve: o
   /// gasto do mês já vai por categoria, no resto do contexto.
-  static List<ContextNumber> of(Finances finances, LocalDate today) {
-    final owed = finances.owedOn(today);
-    final budget = finances.budgetFor(today.budgetMonth);
-    return [
-      if (!finances.plan.isEmpty) ..._month(budget),
-      if (owed.isPositive)
-        _number('Quanto ainda devo, com as parcelas de cartão', owed, '$today'),
-    ];
-  }
+  static List<ContextNumber> of(Finances finances, LocalDate today) =>
+      from(MonthFigures.of(finances, today), today);
 
-  static Iterable<ContextNumber> _month(MonthBudget budget) sync* {
-    final period = '${budget.month}';
+  /// Os mesmos números, a partir de [figures] já feitos — os que o celular
+  /// manda junto da pergunta, para a Juju dizer o que está na tela dele.
+  static List<ContextNumber> from(MonthFigures figures, LocalDate today) => [
+    if (figures.hasPlan) ..._month(figures),
+    if (figures.owed.isPositive)
+      _number(
+        'Quanto ainda devo, com as parcelas de cartão',
+        figures.owed,
+        '$today',
+      ),
+  ];
+
+  static Iterable<ContextNumber> _month(MonthFigures budget) sync* {
+    final period = budget.period;
     ContextNumber plan(String label, Money amount) =>
         _number(label, amount, period, kind: ContextNumberKind.plan);
     yield plan('O que entra no mês, em dinheiro', budget.cashIncome);
