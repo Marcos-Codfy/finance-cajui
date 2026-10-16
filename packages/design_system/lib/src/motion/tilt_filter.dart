@@ -16,11 +16,12 @@ final class TiltFilter {
   static const double smoothing = 0.15;
 
   /// Quanto cada amostra puxa a pose de quem segura: a uns 15 por segundo,
-  /// o cartão volta ao centro em uns três segundos parado.
-  static const double settling = 0.02;
+  /// o cartão volta ao centro em uns cinco segundos parado.
+  static const double settling = 0.012;
 
-  /// O ganho do movimento: 20° de inclinação já levam o cartão ao máximo.
-  static const double gain = 3;
+  /// O ganho do movimento: uns 13° de inclinação já levam o cartão ao
+  /// máximo — o dono pediu mais sensível (16/10/2026).
+  static const double gain = 4.5;
 
   Offset? _pose;
   Offset _smoothed = Offset.zero;

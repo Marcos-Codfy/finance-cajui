@@ -22,7 +22,7 @@ void main() {
     test('parado na pose nova, o cartão volta ao centro sozinho', () {
       final filter = TiltFilter()..next(Offset.zero);
       var tilt = Offset.zero;
-      for (var sample = 0; sample < 300; sample++) {
+      for (var sample = 0; sample < 450; sample++) {
         tilt = filter.next(const Offset(0.5, 0.2));
       }
 
