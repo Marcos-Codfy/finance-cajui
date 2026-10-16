@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A abertura do Android 12+ no tema escuro: a mesma de `values-v31`, sobre
+     o night da primeira tela, com a castanha em moon (`values-night`). Fica
+     num arquivo à parte porque o tema escuro herda de outro tema do sistema,
+     e o Android escolhe o modo noturno antes da versão. -->
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/cajui_splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_cajui</item>
+    </style>
+</resources>

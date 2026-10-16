@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O primeiro plano do ícone adaptativo: o cajuí no círculo seguro.
+     Gerado por tool/brand/build_app_icons.py a partir de build_logo.py:
+     para mudar o desenho, mude lá e rode o script. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:translateX="55.3" android:translateY="58.1"
+        android:scaleX="0.7918" android:scaleY="0.7918">
+        <group android:pivotX="256" android:pivotY="256" android:rotation="-14">
+            <path android:pathData="M292.7 299.6 A64 64 0 1 0 292.7 404.4"
+                android:strokeColor="#F4ECE0"
+                android:strokeWidth="60"
+                android:strokeLineCap="round"/>
+            <path android:pathData="M256 52 C284 52 304 72 308 104 C314 150 352 168 352 210 C352 248 310 270 256 270 C202 270 160 248 160 210 C160 168 198 150 204 104 C208 72 228 52 256 52 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:type="linear"
+                        android:startX="208" android:startY="52"
+                        android:endX="304" android:endY="270">
+                        <item android:offset="0" android:color="#FFF4B740"/>
+                        <item android:offset="0.5" android:color="#FFEE7B33"/>
+                        <item android:offset="1" android:color="#FFD5411E"/>
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <group android:pivotX="232" android:pivotY="112" android:rotation="12">
+                <path android:fillColor="#FFFFFFFF" android:fillAlpha="0.2"
+                    android:pathData="M219,112 a13,30 0 1,0 26,0 a13,30 0 1,0 -26,0 Z"/>
+            </group>
+        </group>
+    </group>
+</vector>

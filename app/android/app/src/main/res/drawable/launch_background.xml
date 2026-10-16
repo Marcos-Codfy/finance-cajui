@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
+<!-- A abertura antes do Android 12: o fundo da primeira tela do app, na cor
+     do tema, com o mesmo cajuí da abertura do Android 12+ no meio. Do 12 em
+     diante, quem desenha é o sistema (`values-v31/styles.xml`).
 
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+     Um arquivo só, sem a cópia de `drawable-v21`: o app pede o Android 7
+     (API 24) ou mais novo, e o tamanho e a gravidade de cada camada valem
+     desde o 6. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/cajui_splash_background" />
+    <item
+        android:width="160dp"
+        android:height="160dp"
+        android:drawable="@drawable/splash_cajui"
+        android:gravity="center" />
 </layer-list>

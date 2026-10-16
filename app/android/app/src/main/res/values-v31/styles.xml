@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A abertura do Android 12+ (SplashScreen), no tema claro: o sistema
+     desenha o cajuí da marca sobre a cor da primeira tela do app e o mantém
+     até o Flutter desenhar o primeiro quadro. Sem isto, o sistema punha o
+     ícone do launcher, com o fundo de anoitecer, sobre o branco.
+
+     O cajuí vai sem fundo próprio: em 288 dp, recortado num círculo de
+     192 dp, e o desenho já cabe nele (`tool/brand/build_app_icons.py`). -->
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/cajui_splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_cajui</item>
+    </style>
+</resources>
