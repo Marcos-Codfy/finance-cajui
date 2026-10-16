@@ -1,6 +1,7 @@
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
+import 'package:cajui/src/features/budget/presentation/income_page.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
 import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
@@ -103,11 +104,31 @@ class HomePage extends ConsumerWidget {
     export: () => ref.read(exportMonthProvider).call(view.budget.month),
   );
 
-  static Widget _newEntry(BuildContext context) => CajuiButton(
-    label: 'Novo lançamento',
-    icon: CajuiIconData.plus,
-    expand: true,
-    onPressed: () => EntryFormPage.open(context),
+  /// Lançar o que saiu, e — ao lado, à vista — registrar o que entrou:
+  /// a renda avulsa e o saldo moravam escondidos em Minhas contas
+  /// (16/10/2026).
+  static Widget _newEntry(BuildContext context) => Row(
+    spacing: CajuiSpacing.sm,
+    children: [
+      Expanded(
+        flex: 3,
+        child: CajuiButton(
+          label: 'Novo lançamento',
+          icon: CajuiIconData.plus,
+          expand: true,
+          onPressed: () => EntryFormPage.open(context),
+        ),
+      ),
+      Expanded(
+        flex: 2,
+        child: CajuiButton(
+          label: 'Entrou dinheiro',
+          variant: CajuiButtonVariant.secondary,
+          expand: true,
+          onPressed: () => IncomePage.open(context),
+        ),
+      ),
+    ],
   );
 
   /// Se o mês no verde está em festa; a primeira vez é anotada, para não

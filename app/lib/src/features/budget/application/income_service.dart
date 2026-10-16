@@ -29,6 +29,7 @@ class IncomeService {
     required LocalDate receivedOn,
     String? salaryId,
     String? id,
+    String? note,
   }) async {
     if (!amount.isPositive) return;
     if (id != null && await _knows(id)) return;
@@ -40,6 +41,10 @@ class IncomeService {
           tender: tender,
           amount: amount,
           receivedOn: receivedOn,
+          note: switch (note?.trim()) {
+            final String text when text.isNotEmpty => text,
+            _ => null,
+          },
         ),
       ),
     );
