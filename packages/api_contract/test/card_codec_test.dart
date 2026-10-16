@@ -87,4 +87,27 @@ void main() {
       expect(CardCodec.decodeSettlement(gravado).dueMonth, janeiro.dueMonth);
     });
   });
+
+  test('a cor do cartão vai e volta, e o cartão sem cor viaja como antes', () {
+    final painted = CreditCard.create(
+      id: 'card-1',
+      name: 'Cartão Ipê',
+      closingDay: 3,
+      dueDay: 10,
+      skin: 'ipe-roxo',
+    ).valueOrNull!;
+    final plain = CreditCard.create(
+      id: 'card-2',
+      name: 'Cartão',
+      closingDay: 3,
+      dueDay: 10,
+    ).valueOrNull!;
+
+    expect(
+      CardCodec.decodeCard(CardCodec.encodeCard(painted)).skin,
+      'ipe-roxo',
+    );
+    expect(CardCodec.encodeCard(plain).containsKey('skin'), isFalse);
+    expect(CardCodec.decodeCard(CardCodec.encodeCard(plain)).skin, isNull);
+  });
 }
