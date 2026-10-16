@@ -1,20 +1,25 @@
-"""Gera o ícone do app Android a partir do mesmo símbolo da marca.
+"""Gera o ícone do app Android e o da abertura a partir do símbolo da marca.
 
 Nada de desenho novo: a geometria vem de `build_logo.py`, que é a fonte única
-do símbolo. Aqui ele só é posto nos dois formatos que o Android pede — o
-primeiro plano do ícone adaptativo (transparente, dentro do círculo seguro) e
-o ícone antigo, com o fundo já embutido — e rasterizado em cada densidade.
+do símbolo. Aqui ele só é posto nos formatos que o Android pede:
 
-A rasterização usa o Chrome em modo headless: é o mesmo motor que desenha o
-SVG na web, então o PNG sai igual ao vetor aprovado, com transparência.
+- o ícone adaptativo (Android 8+): primeiro plano e monocromático em vetor
+  (`android_vectors.py`), sobre o fundo de anoitecer, também em XML;
+- o ícone da abertura (Android 12+), em vetor, com a castanha na cor do tema;
+- o ícone antigo (Android 7), em PNG, com o fundo já embutido.
+
+Só o antigo é rasterizado. A rasterização usa o Chrome em modo headless: é o
+mesmo motor que desenha o SVG na web, então o PNG sai igual ao vetor
+aprovado, com transparência. O Chrome também mede onde a tinta do símbolo
+está, para centrá-lo.
 
 Uso: python tool/brand/build_app_icons.py
-Requer: Google Chrome instalado.
+Requer: Google Chrome instalado e Pillow.
 """
 
 from __future__ import annotations
 
-import shutil
+import math
 import subprocess
 import sys
 import tempfile
@@ -22,6 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from android_vectors import GRID, WHITE, symbol_vector  # noqa: E402
 from build_logo import (  # noqa: E402
     GRADIENT,
     MOON,
@@ -48,13 +54,11 @@ LEGACY_SIZES = {
     "mipmap-xxhdpi": 144,
     "mipmap-xxxhdpi": 192,
 }
-# O primeiro plano do adaptativo: 108 dp, com o desenho no círculo de 66 dp.
-FOREGROUND_SIZES = {name: round(size * 108 / 48) for name, size in LEGACY_SIZES.items()}
 
 ADAPTIVE_XML = """<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <foreground android:drawable="@drawable/ic_launcher_foreground"/>
     <monochrome android:drawable="@drawable/ic_launcher_monochrome"/>
 </adaptive-icon>
 """
@@ -70,13 +74,14 @@ BACKGROUND_XML = f"""<?xml version="1.0" encoding="utf-8"?>
 </shape>
 """
 
-
-GRID = 512
 # Quanto da grade a tinta ocupa. O adaptativo corta tudo fora de 66% e ainda
 # aproxima o ícone ao tocar, então 60% deixa folga sem encolher o desenho.
 FOREGROUND_EXTENT = 0.60
 # No ícone antigo o corte é o próprio quadrado: cabe um pouco mais de tinta.
 LEGACY_EXTENT = 0.66
+# A abertura do Android 12+ desenha o ícone em 288 dp e o recorta num
+# círculo de 192 dp. A diagonal da tinta cabe nele, com um respiro de 8%.
+SPLASH_CIRCLE = 192 / 288 * 0.92
 
 
 def measure_ink(browser: Path, svg_text: str) -> tuple[float, float, float, float]:
@@ -100,19 +105,30 @@ def measure_ink(browser: Path, svg_text: str) -> tuple[float, float, float, floa
     return box
 
 
-def centered_transform(box: tuple[float, float, float, float], extent: float) -> str:
-    """A transformação que põe a tinta medida no meio da grade, ocupando
-    [extent] dela."""
+def centered(box: tuple[float, float, float, float], scale: float) -> tuple[float, float, float]:
+    """Esquerda, topo e escala que põem a tinta medida no meio da grade."""
     x0, y0, x1, y1 = box
-    scale = extent * GRID / max(x1 - x0, y1 - y0)
     left = GRID / 2 - scale * (x0 + x1) / 2
     top = GRID / 2 - scale * (y0 + y1) / 2
+    return (left, top, scale)
+
+
+def by_extent(box: tuple[float, float, float, float], extent: float) -> tuple[float, float, float]:
+    """O lado maior da tinta ocupando [extent] da grade."""
+    x0, y0, x1, y1 = box
+    return centered(box, extent * GRID / max(x1 - x0, y1 - y0))
+
+
+def by_circle(box: tuple[float, float, float, float], diameter: float) -> tuple[float, float, float]:
+    """A diagonal da tinta cabendo num círculo de [diameter] da grade: é o
+    que garante que o recorte redondo da abertura não come a castanha."""
+    x0, y0, x1, y1 = box
+    return centered(box, diameter * GRID / math.hypot(x1 - x0, y1 - y0))
+
+
+def as_transform(place: tuple[float, float, float]) -> str:
+    left, top, scale = place
     return f"translate({left:.1f} {top:.1f}) scale({scale:.4f})"
-
-
-def foreground_svg(transform: str) -> str:
-    """O símbolo sozinho, centrado, para o primeiro plano do adaptativo."""
-    return svg_document(GRID, GRID, symbol_group(MOON, transform), "Cajui")
 
 
 def legacy_svg(transform: str) -> str:
@@ -131,22 +147,6 @@ def legacy_svg(transform: str) -> str:
         "Cajui",
         defs=defs,
     )
-
-
-def monochrome_svg(transform: str) -> str:
-    """A versão de uma cor só, para o tema dinâmico do Android 13+: o sistema
-    pinta a silhueta com a cor do papel de parede."""
-    body = (
-        f'<g transform="{transform}">'
-        '<g transform="rotate(-14 256 256)" fill="#FFFFFF">'
-        '<path d="M256 52 C284 52 304 72 308 104 C314 150 352 168 352 210 '
-        "C352 248 310 270 256 270 C202 270 160 248 160 210 "
-        'C160 168 198 150 204 104 C208 72 228 52 256 52 Z"/>'
-        '<path fill="none" stroke="#FFFFFF" stroke-width="60" '
-        'stroke-linecap="round" d="M292.7 299.6 A64 64 0 1 0 292.7 404.4"/>'
-        "</g></g>"
-    )
-    return svg_document(512, 512, body, "Cajui", defs=GRADIENT)
 
 
 def chrome() -> Path:
@@ -201,41 +201,57 @@ def write_png_set(browser: Path, svg_text: str, name: str, sizes: dict) -> None:
                 print(f"ok  {folder}/{name}.png  {size}px")
 
 
-def write_vector_drawables() -> None:
-    (RES_DIR / "mipmap-anydpi-v26").mkdir(parents=True, exist_ok=True)
-    (RES_DIR / "drawable").mkdir(parents=True, exist_ok=True)
+def write_text(relative: str, text: str) -> None:
+    target = RES_DIR / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8", newline="\n")
+    print(f"ok  {relative}")
+
+
+def write_vector_drawables(ink: tuple[float, float, float, float]) -> None:
+    """O adaptativo, o monocromático e a abertura, todos em vetor."""
+    inside = by_extent(ink, FOREGROUND_EXTENT)
     for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
-        (RES_DIR / "mipmap-anydpi-v26" / name).write_text(
-            ADAPTIVE_XML, encoding="utf-8", newline="\n"
-        )
-        print(f"ok  mipmap-anydpi-v26/{name}")
-    (RES_DIR / "drawable" / "ic_launcher_background.xml").write_text(
-        BACKGROUND_XML, encoding="utf-8", newline="\n"
+        write_text(f"mipmap-anydpi-v26/{name}", ADAPTIVE_XML)
+    write_text("drawable/ic_launcher_background.xml", BACKGROUND_XML)
+    write_text(
+        "drawable/ic_launcher_foreground.xml",
+        symbol_vector(
+            "O primeiro plano do ícone adaptativo: o cajuí no círculo seguro.",
+            108,
+            inside,
+        ),
     )
-    print("ok  drawable/ic_launcher_background.xml")
+    write_text(
+        "drawable/ic_launcher_monochrome.xml",
+        symbol_vector(
+            "O ícone de uma cor só do Android 13+: o sistema pinta a\n"
+            "     silhueta com a cor do papel de parede.",
+            108,
+            inside,
+            solid=WHITE,
+        ),
+    )
+    write_text(
+        "drawable/splash_cajui.xml",
+        symbol_vector(
+            "O cajuí da abertura do Android 12+. A castanha segue o tema\n"
+            "     (`cajui_splash_nut`): tinta no claro, lua no escuro.",
+            288,
+            by_circle(ink, SPLASH_CIRCLE),
+            nut="@color/cajui_splash_nut",
+        ),
+    )
 
 
 def main() -> None:
     browser = chrome()
     ink = measure_ink(browser, svg_document(GRID, GRID, symbol_group(MOON), "Cajui"))
     print(f"ok  tinta do símbolo medida em {ink}")
-    inside = centered_transform(ink, FOREGROUND_EXTENT)
-    square = centered_transform(ink, LEGACY_EXTENT)
+    square = as_transform(by_extent(ink, LEGACY_EXTENT))
     write_png_set(browser, legacy_svg(square), "ic_launcher", LEGACY_SIZES)
     write_png_set(browser, legacy_svg(square), "ic_launcher_round", LEGACY_SIZES)
-    write_png_set(
-        browser, foreground_svg(inside), "ic_launcher_foreground", FOREGROUND_SIZES
-    )
-    write_png_set(
-        browser, monochrome_svg(inside), "ic_launcher_monochrome", FOREGROUND_SIZES
-    )
-    write_vector_drawables()
-    # O monocromático é drawable, não mipmap: o adaptativo o referencia assim.
-    for folder in FOREGROUND_SIZES:
-        source = RES_DIR / folder / "ic_launcher_monochrome.png"
-        target = RES_DIR / folder.replace("mipmap", "drawable")
-        target.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(source), str(target / "ic_launcher_monochrome.png"))
+    write_vector_drawables(ink)
     print("ok  ícone do app gerado a partir do símbolo da marca")
 
 
