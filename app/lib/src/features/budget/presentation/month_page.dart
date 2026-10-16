@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/appearance/block_badge.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/export/application/export_month.dart';
@@ -87,12 +88,17 @@ class MonthPage extends ConsumerWidget {
           );
   }
 
-  static Widget _row(String title, Money amount, {String? subtitle}) =>
-      CajuiListRow(
-        title: title,
-        subtitle: subtitle,
-        trailing: CajuiAmountText(amount.cents),
-      );
+  static Widget _row(
+    String title,
+    Money amount, {
+    String? subtitle,
+    Block? block,
+  }) => CajuiListRow(
+    leading: block == null ? null : BlockBadge(block),
+    title: title,
+    subtitle: subtitle,
+    trailing: CajuiAmountText(amount.cents),
+  );
 
   static List<Widget> _comesIn(MonthBudget budget, BudgetPlan plan) => [
     const CajuiSectionTitle('O que entra'),
@@ -123,6 +129,7 @@ class MonthPage extends ConsumerWidget {
       'Parcelas de dívida',
       budget.debtInstallments,
       subtitle: 'Vêm das dívidas cadastradas',
+      block: Block.debt,
     ),
     if (budget.tithe.isPositive) _row('Dízimo', budget.tithe),
     _row('Total que sai', budget.totalOut),
@@ -138,7 +145,7 @@ class MonthPage extends ConsumerWidget {
   ) {
     String brl(Money amount) => BrlFormatter.format(amount.cents);
     return [
-      _row(title, budget.totalOf(block)),
+      _row(title, budget.totalOf(block), block: block),
       for (final item in budget.itemsOf(block))
         Padding(
           // Recuada, e sem caixa à esquerda: a categoria é parte do grupo de

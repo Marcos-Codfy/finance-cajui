@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/appearance/block_badge.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_detail_page.dart';
@@ -46,9 +47,11 @@ class EntryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final category = book.categoryOf(entry.categoryId).name;
+    final group = book.categoryOf(entry.categoryId);
+    final category = group.name;
     final day = DateLabels.day(entry.occurredOn, today: today);
     return CajuiListRow(
+      leading: BlockBadge(group.block),
       title: entry.description,
       subtitle: '$category · $_paidWith · $day$_backNote',
       trailing: CajuiAmountText(entry.amount.cents),
