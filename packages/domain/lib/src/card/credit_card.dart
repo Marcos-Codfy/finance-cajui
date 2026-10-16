@@ -13,6 +13,7 @@ final class CreditCard {
     required this.closingDay,
     required this.dueDay,
     this.creditLimit,
+    this.skin,
   });
 
   /// O identificador; é também o da forma de pagamento nas linhas.
@@ -30,6 +31,11 @@ final class CreditCard {
   /// O limite de crédito, se a pessoa quiser informar.
   final Money? creditLimit;
 
+  /// A cor do plástico que a pessoa escolheu, como palavra ("pequi",
+  /// "ipe-roxo"); quem decide o tom é o design system. Não entra em conta
+  /// nenhuma — nulo é o tom de sempre.
+  final String? skin;
+
   /// Cria o cartão, recusando dia fora de 1 a 31.
   ///
   /// Dia 31 é aceito: nos meses mais curtos, vale o último dia do mês.
@@ -39,6 +45,7 @@ final class CreditCard {
     required int closingDay,
     required int dueDay,
     Money? creditLimit,
+    String? skin,
   }) {
     for (final day in [closingDay, dueDay]) {
       if (day < 1 || day > 31) return Err(InvalidCardDay(day));
@@ -50,6 +57,7 @@ final class CreditCard {
         closingDay: closingDay,
         dueDay: dueDay,
         creditLimit: creditLimit,
+        skin: skin,
       ),
     );
   }
