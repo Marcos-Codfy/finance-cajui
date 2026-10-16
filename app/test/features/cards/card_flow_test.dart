@@ -169,4 +169,32 @@ void main() {
     );
     expect(scope.read(ledgerProvider).value!.cards.single.skin, 'ipe-roxo');
   });
+
+  testWidgets('cartão sem limite mostra o convite para informar, que abre '
+      'a alteração dele', (tester) async {
+    tester.view.physicalSize = const Size(390, 2600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(
+          journal: MemoryLedgerJournal(samplePlanEvents),
+        ),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+    await openFromHome(tester, 'Cartões');
+    await _tap(tester, find.text('Cadastrar cartão'));
+    await tester.enterText(_field('Nome do cartão'), 'Cartão da casa');
+    await _tap(tester, find.text('Fecha em'));
+    await _tap(tester, find.text('dia 25'));
+    await _tap(tester, find.text('Vence em'));
+    await _tap(tester, find.text('dia 5'));
+    await _tap(tester, find.text('Guardar'));
+
+    await _tap(tester, find.text('Informe o limite do cartão'));
+
+    expect(find.text('Alterar cartão'), findsOneWidget);
+  });
 }
