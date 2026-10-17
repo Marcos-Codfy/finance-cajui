@@ -117,23 +117,29 @@ class CajuiRingChart extends StatelessWidget {
       builder: (context, _) => Row(
         spacing: CajuiSpacing.md,
         children: [
-          SizedBox.square(
-            dimension: chosen ? 14 : 10,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: slice.color,
-                shape: BoxShape.circle,
-              ),
+          _dot(slice.color, chosen: chosen),
+          // A parte vai junto do nome: com a fonte grande, nome, parte e
+          // valor lado a lado não cabiam num celular estreito.
+          Expanded(
+            child: Text(
+              '${slice.label} · $share%',
+              style: theme.typography.body,
             ),
           ),
-          Expanded(child: Text(slice.label, style: theme.typography.body)),
-          Text('$share%', style: theme.typography.caption),
           CajuiAmountText(slice.cents),
         ],
       ),
     );
   }
 }
+
+/// A bolinha da cor da fatia; a escolhida, maior.
+Widget _dot(Color color, {required bool chosen}) => SizedBox.square(
+  dimension: chosen ? 14 : 10,
+  child: DecoratedBox(
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  ),
+);
 
 class _RingPainter extends CustomPainter {
   const new({

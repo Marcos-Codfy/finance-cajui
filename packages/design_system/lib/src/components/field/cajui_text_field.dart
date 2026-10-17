@@ -139,27 +139,37 @@ class _CajuiTextFieldState extends State<CajuiTextField> {
     final ink = widget.enabled ? colors.text.primary : colors.text.disabled;
     return Material(
       type: MaterialType.transparency,
-      child: TextField(
-        controller: widget.controller,
-        focusNode: _focus,
-        enabled: widget.enabled,
-        onChanged: _changed,
-        onSubmitted: widget.onSubmitted,
-        textInputAction: widget.textInputAction,
-        keyboardType: widget.keyboardType,
-        inputFormatters: [
-          ...?widget.inputFormatters,
-          if (widget.maxLength case final max?)
-            LengthLimitingTextInputFormatter(max),
-        ],
-        textAlign: widget.textAlign,
-        style: base.copyWith(color: ink),
-        cursorColor: colors.action.primary,
-        decoration: InputDecoration.collapsed(
-          hintText: widget.hint,
-          hintStyle: base.copyWith(color: colors.text.faint),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _touch),
+        child: TextField(
+          textAlignVertical: TextAlignVertical.center,
+          controller: widget.controller,
+          focusNode: _focus,
+          enabled: widget.enabled,
+          onChanged: _changed,
+          onSubmitted: widget.onSubmitted,
+          textInputAction: widget.textInputAction,
+          keyboardType: widget.keyboardType,
+          inputFormatters: _formatters,
+          textAlign: widget.textAlign,
+          style: base.copyWith(color: ink),
+          cursorColor: colors.action.primary,
+          decoration: InputDecoration.collapsed(
+            hintText: widget.hint,
+            hintStyle: base.copyWith(color: colors.text.faint),
+          ),
         ),
       ),
     );
   }
+
+  List<TextInputFormatter> get _formatters => [
+    ...?widget.inputFormatters,
+    if (widget.maxLength case final max?) LengthLimitingTextInputFormatter(max),
+  ];
+
+  /// O alvo mínimo de toque: o campo ocupa a altura da moldura. Sem isso o
+  /// toque valia só na linha do texto (31 dp com a fonte em 130%) — a
+  /// moldura já tem 52 dp, e nada muda à vista (17/10/2026).
+  static const double _touch = 48;
 }

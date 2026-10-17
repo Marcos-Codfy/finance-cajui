@@ -31,9 +31,9 @@ void main() {
         ),
       );
 
-      expect(find.text('75%'), findsOneWidget);
-      expect(find.text('25%'), findsOneWidget);
-      expect(find.text('Assinaturas'), findsNothing);
+      expect(find.text('Contas fixas · 75%'), findsOneWidget);
+      expect(find.text('Dia a dia · 25%'), findsOneWidget);
+      expect(find.textContaining('Assinaturas'), findsNothing);
       expect(find.text('Sai no mês'), findsOneWidget);
     });
 
@@ -53,7 +53,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Dia a dia'));
+      await tester.tap(find.text('Dia a dia · 25%'));
       // O alto à direita do anel é o começo: as contas fixas (75%).
       final ring = tester.getTopLeft(find.byType(CustomPaint).first);
       await tester.tapAt(ring + const Offset(170, 60));
