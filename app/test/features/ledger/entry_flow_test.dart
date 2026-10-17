@@ -66,7 +66,7 @@ void main() {
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(find.text('Nova despesa'), findsNothing);
+    expect(find.text('Novo lançamento'), findsNothing);
     expect(find.text('Ônibus'), findsOneWidget);
     expect(find.text('Transporte · Pix · hoje'), findsOneWidget);
     expect(await journal.readAll(), hasLength(1));
@@ -83,7 +83,7 @@ void main() {
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(find.text('Nova despesa'), findsOneWidget);
+    expect(find.text('Novo lançamento'), findsOneWidget);
     expect(await journal.readAll(), isEmpty);
   });
 
@@ -99,7 +99,7 @@ void main() {
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(find.text('Nova despesa'), findsNothing);
+    expect(find.text('Novo lançamento'), findsNothing);
     expect(find.text('Outros'), findsOneWidget);
     expect(find.text('Outros · Pix · hoje'), findsOneWidget);
     expect(await journal.readAll(), hasLength(1));
