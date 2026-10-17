@@ -1,6 +1,9 @@
+import 'package:design_system/src/components/button/cajui_button.dart';
+import 'package:design_system/src/components/button/cajui_button_variant.dart';
 import 'package:design_system/src/components/field/cajui_text_field.dart';
 import 'package:design_system/src/components/field/cents_input_formatter.dart';
 import 'package:design_system/src/format/brl_formatter.dart';
+import 'package:design_system/src/icons/cajui_icon_data.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:flutter/widgets.dart';
 
@@ -53,18 +56,56 @@ class _CajuiAmountFieldState extends State<CajuiAmountField> {
     super.dispose();
   }
 
+  /// Começa outro valor para somar: "35,00 + ".
+  void _add() {
+    if (!_controller.text.trimRight().endsWith('+')) {
+      final text = '${_controller.text} + ';
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+    setState(() {});
+  }
+
+  Widget get _addButton => Align(
+    alignment: Alignment.centerLeft,
+    child: CajuiButton(
+      label: 'Somar outro valor',
+      icon: CajuiIconData.plus,
+      variant: CajuiButtonVariant.ghost,
+      onPressed: _add,
+    ),
+  );
+
+  void _changed(String text) {
+    setState(() {});
+    widget.onChanged(CentsInputFormatter.parse(text));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return CajuiTextField(
-      label: widget.label,
-      controller: _controller,
-      helper: widget.helper,
-      error: widget.error,
-      enabled: widget.enabled,
-      keyboardType: TextInputType.number,
-      inputFormatters: const [CentsInputFormatter()],
-      style: CajuiTheme.of(context).typography.amountLarge,
-      onChanged: (text) => widget.onChanged(CentsInputFormatter.parse(text)),
+    final terms = CentsInputFormatter.terms(_controller.text);
+    final summing = terms.length > 1 || _controller.text.contains('+');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CajuiTextField(
+          label: widget.label,
+          controller: _controller,
+          // Somando, a dica dá lugar ao total: "= R$ 47,00".
+          helper: summing
+              ? '= ${BrlFormatter.format(CentsInputFormatter.parse(_controller.text))}'
+              : widget.helper,
+          error: widget.error,
+          enabled: widget.enabled,
+          keyboardType: TextInputType.number,
+          inputFormatters: const [CentsInputFormatter()],
+          style: CajuiTheme.of(context).typography.amountLarge,
+          onChanged: _changed,
+        ),
+        if (widget.enabled) _addButton,
+      ],
     );
   }
 }
