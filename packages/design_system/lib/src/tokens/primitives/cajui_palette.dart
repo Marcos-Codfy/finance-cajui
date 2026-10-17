@@ -109,6 +109,13 @@ abstract final class CajuiPalette {
   /// Barro claro, para o tema escuro.
   static const clayLight = Color(0xFFE0A07F);
 
+  /// Ipê-roxo: as assinaturas no gráfico e nas listas — o tom que faltava
+  /// entre fixas, dia a dia, dívidas e vale (17/10/2026).
+  static const ipe = Color(0xFF8E2F7A);
+
+  /// Ipê-roxo claro, para o fundo escuro.
+  static const ipeLight = Color(0xFFD9A0CC);
+
   /// Céu: informação, foco de teclado, link.
   static const sky = Color(0xFF2F6F8F);
 

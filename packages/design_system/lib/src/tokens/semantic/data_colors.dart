@@ -14,6 +14,7 @@ class DataColors {
     required this.fixed,
     required this.variable,
     required this.debt,
+    required this.subscription,
     required this.voucher,
     required this.track,
   });
@@ -27,6 +28,9 @@ class DataColors {
   /// Bloco de dívidas.
   final Color debt;
 
+  /// As assinaturas: o que se repete todo mês, de serviço.
+  final Color subscription;
+
   /// Vale alimentação, sempre em barra separada.
   final Color voucher;
 
@@ -38,6 +42,7 @@ class DataColors {
     fixed: CajuiPalette.inkSoft,
     variable: CajuiPalette.cajui,
     debt: CajuiPalette.clay,
+    subscription: CajuiPalette.ipe,
     voucher: CajuiPalette.vereda,
     // Areia funda, e não o tom mais escuro: só com ela o cajuí do medidor
     // chega a 3:1 contra o trilho (3,09:1; com sandMuted dava 2,79:1).
@@ -49,6 +54,7 @@ class DataColors {
     fixed: CajuiPalette.moonSoft,
     variable: CajuiPalette.cajuiLight,
     debt: CajuiPalette.clayLight,
+    subscription: CajuiPalette.ipeLight,
     voucher: CajuiPalette.veredaLight,
     track: CajuiPalette.nightHigh,
   );

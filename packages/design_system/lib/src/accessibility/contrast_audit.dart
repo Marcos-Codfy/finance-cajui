@@ -121,6 +121,7 @@ abstract final class ContrastAudit {
       'data.fixed': c.data.fixed,
       'data.variable': c.data.variable,
       'data.debt': c.data.debt,
+      'data.subscription': c.data.subscription,
       'data.voucher': c.data.voucher,
       // A água do pote, contra o fundo do próprio pote (o trilho).
       'brand.accent': c.brand.accent,
