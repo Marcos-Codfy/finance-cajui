@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- As linhas de conta a vencer do widget grande. As três são iguais; o
+     estilo evita repetir os mesmos atributos três vezes no layout. Nascem
+     escondidas: o widget só mostra a linha que tem conta. -->
+<resources>
+    <style name="HomeWidgetBillRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="HomeWidgetBillName">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@color/cajui_glass_text</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="HomeWidgetBillDay">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@color/cajui_glass_text_muted</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+</resources>

@@ -9,8 +9,16 @@
     <color name="cajui_glass_text">#FFFFFFFF</color>
     <!-- moon, a 80% -->
     <color name="cajui_glass_text_muted">#CCF4ECE0</color>
+    <!-- O fio entre o número e as contas: a borda do vidro, mais fraca. -->
+    <color name="cajui_glass_divider">#33FFFFFF</color>
     <!-- cajuiStrong -->
     <color name="cajui_accent">#FFB93D17</color>
     <!-- paper, sobre o cajuiStrong -->
     <color name="cajui_on_accent">#FFFFFFFF</color>
+    <!-- A abertura: o fundo é o da primeira tela do app (surface.base, sand),
+         para a passagem da abertura ao app não piscar outra cor. -->
+    <color name="cajui_splash_background">#FFFBF6EE</color>
+    <!-- A castanha do cajuí da abertura: ink, como no símbolo sobre fundo
+         claro. -->
+    <color name="cajui_splash_nut">#FF2A1D17</color>
 </resources>

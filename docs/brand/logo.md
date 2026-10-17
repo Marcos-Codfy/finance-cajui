@@ -43,7 +43,9 @@ Grade de 512 × 512. A geometria vive em um único lugar — [`tool/brand/build_
 
 ## Ícone do app no Android
 
-O Android recorta o ícone adaptativo em formas diferentes por fabricante; só o círculo central de 66% é garantido. O símbolo entra a 76% da grade, o que mantém todo o desenho visível dentro desse círculo. Na implementação (Fase 6) o `app-icon.svg` é separado em duas camadas — fundo e primeiro plano — e ganha a camada monocromática exigida pelos ícones temáticos do Android 13+, que é o `symbol-mono.svg`.
+O Android recorta o ícone adaptativo em formas diferentes por fabricante; só o círculo central de 66% é garantido. O símbolo é centrado pela **tinta**, e não pela caixa de 512 — a castanha e a inclinação de 14° deixavam o desenho deslocado para a direita (BL-045). No `app-icon.svg` o lado maior da tinta ocupa 66% da grade; no primeiro plano do adaptativo, 60%.
+
+No app, o ícone é vetor (`tool/brand/build_app_icons.py` escreve os VectorDrawables a partir da geometria de `build_logo.py`): o fundo de anoitecer, o primeiro plano com o cajuí e a camada monocromática dos ícones temáticos do Android 13+, a silhueta do `symbol-mono.svg`. A abertura do Android 12+ usa o mesmo cajuí, sem fundo, sobre a cor da primeira tela do app — sand no claro, night no escuro —, com a castanha em ink ou em moon. Só o ícone antigo, do Android 7, ainda é PNG.
 
 ## Fundos
 

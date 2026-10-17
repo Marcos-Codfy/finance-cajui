@@ -13,6 +13,8 @@
 
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <item name="android:windowBackground">?android:colorBackground</item>
+        <!-- A cor da primeira tela, e não o branco do sistema: entre a
+             abertura e o primeiro quadro do Flutter, nada pisca. -->
+        <item name="android:windowBackground">@color/cajui_splash_background</item>
     </style>
 </resources>

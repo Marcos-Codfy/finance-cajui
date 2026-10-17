@@ -58,6 +58,7 @@ export 'src/components/glass/cajui_orb_tone.dart';
 export 'src/components/glow/cajui_glow.dart';
 export 'src/components/list/cajui_disclosure.dart';
 export 'src/components/list/cajui_list_row.dart';
+export 'src/components/list/cajui_swipe_row.dart';
 export 'src/components/meter/cajui_meter.dart';
 export 'src/components/nav/cajui_nav_bar.dart';
 export 'src/components/nav/cajui_nav_destination.dart';

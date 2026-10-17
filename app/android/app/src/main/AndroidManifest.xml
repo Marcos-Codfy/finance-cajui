@@ -121,8 +121,9 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
             </intent-filter>
         </receiver>
-        <!-- O widget da tela inicial: quanto dá para gastar na semana, e a
-             câmera e a galeria a um toque. -->
+        <!-- O widget grande da tela inicial (4×2): a sobra do mês, as
+             próximas contas a vencer, e lançar, a câmera e a galeria a um
+             toque. -->
         <receiver
             android:name=".home.HomeWidget"
             android:exported="false"
@@ -133,6 +134,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/home_widget_info"/>
+        </receiver>
+        <!-- O widget pequeno (2×1): só a sobra do mês. -->
+        <receiver
+            android:name=".home.HomeWidgetSmall"
+            android:exported="false"
+            android:label="@string/home_widget_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/home_widget_small_info"/>
         </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

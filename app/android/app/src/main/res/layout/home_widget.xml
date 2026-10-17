@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- O widget da tela inicial (ADR-025), de vidro sobre a aurora: o rótulo,
-     o número em destaque, a frase de baixo e os três atalhos, num painel
-     translúcido, com duas esferas de luz flutuando por fora dele.
+<!-- O widget grande da tela inicial (ADR-025, 4×2), de vidro sobre a
+     aurora: o rótulo, o número em destaque, a frase de baixo, as próximas
+     contas a vencer e os três atalhos, num painel translúcido, com duas
+     esferas de luz flutuando por fora dele. O pequeno (2×1) está em
+     `home_widget_small.xml`.
 
      A raiz tem o id `@android:id/background` e recorta pelo contorno: é por
      ela que o Android 12+ faz o app nascer crescendo de dentro do widget ao
@@ -27,14 +29,14 @@
         android:id="@+id/home_glass"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="12dp"
+        android:layout_margin="10dp"
         android:background="@drawable/home_widget_glass"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="18dp"
-        android:paddingTop="14dp"
+        android:paddingTop="12dp"
         android:paddingEnd="14dp"
-        android:paddingBottom="14dp">
+        android:paddingBottom="12dp">
 
         <LinearLayout
             android:id="@+id/home_balance"
@@ -70,16 +72,78 @@
                 android:textColor="@color/cajui_glass_text"
                 android:textSize="30sp" />
 
+            <!-- Uma linha só: no grande, a segunda linha da frase ficou para
+                 as contas a vencer, que dizem mais do que ela. -->
             <TextView
                 android:id="@+id/home_caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
-                android:maxLines="2"
+                android:maxLines="1"
                 android:text="@string/home_widget_stale_caption"
                 android:textColor="@color/cajui_glass_text_muted"
                 android:textSize="12sp" />
+
+            <!-- As próximas contas a vencer, até três, de "Minhas contas"
+                 (RN-1080). Vêm prontas do Dart; uma linha por conta, o nome
+                 à esquerda e o dia à direita. O fio é um FrameLayout porque
+                 o RemoteViews não desenha uma View simples. -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:background="@color/cajui_glass_divider" />
+
+            <TextView
+                android:id="@+id/home_bills_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/home_widget_bills_empty"
+                android:textColor="@color/cajui_glass_text_muted"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/home_bill_1"
+                style="@style/HomeWidgetBillRow">
+
+                <TextView
+                    android:id="@+id/home_bill_1_name"
+                    style="@style/HomeWidgetBillName" />
+
+                <TextView
+                    android:id="@+id/home_bill_1_day"
+                    style="@style/HomeWidgetBillDay" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/home_bill_2"
+                style="@style/HomeWidgetBillRow">
+
+                <TextView
+                    android:id="@+id/home_bill_2_name"
+                    style="@style/HomeWidgetBillName" />
+
+                <TextView
+                    android:id="@+id/home_bill_2_day"
+                    style="@style/HomeWidgetBillDay" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/home_bill_3"
+                style="@style/HomeWidgetBillRow">
+
+                <TextView
+                    android:id="@+id/home_bill_3_name"
+                    style="@style/HomeWidgetBillName" />
+
+                <TextView
+                    android:id="@+id/home_bill_3_day"
+                    style="@style/HomeWidgetBillDay" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Os atalhos na ordem do rodapé de Lançamentos: câmera e galeria

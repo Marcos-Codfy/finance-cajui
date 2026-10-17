@@ -50,6 +50,12 @@ FRUIT_PATH = (
 # Ela encosta por baixo do fruto, como na planta, em vez de flutuar solta.
 NUT_PATH = "M292.7 299.6 A64 64 0 1 0 292.7 404.4"
 NUT_WIDTH = 60
+# Onde a tinta do símbolo está na grade de 512 (x0, y0, x1, y1), medida pelo
+# `build_app_icons.py`. Se a geometria mudar, rodar aquele script e copiar a
+# medida que ele imprime.
+SYMBOL_INK = (149, 56, 358, 444)
+# O lado maior da tinta no ícone do app: o mesmo do ícone antigo do Android.
+APP_ICON_EXTENT = 0.66
 HIGHLIGHT = '<ellipse cx="232" cy="112" rx="13" ry="30" fill="#FFFFFF" opacity="0.2" transform="rotate(12 232 112)"/>'
 GRADIENT = (
     '<linearGradient id="fruit" x1="0.25" y1="0" x2="0.75" y2="1">'
@@ -160,14 +166,26 @@ def build_symbols() -> dict[str, str]:
 
 
 def build_app_icon() -> str:
-    """Símbolo a 76%: o desenho visível fica dentro do círculo seguro (66%) do ícone adaptativo."""
+    """O ícone do app: o símbolo centrado pela tinta, com o lado maior em 66%
+    da grade — o mesmo enquadramento do ícone antigo do Android.
+
+    O `translate(61 66) scale(0.76)` de antes centrava a caixa de 512, e não
+    o desenho: a castanha e a inclinação deixavam o cajuí ~47 unidades à
+    direita (BL-045). A tinta foi medida pelo `build_app_icons.py`, que a
+    rasteriza no Chrome; aqui ela entra como número para este script seguir
+    sem navegador.
+    """
     defs = GRADIENT + (
         '<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">'
         f'<stop offset="0" stop-color="{NIGHT_TOP}"/>'
         f'<stop offset="1" stop-color="{NIGHT_BOTTOM}"/></linearGradient>'
     )
     background = '<rect width="512" height="512" rx="116" fill="url(#bg)"/>'
-    symbol = symbol_group(MOON, "translate(61 66) scale(0.76)")
+    x0, y0, x1, y1 = SYMBOL_INK
+    scale = APP_ICON_EXTENT * SYMBOL_BOX / max(x1 - x0, y1 - y0)
+    left = SYMBOL_BOX / 2 - scale * (x0 + x1) / 2
+    top = SYMBOL_BOX / 2 - scale * (y0 + y1) / 2
+    symbol = symbol_group(MOON, f"translate({left:.1f} {top:.1f}) scale({scale:.4f})")
     return svg_document(512, 512, background + symbol, "Cajui", defs=defs)
 
 

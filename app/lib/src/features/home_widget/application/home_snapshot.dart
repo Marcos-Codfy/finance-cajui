@@ -1,9 +1,10 @@
+import 'package:cajui/src/features/home_widget/application/widget_bill.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/foundation.dart';
 
 /// O retrato que o Cajui deixa para fora do app: o widget da tela inicial
-/// mostra o número, e o aviso de domingo conta o que ficou para revisar
-/// (ADR-025).
+/// mostra o número e as próximas contas, e o aviso de domingo conta o que
+/// ficou para revisar (ADR-025).
 ///
 /// Vai pronto, já em texto: do lado nativo não há conta nem regra, só um
 /// desenho do que o app disse.
@@ -16,6 +17,7 @@ final class HomeSnapshot {
     required this.caption,
     required this.validUntil,
     required this.reviewDates,
+    this.bills = const [],
   });
 
   /// O que o número é: "Sobra de outubro".
@@ -37,6 +39,10 @@ final class HomeSnapshot {
   /// mesmo que o app não tenha sido aberto desde quarta.
   final List<LocalDate> reviewDates;
 
+  /// As próximas contas a vencer, para o widget grande; o pequeno mostra só
+  /// o número.
+  final List<WidgetBill> bills;
+
   @override
   bool operator ==(Object other) =>
       other is HomeSnapshot &&
@@ -44,11 +50,18 @@ final class HomeSnapshot {
       other.amount == amount &&
       other.caption == caption &&
       other.validUntil == validUntil &&
-      listEquals(other.reviewDates, reviewDates);
+      listEquals(other.reviewDates, reviewDates) &&
+      listEquals(other.bills, bills);
 
   @override
-  int get hashCode =>
-      Object.hash(label, amount, caption, validUntil, reviewDates.length);
+  int get hashCode => Object.hash(
+    label,
+    amount,
+    caption,
+    validUntil,
+    reviewDates.length,
+    bills.length,
+  );
 
   /// O que atravessa o canal.
   Map<String, Object?> toMap() => {
@@ -57,5 +70,6 @@ final class HomeSnapshot {
     'caption': caption,
     'validUntil': '$validUntil',
     'reviewDates': [for (final day in reviewDates) '$day'],
+    'bills': [for (final bill in bills) bill.toMap()],
   };
 }
