@@ -3,9 +3,10 @@ import 'package:flutter/widgets.dart';
 import 'package:gallery/src/pages/screens/home/home_numbers.dart';
 import 'package:gallery/src/pages/screens/shared/mock_screen.dart';
 import 'package:gallery/src/pages/screens/widget/glass_widget.dart';
+import 'package:gallery/src/pages/screens/widget/glass_widget_small.dart';
 
-/// O gesto inteiro, de verdade: a tela inicial do celular com o widget, e o
-/// toque no número abrindo o Cajui.
+/// O gesto inteiro, de verdade: a tela inicial do celular com os dois
+/// tamanhos do widget, e o toque no número abrindo o Cajui.
 ///
 /// O app cresce de dentro do widget, como o Android 12+ faz quando o widget
 /// tem o fundo marcado, e o Início recebe os números atravessando o vidro
@@ -13,10 +14,21 @@ import 'package:gallery/src/pages/screens/widget/glass_widget.dart';
 /// pode ser repetido.
 class WidgetDemo extends StatefulWidget {
   /// Cria a demonstração; com [stale], o widget é o de mês novo.
-  const new({this.stale = false, super.key});
+  const new({this.stale = false, this.bills = sampleBills, super.key});
+
+  /// As contas a vencer do exemplo, fictícias, como o app as escreve: as do
+  /// mês dizem só o dia, as do mês seguinte levam o mês junto.
+  static const sampleBills = [
+    ('Aluguel', 'vence dia 20'),
+    ('Internet', 'vence dia 22'),
+    ('Luz', 'vence 3 de nov.'),
+  ];
 
   /// O widget do mês que virou, antes de o app publicar o novo.
   final bool stale;
+
+  /// As contas a vencer que o widget grande mostra.
+  final List<(String, String)> bills;
 
   @override
   State<WidgetDemo> createState() => _WidgetDemoState();
@@ -83,7 +95,19 @@ class _WidgetDemoState extends State<WidgetDemo>
     ),
   );
 
-  Widget _widget() => widget.stale
+  /// Os dois tamanhos, como numa tela inicial: o grande no alto e o
+  /// pequeno embaixo, à esquerda, ocupando duas células.
+  Widget _widget() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _large(),
+      const SizedBox(height: CajuiSpacing.md),
+      _small(),
+    ],
+  );
+
+  Widget _large() => widget.stale
       ? const GlassWidget(
           label: 'Mês novo',
           amount: r'R$ —',
@@ -93,6 +117,15 @@ class _WidgetDemoState extends State<WidgetDemo>
           label: 'Sobra de outubro',
           amount: BrlFormatter.format(HomeNumbers.leftover),
           caption: 'Depois de pagar tudo, pelo que está lançado.',
+          bills: widget.bills,
+          onNumber: _open,
+        );
+
+  Widget _small() => widget.stale
+      ? const GlassWidgetSmall(label: 'Mês novo', amount: r'R$ —')
+      : GlassWidgetSmall(
+          label: 'Sobra de outubro',
+          amount: BrlFormatter.format(HomeNumbers.leftover),
           onNumber: _open,
         );
 

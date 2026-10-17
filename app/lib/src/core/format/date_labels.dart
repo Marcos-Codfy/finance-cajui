@@ -37,6 +37,10 @@ abstract final class DateLabels {
       '${_weekdays[date.weekday - 1]}, ${date.day} de '
       '${_shortMonths[date.month - 1]}';
 
+  /// "19 de set.": o dia sem o da semana, para onde falta lugar.
+  static String dayMonth(LocalDate date) =>
+      '${date.day} de ${_shortMonths[date.month - 1]}';
+
   /// "19 de setembro"
   static String long(LocalDate date) =>
       '${date.day} de ${_months[date.month - 1]}';

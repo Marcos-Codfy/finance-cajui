@@ -1,6 +1,10 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home_widget/application/home_snapshot.dart';
+import 'package:cajui/src/features/home_widget/application/widget_bill.dart';
+import 'package:cajui/src/features/home_widget/application/widget_bills.dart';
+import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/review/application/review_providers.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,15 +13,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// domingo; `null` enquanto o livro abre.
 ///
 /// **É o único lugar que diz de onde sai o número do widget.** Ele sai de
-/// [homeViewProvider] — o mesmo mês que o Início mostra primeiro. O
-/// publicador, o canal e o lado nativo só repassam o que ele disser.
+/// [homeViewProvider] — o mesmo mês que o Início mostra primeiro —, e as
+/// contas a vencer, de [WidgetBills]. O publicador, o canal e o lado nativo
+/// só repassam o que ele disser.
 final homeSnapshotProvider = Provider<HomeSnapshot?>((ref) {
   final view = ref.watch(homeViewProvider);
-  if (view == null) return null;
+  final finances = ref.watch(financesProvider);
+  final book = ref.watch(ledgerProvider).value;
+  if (view == null || finances == null || book == null) return null;
   final review = ref.watch(reviewItemsProvider);
   return _HomeWords.of(
     view,
     reviewDates: [for (final entry in review) entry.occurredOn],
+    bills: WidgetBills.upcoming(
+      finances,
+      today: view.today,
+      cardIds: {for (final card in book.cards) card.id},
+    ),
   );
 });
 
@@ -31,6 +43,7 @@ abstract final class _HomeWords {
   static HomeSnapshot of(
     HomeView view, {
     required List<LocalDate> reviewDates,
+    required List<WidgetBill> bills,
   }) {
     final (label, amount, caption) = _words(view);
     return HomeSnapshot(
@@ -39,6 +52,7 @@ abstract final class _HomeWords {
       caption: caption,
       validUntil: view.budget.month.lastDay,
       reviewDates: reviewDates,
+      bills: bills,
     );
   }
 

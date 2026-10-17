@@ -93,7 +93,9 @@ void main() {
     const android = 'android/app/src/main';
     final activity = File('$android/kotlin/app/cajui/MainActivity.kt')
         .readAsStringSync();
-    final widget = File('$android/kotlin/app/cajui/home/HomeWidget.kt')
+    // O desenho dos dois tamanhos mora em `HomeWidgetViews.kt`; o "+" é do
+    // grande.
+    final widget = File('$android/kotlin/app/cajui/home/HomeWidgetViews.kt')
         .readAsStringSync();
     final layout = File('$android/res/layout/home_widget.xml')
         .readAsStringSync();

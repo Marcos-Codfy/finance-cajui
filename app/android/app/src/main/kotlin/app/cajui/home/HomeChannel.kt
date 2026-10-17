@@ -45,14 +45,14 @@ class HomeChannel(private val context: Context, messenger: BinaryMessenger) :
     }
 
     /**
-     * "placed" se já há um widget do Cajui na tela; "absent" se o launcher
-     * aceita o pedido do app (Android 8 em diante, e nem todo launcher);
-     * "manual" se só dá pelo menu de widgets.
+     * "placed" se já há um widget do Cajui na tela, de qualquer tamanho;
+     * "absent" se o launcher aceita o pedido do app (Android 8 em diante, e
+     * nem todo launcher); "manual" se só dá pelo menu de widgets.
      */
     private fun placement(): String {
         val manager = AppWidgetManager.getInstance(context)
         return when {
-            manager.getAppWidgetIds(widget()).isNotEmpty() -> "placed"
+            HomeWidget.isPlaced(context, manager) -> "placed"
             canPin(manager) -> "absent"
             else -> "manual"
         }
@@ -61,7 +61,8 @@ class HomeChannel(private val context: Context, messenger: BinaryMessenger) :
     /**
      * Pede ao launcher. O sistema mostra a confirmação com a prévia, e é a
      * pessoa quem decide; o widget novo se desenha sozinho com o último
-     * retrato publicado.
+     * retrato publicado. Pede o grande, que tem os atalhos; o pequeno fica
+     * na lista de widgets.
      */
     private fun pin(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false

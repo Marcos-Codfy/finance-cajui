@@ -4,10 +4,12 @@ import android.content.Context
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * O retrato que o Dart publica para fora do app (ADR-025): o número do
- * widget e os dias do que espera revisão.
+ * widget, as próximas contas a vencer e os dias do que espera revisão.
  *
  * Chega pronto, em texto. Aqui não há regra de dinheiro nenhuma: só guardar,
  * comparar datas e contar dias.
@@ -25,7 +27,37 @@ class HomeSnapshotStore(context: Context) {
             .putString(CAPTION, snapshot["caption"] as? String)
             .putString(VALID_UNTIL, snapshot["validUntil"] as? String)
             .putString(REVIEW_DATES, dates.joinToString(","))
+            .putString(BILLS, encodeBills(snapshot["bills"]))
             .apply()
+    }
+
+    /**
+     * As contas a vencer de hoje em diante, na ordem em que o app mandou.
+     * A que venceu enquanto o app estava fechado sai: dizer "vence dia 10"
+     * no dia 12 seria pior do que não dizer nada.
+     */
+    fun bills(today: Calendar = Calendar.getInstance()): List<WidgetBill> {
+        val raw = preferences.getString(BILLS, null) ?: return emptyList()
+        val array = runCatching { JSONArray(raw) }.getOrNull() ?: return emptyList()
+        val first = iso(today)
+        return (0 until array.length())
+            .mapNotNull { array.optJSONObject(it) }
+            .map { WidgetBill(it.optString("name"), it.optString("dueOn"), it.optString("day")) }
+            .filter { it.name.isNotBlank() && it.dueOn >= first }
+    }
+
+    /** As contas em JSON: o SharedPreferences não guarda lista de mapas. */
+    private fun encodeBills(raw: Any?): String {
+        val array = JSONArray()
+        (raw as? List<*>).orEmpty().filterIsInstance<Map<*, *>>().forEach { bill ->
+            array.put(
+                JSONObject()
+                    .put("name", bill["name"] as? String ?: "")
+                    .put("dueOn", bill["dueOn"] as? String ?: "")
+                    .put("day", bill["day"] as? String ?: ""),
+            )
+        }
+        return array.toString()
     }
 
     /** Se o app já publicou alguma vez. */
@@ -64,6 +96,7 @@ class HomeSnapshotStore(context: Context) {
         const val CAPTION = "caption"
         const val VALID_UNTIL = "validUntil"
         const val REVIEW_DATES = "reviewDates"
+        const val BILLS = "bills"
 
         /** A mesma janela de `weekly_review.dart`. */
         const val WINDOW_DAYS = 7

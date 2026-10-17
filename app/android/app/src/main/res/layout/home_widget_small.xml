@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O widget pequeno da tela inicial (2×1): o mesmo vidro sobre a aurora do
+     grande, só com o rótulo e o número do mês. Sem atalhos e sem contas: em
+     duas células, eles espremeriam o número, que é o motivo de pôr o widget.
+
+     A raiz tem o id `@android:id/background`, como no grande: o toque faz o
+     app crescer de dentro do widget no Android 12+. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/home_widget_aurora"
+    android:clipToOutline="true">
+
+    <LinearLayout
+        android:id="@+id/home_balance"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:background="@drawable/home_widget_glass"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/home_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.06"
+            android:maxLines="1"
+            android:text="@string/home_widget_stale_label"
+            android:textAllCaps="true"
+            android:textColor="@color/cajui_glass_text_muted"
+            android:textSize="10sp" />
+
+        <!-- O número encolhe para caber inteiro na largura de duas células:
+             "R$ 12.345,67" cortado no meio diria outro valor. -->
+        <TextView
+            android:id="@+id/home_amount"
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:autoSizeMaxTextSize="26sp"
+            android:autoSizeMinTextSize="14sp"
+            android:autoSizeStepGranularity="1sp"
+            android:autoSizeTextType="uniform"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:shadowColor="#66000000"
+            android:shadowDy="2"
+            android:shadowRadius="8"
+            android:text="@string/home_widget_stale_amount"
+            android:textColor="@color/cajui_glass_text"
+            android:textSize="24sp" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="2dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/home_widget_orb_small" />
+</FrameLayout>

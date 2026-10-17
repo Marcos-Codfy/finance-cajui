@@ -18,8 +18,10 @@ class HomeWidgetPage extends StatelessWidget {
   /// O papel da tela no app.
   static const lead =
       'A sobra do mês na tela inicial, num painel de vidro sobre a aurora '
-      'do Cerrado à noite. Tocar no número abre o Cajui de dentro do '
-      'widget; o "+" abre direto o novo lançamento.';
+      'do Cerrado à noite, em dois tamanhos: o grande (4×2) traz as '
+      'próximas contas a vencer e os atalhos; o pequeno (2×1), só o '
+      'número. Tocar no número abre o Cajui de dentro do widget; o "+" '
+      'abre direto o novo lançamento.';
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +42,14 @@ class HomeWidgetPage extends StatelessWidget {
           'Toque no número: o app cresce do widget (Android 12+) e o '
           'Início recebe os números pelo vidro, com o pop do card.',
       builder: (_) => const WidgetDemo(),
+    ),
+    ScreenVariant(
+      label: 'Sem contas a vencer',
+      note:
+          'Nenhuma conta de Minhas contas vence nos próximos 30 dias, ou '
+          'todas já foram pagas: o grande diz isso, em vez de uma lista '
+          'vazia.',
+      builder: (_) => const WidgetDemo(bills: []),
     ),
     ScreenVariant(
       label: 'Mês novo',
