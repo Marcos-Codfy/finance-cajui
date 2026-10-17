@@ -68,10 +68,16 @@ void main() {
       'ainda devo e quanto pago por mês, como na planilha', (tester) async {
     final journal = await _openDebts(tester);
     expect(find.text('Nenhuma dívida cadastrada'), findsOneWidget);
+    // O vazio sem dívida é boa notícia: o ipê em flor.
+    expect(
+      tester.widget<CajuiCerradoArt>(find.byType(CajuiCerradoArt)).kind,
+      CajuiCerrado.ipe,
+    );
 
     await _loan(tester, 'Empréstimo Banco X', paid: 5);
 
     expect(find.text('Empréstimo Banco X'), findsOneWidget);
+    expect(find.byType(CajuiCerradoArt), findsNothing);
     // Cinco pagas no cadastro e a sexta venceu no dia 10: hoje, 20/09,
     // faltam seis de R$ 212,00 (RN-1030).
     expect(
