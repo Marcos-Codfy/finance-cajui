@@ -105,6 +105,7 @@ export 'src/reminders/due_item.dart';
 export 'src/reminders/due_reminder.dart';
 export 'src/reminders/due_reminders.dart';
 export 'src/reminders/due_window.dart';
+export 'src/reminders/month_bills.dart';
 export 'src/reminders/reminder_moment.dart';
 export 'src/reminders/reminder_target.dart';
 export 'src/shared/clock.dart';
