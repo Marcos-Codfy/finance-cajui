@@ -1,12 +1,13 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gallery/src/pages/components/cerrado_section.dart';
 import 'package:gallery/src/shell/gallery_page.dart';
 import 'package:gallery/src/shell/gallery_section.dart';
 import 'package:gallery/src/shell/gallery_specimen.dart';
 import 'package:gallery/src/shell/gallery_specimens.dart';
 
-/// A página dos componentes de estado: aviso, vazio, esqueleto, carregando e
-/// o ícone-herói.
+/// A página dos componentes de estado: aviso, vazio, as ilustrações do
+/// Cerrado, esqueleto, carregando e o ícone-herói.
 class StatePage extends StatefulWidget {
   /// Cria a página de estados.
   const new({super.key});
@@ -30,7 +31,13 @@ class _StatePageState extends State<StatePage> {
           'O que a tela mostra quando não tem o dado: porque está vindo, '
           'porque não existe ainda, ou porque algo falhou. Nenhum desses é '
           'uma tela em branco.',
-      sections: [_notices(), _dismissible(), _empty(), _loading(context)],
+      sections: [
+        _notices(),
+        _dismissible(),
+        _empty(),
+        const CerradoSection(),
+        _loading(context),
+      ],
     );
   }
 
@@ -139,12 +146,13 @@ class _StatePageState extends State<StatePage> {
       child: GallerySpecimens(
         children: [
           _firstUse(),
+          // Sem desenho: o vazio que nasce de um filtro não é primeiro uso.
           const GallerySpecimen(
             state: 'Só texto',
             width: _wide,
             child: CajuiEmptyState(
-              title: 'Nenhuma dívida cadastrada',
-              message: 'Se aparecer alguma, é aqui que ela fica à vista.',
+              title: 'Nenhum lançamento com esses filtros',
+              message: 'Tire o filtro de categoria para ver mais.',
             ),
           ),
         ],

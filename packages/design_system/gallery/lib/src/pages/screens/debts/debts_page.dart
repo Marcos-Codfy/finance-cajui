@@ -89,9 +89,11 @@ class DebtsPage extends StatelessWidget {
 
   static ScreenVariant _empty() => _variant(
     'Vazia',
-    'Sem dívida cadastrada. Não é erro, e a tela não comemora nem cobra.',
+    'Sem dívida cadastrada. Não é erro, e a tela não comemora nem cobra: '
+        'o ipê em flor só diz, em silêncio, que é boa notícia.',
     const [
       CajuiEmptyState(
+        illustration: CajuiCerradoArt(CajuiCerrado.ipe),
         title: 'Nenhuma dívida cadastrada',
         message:
             'Se aparecer alguma — empréstimo, parcelamento, fatura que '
