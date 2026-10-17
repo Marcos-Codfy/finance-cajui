@@ -30,7 +30,7 @@ void main() {
     expect(find.byType(CajuiRingChart), findsOneWidget);
     final group = find.descendant(
       of: find.byType(CajuiRingChart),
-      matching: find.text('Dia a dia'),
+      matching: find.textContaining('Dia a dia'),
     );
     await tester.ensureVisible(group);
     await tester.tap(group);
