@@ -83,7 +83,7 @@ void main() {
       await tester.drag(find.text('Padaria Pão Quente'), const Offset(600, 0));
       await tester.pumpAndSettle();
 
-      expect(find.text('Corrigir despesa'), findsOneWidget);
+      expect(find.text('Corrigir lançamento'), findsOneWidget);
     });
   });
 }

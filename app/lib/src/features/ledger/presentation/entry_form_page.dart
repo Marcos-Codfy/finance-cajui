@@ -36,7 +36,7 @@ class EntryFormPage extends ConsumerStatefulWidget {
   /// ([header]), as ações a mais no pé ([extraActions]) e o que acontece
   /// depois de gravar. A correção de um lançamento faz o mesmo.
   const new({
-    this.title = 'Nova despesa',
+    this.title = 'Novo lançamento',
     this.submitLabel = 'Lançar',
     this.header,
     this.extraActions = const [],

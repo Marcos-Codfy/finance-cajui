@@ -64,7 +64,7 @@ void main() {
     final journal = await _openCinema(tester);
 
     await _tap(tester, find.text('Corrigir'));
-    expect(find.text('Corrigir despesa'), findsOneWidget);
+    expect(find.text('Corrigir lançamento'), findsOneWidget);
     await _tap(tester, find.text('Categoria'));
     await _tap(tester, find.text('Transporte'));
     await _tap(tester, find.text('Guardar correção'));

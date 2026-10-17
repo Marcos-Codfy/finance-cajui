@@ -59,7 +59,7 @@ void main() {
     await _open(tester, route: NewEntryShortcut.route);
 
     expect(find.byType(EntryFormPage), findsOneWidget);
-    expect(find.text('Nova despesa'), findsOneWidget);
+    expect(find.text('Novo lançamento'), findsOneWidget);
   });
 
   testWidgets('com o app aberto, o "+" abre o formulário por cima, e o que '
