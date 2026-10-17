@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O ícone de uma cor só do Android 13+: o sistema pinta a
+     silhueta com a cor do papel de parede.
+     Gerado por tool/brand/build_app_icons.py a partir de build_logo.py:
+     para mudar o desenho, mude lá e rode o script. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:translateX="55.3" android:translateY="58.1"
+        android:scaleX="0.7918" android:scaleY="0.7918">
+        <group android:pivotX="256" android:pivotY="256" android:rotation="-14">
+            <path android:pathData="M292.7 299.6 A64 64 0 1 0 292.7 404.4"
+                android:strokeColor="#FFFFFFFF"
+                android:strokeWidth="60"
+                android:strokeLineCap="round"/>
+            <path android:fillColor="#FFFFFFFF" android:pathData="M256 52 C284 52 304 72 308 104 C314 150 352 168 352 210 C352 248 310 270 256 270 C202 270 160 248 160 210 C160 168 198 150 204 104 C208 72 228 52 256 52 Z"/>
+        </group>
+    </group>
+</vector>

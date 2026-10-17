@@ -5,4 +5,8 @@
     <color name="cajui_accent">#FFFF8A5C</color>
     <!-- night, sobre o cajuiLight -->
     <color name="cajui_on_accent">#FF0F1A1E</color>
+    <!-- A abertura no escuro: night (surface.base), e a castanha em moon,
+         como no símbolo sobre fundo escuro. -->
+    <color name="cajui_splash_background">#FF0F1A1E</color>
+    <color name="cajui_splash_nut">#FFF4ECE0</color>
 </resources>
