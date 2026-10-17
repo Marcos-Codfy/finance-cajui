@@ -35,6 +35,32 @@ class EntryDetailPage extends ConsumerStatefulWidget {
     );
   }
 
+  /// Abre a correção de [entry] — daqui e do deslizar da lista. Reaproveita
+  /// o formulário de lançar inteiro — mesmos campos, mesmas regras, mesmos
+  /// erros — aberto com o que já está gravado.
+  static Future<void> correct(
+    BuildContext context,
+    LedgerBook book,
+    Entry entry,
+  ) {
+    final draft = EntryDraft.correcting(
+      entry,
+      category: book.categoryOf(entry.categoryId),
+      methodOf: book.methodOf,
+    );
+    return Navigator.of(context).push<void>(
+      CajuiPageRoute(
+        builder: (_) => ProviderScope(
+          overrides: [initialDraftProvider.overrideWithValue(draft)],
+          child: const EntryFormPage(
+            title: 'Corrigir despesa',
+            submitLabel: 'Guardar correção',
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   ConsumerState<EntryDetailPage> createState() => _EntryDetailPageState();
 }
@@ -86,7 +112,7 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
     CajuiButton(
       label: 'Corrigir',
       expand: true,
-      onPressed: () => _correct(context, book, entry),
+      onPressed: () => EntryDetailPage.correct(context, book, entry),
     ),
     if (_canReverse(book, entry)) ...[
       _gap,
@@ -126,31 +152,6 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
       ),
     ],
   ];
-
-  /// A correção reaproveita o formulário de lançar inteiro — mesmos campos,
-  /// mesmas regras, mesmos erros — aberto com o que já está gravado.
-  static Future<void> _correct(
-    BuildContext context,
-    LedgerBook book,
-    Entry entry,
-  ) {
-    final draft = EntryDraft.correcting(
-      entry,
-      category: book.categoryOf(entry.categoryId),
-      methodOf: book.methodOf,
-    );
-    return Navigator.of(context).push<void>(
-      CajuiPageRoute(
-        builder: (_) => ProviderScope(
-          overrides: [initialDraftProvider.overrideWithValue(draft)],
-          child: const EntryFormPage(
-            title: 'Corrigir despesa',
-            submitLabel: 'Guardar correção',
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _cancel(Entry entry) async {
     final navigator = Navigator.of(context);
