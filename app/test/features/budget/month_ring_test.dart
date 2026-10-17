@@ -47,4 +47,29 @@ void main() {
     expect(find.byType(CajuiRingChart), findsNothing);
     expect(find.widgetWithText(CajuiChip, 'Mercado'), findsOneWidget);
   });
+
+  testWidgets('os vencimentos do mês vêm na linha do tempo, com a frase de '
+      'cada conta', (tester) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(
+          journal: MemoryLedgerJournal(samplePlanEvents),
+        ),
+        child: const CajuiApp(),
+      ),
+    );
+    await settleAfterTap(tester);
+    await openFromHome(tester, 'Meu mês');
+
+    final timeline = find.byType(CajuiTimeline);
+    await tester.ensureVisible(timeline);
+    expect(find.text('Vencimentos do mês'), findsOneWidget);
+    expect(
+      find.descendant(of: timeline, matching: find.textContaining('dia ')),
+      findsWidgets,
+    );
+  });
 }
