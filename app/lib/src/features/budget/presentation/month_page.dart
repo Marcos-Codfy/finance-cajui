@@ -2,6 +2,7 @@ import 'package:cajui/src/core/appearance/block_badge.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/presentation/month_ring.dart';
+import 'package:cajui/src/features/budget/presentation/month_timeline.dart';
 import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:design_system/design_system.dart';
@@ -47,18 +48,23 @@ class MonthPage extends ConsumerWidget {
       children: [
         ?_headline(budget),
         ..._comesIn(budget, finances.plan),
-        ?_ring(budget, finances.categories),
+        ..._where(budget, finances.categories),
         ..._goesOut(budget, finances.categories),
         ..._closes(budget),
       ],
     );
   }
 
-  /// O anel de para onde foi; sem nada saindo, não há o que mostrar.
-  static Widget? _ring(MonthBudget budget, Map<String, Category> categories) =>
-      budget.totalOut.isPositive
-      ? MonthRing(budget: budget, categories: categories)
-      : null;
+  /// Para onde foi — o anel; sem nada saindo, não há o que mostrar — e os
+  /// vencimentos do mês.
+  static List<Widget> _where(
+    MonthBudget budget,
+    Map<String, Category> categories,
+  ) => [
+    if (budget.totalOut.isPositive)
+      MonthRing(budget: budget, categories: categories),
+    MonthTimeline(month: budget.month),
+  ];
 
   /// Levar o mês para planilha (RN-1090): a garantia de que os números
   /// nunca ficam presos no app — o dono veio de uma planilha.
