@@ -14,19 +14,42 @@ class CentsInputFormatter extends TextInputFormatter {
   final int maxDigits;
 
   /// Lê os centavos de um texto já formatado, como "1.284,50".
-  static int parse(String text) {
-    final digits = text.replaceAll(RegExp(r'\D'), '');
-    return digits.isEmpty ? 0 : int.parse(digits);
-  }
+  static int parse(String text) =>
+      terms(text).fold(0, (sum, cents) => sum + cents);
+
+  /// Os valores somados em [text], em centavos: "35,00 + 12,00" são dois.
+  /// A conta rápida do campo (17/10/2026) — rachar e somar sem calculadora.
+  static List<int> terms(String text) => [
+    for (final part in text.split('+'))
+      if (_digits(part).isNotEmpty) int.parse(_digits(part)),
+  ];
+
+  static String _digits(String text) => text.replaceAll(RegExp(r'\D'), '');
 
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
-    if (digits.length > maxDigits) return oldValue;
-    final text = BrlFormatter.number(digits.isEmpty ? 0 : int.parse(digits));
+    final shrank = newValue.text.length < oldValue.text.length;
+    var parts = newValue.text.split('+');
+    // Apagar logo depois do "+" tira a soma vazia do fim: "35,00 + " volta
+    // a ser "35,00", e não fica preso no operador.
+    if (shrank &&
+        parts.length > 1 &&
+        _digits(parts.last).isEmpty &&
+        oldValue.text.trimRight().endsWith('+')) {
+      parts = parts.sublist(0, parts.length - 1);
+    }
+    final shown = <String>[];
+    for (final (index, part) in parts.indexed) {
+      final digits = _digits(part);
+      if (digits.length > maxDigits) return oldValue;
+      final cents = digits.isEmpty ? 0 : int.parse(digits);
+      // Só o primeiro valor mostra 0,00; os somados começam vazios.
+      shown.add(index > 0 && cents == 0 ? '' : BrlFormatter.number(cents));
+    }
+    final text = shown.join(' + ');
     return TextEditingValue(
       text: text,
       // O cursor fica sempre no fim: é por lá que os dígitos entram.
