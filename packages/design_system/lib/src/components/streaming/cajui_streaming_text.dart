@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:design_system/src/components/streaming/money_words.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/tokens/primitives/cajui_durations.dart';
 import 'package:flutter/widgets.dart';
@@ -41,9 +42,6 @@ class _CajuiStreamingTextState extends State<CajuiStreamingText>
   /// de a anterior terminar, e o texto escorre em vez de piscar.
   static const double _fade = 2;
 
-  /// Uma palavra é o que não é espaço, com o espaço que vem depois dela.
-  static final _wordPattern = RegExp(r'\s*\S+\s*');
-
   late final AnimationController _reveal = AnimationController(vsync: this)
     ..addStatusListener(_onStatus);
   List<String> _words = const [];
@@ -70,9 +68,7 @@ class _CajuiStreamingTextState extends State<CajuiStreamingText>
       math.max(0, _reveal.value * (_words.length + _fade) - _fade);
 
   void _play({required double from}) {
-    _words = [
-      for (final match in _wordPattern.allMatches(widget.text)) match[0]!,
-    ];
+    _words = MoneyWords.split(widget.text);
     final total = _words.length + _fade;
     final animate = CajuiTheme.of(context).motionLevel.allowsSpring;
     if (!animate || _words.isEmpty) {
@@ -142,6 +138,9 @@ class _CajuiStreamingTextState extends State<CajuiStreamingText>
         TextSpan(
           text: word,
           style: style.copyWith(
+            fontVariations: MoneyWords.isMoney(_words, index)
+                ? MoneyWords.weight
+                : null,
             color: color.withValues(
               alpha: color.a * ((front - index) / _fade).clamp(0, 1),
             ),

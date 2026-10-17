@@ -73,6 +73,7 @@ export 'src/components/screen/cajui_sheet.dart';
 export 'src/components/skeleton/cajui_skeleton.dart';
 export 'src/components/stat/cajui_stat_card.dart';
 export 'src/components/streaming/cajui_streaming_text.dart';
+export 'src/components/streaming/money_words.dart';
 export 'src/components/switch/cajui_switch.dart';
 export 'src/components/timeline/cajui_timeline.dart';
 export 'src/components/timeline/cajui_timeline_item.dart';

@@ -1,5 +1,6 @@
 import 'package:design_system/src/components/feedback/cajui_loading_dots.dart';
 import 'package:design_system/src/components/streaming/cajui_streaming_text.dart';
+import 'package:design_system/src/components/streaming/money_words.dart';
 import 'package:design_system/src/theme/cajui_theme.dart';
 import 'package:design_system/src/theme/cajui_theme_data.dart';
 import 'package:design_system/src/tokens/primitives/cajui_radius.dart';
@@ -84,6 +85,22 @@ class CajuiChatBubble extends StatelessWidget {
       color: theme.colors.text.primary,
     );
     if (streamed && !fromUser) return CajuiStreamingText(text, style: style);
-    return Text(text, style: style);
+    if (fromUser) return Text(text, style: style);
+    // A resposta que já chegou leva o mesmo destaque nos valores.
+    final words = MoneyWords.split(text);
+    return Text.rich(
+      TextSpan(
+        children: [
+          for (final (index, word) in words.indexed)
+            TextSpan(
+              text: word,
+              style: MoneyWords.isMoney(words, index)
+                  ? style.copyWith(fontVariations: MoneyWords.weight)
+                  : null,
+            ),
+        ],
+      ),
+      style: style,
+    );
   }
 }
