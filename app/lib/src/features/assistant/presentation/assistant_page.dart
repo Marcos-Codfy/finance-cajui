@@ -1,13 +1,17 @@
 import 'package:cajui/src/features/assistant/application/answer_link.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
+import 'package:cajui/src/features/assistant/application/assistant_suggestions.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_composer.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_view_model.dart';
+import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/presentation/month_page.dart';
 import 'package:cajui/src/features/debts/presentation/debts_page.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
+import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
+import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_view_model.dart';
 import 'package:cajui/src/features/statements/presentation/statement_footer.dart';
@@ -29,14 +33,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AssistantPage extends ConsumerStatefulWidget {
   /// Cria a tela do assistente.
   const new({super.key});
-
-  /// Três coisas que o assistente faz bem: a primeira conversa não começa
-  /// diante de um campo vazio.
-  static const _suggestions = [
-    'Gastei 35 no mercado',
-    'Quanto sobra neste mês?',
-    'Para onde foi o dinheiro deste mês?',
-  ];
 
   @override
   ConsumerState<AssistantPage> createState() => _AssistantPageState();
@@ -175,6 +171,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return 'Sobram ${brl(budget.result)} neste mês';
   }
 
+  /// Três coisas para dizer: a primeira conversa não começa diante de um
+  /// campo vazio, e as sugestões acompanham o mês.
+  List<String> _suggestions() => AssistantSuggestions.of(
+    ref.watch(financesProvider),
+    ref.watch(todayProvider).budgetMonth,
+    cardIds: {
+      ...?ref.watch(ledgerProvider).value?.cards.map((card) => card.id),
+    },
+  );
+
   List<Widget> _firstTalk(ValueChanged<String> onAsk) => [
     const CajuiEmptyState(
       title: AssistantIdentity.greeting,
@@ -187,7 +193,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       spacing: CajuiSpacing.sm,
       runSpacing: CajuiSpacing.sm,
       children: [
-        for (final suggestion in AssistantPage._suggestions)
+        for (final suggestion in _suggestions())
           CajuiChip(
             label: suggestion,
             selected: false,
