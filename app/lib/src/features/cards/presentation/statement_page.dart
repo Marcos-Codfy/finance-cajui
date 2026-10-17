@@ -95,7 +95,9 @@ class StatementPage extends ConsumerWidget {
     );
   }
 
+  /// O cajuí: a fatura que ainda não começou.
   static const _noPurchasesYet = CajuiEmptyState(
+    illustration: CajuiCerradoArt(CajuiCerrado.cashew),
     title: 'Nenhuma compra neste cartão',
     message:
         'Ao lançar uma despesa, escolha este cartão em "Por onde foi pago". '

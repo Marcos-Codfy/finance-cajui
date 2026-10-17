@@ -64,7 +64,9 @@ class DebtsPage extends ConsumerWidget {
         )
       : null;
 
+  /// O ipê em flor: não ter dívida é o vazio que é boa notícia.
   static const _noDebtsYet = CajuiEmptyState(
+    illustration: CajuiCerradoArt(CajuiCerrado.ipe),
     title: 'Nenhuma dívida cadastrada',
     message:
         'Dívida é só o que você paga em mais de um mês: parcelamento, carnê, '

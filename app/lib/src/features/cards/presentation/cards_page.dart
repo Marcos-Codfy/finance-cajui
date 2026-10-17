@@ -91,7 +91,9 @@ class CardsPage extends ConsumerWidget {
       ? ref.watch(deviceTiltProvider)
       : null;
 
+  /// A folha: um cartão é o que ainda vai crescer na lista.
   static const _noCardsYet = CajuiEmptyState(
+    illustration: CajuiCerradoArt(CajuiCerrado.leaf),
     title: 'Nenhum cartão ainda',
     message:
         'Cadastre o cartão para pagar compras com ele. O Cajui só precisa '

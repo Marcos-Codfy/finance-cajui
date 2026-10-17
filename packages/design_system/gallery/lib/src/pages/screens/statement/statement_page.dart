@@ -102,6 +102,7 @@ class StatementPage extends StatelessWidget {
     'Fatura zerada não é erro: é um ciclo sem uso do cartão.',
     const [
       CajuiEmptyState(
+        illustration: CajuiCerradoArt(CajuiCerrado.cashew),
         title: 'Nenhuma compra neste ciclo',
         message:
             'O cartão não foi usado entre 29/08 e 28/09, e não há nada a '

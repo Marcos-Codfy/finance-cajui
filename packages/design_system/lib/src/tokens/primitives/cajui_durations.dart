@@ -35,4 +35,8 @@ abstract final class CajuiDurations {
   /// A janela do Desfazer depois de cancelar deslizando: dá tempo de ler e
   /// tocar, e não deixa o cancelamento pendurado.
   static const undo = Duration(seconds: 5);
+
+  /// 6 s — um balanço inteiro das ilustrações do Cerrado ao vento: lento o
+  /// bastante para ser ambiente, e não chamar o olho como um aviso.
+  static const breeze = Duration(seconds: 6);
 }
