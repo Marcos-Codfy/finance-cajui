@@ -81,6 +81,8 @@ export 'src/feedback/silent_feedback.dart';
 export 'src/format/brl_formatter.dart';
 export 'src/icons/cajui_icon.dart';
 export 'src/icons/cajui_icon_data.dart';
+export 'src/illustrations/cajui_cerrado.dart';
+export 'src/illustrations/cajui_cerrado_art.dart';
 export 'src/illustrations/cajui_hero_fruit.dart';
 export 'src/illustrations/hero_fruit_painter.dart';
 export 'src/interaction/cajui_pressable.dart';

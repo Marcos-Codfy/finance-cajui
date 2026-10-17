@@ -96,6 +96,32 @@ void main() {
 
       expect(started, 1);
     });
+
+    testWidgets('a ilustração é opcional: sem ela, só o texto; com ela, o '
+        'desenho vem antes do título', (tester) async {
+      const title = 'Nenhum cartão ainda';
+      await tester.pumpWidget(
+        host(const CajuiEmptyState(title: title, message: 'Cadastre.')),
+      );
+      expect(find.byType(CajuiCerradoArt), findsNothing);
+
+      await tester.pumpWidget(
+        host(
+          const CajuiEmptyState(
+            title: title,
+            message: 'Cadastre.',
+            illustration: CajuiCerradoArt(CajuiCerrado.leaf),
+          ),
+        ),
+      );
+
+      final art = tester.getRect(find.byType(CajuiCerradoArt));
+      expect(art.bottom, lessThan(tester.getTopLeft(find.text(title)).dy));
+      expect(
+        art.center.dx,
+        closeTo(tester.getCenter(find.text(title)).dx, 0.5),
+      );
+    });
   });
 
   group('movimento reduzido (RNF-A11Y-07)', () {

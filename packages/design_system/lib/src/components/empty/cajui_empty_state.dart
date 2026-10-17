@@ -27,7 +27,11 @@ class CajuiEmptyState extends StatelessWidget {
   /// primeiro à mão."
   final String message;
 
-  /// A ilustração — em geral, o ícone-herói.
+  /// A ilustração, opcional: uma das leves do Cerrado (`CajuiCerradoArt`)
+  /// nos vazios das listas, ou o ícone-herói (`CajuiHeroFruit`) onde o vazio
+  /// é a primeira coisa do app — no máximo um herói por tela. Sem ela, o
+  /// vazio é só texto, para os vazios que nascem de um filtro e não pedem
+  /// desenho.
   final Widget? illustration;
 
   /// O próximo passo.
