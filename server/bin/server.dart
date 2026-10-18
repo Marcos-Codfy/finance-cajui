@@ -7,6 +7,7 @@ import 'package:server/src/ai/ai_receipt_classifier.dart';
 import 'package:server/src/ai/ai_statement_reader.dart';
 import 'package:server/src/ai/chat_client.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
+import 'package:server/src/ai/claude_chat_client.dart';
 import 'package:server/src/ai/deepseek_chat_client.dart';
 import 'package:server/src/ai/token_budget.dart';
 import 'package:server/src/app.dart';
@@ -85,11 +86,8 @@ typedef _Ai = ({
 /// O orçamento de tokens e o disjuntor são **um só** para as três peças
 /// (RN-960): conversa, classificação e extrato gastam do mesmo teto.
 _Ai _ai(EventStore store) {
-  final directory = Platform.environment['CREDENTIALS_DIRECTORY'];
-  final keyFile = directory == null
-      ? null
-      : File(p.join(directory, DeepSeekChatClient.credentialName));
-  if (keyFile == null || !keyFile.existsSync()) {
+  final client = _client(Platform.environment['CREDENTIALS_DIRECTORY']);
+  if (client == null) {
     stdout.writeln(
       'sem credencial da IA: classificando só pelas regras locais',
     );
@@ -100,10 +98,30 @@ _Ai _ai(EventStore store) {
     );
   }
   return _pieces(
-    DeepSeekChatClient(apiKey: keyFile.readAsStringSync().trim()),
+    client,
     TokenBudget(store, monthlyLimit: 2000000),
     CircuitBreaker(),
   );
+}
+
+/// Quem fala com a IA. Com a credencial do Claude instalada, ele (o dono
+/// usou por um dia em 18/10/2026); senão a DeepSeek, como sempre. Voltar à
+/// DeepSeek é tirar a credencial do Claude — o resto não muda.
+ChatClient? _client(String? directory) {
+  if (directory == null) return null;
+  String? key(String name) {
+    final file = File(p.join(directory, name));
+    return file.existsSync() ? file.readAsStringSync().trim() : null;
+  }
+
+  if (key(ClaudeChatClient.credentialName) case final claude?) {
+    stdout.writeln('IA: Claude (${ClaudeChatClient.model})');
+    return ClaudeChatClient(apiKey: claude);
+  }
+  if (key(DeepSeekChatClient.credentialName) case final deepSeek?) {
+    return DeepSeekChatClient(apiKey: deepSeek);
+  }
+  return null;
 }
 
 /// As três peças sobre o mesmo [client], o mesmo [budget] e o mesmo
