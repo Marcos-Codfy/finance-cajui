@@ -30,7 +30,7 @@ void main() {
       ),
     );
     await settleAfterTap(tester);
-    await tester.tap(find.bySemanticsLabel('Início'));
+    await tester.tap(find.bySemanticsLabel('Painel'));
     await settleAfterTap(tester);
 
     // A abertura já sincroniza sozinha; conta só o que o puxão acrescenta.

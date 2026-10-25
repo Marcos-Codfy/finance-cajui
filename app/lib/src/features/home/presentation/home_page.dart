@@ -1,10 +1,10 @@
 import 'package:cajui/src/core/format/date_labels.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
-import 'package:cajui/src/features/budget/presentation/income_page.dart';
 import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
 import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
+import 'package:cajui/src/features/home/presentation/home_actions.dart';
 import 'package:cajui/src/features/home/presentation/home_cards.dart';
 import 'package:cajui/src/features/home/presentation/home_links.dart';
 import 'package:cajui/src/features/home/presentation/home_setup_card.dart';
@@ -15,7 +15,6 @@ import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
 import 'package:cajui/src/features/ledger/application/sync_now.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
 import 'package:cajui/src/features/settings/presentation/settings_page.dart';
 import 'package:design_system/design_system.dart';
@@ -23,7 +22,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// O Início: o mês da planilha de relance e as portas para o resto.
+/// O Painel: o mês da planilha de relance e as portas para o resto.
 ///
 /// Responde primeiro se o mês fecha — a sobra, ou quanto falta. Um aviso
 /// por vez, e só quando há o que fazer.
@@ -36,7 +35,7 @@ class HomePage extends ConsumerWidget {
     final state = ref.watch(homeStateProvider);
     return switch (state) {
       HomeLoading() => const CajuiScreen(
-        title: 'Início',
+        title: 'Painel',
         children: [
           CajuiSkeleton(height: 148),
           SizedBox(height: CajuiSpacing.lg),
@@ -46,7 +45,7 @@ class HomePage extends ConsumerWidget {
       // Os ajustes também aqui: é por eles que a consulta sai (ADR-027), e
       // a web de quem começou do zero passa a primeira visita nesta tela.
       HomeFirstUse() => CajuiScreen(
-        title: 'Início',
+        title: 'Painel',
         trailing: _tools(context, readOnly: true),
         children: const [WebEmptyState()],
       ),
@@ -82,7 +81,7 @@ class HomePage extends ConsumerWidget {
     return CajuiScreen(
       title: month[0].toUpperCase() + month.substring(1),
       trailing: _tools(context, readOnly: state.readOnly),
-      footer: state.readOnly ? null : _newEntry(context),
+      footer: state.readOnly ? null : const HomeActions(),
       depth: true,
       cinematic: true,
       replayKey: view.budget.month,
@@ -106,33 +105,6 @@ class HomePage extends ConsumerWidget {
     context,
     view,
     export: () => ref.read(exportMonthProvider).call(view.budget.month),
-  );
-
-  /// Lançar o que saiu, e — ao lado, à vista — registrar o que entrou:
-  /// a renda avulsa e o saldo moravam escondidos em Minhas contas
-  /// (16/10/2026).
-  static Widget _newEntry(BuildContext context) => Row(
-    spacing: CajuiSpacing.sm,
-    children: [
-      Expanded(
-        flex: 3,
-        child: CajuiButton(
-          label: 'Novo lançamento',
-          icon: CajuiIconData.plus,
-          expand: true,
-          onPressed: () => EntryFormPage.open(context),
-        ),
-      ),
-      Expanded(
-        flex: 2,
-        child: CajuiButton(
-          label: 'Entrou dinheiro',
-          variant: CajuiButtonVariant.secondary,
-          expand: true,
-          onPressed: () => IncomePage.open(context),
-        ),
-      ),
-    ],
   );
 
   /// Se o mês no verde está em festa; a primeira vez é anotada, para não

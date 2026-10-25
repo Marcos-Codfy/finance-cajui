@@ -13,7 +13,7 @@ Future<void> settleAfterTap(WidgetTester tester) async {
 /// Início, e a porta pode estar abaixo da dobra.
 Future<void> openFromHome(WidgetTester tester, String label) async {
   await backToTabs(tester);
-  await tester.tap(find.bySemanticsLabel('Início'));
+  await tester.tap(find.bySemanticsLabel('Painel'));
   await settleAfterTap(tester);
   // As portas de menos uso ficam guardadas no "Mais" do Início.
   if (find.bySemanticsLabel(label).evaluate().isEmpty) {
@@ -33,7 +33,7 @@ Future<void> openFromHome(WidgetTester tester, String label) async {
 /// tela empilhada esconde a barra, e o `find` não enxerga o que está fora
 /// de cena.
 Future<void> backToTabs(WidgetTester tester) async {
-  final tabs = find.bySemanticsLabel('Início');
+  final tabs = find.bySemanticsLabel('Painel');
   for (var depth = 0; depth < 6 && tabs.evaluate().isEmpty; depth++) {
     final back = find.bySemanticsLabel('Voltar');
     if (back.evaluate().isEmpty) return;

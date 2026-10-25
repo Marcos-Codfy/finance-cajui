@@ -29,15 +29,15 @@ Future<ProviderContainer> _openMoneyIn(WidgetTester tester) async {
     ),
   );
   await settleAfterTap(tester);
-  await tester.tap(find.bySemanticsLabel('Início'));
+  await tester.tap(find.bySemanticsLabel('Painel'));
   await settleAfterTap(tester);
-  await tester.tap(find.text('Entrou dinheiro'));
+  await tester.tap(find.text('Recebi'));
   await settleAfterTap(tester);
   return ProviderScope.containerOf(tester.element(find.byType(CajuiApp)));
 }
 
 void main() {
-  group('Entrou dinheiro, do Início', () {
+  group('Recebi, do Painel', () {
     testWidgets('o saldo que já estava na conta entra com o nome dele', (
       tester,
     ) async {

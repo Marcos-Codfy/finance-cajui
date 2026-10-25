@@ -1,14 +1,14 @@
 import 'package:design_system/design_system.dart';
 
 /// As duas áreas do app (sugestão 5 do dono, 11/10/2026): a conversa com a
-/// Juju, que é a tela principal, e o Início, com o mês e as portas para o
-/// resto. Lançamentos, cartões, dívidas e ajustes abrem a partir do Início.
+/// Juju, que é a tela principal, e o Painel, com o mês e as portas para o
+/// resto. Lançamentos, cartões, dívidas e ajustes abrem a partir do Painel.
 enum HomeTab {
   /// A conversa: lançar, perguntar, mandar foto ou extrato.
   conversar(CajuiIconData.chat, 'Conversar'),
 
   /// O mês da planilha e as portas para o resto.
-  inicio(CajuiIconData.wallet, 'Início');
+  inicio(CajuiIconData.wallet, 'Painel');
 
   new(this.icon, this.label);
 

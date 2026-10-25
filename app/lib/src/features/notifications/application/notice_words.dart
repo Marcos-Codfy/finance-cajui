@@ -87,6 +87,18 @@ abstract final class NoticeWords {
     );
   }
 
+  /// O boleto pago sem dizer a quem: pede um toque (BL-087, 24/10/2026). Se
+  /// for a fatura do cartão, lançar sozinho contaria o mês em dobro (RN-1001).
+  static AskAnnouncement boleto(String noticeId, BankReading reading) =>
+      AskAnnouncement(
+        noticeId: noticeId,
+        title: 'Boleto de ${_brl(reading.amount)}',
+        text:
+            'Não sei para quem foi. Toque para registrar; se for a fatura do '
+            'cartão, ela não é gasto.',
+        shareText: receiptText(reading),
+      );
+
   /// O texto que o classificador lê para achar a categoria (RN-789): o
   /// mesmo formato de comprovante, com o nome no rótulo que as regras do
   /// comprovante já procuram.

@@ -49,7 +49,7 @@ Future<void> _openHome(WidgetTester tester, List<LedgerEvent> events) async {
     ),
   );
   await tester.pump();
-  await tester.tap(find.bySemanticsLabel('Início'));
+  await tester.tap(find.bySemanticsLabel('Painel'));
   await settleAfterTap(tester);
 }
 
@@ -111,7 +111,7 @@ void main() {
 
     expect(find.byType(CajuiGlow, skipOffstage: false), findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Início'));
+    await tester.tap(find.bySemanticsLabel('Painel'));
     await settleAfterTap(tester);
 
     expect(_glow(tester).celebrateOnAppear, isTrue);
