@@ -116,11 +116,11 @@ void main() {
   });
 
   group('a resposta (ADR-021)', () {
-    test('o texto da IA chega como está, sem asteriscos de markdown e sem '
-        'conferência de número', () async {
+    test('o texto da IA chega sem asteriscos de markdown; o valor sem origem '
+        'é assunto da conferência da RN-943', () async {
       final reply =
-          '**Você gastou** ${_brl('56,00')} em dinheiro, e sobram '
-          '${_brl('5.000,00')} pelo que você me disse.';
+          '**Você gastou** ${_brl('56,00')} em dinheiro, '
+          'pelo que você me disse.';
       final client = SequencedChatClient([reply]);
       final (server, token) = await _server(client);
 
@@ -130,8 +130,7 @@ void main() {
       expect(body['fallback'], isFalse);
       expect(
         body['text'],
-        'Você gastou ${_brl('56,00')} em dinheiro, e '
-        'sobram ${_brl('5.000,00')} pelo que você me disse.',
+        'Você gastou ${_brl('56,00')} em dinheiro, pelo que você me disse.',
       );
       expect(body['actions'], isEmpty);
       expect(body['sources'], isEmpty);

@@ -13,11 +13,13 @@ void main() {
 
   test('ADR-023 · as instruções falam com as palavras da planilha e proíbem '
       'as de banco', () {
-    expect(AssistantPrompt.version, 7);
+    expect(AssistantPrompt.version, 8);
     // O "pode gastar por semana" saiu do app em 11/10/2026: a Juju não fala
     // de um número que nenhuma tela mostra.
     expect(AssistantPrompt.system, isNot(contains('por semana')));
     expect(AssistantPrompt.system, contains(r'faltam R$ X para fechar'));
     expect(AssistantPrompt.system, contains('mudar_categoria'));
+    // 22/10/2026: o valor vem já escrito em "reais", e a Juju não faz conta.
+    expect(AssistantPrompt.system, contains('Nunca converta centavos'));
   });
 }

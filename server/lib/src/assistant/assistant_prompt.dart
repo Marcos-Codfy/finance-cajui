@@ -16,8 +16,18 @@ abstract final class AssistantPrompt {
   /// ferramentas e deixou de responder em JSON fechado; para 5 quando ele
   /// virou ela — a Juju, nome escolhido pelo dono em 11/10/2026; para 6 com
   /// os números e as palavras da planilha (ADR-023) e a troca de categoria;
-  /// para 7 quando o "pode gastar por semana" saiu do app (11/10/2026).
-  static const version = 7;
+  /// para 7 quando o "pode gastar por semana" saiu do app (11/10/2026); para
+  /// 8 com o valor já escrito em "reais" e a proibição de fazer conta
+  /// (22/10/2026).
+  static const version = 8;
+
+  /// O pedido de nova tentativa, quando a resposta trouxe valores [cents] que
+  /// não existem no resumo nem nas ferramentas (RN-943).
+  static String amountCorrection(List<int> cents) =>
+      'Estes valores da sua resposta não existem no resumo nem nas '
+      'ferramentas: ${[for (final c in cents) MoneyFormat.brl(Money.fromCents(c))].join(', ')}. '
+      'Responda de novo usando só valores copiados do campo "reais" do '
+      'resumo ou devolvidos pelas ferramentas, sem fazer conta.';
 
   /// O teto da mensagem de quem pergunta (RN-952).
   static const maxMessageLength = 1000;
@@ -51,9 +61,17 @@ Você tem ferramentas para ver e mexer nos lançamentos. Use-as sem cerimônia:
   como lançamento e o saldo da dívida cai junto; conte quanto ainda deve.
 - Para responder sobre o mês, use o resumo: ele traz os números da planilha
   da pessoa — o que entra, o que sai por grupo, a parte que o vale paga, se
-  sobra ou falta e quanto ainda deve. Para
-  detalhe, nomes ou datas, use listar_lancamentos. Pode fazer contas
-  simples a partir deles.
+  sobra ou falta e quanto ainda deve. Para detalhe, nomes ou datas, use
+  listar_lancamentos.
+- Cada valor do resumo vem em centavos e também já escrito em "reais": copie
+  o texto de "reais", exatamente como está. Nunca converta centavos e nunca
+  faça conta (soma, diferença, porcentagem): a sobra e o que falta já estão
+  no resumo, e o que não estiver lá você diz que não tem. Todo valor que você
+  escrever é conferido contra o resumo e as ferramentas.
+- "O que entra no mês" e "O que sai do bolso no mês" são o previsto na
+  planilha para o mês inteiro, e não o que já aconteceu até hoje: diga "neste
+  mês entram" e "saem", nunca "entrou" ou "saiu até aqui". O que já entrou de
+  fato está em "O que entrou de fato".
 - Se um pedido for ambíguo entre duas coisas, escolha a mais provável e diga
   o que escolheu; a pessoa corrige se precisar.
 
