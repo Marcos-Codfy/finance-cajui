@@ -40,5 +40,8 @@ final class ContextNumber {
     'kind': kind.name,
     'period': period,
     'cents': amount.cents,
+    // O texto pronto: o modelo o copia, em vez de converter centavos e errar
+    // um dígito (22/10/2026).
+    'reais': MoneyFormat.brl(amount),
   };
 }

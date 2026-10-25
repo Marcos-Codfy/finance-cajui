@@ -9,6 +9,7 @@ import 'package:server/src/ai/chat_tool.dart';
 import 'package:server/src/ai/chat_unavailable.dart';
 import 'package:server/src/ai/circuit_breaker.dart';
 import 'package:server/src/ai/token_budget.dart';
+import 'package:server/src/assistant/amount_check.dart';
 import 'package:server/src/assistant/assistant_action.dart';
 import 'package:server/src/assistant/assistant_answer.dart';
 import 'package:server/src/assistant/assistant_context.dart';
@@ -81,8 +82,9 @@ final class AssistantService {
       window: window.of(sessionId),
       message: question,
     );
+    final known = _known(context, catalog, question);
     try {
-      final answer = await _converse(messages, context, tools);
+      final answer = await _converse(messages, context, tools, known);
       window.add(sessionId, question, answer.text);
       return (answer: answer, error: null, retryAfterSeconds: null);
     } on ChatUnavailable catch (unavailable) {
@@ -91,6 +93,18 @@ final class AssistantService {
       return _down(null);
     }
   }
+
+  /// Os valores que a resposta pode citar (RN-943): os do resumo, os do
+  /// cadastro e os que a pessoa digitou. Os das ferramentas entram no laço.
+  static Set<int> _known(
+    AssistantContext context,
+    Map<String, Object?> catalog,
+    String question,
+  ) => {
+    ...AmountCheck.intsIn(context.toJson()),
+    ...AmountCheck.intsIn(catalog),
+    ...AmountCheck.typedIn(question),
+  };
 
   /// A pergunta mascarada antes de ser guardada ou enviada (RN-952), sem os
   /// nomes da casa (RN-732).
@@ -115,31 +129,61 @@ final class AssistantService {
 
   /// O laço da conversa. [messages] cresce com cada pedido de ferramenta e
   /// cada resultado, e é o que vai inteiro na chamada seguinte.
+  ///
+  /// A resposta com valor sem origem (RN-943) volta ao modelo **uma vez**, com
+  /// os valores apontados; se insistir, sai a resposta de formato fixo
+  /// (RN-945), que é melhor que um número errado dito com segurança.
   Future<AssistantAnswer> _converse(
     List<ChatMessage> messages,
     AssistantContext context,
     AssistantTools tools,
+    Set<int> known,
   ) async {
     final actions = <AssistantAction>[];
+    var corrected = false;
     for (var round = 0; round <= maxToolRounds; round++) {
       final offered = round < maxToolRounds
           ? tools.offered
           : const <ChatTool>[];
       final reply = await _call(messages, offered, context);
-      if (!reply.wantsTools) {
+      if (reply.wantsTools) {
+        await _runTools(reply, messages, tools, actions, known);
+        continue;
+      }
+      final unknown = AmountCheck.unknownIn(reply.content, known);
+      if (unknown.isEmpty) {
         return AssistantAnswer.fromText(reply.content, actions: actions) ??
             AssistantAnswer.fallback(actions: actions);
       }
-      messages.add(
-        ChatMessage.assistant(reply.content, toolCalls: reply.toolCalls),
-      );
-      for (final call in reply.toolCalls) {
-        final outcome = await tools.run(call);
-        if (outcome.action case final action?) actions.add(action);
-        messages.add(ChatMessage.tool(outcome.json, toolCallId: call.id));
-      }
+      if (corrected) break;
+      corrected = true;
+      messages
+        ..add(ChatMessage.assistant(reply.content))
+        ..add(ChatMessage.user(AssistantPrompt.amountCorrection(unknown)));
     }
     return AssistantAnswer.fallback(actions: actions);
+  }
+
+  /// Atende os pedidos de ferramenta de [reply], devolve os resultados ao
+  /// modelo em [messages] e anota em [known] os valores que eles trouxeram.
+  Future<void> _runTools(
+    ChatReply reply,
+    List<ChatMessage> messages,
+    AssistantTools tools,
+    List<AssistantAction> actions,
+    Set<int> known,
+  ) async {
+    messages.add(
+      ChatMessage.assistant(reply.content, toolCalls: reply.toolCalls),
+    );
+    for (final call in reply.toolCalls) {
+      final outcome = await tools.run(call);
+      if (outcome.action case final action?) actions.add(action);
+      known
+        ..addAll(AmountCheck.intsIn(call.arguments))
+        ..addAll(AmountCheck.intsIn(outcome.result));
+      messages.add(ChatMessage.tool(outcome.json, toolCallId: call.id));
+    }
   }
 
   Future<ChatReply> _call(
