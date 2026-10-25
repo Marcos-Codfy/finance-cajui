@@ -51,6 +51,7 @@ class NoticeRecorder {
     final id = entryIdOf(noticeId);
     if (_known(book, id) || _alreadyThere(book, reading)) return null;
     if (withinHouse) return NoticeWords.ownTransfer(noticeId, reading);
+    if (_unknownBoleto(reading)) return NoticeWords.boleto(noticeId, reading);
     final method = NoticePaymentMethod.of(reading, book);
     if (method == null || reading.isInstallment || _cardBill(reading, book)) {
       return _ask(noticeId, reading);
@@ -72,6 +73,12 @@ class NoticeRecorder {
       ),
     );
   }
+
+  /// Boleto pago sem favorecido: não dá para saber se é conta ou fatura, e a
+  /// fatura não é despesa. Pede um toque, como o Pix para o banco do cartão
+  /// (BL-087).
+  static bool _unknownBoleto(BankReading reading) =>
+      reading.kind == MovementKind.boletoPaid && reading.counterpart == null;
 
   static const Set<MovementKind> _paysSomeone = {
     MovementKind.pixSent,
