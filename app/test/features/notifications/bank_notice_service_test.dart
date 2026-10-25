@@ -122,33 +122,37 @@ void main() {
     expect(said.text, startsWith('Outros · Pix.'));
   });
 
-  test('RN-789 · débito vai para Débito, boleto para Boleto', () async {
-    device
-      ..push(
-        bankNotice(
-          'd1',
-          BankApp.nubank,
-          r'Compra de R$ 12,50 no débito APROVADA em PADARIA SOL NASCENTE.',
-        ),
-      )
-      ..push(
-        bankNotice(
-          'b1',
-          BankApp.inter,
-          r'Pagamento de boleto realizado: R$ 210,35',
-        ),
-      );
+  test('RN-789 · débito vai para Débito', () async {
+    device.push(
+      bankNotice(
+        'd1',
+        BankApp.nubank,
+        r'Compra de R$ 12,50 no débito APROVADA em PADARIA SOL NASCENTE.',
+      ),
+    );
 
     final book = await drain();
 
-    expect(book.entries.map((entry) => methodOf(book, entry)), [
-      'Débito',
-      'Boleto',
-    ]);
-    expect(book.entries.first.categoryId, 'bakery');
-    expect(book.entries.last.description, 'Boleto');
-    final titles = [for (final said in device.announced) said.title];
-    expect(titles.last, startsWith('Lancei o boleto de'));
+    expect(methodOf(book, book.entries.single), 'Débito');
+    expect(book.entries.single.categoryId, 'bakery');
+  });
+
+  test('BL-087 · boleto pago sem favorecido pede um toque e não lança '
+      'sozinho: pode ser a fatura do cartão', () async {
+    device.push(
+      bankNotice(
+        'b1',
+        BankApp.inter,
+        r'Pagamento de boleto realizado: R$ 210,35',
+      ),
+    );
+
+    final book = await drain();
+
+    expect(book.entries, isEmpty);
+    final said = device.announced.single;
+    expect(said, isA<AskAnnouncement>());
+    expect(said.title, startsWith('Boleto de'));
   });
 
   test('RN-789 · o que já está no livro, com o mesmo valor no mesmo dia, '
