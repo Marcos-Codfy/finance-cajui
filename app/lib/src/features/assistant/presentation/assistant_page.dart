@@ -93,6 +93,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             talk is StatementTalkIdle)
           ..._firstTalk(assistant.ask),
         ..._exchanges(state, canUndo: paired, waiting: pending != null),
+        if (pending == null && talk is StatementTalkIdle)
+          ..._followUps(assistant.ask, state),
         if (pending != null) ...[
           CajuiChatBubble(pending, fromUser: true),
           const CajuiChatBubble('', thinking: true),
@@ -176,9 +178,37 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   List<String> _suggestions() => AssistantSuggestions.of(
     ref.watch(financesProvider),
     ref.watch(todayProvider).budgetMonth,
-    cardIds: {
-      ...?ref.watch(ledgerProvider).value?.cards.map((card) => card.id),
-    },
+    cardIds: _cardIds(),
+  );
+
+  Set<String> _cardIds() => {
+    ...?ref.watch(ledgerProvider).value?.cards.map((card) => card.id),
+  };
+
+  /// O que vale perguntar depois da última resposta: acompanha o assunto da
+  /// conversa e não repete o que ela já teve (24/10/2026).
+  List<Widget> _followUps(ValueChanged<String> onAsk, AssistantTalking state) {
+    final suggestions = AssistantSuggestions.after(
+      state.exchanges,
+      ref.watch(financesProvider),
+      ref.watch(todayProvider).budgetMonth,
+      cardIds: _cardIds(),
+    );
+    if (suggestions.isEmpty) return const [];
+    return [_chips(suggestions, onAsk)];
+  }
+
+  Widget _chips(List<String> suggestions, ValueChanged<String> onAsk) => Wrap(
+    spacing: CajuiSpacing.sm,
+    runSpacing: CajuiSpacing.sm,
+    children: [
+      for (final suggestion in suggestions)
+        CajuiChip(
+          label: suggestion,
+          selected: false,
+          onSelected: (_) => onAsk(suggestion),
+        ),
+    ],
   );
 
   List<Widget> _firstTalk(ValueChanged<String> onAsk) => [
@@ -189,17 +219,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           'seus números na mão.',
     ),
     const SizedBox(height: CajuiSpacing.lg),
-    Wrap(
-      spacing: CajuiSpacing.sm,
-      runSpacing: CajuiSpacing.sm,
-      children: [
-        for (final suggestion in _suggestions())
-          CajuiChip(
-            label: suggestion,
-            selected: false,
-            onSelected: (_) => onAsk(suggestion),
-          ),
-      ],
-    ),
+    _chips(_suggestions(), onAsk),
   ];
 }
