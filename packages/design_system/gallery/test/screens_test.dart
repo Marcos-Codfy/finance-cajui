@@ -5,7 +5,7 @@ import 'package:gallery/src/shell/gallery_destination.dart';
 import 'support/gallery_harness.dart';
 
 void main() {
-  group('Início', () {
+  group('Painel', () {
     testWidgets('mostra os números do mês no carrossel e a Planilha do mês', (
       tester,
     ) async {
@@ -24,7 +24,7 @@ void main() {
         find.text('Leva outubro para o Excel ou o Planilhas Google'),
         findsOneWidget,
       );
-      expect(find.text('Novo lançamento'), findsOneWidget);
+      expect(find.text('Gastei'), findsOneWidget);
     });
 
     testWidgets('o mês que não fecha diz quanto falta, sem julgamento', (
@@ -53,7 +53,7 @@ void main() {
       await openGallery(tester, page: GalleryDestination.home);
       await pickVariant(tester, 'Consulta pela web');
 
-      expect(find.text('Novo lançamento'), findsNothing);
+      expect(find.text('Gastei'), findsNothing);
       expect(find.bySemanticsLabel('Fotografar comprovante'), findsNothing);
       expect(find.bySemanticsLabel('Ajustes'), findsOneWidget);
     });

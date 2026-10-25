@@ -160,8 +160,8 @@ class HomePage extends StatelessWidget {
 
   static ScreenVariant _readOnly() => _ready(
     'Consulta pela web',
-    'ADR-013: no computador o Início é só leitura. Sem câmera, sem galeria '
-        'e sem "Novo lançamento": lançar é no celular.',
+    'ADR-013: no computador o Painel é só leitura. Sem câmera, sem galeria '
+        'e sem "Gastei": lançar é no celular.',
     HomeNumbers.closing(),
     readOnly: true,
   );
