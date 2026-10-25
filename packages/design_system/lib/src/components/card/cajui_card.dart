@@ -52,6 +52,9 @@ class CajuiCard extends StatelessWidget {
     return CajuiPressable(
       onPressed: tap,
       touch: CajuiTouch.card,
+      // Cartão preenche o espaço que ganha: o do conteúdo curto não pode ficar
+      // menor que o vizinho de conteúdo longo.
+      fill: true,
       radius: _radius,
       semanticLabel: semanticLabel!,
       builder: (context, states) =>

@@ -32,6 +32,7 @@ class CajuiPressable extends StatefulWidget {
     this.busy = false,
     this.autofocus = false,
     this.touch = CajuiTouch.action,
+    this.fill = false,
     super.key,
   }) : assert(
          toggled == null || selected == null,
@@ -69,6 +70,13 @@ class CajuiPressable extends StatefulWidget {
   /// Que tipo de toque é, para o som: o clique do botão ou o pop do card.
   /// Chave e chip ([toggled]) soam como chave, seja qual for.
   final CajuiTouch touch;
+
+  /// Se o desenho preenche o espaço que o controle recebe, em vez de encolher
+  /// ao tamanho do próprio conteúdo. É o que um cartão precisa: sem isto, num
+  /// par de portas do Início "Tudo quitado" ficava menor que o vizinho de
+  /// frase longa (22/10/2026). Chip e botão pequeno seguem sem preencher, para
+  /// o alvo de 48 dp não esticar o desenho.
+  final bool fill;
 
   @override
   State<CajuiPressable> createState() => _CajuiPressableState();
@@ -168,7 +176,9 @@ class _CajuiPressableState extends State<CajuiPressable> {
         minWidth: CajuiSpacing.touchTarget,
         minHeight: CajuiSpacing.touchTarget,
       ),
-      child: Center(widthFactor: 1, heightFactor: 1, child: _spring(context)),
+      child: widget.fill
+          ? _spring(context)
+          : Center(widthFactor: 1, heightFactor: 1, child: _spring(context)),
     );
   }
 
