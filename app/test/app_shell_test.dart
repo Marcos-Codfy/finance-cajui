@@ -40,7 +40,7 @@ void main() {
     await _open(tester);
 
     expect(find.textContaining(AssistantIdentity.name), findsWidgets);
-    for (final label in ['Conversar', 'Início']) {
+    for (final label in ['Conversar', 'Painel']) {
       expect(_bar(label), findsOneWidget, reason: label);
     }
     expect(_bar('Lançamentos'), findsNothing);
@@ -50,7 +50,7 @@ void main() {
   testWidgets('o Início tem o mês e as portas para o resto', (tester) async {
     await _open(tester);
 
-    await tester.tap(find.bySemanticsLabel('Início'));
+    await tester.tap(find.bySemanticsLabel('Painel'));
     await settleAfterTap(tester);
 
     expect(_screen('Setembro'), findsOneWidget);

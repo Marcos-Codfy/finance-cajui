@@ -23,7 +23,7 @@ Future<void> _open(WidgetTester tester, List<SetupStep> steps) async {
     ),
   );
   await settleAfterTap(tester);
-  await tester.tap(find.bySemanticsLabel('Início'));
+  await tester.tap(find.bySemanticsLabel('Painel'));
   await settleAfterTap(tester);
 }
 

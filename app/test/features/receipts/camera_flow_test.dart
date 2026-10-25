@@ -99,7 +99,7 @@ void main() {
       SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
     ];
     await backToTabs(tester);
-    await _tap(tester, find.bySemanticsLabel('Início'));
+    await _tap(tester, find.bySemanticsLabel('Painel'));
 
     await _tap(
       tester,

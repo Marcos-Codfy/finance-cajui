@@ -28,7 +28,7 @@ class _ActionPageState extends State<ActionPage> {
   /// o Início, de onde se abre o resto.
   static const _areas = [
     CajuiNavDestination(icon: CajuiIconData.chat, label: 'Conversar'),
-    CajuiNavDestination(icon: CajuiIconData.wallet, label: 'Início'),
+    CajuiNavDestination(icon: CajuiIconData.wallet, label: 'Painel'),
   ];
 
   String _category = _categories.first;

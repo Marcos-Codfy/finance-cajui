@@ -106,7 +106,7 @@ class HomePage extends StatelessWidget {
   );
 
   static Widget _newEntry() => CajuiButton(
-    label: 'Novo lançamento',
+    label: 'Gastei',
     icon: CajuiIconData.plus,
     expand: true,
     onPressed: () {},

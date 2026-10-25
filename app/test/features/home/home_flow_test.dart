@@ -80,7 +80,7 @@ Future<MemoryLedgerJournal> _openHome(
     ),
   );
   await tester.pump();
-  await tester.tap(find.bySemanticsLabel('Início'));
+  await tester.tap(find.bySemanticsLabel('Painel'));
   await settleAfterTap(tester);
   return journal;
 }
