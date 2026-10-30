@@ -6,7 +6,7 @@ import 'package:domain/domain.dart';
 import 'package:server/src/ai/classification_prompt.dart';
 import 'package:server/src/ai/receipt_image.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:server/src/ledger/household_facts.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
@@ -46,8 +46,28 @@ final class ReceiptRoutes {
   /// até 2.000 px, que fica bem abaixo disto.
   static const int maxImageBytes = 2 * 1024 * 1024;
 
-  Future<Response> _classify(Request request) async {
-    final json = await JsonBody.read(request, limit: maxBodyBytes);
+  Future<Response> _classify(Request request) =>
+      RequestBody.handle(request, _parse, (read) async {
+        final proposal = await classifier.classify(
+          ClassificationRequest(
+            text: ReceiptText.clean(read.text),
+            categories: state.categories.values.toList(),
+            today: clock.today(),
+            learnedRules: read.examples,
+            images: read.images,
+            // Os nomes da casa saem do texto antes da IA (RN-732, BL-093).
+            householdNames: HouseholdFacts.namesIn(state),
+          ),
+        );
+        return Responses.json(ProposalCodec.encode(proposal));
+      }, limit: maxBodyBytes);
+
+  /// O pedido de classificação, já conferido: o texto, as imagens e os
+  /// exemplos que o aparelho aprendeu. Sem texto e sem imagem não há o que
+  /// classificar.
+  ({String text, List<Uint8List> images, Map<String, String> examples}) _parse(
+    Object? json,
+  ) {
     final body = JsonReader(
       json,
       allowed: const {'text', 'examples', 'images'},
@@ -57,18 +77,7 @@ final class ReceiptRoutes {
     if (text.isEmpty && images.isEmpty) {
       throw const FormatException('nem texto nem imagem');
     }
-    final proposal = await classifier.classify(
-      ClassificationRequest(
-        text: ReceiptText.clean(text),
-        categories: state.categories.values.toList(),
-        today: clock.today(),
-        learnedRules: _examples(json),
-        images: images,
-        // Os nomes da casa saem do texto antes da IA (RN-732, BL-093).
-        householdNames: HouseholdFacts.namesIn(state),
-      ),
-    );
-    return Responses.json(ProposalCodec.encode(proposal));
+    return (text: text, images: images, examples: _examples(json));
   }
 
   /// As imagens, em base64. Cada uma é conferida pelos primeiros bytes: o

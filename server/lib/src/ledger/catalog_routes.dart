@@ -2,7 +2,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:server/src/ledger/fingerprint.dart';
 import 'package:server/src/ledger/ledger_routes.dart';
 import 'package:server/src/ledger/ledger_state.dart';
@@ -44,9 +44,33 @@ final class CatalogRoutes {
     ],
   });
 
-  Future<Response> _defineCategory(Request request) async {
+  Future<Response> _defineCategory(Request request) =>
+      RequestBody.handle(request, _categoryBody, (read) async {
+        final (:body, :name) = read;
+        if (CategoryNamePolicy.check(name) case final refused?) {
+          final (code, detail) = FailureMapper.map(refused);
+          return Responses.error(request, code, detail: detail);
+        }
+        final category = Decoded.of(() => _categoryOf(body, name: name));
+        if (category is! Understood<Category>) {
+          return Responses.error(request, ErrorCode.req01);
+        }
+        return await _keep(
+          request,
+          body,
+          prefix: 'category',
+          type: LedgerState.categoryCreated,
+          content: CategoryCodec.encode(category.value),
+          current: state.catalog.categoryVersion(category.value.id),
+        );
+      });
+
+  /// O corpo de uma categoria, com os campos que a rota aceita e o nome já
+  /// lido: a política do nome só roda depois, para o erro dela ser o do
+  /// catálogo e não um pedido malformado.
+  static ({JsonReader body, String name}) _categoryBody(Object? json) {
     final body = JsonReader(
-      await JsonBody.read(request),
+      json,
       allowed: const {
         'id',
         'name',
@@ -56,20 +80,7 @@ final class CatalogRoutes {
         CatalogVersion.stampField,
       },
     );
-    final name = body.string('name', maxLength: 40);
-    if (CategoryNamePolicy.check(name) case final refused?) {
-      final (code, detail) = FailureMapper.map(refused);
-      return Responses.error(request, code, detail: detail);
-    }
-    final category = _categoryOf(body, name: name);
-    return await _keep(
-      request,
-      body,
-      prefix: 'category',
-      type: LedgerState.categoryCreated,
-      content: CategoryCodec.encode(category),
-      current: state.catalog.categoryVersion(category.id),
-    );
+    return (body: body, name: body.string('name', maxLength: 40));
   }
 
   /// A categoria lida de [body], já com o [name] conferido. Bloco que o
@@ -92,9 +103,23 @@ final class CatalogRoutes {
   /// O cartão como forma de pagamento, e **nada de número de cartão**: só
   /// nome, dias e limite, que é o que a conta da fatura pede — e a cor do
   /// plástico, que é só aparência.
-  Future<Response> _defineCard(Request request) async {
+  Future<Response> _defineCard(Request request) =>
+      RequestBody.handle(request, _cardBody, (read) async {
+        final (:body, :card) = read;
+        return await _keep(
+          request,
+          body,
+          prefix: 'card',
+          type: LedgerState.cardDefined,
+          content: CardCodec.encodeCard(card),
+          current: state.catalog.cardVersion(card.id),
+        );
+      });
+
+  /// O corpo de um cartão e o cartão que ele descreve.
+  static ({JsonReader body, CreditCard card}) _cardBody(Object? json) {
     final body = JsonReader(
-      await JsonBody.read(request),
+      json,
       allowed: const {
         'id',
         'name',
@@ -113,14 +138,7 @@ final class CatalogRoutes {
       'creditLimitCents': body.optionalInteger('creditLimitCents'),
       'skin': body.optionalString('skin', maxLength: 20),
     });
-    return await _keep(
-      request,
-      body,
-      prefix: 'card',
-      type: LedgerState.cardDefined,
-      content: CardCodec.encodeCard(card),
-      current: state.catalog.cardVersion(card.id),
-    );
+    return (body: body, card: card);
   }
 
   /// Grava a versão que chegou, se ela é a que vale.

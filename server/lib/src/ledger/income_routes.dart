@@ -1,7 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -38,27 +38,33 @@ final class IncomeRoutes {
     'voucherBalanceCents': state.voucherBalance.cents,
   });
 
-  Future<Response> _receive(Request request) async {
-    final receipt = IncomeCodec.read(await JsonBody.read(request));
-    final event = await store.append(
-      id: 'income-${receipt.id}',
-      type: LedgerState.incomeReceived,
-      payload: IncomeCodec.encode(receipt),
-    );
-    state.apply(event);
-    return Responses.json({'id': receipt.id, 'seq': event.seq}, status: 201);
-  }
+  Future<Response> _receive(Request request) => RequestBody.handle(
+    request,
+    IncomeCodec.read,
+    (receipt) async {
+      final event = await store.append(
+        id: 'income-${receipt.id}',
+        type: LedgerState.incomeReceived,
+        payload: IncomeCodec.encode(receipt),
+      );
+      state.apply(event);
+      return Responses.json({'id': receipt.id, 'seq': event.seq}, status: 201);
+    },
+  );
 
   /// Acertar o saldo não é renda nem despesa (RN-123): é o app admitindo que
   /// o saldo de verdade é o do cartão do vale, e não o que ele calculou.
-  Future<Response> _adjust(Request request) async {
-    final payload = IncomeCodec.readAdjustment(await JsonBody.read(request));
-    final event = await store.append(
-      id: 'voucher-${payload['id']}',
-      type: LedgerState.voucherAdjusted,
-      payload: payload,
-    );
-    state.apply(event);
-    return Responses.json({'id': payload['id'], 'seq': event.seq}, status: 201);
-  }
+  Future<Response> _adjust(Request request) =>
+      RequestBody.handle(request, IncomeCodec.readAdjustment, (payload) async {
+        final event = await store.append(
+          id: 'voucher-${payload['id']}',
+          type: LedgerState.voucherAdjusted,
+          payload: payload,
+        );
+        state.apply(event);
+        return Responses.json({
+          'id': payload['id'],
+          'seq': event.seq,
+        }, status: 201);
+      });
 }

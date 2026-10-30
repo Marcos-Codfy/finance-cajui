@@ -11,7 +11,7 @@ import 'package:server/src/assistant/sheet_numbers.dart';
 import 'package:server/src/auth/authenticate.dart';
 import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:server/src/ledger/household_facts.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
@@ -118,28 +118,33 @@ final class AssistantRoutes {
   /// O roteador, montado em `/v1/assistant`.
   Router get router => Router()..post('/ask', _ask);
 
-  Future<Response> _ask(Request request) async {
-    final raw = await JsonBody.read(request);
+  Future<Response> _ask(Request request) =>
+      RequestBody.handle(request, _questionOf, (question) async {
+        final assistant = service;
+        if (assistant == null) return Responses.error(request, ErrorCode.ai01);
+        final session = Authenticate.sessionOf(request);
+        final readOnly = session.scope == SessionScope.webReadOnly;
+        final outcome = await assistant.ask(
+          sessionId: session.deviceId,
+          message: question.message,
+          context: _contextWith(question.month),
+          catalog: {..._catalog, if (readOnly) 'acesso': _consultOnly},
+          tools: _tools(readOnly: readOnly),
+          householdNames: HouseholdFacts.namesIn(state),
+        );
+        return _reply(request, outcome);
+      });
+
+  /// A pergunta e os números do mês que a tela mostra, já conferidos.
+  static ({String message, MonthFigures? month}) _questionOf(Object? raw) {
     final body = JsonReader(raw, allowed: const {'message', 'month'});
-    final message = body.string(
-      'message',
-      maxLength: AssistantPrompt.maxMessageLength,
-    );
-    final assistant = service;
-    if (assistant == null) return Responses.error(request, ErrorCode.ai01);
-    final session = Authenticate.sessionOf(request);
-    final readOnly = session.scope == SessionScope.webReadOnly;
-    final outcome = await assistant.ask(
-      sessionId: session.deviceId,
-      message: message,
-      context: _contextWith(
-        MonthFigures.fromJson(raw is Map ? raw['month'] : null),
+    return (
+      message: body.string(
+        'message',
+        maxLength: AssistantPrompt.maxMessageLength,
       ),
-      catalog: {..._catalog, if (readOnly) 'acesso': _consultOnly},
-      tools: _tools(readOnly: readOnly),
-      householdNames: HouseholdFacts.namesIn(state),
+      month: MonthFigures.fromJson(raw is Map ? raw['month'] : null),
     );
-    return _reply(request, outcome);
   }
 
   static Response _reply(Request request, AssistantOutcome outcome) {

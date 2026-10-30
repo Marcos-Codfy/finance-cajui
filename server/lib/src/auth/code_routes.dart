@@ -6,7 +6,7 @@ import 'package:server/src/auth/session_book.dart';
 import 'package:server/src/auth/session_scope.dart';
 import 'package:server/src/auth/totp.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -50,26 +50,26 @@ final class CodeRoutes {
   /// O roteador, montado em `/v1/auth`.
   Router get router => Router()..post('/code', _code);
 
-  Future<Response> _code(Request request) async {
-    final body = JsonReader(
-      await JsonBody.read(request),
-      allowed: const {'code'},
-    );
-    final code = body.string('code', maxLength: 8);
-    // Daqui até contar o erro não há `await`: com um isolate só, conferir a
-    // porta, testar o código e contar a falha acontecem juntos. Com a porta
-    // conferida antes de ler o corpo, cem pedidos simultâneos passavam todos
-    // por ela e furavam a trava.
-    final now = clock.now();
-    final verifier = totp;
-    if (verifier == null || _locked(now)) return _refused(request);
-    if (!verifier.accepts(code, now)) {
-      _fail(now);
-      return _refused(request);
-    }
-    _failures = 0;
-    return await _opened(verifier);
-  }
+  Future<Response> _code(Request request) =>
+      RequestBody.handle(request, _codeOf, (code) async {
+        // Daqui até contar o erro não há `await`: com um isolate só, conferir
+        // a porta, testar o código e contar a falha acontecem juntos. Com a
+        // porta conferida antes de ler o corpo, cem pedidos simultâneos
+        // passavam todos por ela e furavam a trava.
+        final now = clock.now();
+        final verifier = totp;
+        if (verifier == null || _locked(now)) return _refused(request);
+        if (!verifier.accepts(code, now)) {
+          _fail(now);
+          return _refused(request);
+        }
+        _failures = 0;
+        return await _opened(verifier);
+      });
+
+  /// O código de seis dígitos que veio no corpo.
+  static String _codeOf(Object? json) =>
+      JsonReader(json, allowed: const {'code'}).string('code', maxLength: 8);
 
   /// Abre a sessão longa e a grava com a impressão do segredo que a abriu:
   /// trocar o segredo derruba todas no próximo reinício (ADR-027).

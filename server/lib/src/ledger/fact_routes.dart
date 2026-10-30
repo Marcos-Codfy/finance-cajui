@@ -1,7 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -34,14 +34,14 @@ final class FactRoutes {
 
   /// Guarda o fato. A chave é o identificador que o aparelho deu a ele:
   /// mandar de novo não grava de novo.
-  Future<Response> _keep(Request request) async {
-    final fact = DeviceFact.read(await JsonBody.read(request));
-    final event = await store.append(
-      id: 'fact-${fact.id}',
-      type: fact.type,
-      payload: {'id': fact.id, 'payload': fact.payload},
-    );
-    state.apply(event);
-    return Responses.json({'id': fact.id, 'seq': event.seq}, status: 201);
-  }
+  Future<Response> _keep(Request request) =>
+      RequestBody.handle(request, DeviceFact.read, (fact) async {
+        final event = await store.append(
+          id: 'fact-${fact.id}',
+          type: fact.type,
+          payload: {'id': fact.id, 'payload': fact.payload},
+        );
+        state.apply(event);
+        return Responses.json({'id': fact.id, 'seq': event.seq}, status: 201);
+      });
 }

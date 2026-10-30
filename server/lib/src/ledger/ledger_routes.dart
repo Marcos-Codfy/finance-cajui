@@ -2,7 +2,7 @@ import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/http/error_response.dart';
-import 'package:server/src/http/json_body.dart';
+import 'package:server/src/http/request_body.dart';
 import 'package:server/src/ledger/fingerprint.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 import 'package:shelf/shelf.dart';
@@ -46,20 +46,20 @@ final class LedgerRoutes {
   ///
   /// A chave sai do próprio conteúdo, como na correção de lançamento:
   /// reenviar o mesmo plano não cria fato novo, e um plano diferente cria.
-  Future<Response> _definePlan(Request request) async {
-    final setup = MonthSetupCodec.read(await JsonBody.read(request));
-    if (_isAhead(setup.definedAt)) {
-      return Responses.error(request, ErrorCode.req01);
-    }
-    final payload = MonthSetupCodec.encode(setup);
-    final event = await store.append(
-      id: 'plan-${Fingerprint.of(payload)}',
-      type: LedgerState.planDefined,
-      payload: payload,
-    );
-    state.apply(event);
-    return Responses.json({'seq': event.seq});
-  }
+  Future<Response> _definePlan(Request request) =>
+      RequestBody.handle(request, MonthSetupCodec.read, (setup) async {
+        if (_isAhead(setup.definedAt)) {
+          return Responses.error(request, ErrorCode.req01);
+        }
+        final payload = MonthSetupCodec.encode(setup);
+        final event = await store.append(
+          id: 'plan-${Fingerprint.of(payload)}',
+          type: LedgerState.planDefined,
+          payload: payload,
+        );
+        state.apply(event);
+        return Responses.json({'seq': event.seq});
+      });
 
   Response _listEntries(Request request) {
     final month = request.url.queryParameters['month'];
@@ -81,50 +81,52 @@ final class LedgerRoutes {
     });
   }
 
-  Future<Response> _createEntry(Request request) async {
-    final command = CreateEntryRequest.fromJson(await JsonBody.read(request));
-    if (_gate(request, command) case final refused?) return refused;
-    final known = state.entries.any((entry) => entry.id == command.id);
-    final result = state.tryCreate(command, today: clock.today());
-    final failure = result.failureOrNull;
-    if (failure != null) return _refuse(request, failure);
-    final event = await store.append(
-      // O prefixo separa os identificadores por tipo: um lançamento nunca
-      // colide com uma categoria ou com um aparelho de mesmo `id`.
-      id: 'entry-${command.id}',
-      type: LedgerState.entryCreated,
-      payload: command.toJson(),
-    );
-    if (!known) state.apply(event);
-    return Responses.json({'id': command.id, 'seq': event.seq}, status: 201);
-  }
+  Future<Response> _createEntry(Request request) => RequestBody.handle(
+    request,
+    CreateEntryRequest.fromJson,
+    (command) async {
+      if (_gate(request, command) case final refused?) return refused;
+      final known = state.entries.any((entry) => entry.id == command.id);
+      final result = state.tryCreate(command, today: clock.today());
+      final failure = result.failureOrNull;
+      if (failure != null) return _refuse(request, failure);
+      final event = await store.append(
+        // O prefixo separa os identificadores por tipo: um lançamento nunca
+        // colide com uma categoria ou com um aparelho de mesmo `id`.
+        id: 'entry-${command.id}',
+        type: LedgerState.entryCreated,
+        payload: command.toJson(),
+      );
+      if (!known) state.apply(event);
+      return Responses.json({'id': command.id, 'seq': event.seq}, status: 201);
+    },
+  );
 
   /// O lançamento como passou a valer (RN-208). A chave de idempotência sai
   /// do próprio conteúdo: reenviar a mesma correção não cria fato novo, e
   /// uma correção diferente cria — sem o app ter de contar revisões.
-  Future<Response> _reviseEntry(Request request, String id) async {
-    final json = await JsonBody.read(request);
-    final command = CreateEntryRequest.fromJson(json);
-    if (command.id != id) return Responses.error(request, ErrorCode.req02);
-    if (_gate(request, command) case final refused?) return refused;
-    final result = state.tryCreate(command, today: clock.today());
-    if (result.failureOrNull case final failure?) {
-      return _refuse(request, failure);
-    }
-    // A versão mais velha não passa por cima da mais nova: quem corrigiu
-    // depois vence, e é a correção dele que desce (BL-062).
-    if (state.entryOf(id)?.isNewerThan(result.valueOrNull!) ?? false) {
-      return Responses.json({'id': id, 'kept': true});
-    }
-    final payload = command.toJson();
-    final event = await store.append(
-      id: 'entry-revised-$id-${Fingerprint.of(payload)}',
-      type: LedgerState.entryRevised,
-      payload: payload,
-    );
-    state.apply(event);
-    return Responses.json({'id': id});
-  }
+  Future<Response> _reviseEntry(Request request, String id) =>
+      RequestBody.handle(request, CreateEntryRequest.fromJson, (command) async {
+        if (command.id != id) return Responses.error(request, ErrorCode.req02);
+        if (_gate(request, command) case final refused?) return refused;
+        final result = state.tryCreate(command, today: clock.today());
+        if (result.failureOrNull case final failure?) {
+          return _refuse(request, failure);
+        }
+        // A versão mais velha não passa por cima da mais nova: quem corrigiu
+        // depois vence, e é a correção dele que desce (BL-062).
+        if (state.entryOf(id)?.isNewerThan(result.valueOrNull!) ?? false) {
+          return Responses.json({'id': id, 'kept': true});
+        }
+        final payload = command.toJson();
+        final event = await store.append(
+          id: 'entry-revised-$id-${Fingerprint.of(payload)}',
+          type: LedgerState.entryRevised,
+          payload: payload,
+        );
+        state.apply(event);
+        return Responses.json({'id': id});
+      });
 
   Response _listReversals(Request request) => Responses.json({
     'reversals': [
@@ -137,24 +139,24 @@ final class LedgerRoutes {
   ///
   /// Não altera o lançamento original: é fato próprio, e o servidor confere
   /// de novo se ainda resta o que estornar naquela linha (RN-210, T-05).
-  Future<Response> _reverseEntry(Request request, String id) async {
-    final payload = ReversalCodec.read(await JsonBody.read(request));
-    if (payload['entryId'] != id) {
-      return Responses.error(request, ErrorCode.req02);
-    }
-    final entry = state.entryOf(id);
-    if (entry == null) return Responses.error(request, ErrorCode.req02);
-    final result = state.tryReverse(payload, entry);
-    final failure = result.failureOrNull;
-    if (failure != null) return _refuse(request, failure);
-    final event = await store.append(
-      id: 'reversal-${payload['id']}',
-      type: LedgerState.entryReversed,
-      payload: payload,
-    );
-    state.apply(event);
-    return Responses.json({'id': payload['id']}, status: 201);
-  }
+  Future<Response> _reverseEntry(Request request, String id) =>
+      RequestBody.handle(request, ReversalCodec.read, (payload) async {
+        if (payload['entryId'] != id) {
+          return Responses.error(request, ErrorCode.req02);
+        }
+        final entry = state.entryOf(id);
+        if (entry == null) return Responses.error(request, ErrorCode.req02);
+        final result = state.tryReverse(payload, entry);
+        final failure = result.failureOrNull;
+        if (failure != null) return _refuse(request, failure);
+        final event = await store.append(
+          id: 'reversal-${payload['id']}',
+          type: LedgerState.entryReversed,
+          payload: payload,
+        );
+        state.apply(event);
+        return Responses.json({'id': payload['id']}, status: 201);
+      });
 
   /// Cancelar não apaga: grava o fato de que aquele lançamento não vale mais.
   /// O que recusa um pedido de lançamento antes das regras: categoria que
