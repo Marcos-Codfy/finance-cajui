@@ -30,7 +30,8 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 **[See the design system gallery live](https://cajui-teal.vercel.app/gallery/)**
 
 [Specification](docs/spec) · [Decisions (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
-[Security](docs/security) · [Operations](docs/ops/runbook.md) · [Progress](PROGRESS.md)
+[Security](docs/security) · [Operations](docs/ops/runbook.md) · [API](docs/api.md) ·
+[Wireframes](docs/design/wireframes.html) · [Progress](PROGRESS.md)
 
 <sub>The specification, the ADRs and the app itself are in Brazilian Portuguese.</sub>
 
@@ -40,7 +41,8 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 
 **For reviewers:** [In 30 seconds](#in-30-seconds) · [Visuals](#visuals) · [Behind the scenes](#behind-the-scenes) ·
 [Challenges I solved](#challenges-i-solved) · [Stack](#stack) · [Architecture](#architecture) ·
-[Security and privacy](#security-and-privacy) · [Quality](#quality) · [What went wrong](#what-went-wrong)<br />
+[Patterns applied](#design-patterns-applied) · [Security and privacy](#security-and-privacy) ·
+[Quality](#quality) · [What went wrong](#what-went-wrong)<br />
 **For developers:** [Getting started](#getting-started) · [Scripts](#scripts) · [Structure](#project-structure) ·
 [Deploy](#deploy) · [Roadmap](#roadmap)
 
@@ -280,6 +282,53 @@ sequenceDiagram
 More in the [ADRs](docs/architecture/adr): [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) covers the
 statement, [020](docs/architecture/adr/ADR-020-chave-da-casa.md) access, and
 [022](docs/architecture/adr/ADR-022-a-ia-le-a-foto.md) the photo read by the AI.
+
+## Design patterns applied
+
+Coursework for the Mobile Development II class: the app and the design system follow the patterns studied during the
+semester. The rule was **one pattern per question**, never two patterns for the same thing.
+
+| Question | Pattern chosen | Where |
+| -------- | -------------- | ----- |
+| How to organize one screen? | **MVVM**: the page only draws; a Riverpod `Notifier` is the ViewModel and the state is sealed | [`entries_view_model.dart`](app/lib/src/features/ledger/presentation/entries_view_model.dart), [`entries_state.dart`](app/lib/src/features/ledger/presentation/entries_state.dart) |
+| How to organize the whole app? | **Layers (Clean)**: the domain knows nothing about the UI; a checker rejects forbidden imports | [`layer_rules.dart`](tool/code_metrics/lib/src/layer_rules.dart), [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md) |
+| Who navigates? | **Coordinator**: the ViewModel says what happened, the Coordinator decides where to go | [`core/navigation/`](app/lib/src/core/navigation) and `features/<x>/presentation/<x>_coordinator.dart` ([ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)) |
+| How to deliver dependencies? | **Injection** with Riverpod, wired in a single **composition root** | [`composition.dart`](app/lib/src/app/composition.dart), [ADR-002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md) |
+| How to organize folders? | **By feature** (the class's "scene") | `features/<x>/{application,infrastructure,presentation}` |
+| How to organize the repository? | **Monorepo** of packages | [`packages/`](packages), [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md) |
+
+**The class's pieces and where they live in Cajui:**
+
+| Class piece | In Cajui |
+| ----------- | -------- |
+| Core (models, repositories, `Result`) | [`packages/domain`](packages/domain), [`packages/api_contract`](packages/api_contract) |
+| Design System | [`packages/design_system`](packages/design_system) |
+| Scene | One folder per feature, with `application`, `infrastructure` and `presentation` |
+| Scene factory | The Coordinator builds the page and the ViewModel's provider delivers the dependencies ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md)) |
+| View | `*_page.dart`, only draws with design system components |
+| ViewModel | `*_view_model.dart` (a `Notifier`) with the sealed state next to it |
+| Server | The feature's port (`AssistantGateway`, `LedgerDownlink`…) and the HTTP adapter in `infrastructure` |
+| Storage | `PreferencesStore`, `HouseholdKeyStore` and the event ledger, each with a real and an in-memory version |
+
+**The design patterns:**
+
+| Pattern | Where it appears |
+| ------- | ---------------- |
+| Factory | `factory of(...)` in [`home_view.dart`](app/lib/src/features/home/application/home_view.dart) and [`statement_view.dart`](app/lib/src/features/cards/application/statement_view.dart) |
+| Adapter | [`NativeReceiptReader`](app/lib/src/features/receipts/infrastructure/native_receipt_reader.dart) fits Android's OCR into the `ReceiptReader` port; [`HttpAssistantGateway`](app/lib/src/features/assistant/infrastructure/http_assistant_gateway.dart) fits the API |
+| Strategy | [`ChatClient`](server/lib/src/ai/chat_client.dart) with [`DeepSeekChatClient`](server/lib/src/ai/deepseek_chat_client.dart) and [`ClaudeChatClient`](server/lib/src/ai/claude_chat_client.dart), chosen when the server starts |
+| Observer | Riverpod's `ref.watch` in the pages and `Stream` in the live sync |
+| Repository | [`LedgerJournal`](app/lib/src/features/ledger/application/ledger_journal.dart) with local, remote and in-memory versions |
+| Result | [Sealed `Result` and `Failure`](packages/domain/lib/src/shared/result.dart): a refused rule is a value, not an exception |
+
+**Class deliverables:**
+
+| Deliverable | Where |
+| ----------- | ----- |
+| App theme | [Problem and audience](docs/spec/problem.md), [brand](docs/brand) |
+| Screen prototype | [Low-fidelity wireframes](docs/design/wireframes.html) |
+| Components and design system sample | [`packages/design_system`](packages/design_system) and the [live gallery](https://cajui-teal.vercel.app/gallery/), which is the sample app: it imports the package like any app and shows every component in every state |
+| API documentation (requests and responses) | [`docs/api.md`](docs/api.md) |
 
 ## Security and privacy
 

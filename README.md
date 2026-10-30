@@ -30,7 +30,8 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 **[Ver a gallery do design system ao vivo](https://cajui-teal.vercel.app/gallery/)**
 
 [Especificação](docs/spec) · [Decisões (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
-[Segurança](docs/security) · [Operação](docs/ops/runbook.md) · [Progresso](PROGRESS.md)
+[Segurança](docs/security) · [Operação](docs/ops/runbook.md) · [API](docs/api.md) ·
+[Wireframes](docs/design/wireframes.html) · [Progresso](PROGRESS.md)
 
 </div>
 
@@ -38,7 +39,8 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 
 **Para quem avalia:** [Em 30 segundos](#em-30-segundos) · [Visual](#visual) · [Bastidores](#bastidores) ·
 [Desafios que resolvi](#desafios-que-resolvi) · [Stack](#stack) · [Arquitetura](#arquitetura) ·
-[Segurança e privacidade](#segurança-e-privacidade) · [Qualidade](#qualidade) · [O que deu errado](#o-que-deu-errado)<br />
+[Padrões aplicados](#padrões-de-projeto-aplicados) · [Segurança e privacidade](#segurança-e-privacidade) ·
+[Qualidade](#qualidade) · [O que deu errado](#o-que-deu-errado)<br />
 **Para quem desenvolve:** [Começando](#começando) · [Scripts](#scripts) · [Estrutura](#estrutura-do-projeto) ·
 [Deploy](#deploy) · [Roadmap](#roadmap)
 
@@ -279,6 +281,53 @@ sequenceDiagram
 Detalhes nas [ADRs](docs/architecture/adr): a [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) é a do
 extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso, a
 [022](docs/architecture/adr/ADR-022-a-ia-le-a-foto.md) é a da foto lida pela IA.
+
+## Padrões de projeto aplicados
+
+Trabalho da disciplina de Dispositivos Móveis II: o app e o design system seguem os padrões estudados no semestre
+(anotados no meu "Deck do Engenheiro"). A regra foi **um padrão por pergunta**, sem misturar dois para a mesma coisa.
+
+| Pergunta | Padrão escolhido | Onde está |
+| -------- | ---------------- | --------- |
+| Como organizar uma tela? | **MVVM**: a tela só desenha; o `Notifier` do Riverpod é o ViewModel e o estado é selado | [`entries_view_model.dart`](app/lib/src/features/ledger/presentation/entries_view_model.dart), [`entries_state.dart`](app/lib/src/features/ledger/presentation/entries_state.dart) |
+| Como organizar o app inteiro? | **Camadas (Clean)**: o domínio não conhece a tela; um verificador reprova import proibido | [`layer_rules.dart`](tool/code_metrics/lib/src/layer_rules.dart), [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md) |
+| Quem navega? | **Coordinator**: o ViewModel diz o que aconteceu, o Coordinator decide para onde ir | [`core/navigation/`](app/lib/src/core/navigation) e `features/<x>/presentation/<x>_coordinator.dart` ([ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)) |
+| Como entregar as dependências? | **Injeção** com Riverpod, ligada num único **composition root** | [`composition.dart`](app/lib/src/app/composition.dart), [ADR-002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md) |
+| Como organizar as pastas? | **Por feature** (a "cena" da aula) | `features/<x>/{application,infrastructure,presentation}` |
+| Como organizar o repositório? | **Monorepo** de pacotes | [`packages/`](packages), [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md) |
+
+**As peças da aula e onde elas moram no Cajui:**
+
+| Peça da aula | No Cajui |
+| ------------ | -------- |
+| Core (modelos, repositórios, `Result`) | [`packages/domain`](packages/domain), [`packages/api_contract`](packages/api_contract) |
+| Design System | [`packages/design_system`](packages/design_system) |
+| Cena | Uma pasta por feature, com `application`, `infrastructure` e `presentation` |
+| Factory de cena | O Coordinator monta a tela e o provider do ViewModel entrega as dependências ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md)) |
+| View | `*_page.dart`, só desenha com os componentes do design system |
+| ViewModel | `*_view_model.dart` (um `Notifier`) com o estado selado ao lado |
+| Server | A porta da feature (`AssistantGateway`, `LedgerDownlink`…) e o adaptador HTTP em `infrastructure` |
+| Storage | `PreferencesStore`, `HouseholdKeyStore` e o livro de eventos, cada um com versão real e versão em memória |
+
+**Os padrões de projeto:**
+
+| Padrão | Onde aparece |
+| ------ | ------------ |
+| Factory | `factory of(...)` em [`home_view.dart`](app/lib/src/features/home/application/home_view.dart) e [`statement_view.dart`](app/lib/src/features/cards/application/statement_view.dart) |
+| Adapter | [`NativeReceiptReader`](app/lib/src/features/receipts/infrastructure/native_receipt_reader.dart) encaixa o OCR do Android na porta `ReceiptReader`; [`HttpAssistantGateway`](app/lib/src/features/assistant/infrastructure/http_assistant_gateway.dart) encaixa a API |
+| Strategy | [`ChatClient`](server/lib/src/ai/chat_client.dart) com [`DeepSeekChatClient`](server/lib/src/ai/deepseek_chat_client.dart) e [`ClaudeChatClient`](server/lib/src/ai/claude_chat_client.dart), escolhido na subida do servidor |
+| Observer | `ref.watch` do Riverpod nas telas e `Stream` na sincronização ao vivo |
+| Repository | [`LedgerJournal`](app/lib/src/features/ledger/application/ledger_journal.dart) com versão local, remota e em memória |
+| Result | [`Result` e `Failure` selados](packages/domain/lib/src/shared/result.dart): regra recusada é valor, não exceção |
+
+**Entregas da disciplina:**
+
+| Entrega | Onde está |
+| ------- | --------- |
+| Tema do app | [Problema e público](docs/spec/problem.md), [marca](docs/brand) |
+| Protótipo das telas | [Wireframes de baixa fidelidade](docs/design/wireframes.html) |
+| Componentes e sample do design system | [`packages/design_system`](packages/design_system) e a [gallery ao vivo](https://cajui-teal.vercel.app/gallery/), que é o app de exemplo: importa o pacote como qualquer app e mostra cada componente em todos os estados |
+| Documentação da API (requests e responses) | [`docs/api.md`](docs/api.md) |
 
 ## Segurança e privacidade
 
