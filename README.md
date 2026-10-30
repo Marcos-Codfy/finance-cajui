@@ -284,50 +284,56 @@ extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso,
 
 ## Padrões de projeto aplicados
 
-Trabalho da disciplina de Dispositivos Móveis II: o app e o design system seguem os padrões estudados no semestre
-(anotados no meu "Deck do Engenheiro"). A regra foi **um padrão por pergunta**, sem misturar dois para a mesma coisa.
+O Cajui também é o meu trabalho de Dispositivos Móveis II, que pede o app e o design system seguindo os padrões
+estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem misturar dois para a mesma coisa.
 
-| Pergunta | Padrão escolhido | Onde está |
-| -------- | ---------------- | --------- |
-| Como organizar uma tela? | **MVVM**: a tela só desenha; o `Notifier` do Riverpod é o ViewModel e o estado é selado | [`entries_view_model.dart`](app/lib/src/features/ledger/presentation/entries_view_model.dart), [`entries_state.dart`](app/lib/src/features/ledger/presentation/entries_state.dart) |
-| Como organizar o app inteiro? | **Camadas (Clean)**: o domínio não conhece a tela; um verificador reprova import proibido | [`layer_rules.dart`](tool/code_metrics/lib/src/layer_rules.dart), [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md) |
-| Quem navega? | **Coordinator**: o ViewModel diz o que aconteceu, o Coordinator decide para onde ir | [`core/navigation/`](app/lib/src/core/navigation) e `features/<x>/presentation/<x>_coordinator.dart` ([ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)) |
-| Como entregar as dependências? | **Injeção** com Riverpod, ligada num único **composition root** | [`composition.dart`](app/lib/src/app/composition.dart), [ADR-002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md) |
-| Como organizar as pastas? | **Por feature** (a "cena" da aula) | `features/<x>/{application,infrastructure,presentation}` |
-| Como organizar o repositório? | **Monorepo** de pacotes | [`packages/`](packages), [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md) |
+| Pergunta      | Padrão escolhido                                                            | Onde está                                                                                                                                                                                       |
+| ------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Uma tela      | MVVM: a tela só desenha, o `Notifier` do Riverpod decide, o estado é selado | [`entries_view_model.dart`](app/lib/src/features/ledger/presentation/entries_view_model.dart)                                                                                                   |
+| O app inteiro | Camadas (Clean), travadas por um verificador                                | [`layer_rules.dart`](tool/code_metrics/lib/src/layer_rules.dart) · [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md)                                                 |
+| Navegação     | Coordinator: o ViewModel diz o que houve, o Coordinator decide para onde ir | [`core/navigation`](app/lib/src/core/navigation) · [ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)                                                                        |
+| Dependências  | Injeção com Riverpod, ligada num único composition root                     | [`composition.dart`](app/lib/src/app/composition.dart) · [ADR-002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md) |
+| Pastas        | Por feature: `features/<x>/{application,infrastructure,presentation}`       | uma pasta por cena                                                                                                                                                                              |
+| Repositório   | Monorepo de pacotes                                                         | [`packages/`](packages) · [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md)                                                                                          |
 
-**As peças da aula e onde elas moram no Cajui:**
+<details>
+<summary><b>As peças da aula e onde elas moram no Cajui</b></summary>
 
-| Peça da aula | No Cajui |
-| ------------ | -------- |
-| Core (modelos, repositórios, `Result`) | [`packages/domain`](packages/domain), [`packages/api_contract`](packages/api_contract) |
-| Design System | [`packages/design_system`](packages/design_system) |
-| Cena | Uma pasta por feature, com `application`, `infrastructure` e `presentation` |
-| Factory de cena | O Coordinator monta a tela e o provider do ViewModel entrega as dependências ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md)) |
-| View | `*_page.dart`, só desenha com os componentes do design system |
-| ViewModel | `*_view_model.dart` (um `Notifier`) com o estado selado ao lado |
-| Server | A porta da feature (`AssistantGateway`, `LedgerDownlink`…) e o adaptador HTTP em `infrastructure` |
-| Storage | `PreferencesStore`, `HouseholdKeyStore` e o livro de eventos, cada um com versão real e versão em memória |
+| Peça da aula                           | No Cajui                                                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core (modelos, repositórios, `Result`) | [`packages/domain`](packages/domain) e [`packages/api_contract`](packages/api_contract)                                                              |
+| Design System                          | [`packages/design_system`](packages/design_system)                                                                                                   |
+| Cena                                   | Uma pasta por feature, com `application`, `infrastructure` e `presentation`                                                                          |
+| Factory de cena                        | O Coordinator monta a tela e o provider do ViewModel entrega as dependências ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md)) |
+| View                                   | `*_page.dart`, só desenha, com os componentes do design system                                                                                       |
+| ViewModel                              | `*_view_model.dart` (um `Notifier`), com o estado selado ao lado                                                                                     |
+| Server                                 | A porta da feature (`AssistantGateway`, `LedgerDownlink`…) e o adaptador HTTP em `infrastructure`                                                    |
+| Storage                                | `PreferencesStore`, `HouseholdKeyStore` e o livro de eventos, cada um com versão real e em memória                                                   |
 
-**Os padrões de projeto:**
+</details>
 
-| Padrão | Onde aparece |
-| ------ | ------------ |
-| Factory | `factory of(...)` em [`home_view.dart`](app/lib/src/features/home/application/home_view.dart) e [`statement_view.dart`](app/lib/src/features/cards/application/statement_view.dart) |
-| Adapter | [`NativeReceiptReader`](app/lib/src/features/receipts/infrastructure/native_receipt_reader.dart) encaixa o OCR do Android na porta `ReceiptReader`; [`HttpAssistantGateway`](app/lib/src/features/assistant/infrastructure/http_assistant_gateway.dart) encaixa a API |
-| Strategy | [`ChatClient`](server/lib/src/ai/chat_client.dart) com [`DeepSeekChatClient`](server/lib/src/ai/deepseek_chat_client.dart) e [`ClaudeChatClient`](server/lib/src/ai/claude_chat_client.dart), escolhido na subida do servidor |
-| Observer | `ref.watch` do Riverpod nas telas e `Stream` na sincronização ao vivo |
-| Repository | [`LedgerJournal`](app/lib/src/features/ledger/application/ledger_journal.dart) com versão local, remota e em memória |
-| Result | [`Result` e `Failure` selados](packages/domain/lib/src/shared/result.dart): regra recusada é valor, não exceção |
+<details>
+<summary><b>Padrões de projeto: onde aparece cada um</b></summary>
+
+| Padrão     | Onde aparece                                                                                                                                                                                                                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Factory    | `factory of(...)` em [`home_view.dart`](app/lib/src/features/home/application/home_view.dart) e [`statement_view.dart`](app/lib/src/features/cards/application/statement_view.dart)                                                                                   |
+| Adapter    | [`NativeReceiptReader`](app/lib/src/features/receipts/infrastructure/native_receipt_reader.dart) encaixa o OCR do Android na porta `ReceiptReader`; [`HttpAssistantGateway`](app/lib/src/features/assistant/infrastructure/http_assistant_gateway.dart) encaixa a API |
+| Strategy   | [`ChatClient`](server/lib/src/ai/chat_client.dart) com [`DeepSeekChatClient`](server/lib/src/ai/deepseek_chat_client.dart) e [`ClaudeChatClient`](server/lib/src/ai/claude_chat_client.dart), escolhido na subida do servidor                                         |
+| Observer   | `ref.watch` do Riverpod nas telas e `Stream` na sincronização ao vivo                                                                                                                                                                                                 |
+| Repository | [`LedgerJournal`](app/lib/src/features/ledger/application/ledger_journal.dart), com versão local, remota e em memória                                                                                                                                                 |
+| Result     | [`Result` e `Failure` selados](packages/domain/lib/src/shared/result.dart): regra recusada é valor, e não exceção                                                                                                                                                     |
+
+</details>
 
 **Entregas da disciplina:**
 
-| Entrega | Onde está |
-| ------- | --------- |
-| Tema do app | [Problema e público](docs/spec/problem.md), [marca](docs/brand) |
-| Protótipo das telas | [Wireframes de baixa fidelidade](docs/design/wireframes.html) |
-| Componentes e sample do design system | [`packages/design_system`](packages/design_system) e a [gallery ao vivo](https://cajui-teal.vercel.app/gallery/), que é o app de exemplo: importa o pacote como qualquer app e mostra cada componente em todos os estados |
-| Documentação da API (requests e responses) | [`docs/api.md`](docs/api.md) |
+| Entrega                               | Onde está                                                                                                                                |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Tema do app                           | [Problema e público](docs/spec/problem.md) e [marca](docs/brand)                                                                         |
+| Protótipo das telas                   | [Wireframes de baixa fidelidade](docs/design/wireframes.html): mapa de navegação, 14 telas e os estados                                  |
+| Componentes e sample do design system | [`packages/design_system`](packages/design_system) e a [gallery ao vivo](https://cajui-teal.vercel.app/gallery/), que é o app de exemplo |
+| Documentação da API                   | [`docs/api.md`](docs/api.md): cada rota com request, response e erros                                                                    |
 
 ## Segurança e privacidade
 
