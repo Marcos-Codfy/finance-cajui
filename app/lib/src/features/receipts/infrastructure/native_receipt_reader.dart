@@ -39,6 +39,11 @@ final class NativeReceiptReader implements ReceiptReader {
       // O lado nativo responde com o código do catálogo. Código que o app
       // não conhece vira "não consegui ler", que é o que a pessoa viu.
       return ReadFailed(ErrorCode.tryParse(failure.code) ?? ErrorCode.capt01);
+    } on MissingPluginException {
+      // Sem o módulo (o teste, uma plataforma sem ele): o mesmo que
+      // `NoReceiptReader` responde, para trocar um pelo outro não mudar o
+      // que quem chama recebe.
+      return const ReadFailed(ErrorCode.capt02);
     } finally {
       await listening.cancel();
     }
