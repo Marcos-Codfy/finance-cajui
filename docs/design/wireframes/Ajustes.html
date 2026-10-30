@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajustes</title>
+<style>
+body{margin:0;font:14px/1.3 system-ui,"Segoe UI",Roboto,sans-serif;color:#222}
+*{box-sizing:border-box}
+.bd{width:700px;height:844px;display:flex;gap:24px;background:#f4f4f2}
+.ph{width:390px;height:844px;flex:none;border:3px solid #222;border-radius:30px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.hd{height:58px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:2px solid #222;font-weight:700;font-size:18px}
+.sp{flex:1}
+.ic{width:30px;height:30px;border:2px solid #222;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+.by{flex:1;min-height:0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.bx{position:relative;border:2px solid #222;border-radius:10px;padding:4px 12px;background:#fff}
+.h{font-weight:700;font-size:15px}.sm{font-size:12px;color:#555}
+.fx{display:flex;gap:10px;align-items:center}
+.rw{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1.5px dashed #888}
+.rw:last-child{border-bottom:0}
+.sw{width:46px;height:26px;border:2px solid #222;border-radius:999px;position:relative;flex:none}
+.sw i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#222}
+.sw.on{background:#222}.sw.on i{left:22px;background:#fff}
+.mk{position:absolute;top:-11px;right:-8px;width:24px;height:24px;border-radius:50%;background:#b8400f;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2}
+.lg{flex:1;padding-top:6px}.lg h2{margin:0 0 4px;font-size:20px}.lg p{margin:0 0 16px;color:#555;font-size:13px}
+.lg ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.lg li{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.lg .mk{position:static;flex:none}
+</style>
+</head>
+<body>
+<div class="bd">
+  <div class="ph">
+    <div class="hd"><span class="ic">‹</span><span>Ajustes</span></div>
+    <div class="by">
+      <div class="bx">
+        <span class="mk">1</span>
+        <div class="rw"><div class="sp"><div class="h">Tema escuro</div><div class="sm">O app abre no claro; o escuro fica se você ligar</div></div><span class="sw"><i></i></span></div>
+        <div class="rw"><div class="sp"><div class="h">Sons</div><div class="sm">Toques suaves ao tocar, salvar e confirmar</div></div><span class="sw on"><i></i></span></div>
+        <div class="rw"><div class="sp"><div class="h">Vibração</div></div><span class="sw on"><i></i></span></div>
+      </div>
+      <div class="bx">
+        <span class="mk">2</span>
+        <div class="rw"><div class="sp"><div class="h">Nomes da casa</div><div class="sm">Quem aparece no “Alguém da casa”</div></div><span class="h">›</span></div>
+        <div class="rw"><div class="sp"><div class="h">Chave da casa</div><div class="sm">Para entrar na consulta pela web de outro computador</div></div><span class="h">›</span></div>
+      </div>
+      <div class="bx">
+        <span class="mk">3</span>
+        <div class="rw"><div class="sp"><div class="h">Sair</div><div class="sm">Só na web de consulta</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="lg">
+    <h2>13 · Ajustes</h2>
+    <p>Abre pelo ícone de ajustes do Painel.</p>
+    <ol>
+      <li><span class="mk">1</span><span>Aparência e sentidos: tema escuro, sons e vibração. Cada um é um interruptor.</span></li>
+      <li><span class="mk">2</span><span>Nomes da casa e a chave da casa (a chave é o único segredo que aparece na tela).</span></li>
+      <li><span class="mk">3</span><span>Sair: aparece só na web de consulta, que entra com código de autenticador.</span></li>
+    </ol>
+  </div>
+</div>
+</body>
+</html>

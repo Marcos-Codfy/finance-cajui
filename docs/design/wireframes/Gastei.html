@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Novo lançamento</title>
+<style>
+body{margin:0;font:14px/1.3 system-ui,"Segoe UI",Roboto,sans-serif;color:#222}
+*{box-sizing:border-box}
+.bd{width:700px;height:844px;display:flex;gap:24px;background:#f4f4f2}
+.ph{width:390px;height:844px;flex:none;border:3px solid #222;border-radius:30px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.hd{height:58px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:2px solid #222;font-weight:700;font-size:18px}
+.sp{flex:1}
+.ic{width:30px;height:30px;border:2px solid #222;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+.by{flex:1;min-height:0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.bx{position:relative;border:2px solid #222;border-radius:10px;padding:12px;background:#fff}
+.gr{background:#e9e9e4}
+.ln{height:9px;border-radius:5px;background:#c4c4be;margin:6px 0}
+.h{font-weight:700;font-size:15px}.sm{font-size:12px;color:#555}.bg{font-size:32px;font-weight:800}
+.bt{height:46px;border:2px solid #222;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;flex:1}
+.pr{background:#222;color:#fff}
+.cp{border:2px solid #222;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.cp.on{background:#222;color:#fff}
+.fx{display:flex;gap:10px;align-items:center}
+.mk{position:absolute;top:-11px;right:-8px;width:24px;height:24px;border-radius:50%;background:#b8400f;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2}
+.lg{flex:1;padding-top:6px}.lg h2{margin:0 0 4px;font-size:20px}.lg p{margin:0 0 16px;color:#555;font-size:13px}
+.lg ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.lg li{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.lg .mk{position:static;flex:none}
+</style>
+</head>
+<body>
+<div class="bd">
+  <div class="ph">
+    <div class="hd"><span class="ic">‹</span><span>Novo lançamento</span></div>
+    <div class="by">
+      <div class="bx gr">
+        <span class="mk">1</span>
+        <div class="sm">Valor</div>
+        <div class="bg">R$ 000,00</div>
+        <div class="sm">aceita conta: 35 + 12</div>
+      </div>
+      <div class="bx"><span class="mk">2</span><div class="sm">Descrição</div><div class="ln w6"></div></div>
+      <div class="bx fx"><span class="mk">3</span><div class="sp"><div class="sm">Categoria</div><div class="h">Escolher ›</div></div></div>
+      <div class="bx">
+        <span class="mk">4</span>
+        <div class="sm">Por onde foi pago</div>
+        <div class="fx" style="margin-top:8px;flex-wrap:wrap">
+          <span class="cp on">Dinheiro</span><span class="cp">Débito</span><span class="cp">Pix</span><span class="cp">Crédito</span><span class="cp">Vale</span>
+        </div>
+        <div class="sm" style="margin-top:10px">Crédito → escolhe o cartão e as parcelas</div>
+      </div>
+      <div class="bx fx"><span class="mk">5</span><div class="sp"><div class="sm">Quando</div><div class="h">Hoje ▾</div></div></div>
+      <div class="sp"></div>
+      <div class="fx" style="position:relative"><span class="mk">6</span><div class="bt pr">Salvar</div></div>
+    </div>
+  </div>
+  <div class="lg">
+    <h2>03 · Gastei</h2>
+    <p>Abre a partir do Painel. Um gasto novo, em poucos toques.</p>
+    <ol>
+      <li><span class="mk">1</span><span>Valor em destaque. O campo aceita soma (35 + 12).</span></li>
+      <li><span class="mk">2</span><span>Descrição curta, que a Juju também usa para sugerir a categoria.</span></li>
+      <li><span class="mk">3</span><span>Categoria: abre uma lista de escolha e volta com a opção marcada.</span></li>
+      <li><span class="mk">4</span><span>Por onde foi pago. Cartão de crédito é forma de pagamento, nunca despesa; vale é outra moeda.</span></li>
+      <li><span class="mk">5</span><span>Data do gasto; hoje por padrão.</span></li>
+      <li><span class="mk">6</span><span>Salvar. Se uma regra recusa, o texto do erro vem do catálogo e diz como resolver.</span></li>
+    </ol>
+  </div>
+</div>
+</body>
+</html>

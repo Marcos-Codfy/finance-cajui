@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartões de crédito</title>
+<style>
+body{margin:0;font:14px/1.3 system-ui,"Segoe UI",Roboto,sans-serif;color:#222}
+*{box-sizing:border-box}
+.bd{width:700px;height:844px;display:flex;gap:24px;background:#f4f4f2}
+.ph{width:390px;height:844px;flex:none;border:3px solid #222;border-radius:30px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.hd{height:58px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:2px solid #222;font-weight:700;font-size:18px}
+.sp{flex:1}
+.ic{width:30px;height:30px;border:2px solid #222;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+.by{flex:1;min-height:0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.bx{position:relative;border:2px solid #222;border-radius:10px;padding:12px;background:#fff}
+.gr{background:#e9e9e4}
+.ln{height:9px;border-radius:5px;background:#c4c4be;margin:6px 0}
+.w6{width:60%}
+.h{font-weight:700;font-size:15px}.sm{font-size:12px;color:#555}
+.bt{height:46px;border:2px solid #222;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;flex:1}
+.pr{background:#222;color:#fff}
+.fx{display:flex;gap:10px;align-items:center}
+.cd{height:132px;display:flex;flex-direction:column;justify-content:space-between}
+.bar{height:8px;border:2px solid #222;border-radius:4px;background:#fff}
+.bar i{display:block;height:100%;width:45%;background:#222}
+.mk{position:absolute;top:-11px;right:-8px;width:24px;height:24px;border-radius:50%;background:#b8400f;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2}
+.lg{flex:1;padding-top:6px}.lg h2{margin:0 0 4px;font-size:20px}.lg p{margin:0 0 16px;color:#555;font-size:13px}
+.lg ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.lg li{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.lg .mk{position:static;flex:none}
+</style>
+</head>
+<body>
+<div class="bd">
+  <div class="ph">
+    <div class="hd"><span class="ic">‹</span><span>Cartões de crédito</span></div>
+    <div class="by">
+      <div class="bx gr cd">
+        <span class="mk">1</span>
+        <div class="fx"><span class="h sp">Nome do cartão</span><span class="sm">fecha dia 00</span></div>
+        <div><div class="sm">Fatura aberta</div><div class="h" style="font-size:20px">R$ 000,00</div></div>
+        <div><div class="bar"><i></i></div><div class="sm" style="margin-top:4px">limite livre R$ 000,00</div></div>
+      </div>
+      <div class="bx cd" style="margin-top:-6px;opacity:.75">
+        <div class="fx"><span class="h sp">Outro cartão</span><span class="sm">fecha dia 00</span></div>
+        <div><div class="h" style="font-size:20px">R$ 000,00</div></div>
+        <div class="bar"><i style="width:20%"></i></div>
+      </div>
+      <div class="bx" style="border-style:dashed"><span class="mk">2</span><div class="h">Informe o limite do cartão</div><div class="sm">Sem limite, a barra de uso não pode ser calculada.</div></div>
+      <div class="bx" style="border-style:dashed;opacity:.8"><div class="h">Nenhum cartão ainda</div><div class="sm">(estado vazio: ilustração + texto de ajuda)</div></div>
+      <div class="sp"></div>
+      <div class="fx" style="position:relative"><span class="mk">3</span><div class="bt pr">Cadastrar cartão</div></div>
+    </div>
+  </div>
+  <div class="lg">
+    <h2>08 · Cartões de crédito</h2>
+    <p>Aberta pela porta “Cartões”. A carteira.</p>
+    <ol>
+      <li><span class="mk">1</span><span>Cada cartão mostra a fatura aberta, o dia de fechamento e o limite livre. Tocar abre a fatura.</span></li>
+      <li><span class="mk">2</span><span>Aviso quando falta o limite, que muda o que se pode calcular.</span></li>
+      <li><span class="mk">3</span><span>Cadastrar cartão abre o formulário (nome, dias de fechar e de vencer, limite).</span></li>
+    </ol>
+    <p style="margin-top:6px">Cartão é forma de pagamento: aqui aparecem faturas, e não despesas. O estado vazio (“Nenhum cartão ainda”) tem ilustração e um texto que diz o que fazer.</p>
+  </div>
+</div>
+</body>
+</html>

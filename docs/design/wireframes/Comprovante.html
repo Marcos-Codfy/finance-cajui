@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferir comprovante</title>
+<style>
+body{margin:0;font:14px/1.3 system-ui,"Segoe UI",Roboto,sans-serif;color:#222}
+*{box-sizing:border-box}
+.bd{width:700px;height:844px;display:flex;gap:24px;background:#f4f4f2}
+.ph{width:390px;height:844px;flex:none;border:3px solid #222;border-radius:30px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.hd{height:58px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:2px solid #222;font-weight:700;font-size:18px}
+.sp{flex:1}
+.ic{width:30px;height:30px;border:2px solid #222;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+.by{flex:1;min-height:0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.bx{position:relative;border:2px solid #222;border-radius:10px;padding:10px 12px;background:#fff}
+.gr{background:#e9e9e4}
+.im{border:2px solid #222;border-radius:8px;background:linear-gradient(to top right,transparent 48%,#222 49% 51%,transparent 52%),linear-gradient(to bottom right,transparent 48%,#222 49% 51%,transparent 52%),#f1f1ee}
+.h{font-weight:700;font-size:15px}.sm{font-size:12px;color:#555}
+.bt{height:46px;border:2px solid #222;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;flex:1}
+.pr{background:#222;color:#fff}
+.fx{display:flex;gap:10px;align-items:center}
+.rw{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1.5px dashed #888;justify-content:space-between}
+.mk{position:absolute;top:-11px;right:-8px;width:24px;height:24px;border-radius:50%;background:#b8400f;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2}
+.lg{flex:1;padding-top:6px}.lg h2{margin:0 0 4px;font-size:20px}.lg p{margin:0 0 16px;color:#555;font-size:13px}
+.lg ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.lg li{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.lg .mk{position:static;flex:none}
+</style>
+</head>
+<body>
+<div class="bd">
+  <div class="ph">
+    <div class="hd"><span class="ic">×</span><span>Conferir comprovante</span></div>
+    <div class="by">
+      <div class="fx" style="position:relative">
+        <span class="mk">1</span>
+        <div class="im" style="width:96px;height:120px;flex:none"></div>
+        <div><div class="h">Foto, print ou PDF</div><div class="sm">lido no aparelho; só o texto sai dele</div></div>
+      </div>
+      <div class="bx" style="padding:2px 12px">
+        <span class="mk">2</span>
+        <div class="rw"><span class="sm">Valor</span><span class="h">R$ 000,00</span></div>
+        <div class="rw"><span class="sm">Para quem</span><span class="h">Favorecido</span></div>
+        <div class="rw"><span class="sm">Data</span><span class="h">00/00</span></div>
+        <div class="rw"><span class="sm">Categoria</span><span class="h">Sugerida ›</span></div>
+        <div class="rw" style="border-bottom:0"><span class="sm">Pago com</span><span class="h">Forma ›</span></div>
+      </div>
+      <div class="bx gr"><span class="mk">3</span><div class="h">Confira antes de lançar</div><div class="sm">Aviso quando algo veio incerto: valor ilegível, data estranha, possível repetido.</div></div>
+      <div class="sp"></div>
+      <div class="fx" style="position:relative"><span class="mk">4</span><div class="bt pr">Lançar</div><div class="bt">Não é gasto</div></div>
+      <div class="sm" style="text-align:center">O que foi lido ›</div>
+    </div>
+  </div>
+  <div class="lg">
+    <h2>11 · Comprovante</h2>
+    <p>Chega por foto, por print da galeria ou por “compartilhar” de outro app. Entra pela casca do app, por cima de tudo.</p>
+    <ol>
+      <li><span class="mk">1</span><span>Miniatura do que foi enviado. Antes desta tela há uma de espera (“Lendo o comprovante”).</span></li>
+      <li><span class="mk">2</span><span>Proposta já preenchida: a pessoa só confere e corrige o que estiver errado.</span></li>
+      <li><span class="mk">3</span><span>Avisos de incerteza. A IA lê, mas o domínio é quem confere os números.</span></li>
+      <li><span class="mk">4</span><span>Lançar grava; “Não é gasto” descarta (por exemplo, dinheiro que entrou).</span></li>
+    </ol>
+    <p style="margin-top:6px">“O que foi lido” mostra o texto cru do comprovante, para a pessoa saber de onde veio cada campo.</p>
+  </div>
+</div>
+</body>
+</html>

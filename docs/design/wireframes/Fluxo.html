@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de navegação</title>
+<style>
+body{margin:0;font:14px/1.3 system-ui,"Segoe UI",Roboto,sans-serif;color:#222}
+*{box-sizing:border-box}
+.bd{width:3040px;height:760px;background:#f4f4f2;padding:28px 40px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:24px}
+.nt{font-size:14px;color:#444}
+.rw{display:flex;align-items:center;gap:12px}
+.nd{border:2px solid #222;border-radius:8px;padding:0 14px;height:42px;display:flex;align-items:center;font-weight:700;background:#fff;white-space:nowrap}
+.nd.k{background:#222;color:#fff}
+.nd.g{background:#e9e9e4}
+.nd.d{border-style:dashed;font-weight:600}
+.ar{font-size:20px;font-weight:700;width:24px;text-align:center;flex:none}
+.lb{width:120px;flex:none;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.04em}
+.tb{display:flex;flex-direction:column;gap:8px}
+.cl{display:flex;gap:12px;align-items:center}
+.sm{font-size:12px;color:#555}
+</style>
+</head>
+<body>
+<div class="bd">
+  <div class="rw" style="justify-content:space-between;align-items:flex-end">
+    <div><h1>00 · Mapa de navegação</h1><div class="nt">Quem leva a pessoa para onde. Setas mostram o toque; caixa tracejada é uma entrada de fora do app.</div></div>
+  </div>
+  <div class="rw">
+    <span class="lb">Entrada</span>
+    <span class="nd">Abrir o app</span><span class="ar">→</span>
+    <span class="nd g">Tem a chave da casa?</span><span class="ar">sim →</span>
+    <span class="nd k">Casca do app · abas Conversar | Painel</span>
+    <span class="ar" style="width:80px">não →</span>
+    <span class="nd">14 · Entrar (web, código do autenticador)</span><span class="ar">→</span><span class="sm">volta para a casca</span>
+  </div>
+  <div class="rw">
+    <span class="lb">Aba Conversar</span>
+    <span class="nd k">02 · Conversar (Juju)</span><span class="ar">→</span>
+    <span class="nd">Lançar falando</span>
+    <span class="nd">Perguntar com os números da casa</span>
+    <span class="nd">Ditar por voz</span>
+  </div>
+  <div class="rw">
+    <span class="lb">De fora do app</span>
+    <span class="nd d">Extrato compartilhado</span><span class="ar">→</span><span class="nd">12 · Extrato pela Juju</span>
+    <span class="nd d" style="margin-left:24px">Foto, print ou PDF do comprovante</span><span class="ar">→</span><span class="nd">11 · Comprovante</span>
+    <span class="nd d" style="margin-left:24px">Notificação do banco</span><span class="ar">→</span><span class="nd">Lançamento sozinho com Desfazer</span>
+    <span class="nd d" style="margin-left:24px">Widget da tela inicial</span><span class="ar">→</span><span class="nd">01 · Painel</span>
+  </div>
+  <div class="rw" style="align-items:flex-start">
+    <span class="lb" style="padding-top:12px">Aba Painel</span>
+    <div style="display:flex;align-items:center;align-self:stretch"><span class="nd k" style="height:100%;min-height:340px;writing-mode:vertical-rl;transform:rotate(180deg);justify-content:center">01 · Painel</span></div>
+    <span class="ar" style="align-self:center">→</span>
+    <div class="tb">
+      <div class="cl"><span class="nd" style="width:230px">Porta Lançamentos</span><span class="ar">→</span><span class="nd">05 · Lançamentos</span><span class="ar">→</span><span class="nd">06 · Detalhe</span><span class="ar">→</span><span class="nd g">Corrigir lançamento</span><span class="nd g">Registrar estorno</span><span class="nd g">Cancelar (Desfazer)</span></div>
+      <div class="cl"><span class="nd" style="width:230px">Porta Meu mês</span><span class="ar">→</span><span class="nd">07 · Meu mês</span><span class="ar">→</span><span class="nd">Minhas contas</span><span class="nd">Vale alimentação</span><span class="nd">Dízimo</span><span class="nd">Mês a mês</span><span class="nd">Planilha</span></div>
+      <div class="cl"><span class="nd" style="width:230px">Porta Cartões</span><span class="ar">→</span><span class="nd">08 · Cartões</span><span class="ar">→</span><span class="nd">09 · Fatura</span><span class="ar">→</span><span class="nd g">Alterar cartão</span><span class="nd g">Cadastrar cartão</span></div>
+      <div class="cl"><span class="nd" style="width:230px">Porta Dívidas</span><span class="ar">→</span><span class="nd">10 · Dívidas</span><span class="ar">→</span><span class="nd">Detalhe da dívida</span><span class="ar">→</span><span class="nd g">Pagar parcela</span><span class="nd g">Cadastrar dívida</span></div>
+      <div class="cl"><span class="nd k" style="width:230px">Botão Gastei</span><span class="ar">→</span><span class="nd">03 · Novo lançamento</span><span class="ar">→</span><span class="nd g">Escolher categoria</span><span class="nd g">Por onde foi pago</span><span class="nd g">Parcelas</span></div>
+      <div class="cl"><span class="nd" style="width:230px">Botão Recebi</span><span class="ar">→</span><span class="nd">04 · Registrar recebimento</span></div>
+      <div class="cl"><span class="nd" style="width:230px">Ícone Ajustes</span><span class="ar">→</span><span class="nd">13 · Ajustes</span><span class="ar">→</span><span class="nd g">Nomes da casa</span><span class="nd g">Chave da casa</span><span class="nd g">Sair (web)</span></div>
+      <div class="cl"><span class="nd d" style="width:230px">Aviso “Conferir agora”</span><span class="ar">→</span><span class="nd">Revisão da semana</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

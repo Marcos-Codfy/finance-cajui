@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detalhe do lançamento</title>
+<style>
+body{margin:0;font:14px/1.3 system-ui,"Segoe UI",Roboto,sans-serif;color:#222}
+*{box-sizing:border-box}
+.bd{width:700px;height:844px;display:flex;gap:24px;background:#f4f4f2}
+.ph{width:390px;height:844px;flex:none;border:3px solid #222;border-radius:30px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.hd{height:58px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:2px solid #222;font-weight:700;font-size:18px}
+.sp{flex:1}
+.ic{width:30px;height:30px;border:2px solid #222;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+.by{flex:1;min-height:0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.bx{position:relative;border:2px solid #222;border-radius:10px;padding:12px;background:#fff}
+.gr{background:#e9e9e4}
+.ln{height:9px;border-radius:5px;background:#c4c4be;margin:6px 0}
+.w6{width:60%}
+.h{font-weight:700;font-size:15px}.sm{font-size:12px;color:#555}.bg{font-size:32px;font-weight:800}
+.bt{height:46px;border:2px solid #222;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;flex:1}
+.pr{background:#222;color:#fff}
+.fx{display:flex;gap:10px;align-items:center}
+.rw{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1.5px dashed #888;justify-content:space-between}
+.mk{position:absolute;top:-11px;right:-8px;width:24px;height:24px;border-radius:50%;background:#b8400f;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2}
+.lg{flex:1;padding-top:6px}.lg h2{margin:0 0 4px;font-size:20px}.lg p{margin:0 0 16px;color:#555;font-size:13px}
+.lg ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.lg li{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.lg .mk{position:static;flex:none}
+</style>
+</head>
+<body>
+<div class="bd">
+  <div class="ph">
+    <div class="hd"><span class="ic">‹</span><span>Lançamento</span></div>
+    <div class="by">
+      <div class="bx gr"><span class="mk">1</span><div class="sm">Descrição</div><div class="bg">R$ 000,00</div><div class="sm">data · lançado por voz, foto ou digitado</div></div>
+      <div class="bx" style="padding:4px 12px">
+        <span class="mk">2</span>
+        <div class="rw"><span class="sm">Categoria</span><span class="h">Nome</span></div>
+        <div class="rw"><span class="sm">Pago com</span><span class="h">Forma</span></div>
+        <div class="rw"><span class="sm">Parcelas</span><span class="h">1 de 1</span></div>
+        <div class="rw" style="border-bottom:0"><span class="sm">Origem</span><span class="h">Conversa</span></div>
+      </div>
+      <div class="bx"><span class="mk">3</span><div class="sm">Histórico</div><div class="ln"></div><div class="ln w6"></div><div class="sm">cada correção fica registrada</div></div>
+      <div class="sp"></div>
+      <div class="bx gr" style="position:relative"><span class="mk">4</span><div class="h">Cancelar este lançamento?</div><div class="fx" style="margin-top:8px"><span class="bt pr" style="height:40px">Cancelar lançamento</span><span class="bt" style="height:40px">Manter</span></div></div>
+      <div class="fx" style="position:relative"><span class="mk">5</span><div class="bt pr">Corrigir</div><div class="bt">Registrar estorno</div></div>
+    </div>
+  </div>
+  <div class="lg">
+    <h2>06 · Detalhe do lançamento</h2>
+    <p>Abre ao tocar numa linha da lista de Lançamentos.</p>
+    <ol>
+      <li><span class="mk">1</span><span>Valor e descrição em destaque, com a data.</span></li>
+      <li><span class="mk">2</span><span>Categoria, forma de pagamento, parcelas e de onde veio o lançamento.</span></li>
+      <li><span class="mk">3</span><span>Histórico: o livro é de eventos, então nada se apaga, só se corrige.</span></li>
+      <li><span class="mk">4</span><span>Cancelar pede confirmação; “Manter” volta sem mudar nada.</span></li>
+      <li><span class="mk">5</span><span>Corrigir abre o mesmo formulário do Gastei; estorno devolve o valor.</span></li>
+    </ol>
+  </div>
+</div>
+</body>
+</html>
