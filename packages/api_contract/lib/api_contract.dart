@@ -10,6 +10,7 @@ export 'src/catalog_version.dart';
 export 'src/category_codec.dart';
 export 'src/create_entry_request.dart';
 export 'src/debt_codec.dart';
+export 'src/decoded.dart';
 export 'src/device_fact.dart';
 export 'src/entry_codec.dart';
 export 'src/error_class.dart';
