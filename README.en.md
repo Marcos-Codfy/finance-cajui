@@ -497,7 +497,7 @@ scripts/                  APK, deploy, backup, keys
 <div align="center">
 
 <sub>The name comes from the **cajuí** (<i>Anacardium humile</i>), the low-growing wild cashew of the Tocantins
-Cerrado, which sprouts again after fire.</sub>
+Cerrado.</sub>
 
 <sub>Made by <a href="https://github.com/Marcos-Codfy">Marcos Vinicius Muniz Arruda</a> · Palmas, Brazil · 2026</sub>
 

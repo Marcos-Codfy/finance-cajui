@@ -493,8 +493,7 @@ scripts/                  APK, deploy, backup, chaves
 
 <div align="center">
 
-<sub>O nome vem do **cajuí** (<i>Anacardium humile</i>), o cajuzinho rasteiro do Cerrado tocantinense, que rebrota
-depois do fogo.</sub>
+<sub>O nome vem do **cajuí** (<i>Anacardium humile</i>), o cajuzinho rasteiro do Cerrado tocantinense.</sub>
 
 <sub>Feito por <a href="https://github.com/Marcos-Codfy">Marcos Vinicius Muniz Arruda</a> · Palmas-TO · 2026</sub>
 
