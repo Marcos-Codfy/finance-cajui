@@ -106,18 +106,25 @@ final class CatalogRoutes {
   Future<Response> _defineCard(Request request) =>
       RequestBody.handle(request, _cardBody, (read) async {
         final (:body, :card) = read;
+        // Dia que não existe é recusa de regra (E-CARD-01, 422), e não
+        // defeito do servidor.
+        if (card.failureOrNull case final failure?) {
+          final (code, detail) = FailureMapper.map(failure);
+          return Responses.error(request, code, detail: detail);
+        }
+        final defined = card.valueOrNull!;
         return await _keep(
           request,
           body,
           prefix: 'card',
           type: LedgerState.cardDefined,
-          content: CardCodec.encodeCard(card),
-          current: state.catalog.cardVersion(card.id),
+          content: CardCodec.encodeCard(defined),
+          current: state.catalog.cardVersion(defined.id),
         );
       });
 
-  /// O corpo de um cartão e o cartão que ele descreve.
-  static ({JsonReader body, CreditCard card}) _cardBody(Object? json) {
+  /// O corpo de um cartão e o que o domínio disse do cartão que ele descreve.
+  static ({JsonReader body, Result<CreditCard> card}) _cardBody(Object? json) {
     final body = JsonReader(
       json,
       allowed: const {
@@ -130,7 +137,7 @@ final class CatalogRoutes {
         CatalogVersion.stampField,
       },
     );
-    final card = CardCodec.decodeCard({
+    final card = CardCodec.readCard({
       'id': body.string('id', maxLength: 64),
       'name': body.string('name', maxLength: 40),
       'closingDay': body.integer('closingDay'),

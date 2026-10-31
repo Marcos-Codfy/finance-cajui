@@ -43,6 +43,27 @@ void main() {
     return (body['cards']! as List<Object?>).single! as Map<String, Object?>;
   }
 
+  group('E-CARD-01 · o dia do cartão que não existe', () {
+    test('é recusa de regra (422), e não defeito do servidor (500)', () async {
+      for (final day in [0, 32, 40]) {
+        final (status, body) = await post('/v1/cards', _card(closingDay: day));
+
+        final error = body['error']! as Map<String, Object?>;
+        expect(status, 422, reason: 'dia $day');
+        expect(error['code'], 'E-CARD-01');
+        expect((error['detail']! as Map<String, Object?>)['day'], day);
+      }
+    });
+
+    test('nada é gravado quando o dia é recusado', () async {
+      final before = server.store.events.length;
+
+      await post('/v1/cards', _card(closingDay: 40));
+
+      expect(server.store.events.length, before);
+    });
+  });
+
   group('ADR-024 · o cartão editado atravessa', () {
     test('a edição mais nova grava e passa a valer, com o carimbo', () async {
       final (created, _) = await post('/v1/cards', _card(at: _monday));

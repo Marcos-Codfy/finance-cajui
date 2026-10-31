@@ -251,7 +251,7 @@ A coluna "HTTP" é o status com que a API devolve o código (`packages/api_contr
 | `E-ENTRY-04` | regra | 422 | Estorno maior que o que resta da linha do lançamento. | Sim: estornos |
 | `E-VOUCHER-01` | regra | 422 | Pagamento no vale maior que o saldo. | Não nas rotas lidas |
 | `E-VOUCHER-02` | regra | 422 | Categoria não elegível ao vale. | Sim: lançamentos |
-| `E-CARD-01` | validação | 422 | Dia de fechamento ou de vencimento fora de 1 a 31. | Não (ver nota na seção 7.10) |
+| `E-CARD-01` | validação | 422 | Dia de fechamento ou de vencimento fora de 1 a 31. | Sim (`POST /v1/cards`) |
 | `E-CARD-02` | regra | 422 | Categoria com nome que representa cartão ou fatura. | Sim: categorias |
 | `E-BUDG-01` | validação | 422 | Faixa com mínimo maior que o máximo. | Não (no plano vira `E-REQ-01`) |
 | `E-BUDG-02` | regra | 422 | Fechar um mês que ainda não terminou. | Não nas rotas lidas |
@@ -868,8 +868,7 @@ A versão que já estava vale (`200`): `{ "id": "card-0001", "kept": true }`.
 | HTTP | Código | Quando |
 |---|---|---|
 | 400 | `E-REQ-01` | Corpo fora do formato; `definedAt` no futuro. |
-
-> **Nota (não verificado em execução):** o catálogo prevê `E-CARD-01` (422) para dia fora de 1 a 31, mas, pelo código desta rota, esse caso não é traduzido: a leitura do cartão usa o resultado do domínio sem tratar a recusa, e a falha cai na barreira de erros, que responde `500 E-SRV-01`. O app confere o dia antes de enviar.
+| 422 | `E-CARD-01` | Dia de fechamento ou de vencimento fora de 1 a 31. `detail`: `day`. Nada é gravado. |
 
 **Fonte:** `server/lib/src/ledger/catalog_routes.dart`; `packages/api_contract/lib/src/card_codec.dart`; regra de dias em `packages/domain/lib/src/card/credit_card.dart`.
 
@@ -1698,14 +1697,13 @@ Resposta: `200` com `text`, `fallback`, `actions` e os campos de compatibilidade
 
 Este documento nasceu da leitura do código. Ficam de fora, ou com ressalva:
 
-1. **Nada foi executado.** Nenhuma rota foi chamada; os exemplos de resposta foram montados a partir dos codecs e das rotas, não copiados de uma execução. Os valores `seq`, `ref` e `definedAt` dos exemplos são ilustrativos.
+1. **Quase nada foi executado.** Nenhuma rota foi chamada pela rede (a exceção é o `E-CARD-01` de `POST /v1/cards`, conferido por teste do servidor); os exemplos de resposta foram montados a partir dos codecs e das rotas, não copiados de uma execução. Os valores `seq`, `ref` e `definedAt` dos exemplos são ilustrativos.
 2. **Corpo exato do `404` para rota que não existe** (devolvido pelo roteador, não pelo catálogo de erros) e o comportamento de `HEAD` e de `OPTIONS` vindo de origem diferente da configurada: não foram lidos nem testados.
-3. **`E-CARD-01` em `POST /v1/cards`:** pela leitura do código, um dia fora de 1 a 31 não vira `422`, e sim `500 E-SRV-01` (nota na seção 7.10). Não foi exercitado.
-4. **`PUT /v1/entries/{id}` para um id desconhecido** criar o lançamento é conclusão da leitura do código, não de um teste.
-5. **Reenvio do mesmo estorno** (mesmo `id`) numa segunda tentativa: o servidor refaz a conferência do que resta com o estorno original já contado, então o resultado pode ser `E-ENTRY-04`. Não foi verificado.
-6. **Códigos do catálogo sem rota que os emita** nas rotas lidas: `E-VOUCHER-01`, `E-BUDG-02` a `E-BUDG-04`, `E-SYNC-01`, `E-SYNC-02`, `E-DATA-02`, `E-REQ-03`, `E-SRV-02`, `E-SRV-03` e `E-AUTH-04`. O catálogo os prevê; a tabela da seção 6.3 marca cada um. Pode haver emissão em outro lugar (por exemplo, no proxy ou no app), que não foi investigada.
-7. **Valores padrão do código** (limite de taxa de 120 e 600 por minuto; prazos da IA de 8, 25 e 35 segundos; tetos de tamanho): a composição do servidor pode sobrescrevê-los em produção. Os valores efetivos de produção não foram conferidos, e o teto mensal de tokens da IA não é publicado aqui.
-8. **Conteúdo da resposta da IA** (`text` do assistente, `categoryId` e `confidence` sugeridos): depende do modelo. Só o **formato** e as garantias de validação foram documentados. O significado fino de `candidates`, `confidence` e `source` segue o domínio de recibos e não foi detalhado campo a campo.
-9. **Regras finas dos fatos** (`debt.defined`, `budget.defined`, `household.named`): os campos listados na seção 7.15 são os principais; limites e validações de domínio (dívida, linha do plano, nome com sobrenome) foram lidos só em parte.
-10. **Endereço de produção, origem da web de consulta, nome do segredo e demais detalhes de implantação:** de propósito, não estão neste documento.
-11. **Content-Type do pedido:** o código não o confere; se um proxy à frente do servidor o exige, isso não foi verificado.
+3. **`PUT /v1/entries/{id}` para um id desconhecido** criar o lançamento é conclusão da leitura do código, não de um teste.
+4. **Reenvio do mesmo estorno** (mesmo `id`) numa segunda tentativa: o servidor refaz a conferência do que resta com o estorno original já contado, então o resultado pode ser `E-ENTRY-04`. Não foi verificado.
+5. **Códigos do catálogo sem rota que os emita** nas rotas lidas: `E-VOUCHER-01`, `E-BUDG-02` a `E-BUDG-04`, `E-SYNC-01`, `E-SYNC-02`, `E-DATA-02`, `E-REQ-03`, `E-SRV-02`, `E-SRV-03` e `E-AUTH-04`. O catálogo os prevê; a tabela da seção 6.3 marca cada um. Pode haver emissão em outro lugar (por exemplo, no proxy ou no app), que não foi investigada.
+6. **Valores padrão do código** (limite de taxa de 120 e 600 por minuto; prazos da IA de 8, 25 e 35 segundos; tetos de tamanho): a composição do servidor pode sobrescrevê-los em produção. Os valores efetivos de produção não foram conferidos, e o teto mensal de tokens da IA não é publicado aqui.
+7. **Conteúdo da resposta da IA** (`text` do assistente, `categoryId` e `confidence` sugeridos): depende do modelo. Só o **formato** e as garantias de validação foram documentados. O significado fino de `candidates`, `confidence` e `source` segue o domínio de recibos e não foi detalhado campo a campo.
+8. **Regras finas dos fatos** (`debt.defined`, `budget.defined`, `household.named`): os campos listados na seção 7.15 são os principais; limites e validações de domínio (dívida, linha do plano, nome com sobrenome) foram lidos só em parte.
+9. **Endereço de produção, origem da web de consulta, nome do segredo e demais detalhes de implantação:** de propósito, não estão neste documento.
+10. **Content-Type do pedido:** o código não o confere; se um proxy à frente do servidor o exige, isso não foi verificado.

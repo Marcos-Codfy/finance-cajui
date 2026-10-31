@@ -19,9 +19,11 @@ abstract final class CardCodec {
     'skin': ?card.skin,
   };
 
-  /// O cartão gravado em [payload]. Já foi aceito pelo domínio quando foi
-  /// gravado.
-  static CreditCard decodeCard(Map<String, Object?> payload) {
+  /// O cartão descrito em [payload], ou a recusa do domínio (`E-CARD-01`).
+  ///
+  /// É o que a rota usa para um cartão que **acabou de chegar**: um dia que
+  /// não existe é recusa de regra (422), e não defeito do servidor (500).
+  static Result<CreditCard> readCard(Map<String, Object?> payload) {
     final limit = payload['creditLimitCents'] as int?;
     return CreditCard.create(
       id: payload['id']! as String,
@@ -30,8 +32,13 @@ abstract final class CardCodec {
       dueDay: payload['dueDay']! as int,
       creditLimit: limit == null ? null : Money.fromCents(limit),
       skin: payload['skin'] as String?,
-    ).valueOrNull!;
+    );
   }
+
+  /// O cartão gravado em [payload]. Já foi aceito pelo domínio quando foi
+  /// gravado.
+  static CreditCard decodeCard(Map<String, Object?> payload) =>
+      readCard(payload).valueOrNull!;
 
   /// O que gravar para [settlement].
   static Map<String, Object?> encodeSettlement(Settlement settlement) => {
