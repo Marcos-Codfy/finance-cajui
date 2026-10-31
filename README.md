@@ -29,7 +29,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 
 **[Ver a gallery do design system ao vivo](https://cajui-teal.vercel.app/gallery/)**
 
-[Especificação](docs/spec) · [Decisões (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
+[Especificação](docs/spec) · [Decisões (32 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
 [Segurança](docs/security) · [Operação](docs/ops/runbook.md) · [API](docs/api.md) ·
 [Wireframes](docs/design/wireframes.html) · [Progresso](PROGRESS.md)
 
@@ -62,7 +62,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 - **Privacidade:** o que vai para a IA sai do celular com nome de pessoa, CPF e conta mascarados. A resposta da IA é
   tratada como entrada não confiável: todo valor que ela devolve precisa estar escrito no documento.
 - **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.635 testes nomeados pela
-  regra que provam, cobertura de 85% a 95% por pacote, 30 ADRs e esteira no GitHub Actions.
+  regra que provam, cobertura de 85% a 95% por pacote, 32 ADRs e esteira no GitHub Actions.
 
 ## Visual
 
@@ -299,16 +299,17 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 <details>
 <summary><b>As peças da aula e onde elas moram no Cajui</b></summary>
 
-| Peça da aula                           | No Cajui                                                                                                                                             |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core (modelos, repositórios, `Result`) | [`packages/domain`](packages/domain) e [`packages/api_contract`](packages/api_contract)                                                              |
-| Design System                          | [`packages/design_system`](packages/design_system)                                                                                                   |
-| Cena                                   | Uma pasta por feature, com `application`, `infrastructure` e `presentation`                                                                          |
-| Factory de cena                        | O Coordinator monta a tela e o provider do ViewModel entrega as dependências ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md)) |
-| View                                   | `*_page.dart`, só desenha, com os componentes do design system                                                                                       |
-| ViewModel                              | `*_view_model.dart` (um `Notifier`), com o estado selado ao lado                                                                                     |
-| Server                                 | A porta da feature (`AssistantGateway`, `LedgerDownlink`…) e o adaptador HTTP em `infrastructure`                                                    |
-| Storage                                | `PreferencesStore`, `HouseholdKeyStore` e o livro de eventos, cada um com versão real e em memória                                                   |
+| Peça da aula                           | No Cajui                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core (modelos, repositórios, `Result`) | [`packages/domain`](packages/domain) e [`packages/api_contract`](packages/api_contract)                                                                                                                                                                                                                                          |
+| Design System                          | [`packages/design_system`](packages/design_system)                                                                                                                                                                                                                                                                               |
+| Cena                                   | Uma pasta por feature, com `application`, `infrastructure` e `presentation`                                                                                                                                                                                                                                                      |
+| Factory de cena                        | O Coordinator monta a tela e o provider do ViewModel entrega as dependências ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md))                                                                                                                                                                             |
+| Coordinator                            | Um por feature, em `presentation`, sobre a porta [`SceneNavigator`](app/lib/src/core/navigation/scene_navigator.dart): [`LedgerCoordinator`](app/lib/src/features/ledger/presentation/ledger_coordinator.dart), `BudgetCoordinator`, `CardsCoordinator`… ([ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)) |
+| View                                   | `*_page.dart`, só desenha, com os componentes do design system                                                                                                                                                                                                                                                                   |
+| ViewModel                              | `*_view_model.dart` (um `Notifier`), com o estado selado ao lado                                                                                                                                                                                                                                                                 |
+| Server                                 | A porta da feature (`AssistantGateway`, `LedgerDownlink`…) e o adaptador HTTP em `infrastructure`                                                                                                                                                                                                                                |
+| Storage                                | `PreferencesStore`, `HouseholdKeyStore` e o livro de eventos, cada um com versão real e em memória                                                                                                                                                                                                                               |
 
 </details>
 
@@ -322,7 +323,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 | Strategy   | [`ChatClient`](server/lib/src/ai/chat_client.dart) com [`DeepSeekChatClient`](server/lib/src/ai/deepseek_chat_client.dart) e [`ClaudeChatClient`](server/lib/src/ai/claude_chat_client.dart), escolhido na subida do servidor                                         |
 | Observer   | `ref.watch` do Riverpod nas telas e `Stream` na sincronização ao vivo                                                                                                                                                                                                 |
 | Repository | [`LedgerJournal`](app/lib/src/features/ledger/application/ledger_journal.dart), com versão local, remota e em memória                                                                                                                                                 |
-| Result     | [`Result` e `Failure` selados](packages/domain/lib/src/shared/result.dart): regra recusada é valor, e não exceção                                                                                                                                                     |
+| Result     | [`Result` e `Failure` selados](packages/domain/lib/src/shared/result.dart): regra recusada é valor, e não exceção; [`Decoded`](packages/api_contract/lib/src/decoded.dart) faz o mesmo com o pedido que vem de fora                                                   |
 
 </details>
 
@@ -363,7 +364,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 | Acessibilidade      | Lighthouse 100 na web; semântica ligada desde a raiz; o leitor de tela diz quem fala na conversa         |
 
 **Em números:** 95 mil linhas de Dart em 1.009 arquivos (31 mil delas de teste), 2,7 mil de Kotlin, 420 regras de
-negócio, 114 requisitos não funcionais, 30 ADRs e 107 pull requests.
+negócio, 114 requisitos não funcionais, 32 ADRs e 107 pull requests.
 
 ## O que deu errado
 

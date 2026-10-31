@@ -29,7 +29,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 
 **[See the design system gallery live](https://cajui-teal.vercel.app/gallery/)**
 
-[Specification](docs/spec) · [Decisions (30 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
+[Specification](docs/spec) · [Decisions (32 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
 [Security](docs/security) · [Operations](docs/ops/runbook.md) · [API](docs/api.md) ·
 [Wireframes](docs/design/wireframes.html) · [Progress](PROGRESS.md)
 
@@ -66,7 +66,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 - **Privacy:** what goes to the AI leaves the phone with people's names, tax IDs and account numbers masked. The AI's
   answer is treated as untrusted input: every amount it returns must be written in the document.
 - **Engineering:** clean architecture with the layers locked by a custom checker, 1,635 tests named after the rule
-  they prove, 85% to 95% coverage per package, 30 ADRs and a GitHub Actions pipeline.
+  they prove, 85% to 95% coverage per package, 32 ADRs and a GitHub Actions pipeline.
 
 ## Visuals
 
@@ -301,16 +301,17 @@ thing.
 <details>
 <summary><b>The class pieces and where they live in Cajui</b></summary>
 
-| Class piece                           | In Cajui                                                                                                                                                       |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core (models, repositories, `Result`) | [`packages/domain`](packages/domain) and [`packages/api_contract`](packages/api_contract)                                                                      |
-| Design System                         | [`packages/design_system`](packages/design_system)                                                                                                             |
-| Scene                                 | One folder per feature, with `application`, `infrastructure` and `presentation`                                                                                |
-| Scene factory                         | The Coordinator builds the page and the ViewModel's provider delivers the dependencies ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md)) |
-| View                                  | `*_page.dart`, only draws, with design system components                                                                                                       |
-| ViewModel                             | `*_view_model.dart` (a `Notifier`), with the sealed state next to it                                                                                           |
-| Server                                | The feature's port (`AssistantGateway`, `LedgerDownlink`…) and the HTTP adapter in `infrastructure`                                                            |
-| Storage                               | `PreferencesStore`, `HouseholdKeyStore` and the event ledger, each with a real and an in-memory version                                                        |
+| Class piece                           | In Cajui                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core (models, repositories, `Result`) | [`packages/domain`](packages/domain) and [`packages/api_contract`](packages/api_contract)                                                                                                                                                                                                                                         |
+| Design System                         | [`packages/design_system`](packages/design_system)                                                                                                                                                                                                                                                                                |
+| Scene                                 | One folder per feature, with `application`, `infrastructure` and `presentation`                                                                                                                                                                                                                                                   |
+| Scene factory                         | The Coordinator builds the page and the ViewModel's provider delivers the dependencies ([ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md))                                                                                                                                                                    |
+| Coordinator                           | One per feature, in `presentation`, over the [`SceneNavigator`](app/lib/src/core/navigation/scene_navigator.dart) port: [`LedgerCoordinator`](app/lib/src/features/ledger/presentation/ledger_coordinator.dart), `BudgetCoordinator`, `CardsCoordinator`… ([ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)) |
+| View                                  | `*_page.dart`, only draws, with design system components                                                                                                                                                                                                                                                                          |
+| ViewModel                             | `*_view_model.dart` (a `Notifier`), with the sealed state next to it                                                                                                                                                                                                                                                              |
+| Server                                | The feature's port (`AssistantGateway`, `LedgerDownlink`…) and the HTTP adapter in `infrastructure`                                                                                                                                                                                                                               |
+| Storage                               | `PreferencesStore`, `HouseholdKeyStore` and the event ledger, each with a real and an in-memory version                                                                                                                                                                                                                           |
 
 </details>
 
@@ -324,7 +325,7 @@ thing.
 | Strategy   | [`ChatClient`](server/lib/src/ai/chat_client.dart) with [`DeepSeekChatClient`](server/lib/src/ai/deepseek_chat_client.dart) and [`ClaudeChatClient`](server/lib/src/ai/claude_chat_client.dart), chosen when the server starts                                      |
 | Observer   | Riverpod's `ref.watch` in the pages and `Stream` in the live sync                                                                                                                                                                                                   |
 | Repository | [`LedgerJournal`](app/lib/src/features/ledger/application/ledger_journal.dart), with local, remote and in-memory versions                                                                                                                                           |
-| Result     | [Sealed `Result` and `Failure`](packages/domain/lib/src/shared/result.dart): a refused rule is a value, not an exception                                                                                                                                            |
+| Result     | [Sealed `Result` and `Failure`](packages/domain/lib/src/shared/result.dart): a refused rule is a value, not an exception; [`Decoded`](packages/api_contract/lib/src/decoded.dart) does the same for a request that comes from outside                               |
 
 </details>
 
@@ -365,7 +366,7 @@ thing.
 | Accessibility     | Lighthouse 100 on the web; semantics on from the root; the screen reader says who is speaking in the chat |
 
 **By the numbers:** 95 thousand lines of Dart in 1,009 files (31 thousand of them tests), 2.7 thousand of Kotlin, 420
-business rules, 114 non-functional requirements, 30 ADRs and 107 pull requests.
+business rules, 114 non-functional requirements, 32 ADRs and 107 pull requests.
 
 ## What went wrong
 
