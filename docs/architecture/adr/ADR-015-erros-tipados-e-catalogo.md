@@ -55,3 +55,14 @@ O catálogo lista 45 erros, cada um com gatilho, texto e saída, e proíbe o err
 - Teste que percorre o catálogo em Markdown e compara com o enum: **documento e código não podem divergir**.
 - Teste que passa todos os textos pela lista de termos proibidos do guia de voz (RN-944) — a mesma que valida a saída da IA.
 - Teste de contrato: cada rota, provocada a falhar, devolve exatamente o corpo de erro especificado.
+
+## Atualização de 2026-10-30: o pedido de fora vira valor na borda
+
+O item 5 da decisão deixava a exceção para o defeito e a capturava "na borda de cada camada". Os decodificadores do contrato (`JsonReader`, `CreateEntryRequest.fromJson` e os codecs) lançam `FormatException` ao primeiro campo que não bate (RNF-SEC-09), e até aqui o único lugar que a convertia em `E-REQ-01` era a última barreira do servidor (`Middlewares.errorBoundary`). Funcionava, mas dependia de ninguém esquecer que a barreira existe.
+
+- **`Decoded<T>`**, em `packages/api_contract`, é o resultado de ler o que veio de fora: `Understood` (com o valor) ou `Refused` (com o código do catálogo). `Decoded.of` é a fronteira: a `FormatException` nasce e morre ali, e qualquer outra exceção continua subindo, porque é defeito do programa.
+- **`RequestBody`**, no servidor, lê o corpo (teto de tamanho incluído) e o decodifica sem deixar exceção sair: JSON inválido ou fora do esquema vira `E-REQ-01`, e corpo grande demais vira `E-REQ-04`. Todas as rotas que recebem corpo passam por ele e tratam o resultado num `switch` exaustivo.
+- **A barreira continua**, mas só como rede de segurança para o que ninguém previu (`E-SRV-01`).
+- No **app**, o que cruza a camada de dados já voltava como valor (`Result`, `ApiOutcome`, `CodeOutcome`, `ReadOutcome`); o leitor nativo de comprovante passou a devolver `ReadFailed` também quando o módulo nativo não existe, como o leitor vazio, o que um teste de contrato das duas portas apontou.
+
+Conferido por `decoded_test.dart` (contrato), `request_body_test.dart` (servidor) e `port_contracts_test.dart` (app).

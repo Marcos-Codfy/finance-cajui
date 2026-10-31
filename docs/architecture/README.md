@@ -8,7 +8,7 @@ Como o Cajui é construído, e **por quê**. A especificação ([`docs/spec/`](.
 |---|---|
 | [c4.md](c4.md) | Que partes existem, quem fala com quem, e onde ficam as fronteiras de confiança |
 | [spikes/](spikes/) | O que foi **medido** antes de decidir |
-| [adr/](adr/) | As 19 decisões, cada uma com contexto, alternativas e consequências |
+| [adr/](adr/) | As 32 decisões, cada uma com contexto, alternativas e consequências |
 | [desvios-do-plano.md](desvios-do-plano.md) | Onde a execução se afastou do plano de 19/09, uma a uma, e o que o app **não** faz hoje |
 
 ## A arquitetura em um parágrafo
@@ -62,6 +62,8 @@ Arquitetura limpa, organizada por feature, em quatro camadas — `domain`, `appl
 | [028](adr/ADR-028-rolagem-3d-e-entrada-cinematografica.md) | Rolagem 3D, carrossel 3D, entrada cinematográfica e pilha de carteira: perspectiva por matriz aplicada na pintura, uma câmera só, plano onde se lê; o desfoque da entrada como exceção nomeada ao orçamento | proposta |
 | [029](adr/ADR-029-lembretes-de-vencimento.md) | Lembretes de vencimento: o domínio escreve o lembrete pronto (dia, texto, versão da tela bloqueada, assunto) e o aparelho só marca o alarme e mostra; o pago não lembra | aceita |
 | [030](adr/ADR-030-extrato-pela-juju.md) | Extrato pela Juju: a IA lê uma página por pedido e o app conversa; o celular resolve cada linha (marca, memória, data, chave pelo conteúdo); memória como fato sincronizado; entrada desfeita | aceita |
+| [031](adr/ADR-031-navegacao-com-coordinator.md) | Navegação com Coordinator: uma porta `SceneNavigator`, um coordinator por feature que decide qual cena abrir e com que dados, e ViewModel que nunca navega | aceita |
+| [032](adr/ADR-032-injecao-e-factory-de-cena.md) | Injeção com Riverpod e o papel da factory de cena dividido entre o coordinator (monta a tela) e o provider do ViewModel (entrega as dependências) | aceita |
 
 As 16 foram aceitas em 2026-09-20, no checkpoint da Fase 4. Toda ADR nasce como *proposta* e vira *aceita* num checkpoint. Decisão que mudar depois ganha ADR nova, que substitui a antiga — a antiga não é apagada.
 
