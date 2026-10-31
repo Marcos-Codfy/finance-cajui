@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
-import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/core/navigation/coordinator_access.dart';
-import 'package:cajui/src/features/debts/application/debts_service.dart';
+import 'package:cajui/src/features/debts/presentation/debt_form_state.dart';
+import 'package:cajui/src/features/debts/presentation/debt_form_view_model.dart';
 import 'package:cajui/src/features/debts/presentation/debt_kind_label.dart';
-import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -35,8 +36,6 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
   int _paid = 0;
   int _dueDay = 10;
   bool _nextIsThisMonth = true;
-  PresentedError? _problem;
-  bool _saving = false;
 
   @override
   void dispose() {
@@ -52,56 +51,28 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
       _creditor.text.trim().isNotEmpty &&
       (_byBalance ? _balance > 0 : _cents > 0);
 
-  /// O mês da primeira parcela, contando para trás a partir da próxima: é o
-  /// que o domínio precisa para projetar a quitação (RN-531).
-  BudgetMonth get _firstMonth {
-    final today = ref.read(clockProvider).today().budgetMonth;
-    final next = _nextIsThisMonth ? today : today.next;
-    return next.addMonths(-_paid);
+  void _closeWhenSaved(DebtFormState? before, DebtFormState now) {
+    if (now is! DebtFormSaved) return;
+    CajuiFeedbackScope.of(context).saved();
+    context.back();
   }
 
-  // Vale nos dois tipos: a observação da parcelada era descartada.
-  String? get _noteText => _note.text.trim().isEmpty ? null : _note.text.trim();
-
-  Future<Result<Debt>> _define() {
-    final service = ref.read(debtsServiceProvider);
-    if (_byBalance) {
-      return service.defineByBalance(
+  /// Entrega o que foi preenchido ao ViewModel, que grava.
+  void _save() {
+    unawaited(
+      ref.read(debtFormProvider.notifier).save((
         creditor: _creditor.text,
         kind: _kind,
-        balance: Money.fromCents(_balance),
-        monthlyPayment: Money.fromCents(_cents),
+        byBalance: _byBalance,
+        amountCents: _cents,
+        balanceCents: _balance,
+        totalInstallments: _total,
+        paidInstallments: _paid,
         dueDay: _dueDay,
-        note: _noteText,
-      );
-    }
-    return service.define(
-      creditor: _creditor.text,
-      kind: _kind,
-      installmentAmount: Money.fromCents(_cents),
-      totalInstallments: _total,
-      paidInstallments: _paid,
-      dueDay: _dueDay,
-      firstMonth: _firstMonth,
-      note: _noteText,
+        nextIsThisMonth: _nextIsThisMonth,
+        note: _note.text,
+      )),
     );
-  }
-
-  Future<void> _save() async {
-    setState(() => _saving = true);
-    final navigator = context.navigator;
-    final feedback = CajuiFeedbackScope.of(context);
-    final result = await _define();
-    if (!mounted) return;
-    if (result.failureOrNull case final failure?) {
-      setState(() {
-        _saving = false;
-        _problem = FailurePresenter.present(failure);
-      });
-      return;
-    }
-    feedback.saved();
-    navigator.pop();
   }
 
   Future<void> _pick(
@@ -125,6 +96,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(debtFormProvider, _closeWhenSaved);
     return CajuiScreen(
       title: 'Cadastrar dívida',
       onBack: context.back,
@@ -271,7 +243,8 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
   ];
 
   Widget _footer() {
-    final problem = _problem;
+    final form = ref.watch(debtFormProvider);
+    final problem = form is DebtFormEditing ? form.problem : null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -279,14 +252,15 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
         if (problem != null) ...[
           ErrorNotice(
             error: problem,
-            onAction: (_) => setState(() => _problem = null),
+            onAction: (_) =>
+                ref.read(debtFormProvider.notifier).dismissProblem(),
           ),
           const SizedBox(height: CajuiSpacing.md),
         ],
         CajuiButton(
           label: 'Cadastrar',
           expand: true,
-          loading: _saving,
+          loading: form is DebtFormSaving,
           onPressed: _isComplete ? _save : null,
         ),
       ],

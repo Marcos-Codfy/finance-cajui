@@ -1,6 +1,8 @@
-import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'dart:async';
+
 import 'package:cajui/src/core/navigation/coordinator_access.dart';
-import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
+import 'package:cajui/src/features/cards/presentation/card_form_state.dart';
+import 'package:cajui/src/features/cards/presentation/card_form_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -31,8 +33,6 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
   int? _dueDay;
   int _limitCents = 0;
   CajuiCardSkin _skin = CajuiCardSkin.cajui;
-  String? _dayError;
-  bool _saving = false;
 
   @override
   void initState() {
@@ -66,52 +66,45 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
         );
   }
 
-  /// Grava o cartão. A trava existe porque o identificador é sorteado a cada
-  /// chamada: dois toques em "Guardar" antes de a tela fechar cadastravam
-  /// **dois cartões iguais**, e o segundo `pop` ainda derrubava a tela de
-  /// trás junto.
-  Future<void> _save(int closingDay, int dueDay) async {
-    if (_saving) return;
-    setState(() => _saving = true);
-    final navigator = context.navigator;
-    final result = await ref
-        .read(ledgerProvider.notifier)
-        .defineCard(
-          id: widget.card?.id,
-          name: _name.text,
-          closingDay: closingDay,
-          dueDay: dueDay,
-          creditLimit: _limitCents > 0 ? Money.fromCents(_limitCents) : null,
-          // O tom de sempre não se grava: o cartão viaja como antes.
-          skin: _skin == CajuiCardSkin.cajui ? null : _skin.slug,
-        );
-    if (!mounted) return;
-    switch (result) {
-      case Ok():
-        navigator.pop();
-      case Err(:final failure):
-        final error = FailurePresenter.present(failure);
-        setState(() {
-          _saving = false;
-          _dayError = error.text.message;
-        });
-    }
+  /// Entrega o que foi preenchido ao ViewModel, que grava.
+  void _save(int closingDay, int dueDay) {
+    unawaited(
+      ref.read(cardFormProvider.notifier).save((
+        id: widget.card?.id,
+        name: _name.text,
+        closingDay: closingDay,
+        dueDay: dueDay,
+        creditLimit: _limitCents > 0 ? Money.fromCents(_limitCents) : null,
+        // O tom de sempre não se grava: o cartão viaja como antes.
+        skin: _skin == CajuiCardSkin.cajui ? null : _skin.slug,
+      )),
+    );
+  }
+
+  void _closeWhenSaved(CardFormState? before, CardFormState now) {
+    if (now is CardFormSaved) context.back();
+  }
+
+  Widget _footer({required bool saving}) {
+    final (closing, due) = (_closingDay, _dueDay);
+    final ready =
+        _name.text.trim().isNotEmpty && closing != null && due != null;
+    return CajuiButton(
+      label: 'Guardar',
+      expand: true,
+      loading: saving,
+      onPressed: ready && !saving ? () => _save(closing, due) : null,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final (closing, due) = (_closingDay, _dueDay);
-    final ready =
-        _name.text.trim().isNotEmpty && closing != null && due != null;
+    ref.listen(cardFormProvider, _closeWhenSaved);
+    final form = ref.watch(cardFormProvider);
     return CajuiScreen(
       title: widget.card == null ? 'Novo cartão' : 'Alterar cartão',
       onBack: context.back,
-      footer: CajuiButton(
-        label: 'Guardar',
-        expand: true,
-        loading: _saving,
-        onPressed: ready && !_saving ? () => _save(closing, due) : null,
-      ),
+      footer: _footer(saving: form is CardFormSaving),
       children: [
         CajuiTextField(
           label: 'Nome do cartão',
@@ -119,7 +112,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
           controller: _name,
           onChanged: (_) => setState(() {}),
         ),
-        ..._days(),
+        ..._days(form is CardFormEditing ? form.dayProblem : null),
         const SizedBox(height: CajuiSpacing.lg),
         _limitField,
         const SizedBox(height: CajuiSpacing.lg),
@@ -161,7 +154,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
     ];
   }
 
-  List<Widget> _days() {
+  List<Widget> _days(String? dayProblem) {
     const gap = SizedBox(height: CajuiSpacing.lg);
     return [
       gap,
@@ -169,7 +162,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
         label: 'Fecha em',
         value: _closingDay == null ? null : 'dia $_closingDay',
         helper: 'Compra feita a partir deste dia entra na fatura seguinte',
-        error: _dayError,
+        error: dayProblem,
         onPressed: () async {
           final picked = await _pickDay('Dia do fechamento', _closingDay);
           if (picked != null) setState(() => _closingDay = picked);
