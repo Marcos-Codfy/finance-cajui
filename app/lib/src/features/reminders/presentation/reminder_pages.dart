@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
-import 'package:cajui/src/features/cards/presentation/cards_page.dart';
-import 'package:cajui/src/features/debts/presentation/debts_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
+import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
+import 'package:cajui/src/features/debts/presentation/debts_coordinator.dart';
 import 'package:cajui/src/features/reminders/application/reminder_routes.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -17,9 +18,12 @@ abstract final class ReminderPages {
     final target = ReminderRoutes.targetOf(route);
     if (target == null) return false;
     unawaited(switch (target) {
-      ReminderTarget.bills => MyBillsPage.open(context),
-      ReminderTarget.debts => DebtsPage.open(context),
-      ReminderTarget.cards => CardsPage.open(context),
+      ReminderTarget.bills =>
+        context.coordinator(budgetCoordinatorProvider).openMyBills(),
+      ReminderTarget.debts =>
+        context.coordinator(debtsCoordinatorProvider).openDebts(),
+      ReminderTarget.cards =>
+        context.coordinator(cardsCoordinatorProvider).openCards(),
     });
     return true;
   }

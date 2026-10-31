@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:cajui/src/app/cajui_app.dart';
-import 'package:cajui/src/features/budget/presentation/voucher_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:cajui/src/features/ledger/infrastructure/no_ledger_uplink.dart';
@@ -57,7 +58,12 @@ Future<ProviderContainer> _openVoucher(
     await openFromHome(tester, 'Vale');
   } else {
     // Na web sem lançamento, o Início é a tela vazia, sem as portas.
-    unawaited(VoucherPage.open(tester.element(find.byType(CajuiScreen).first)));
+    unawaited(
+      tester
+          .element(find.byType(CajuiScreen).first)
+          .coordinator(budgetCoordinatorProvider)
+          .openVoucher(),
+    );
     await settleAfterTap(tester);
   }
   return ProviderScope.containerOf(tester.element(find.byType(CajuiApp)));

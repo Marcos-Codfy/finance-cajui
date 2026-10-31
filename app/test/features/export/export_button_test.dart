@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:cajui/src/app/cajui_app.dart';
-import 'package:cajui/src/features/budget/presentation/month_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:cajui/src/features/export/application/month_exporter.dart';
 import 'package:cajui/src/features/ledger/application/ledger_event.dart';
 import 'package:design_system/design_system.dart';
@@ -81,7 +82,12 @@ void main() {
       ),
     );
     await tester.pump();
-    unawaited(MonthPage.open(tester.element(find.byType(CajuiScreen).first)));
+    unawaited(
+      tester
+          .element(find.byType(CajuiScreen).first)
+          .coordinator(budgetCoordinatorProvider)
+          .openMonth(),
+    );
     await settleAfterTap(tester);
 
     await tester.tap(find.text('Levar para planilha'));

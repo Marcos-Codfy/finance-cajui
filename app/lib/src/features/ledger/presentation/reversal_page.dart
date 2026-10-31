@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -22,12 +23,6 @@ class ReversalPage extends ConsumerStatefulWidget {
 
   /// A compra de onde o dinheiro voltou.
   final Entry entry;
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context, Entry entry) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => ReversalPage(entry: entry)));
-  }
 
   @override
   ConsumerState<ReversalPage> createState() => _ReversalPageState();
@@ -64,7 +59,7 @@ class _ReversalPageState extends ConsumerState<ReversalPage> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     final feedback = CajuiFeedbackScope.of(context);
     final result = await ref
         .read(ledgerProvider.notifier)
@@ -100,7 +95,7 @@ class _ReversalPageState extends ConsumerState<ReversalPage> {
     final isSplit = widget.entry.paymentLines.length > 1;
     return CajuiScreen(
       title: 'Registrar estorno',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: _footer(),
       children: [
         _Explanation(entry: widget.entry),

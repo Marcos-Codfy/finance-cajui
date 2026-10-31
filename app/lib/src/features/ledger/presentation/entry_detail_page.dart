@@ -1,13 +1,11 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/core/presentation/loading_page.dart';
-import 'package:cajui/src/features/ledger/application/entry_draft.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_detail_sections.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
-import 'package:cajui/src/features/ledger/presentation/reversal_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -27,39 +25,6 @@ class EntryDetailPage extends ConsumerStatefulWidget {
 
   /// O lançamento à vista.
   final String entryId;
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context, String entryId) {
-    return Navigator.of(context).push<void>(
-      CajuiPageRoute(builder: (_) => EntryDetailPage(entryId: entryId)),
-    );
-  }
-
-  /// Abre a correção de [entry] — daqui e do deslizar da lista. Reaproveita
-  /// o formulário de lançar inteiro — mesmos campos, mesmas regras, mesmos
-  /// erros — aberto com o que já está gravado.
-  static Future<void> correct(
-    BuildContext context,
-    LedgerBook book,
-    Entry entry,
-  ) {
-    final draft = EntryDraft.correcting(
-      entry,
-      category: book.categoryOf(entry.categoryId),
-      methodOf: book.methodOf,
-    );
-    return Navigator.of(context).push<void>(
-      CajuiPageRoute(
-        builder: (_) => ProviderScope(
-          overrides: [initialDraftProvider.overrideWithValue(draft)],
-          child: const EntryFormPage(
-            title: 'Corrigir lançamento',
-            submitLabel: 'Guardar correção',
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   ConsumerState<EntryDetailPage> createState() => _EntryDetailPageState();
@@ -84,7 +49,7 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
     final day = DateLabels.day(entry.occurredOn, today: today);
     return CajuiScreen(
       title: 'Lançamento',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       children: [
         CajuiStatCard(
           label: entry.description,
@@ -112,7 +77,9 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
     CajuiButton(
       label: 'Corrigir',
       expand: true,
-      onPressed: () => EntryDetailPage.correct(context, book, entry),
+      onPressed: () => context
+          .coordinator(ledgerCoordinatorProvider)
+          .openCorrection(book, entry),
     ),
     if (_canReverse(book, entry)) ...[
       _gap,
@@ -120,7 +87,8 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
         label: 'Registrar estorno',
         variant: CajuiButtonVariant.secondary,
         expand: true,
-        onPressed: () => ReversalPage.open(context, entry),
+        onPressed: () =>
+            context.coordinator(ledgerCoordinatorProvider).openReversal(entry),
       ),
     ],
     _gap,
@@ -154,7 +122,7 @@ class _EntryDetailPageState extends ConsumerState<EntryDetailPage> {
   ];
 
   Future<void> _cancel(Entry entry) async {
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     final feedback = CajuiFeedbackScope.of(context);
     await ref
         .read(ledgerProvider.notifier)

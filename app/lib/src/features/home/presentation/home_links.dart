@@ -1,12 +1,10 @@
 import 'package:cajui/src/core/format/date_labels.dart';
-import 'package:cajui/src/features/budget/presentation/month_history_page.dart';
-import 'package:cajui/src/features/budget/presentation/month_page.dart';
-import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
-import 'package:cajui/src/features/budget/presentation/voucher_page.dart';
-import 'package:cajui/src/features/cards/presentation/cards_page.dart';
-import 'package:cajui/src/features/debts/presentation/debts_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
+import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
+import 'package:cajui/src/features/debts/presentation/debts_coordinator.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
-import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -49,35 +47,39 @@ abstract final class HomeLinks {
   static String _brl(int cents) => BrlFormatter.format(cents);
 
   /// Lançamentos, Meu mês, Cartões e Dívidas.
-  static List<Widget> _doors(BuildContext context, HomeView view) {
-    final budget = view.budget;
-    return [
-      CajuiTile(
-        icon: CajuiIconData.receipt,
-        title: 'Lançamentos',
-        subtitle: _entries(view),
-        onPressed: () => EntriesPage.open(context),
-      ),
-      CajuiTile(
-        icon: CajuiIconData.calendar,
-        title: 'Meu mês',
-        subtitle: _monthLine(budget),
-        onPressed: () => MonthPage.open(context),
-      ),
-      CajuiTile(
-        icon: CajuiIconData.card,
-        title: 'Cartões',
-        subtitle: _cardsLine(view),
-        onPressed: () => CardsPage.open(context),
-      ),
-      CajuiTile(
-        icon: CajuiIconData.debt,
-        title: 'Dívidas',
-        subtitle: _debts(view),
-        onPressed: () => DebtsPage.open(context),
-      ),
-    ];
-  }
+  static List<Widget> _doors(BuildContext context, HomeView view) => [
+    _door(
+      CajuiIconData.receipt,
+      'Lançamentos',
+      _entries(view),
+      () => context.coordinator(ledgerCoordinatorProvider).openEntries(),
+    ),
+    _door(
+      CajuiIconData.calendar,
+      'Meu mês',
+      _monthLine(view.budget),
+      () => context.coordinator(budgetCoordinatorProvider).openMonth(),
+    ),
+    _door(
+      CajuiIconData.card,
+      'Cartões',
+      _cardsLine(view),
+      () => context.coordinator(cardsCoordinatorProvider).openCards(),
+    ),
+    _door(
+      CajuiIconData.debt,
+      'Dívidas',
+      _debts(view),
+      () => context.coordinator(debtsCoordinatorProvider).openDebts(),
+    ),
+  ];
+
+  static CajuiTile _door(
+    CajuiIconData icon,
+    String title,
+    String subtitle,
+    VoidCallback open,
+  ) => CajuiTile(icon: icon, title: title, subtitle: subtitle, onPressed: open);
 
   static String _monthLine(MonthBudget budget) =>
       'Entra ${_brl(budget.cashIncome.cents)} · sai do bolso '
@@ -105,13 +107,14 @@ abstract final class HomeLinks {
     _row(
       title: 'Minhas contas',
       subtitle: 'O que entra, o que sai todo mês e o dízimo',
-      open: () => MyBillsPage.open(context),
+      open: () => context.coordinator(budgetCoordinatorProvider).openMyBills(),
     ),
     ?_voucher(context, view),
     _row(
       title: 'Mês a mês',
       subtitle: 'Quanto entrou, saiu e sobrou em cada mês',
-      open: () => MonthHistoryPage.open(context),
+      open: () =>
+          context.coordinator(budgetCoordinatorProvider).openMonthHistory(),
     ),
   ];
 
@@ -128,7 +131,7 @@ abstract final class HomeLinks {
     return _row(
       title: 'Vale',
       subtitle: '$number · conferir com a operadora',
-      open: () => VoucherPage.open(context),
+      open: () => context.coordinator(budgetCoordinatorProvider).openVoucher(),
     );
   }
 

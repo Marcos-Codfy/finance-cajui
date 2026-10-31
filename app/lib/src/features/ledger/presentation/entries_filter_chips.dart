@@ -1,7 +1,8 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_view_model.dart';
-import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -62,23 +63,25 @@ class EntriesFilterChips extends ConsumerWidget {
   /// A escolha volta depois de outra tela: a lista pode ter fechado nesse
   /// meio-tempo, e aí não há filtro a mudar.
   Future<void> _pickCategory(BuildContext context, WidgetRef ref) async {
-    final picked = await OptionPickerPage.open<Category>(
-      context,
-      title: 'Categoria',
-      options: state.book.categories,
-      labelOf: (category) => category.name,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<Category>(
+          title: 'Categoria',
+          options: state.book.categories,
+          labelOf: (category) => category.name,
+        );
     if (picked == null || !context.mounted) return;
     ref.read(entriesViewModelProvider.notifier).filterCategory(picked.id);
   }
 
   Future<void> _pickMethod(BuildContext context, WidgetRef ref) async {
-    final picked = await OptionPickerPage.open<PaymentMethod>(
-      context,
-      title: 'Forma de pagamento',
-      options: state.book.methods,
-      labelOf: (method) => method.name,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<PaymentMethod>(
+          title: 'Forma de pagamento',
+          options: state.book.methods,
+          labelOf: (method) => method.name,
+        );
     if (picked == null || !context.mounted) return;
     ref.read(entriesViewModelProvider.notifier).filterPaymentMethod(picked.id);
   }

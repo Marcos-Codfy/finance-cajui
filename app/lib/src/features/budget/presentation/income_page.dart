@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -20,15 +21,6 @@ class IncomePage extends ConsumerStatefulWidget {
 
   /// A moeda marcada ao abrir.
   final Tender tender;
-
-  /// Abre a tela.
-  static Future<void> open(
-    BuildContext context, {
-    Tender tender = Tender.cash,
-  }) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => IncomePage(tender: tender)));
-  }
 
   @override
   ConsumerState<IncomePage> createState() => _IncomePageState();
@@ -68,7 +60,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     final feedback = CajuiFeedbackScope.of(context);
     await ref
         .read(incomeServiceProvider)
@@ -88,7 +80,7 @@ class _IncomePageState extends ConsumerState<IncomePage> {
     const gap = SizedBox(height: CajuiSpacing.lg);
     return CajuiScreen(
       title: 'Registrar recebimento',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: CajuiButton(
         label: 'Registrar',
         expand: true,

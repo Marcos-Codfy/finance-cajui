@@ -1,5 +1,6 @@
 import 'package:cajui/src/core/format/date_labels.dart';
-import 'package:cajui/src/features/cards/presentation/statement_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
 import 'package:cajui/src/features/receipts/application/capture.dart';
@@ -43,7 +44,7 @@ class _NotAnExpensePageState extends ConsumerState<NotAnExpensePage> {
   CaptureViewModel get _vm => ref.read(captureProvider.notifier);
 
   Future<void> _openStatement(CreditCard card) async {
-    await StatementPage.open(context, card);
+    await context.coordinator(cardsCoordinatorProvider).openStatement(card);
     if (mounted) setState(() => _visited = true);
   }
 

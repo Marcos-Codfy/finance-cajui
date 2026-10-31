@@ -1,6 +1,7 @@
 import 'package:cajui/src/app/home_shell.dart';
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/feedback_providers.dart';
+import 'package:cajui/src/core/navigation/navigation_providers.dart';
 import 'package:cajui/src/features/auth/application/household_key_presence.dart';
 import 'package:cajui/src/features/auth/presentation/key_page.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -21,6 +22,7 @@ class CajuiApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return WidgetsApp(
+      navigatorKey: ref.watch(navigatorKeyProvider),
       title: 'Cajui',
       // A cor que o Android mostra na lista de apps recentes.
       color: CajuiThemeData.light().colors.surface.base,

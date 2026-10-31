@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/income_service.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
@@ -19,11 +20,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class VoucherPage extends ConsumerStatefulWidget {
   /// Cria a tela.
   const new({super.key});
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const VoucherPage()));
 
   @override
   ConsumerState<VoucherPage> createState() => _VoucherPageState();
@@ -58,7 +54,7 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
   Widget build(BuildContext context) {
     final view = ref.watch(homeViewProvider);
     final book = ref.watch(ledgerProvider).value;
-    final back = Navigator.of(context).pop;
+    final back = context.back;
     if (view == null || book == null) {
       return CajuiScreen(
         title: 'Vale',

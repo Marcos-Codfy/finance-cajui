@@ -1,6 +1,7 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/entry_draft.dart';
@@ -10,8 +11,7 @@ import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
-import 'package:cajui/src/features/ledger/presentation/installments_picker.dart';
-import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:cajui/src/features/ledger/presentation/payment_section.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -64,12 +64,6 @@ class EntryFormPage extends ConsumerStatefulWidget {
   /// O que o botão de voltar faz. Sem isto, fecha a tela.
   final VoidCallback? onBack;
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => const EntryFormPage()));
-  }
-
   @override
   ConsumerState<EntryFormPage> createState() => _EntryFormPageState();
 }
@@ -87,27 +81,29 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
   };
 
   Future<void> _pickCategory(LedgerBook book, EntryDraft draft) async {
-    final picked = await OptionPickerPage.open<Category>(
-      context,
-      title: 'Categoria',
-      options: book.categories,
-      labelOf: (category) => category.name,
-      selected: draft.category,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<Category>(
+          title: 'Categoria',
+          options: book.categories,
+          labelOf: (category) => category.name,
+          selected: draft.category,
+        );
     if (picked != null) _form.edit((d) => d.copyWith(category: picked));
   }
 
   Future<void> _pickMethod(LedgerBook book, {required bool second}) async {
     final draft = ref.read(entryFormProvider).draft;
     final taken = second ? draft.method : draft.secondMethod;
-    final picked = await OptionPickerPage.open<PaymentMethod>(
-      context,
-      title: 'Por onde foi pago',
-      // A mesma forma duas vezes não é dividir: é uma linha só.
-      options: [...book.methods.where((method) => method != taken)],
-      labelOf: (method) => method.name,
-      selected: second ? draft.secondMethod : draft.method,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<PaymentMethod>(
+          title: 'Por onde foi pago',
+          // A mesma forma duas vezes não é dividir: é uma linha só.
+          options: [...book.methods.where((method) => method != taken)],
+          labelOf: (method) => method.name,
+          selected: second ? draft.secondMethod : draft.method,
+        );
     if (picked == null) return;
     _form.edit(
       (d) => second
@@ -118,11 +114,12 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
 
   Future<void> _pickInstallments() async {
     final draft = ref.read(entryFormProvider).draft;
-    final picked = await InstallmentsPicker.open(
-      context,
-      total: Money.fromCents(draft.amountCents),
-      selected: draft.installmentCount,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pickInstallments(
+          total: Money.fromCents(draft.amountCents),
+          selected: draft.installmentCount,
+        );
     if (picked != null) _form.edit((d) => d.copyWith(installments: picked));
   }
 
@@ -143,7 +140,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     // A semente caindo: o lançamento entrou (escolha 4 do dono).
     CajuiFeedbackScope.of(context).entrySaved();
     final onSaved = widget.onSaved;
-    onSaved == null ? Navigator.of(context).pop() : onSaved(next.entry);
+    onSaved == null ? context.back() : onSaved(next.entry);
   }
 
   /// A descrição que já vem preenchida, quando o rascunho nasce de uma
@@ -171,7 +168,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     final header = widget.header;
     return CajuiScreen(
       title: widget.title,
-      onBack: widget.onBack ?? Navigator.of(context).pop,
+      onBack: widget.onBack ?? context.back,
       footer: _footer(state, problem),
       children: [
         if (header != null) ...[header(context, _editByApp), _gap],

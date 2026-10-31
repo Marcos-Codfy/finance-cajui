@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
@@ -14,7 +15,7 @@ class LoadingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CajuiScreen(
     title: title,
-    onBack: Navigator.maybeOf(context)?.pop,
+    onBack: context.back,
     children: const [
       CajuiSkeleton(height: 120),
       SizedBox(height: CajuiSpacing.lg),

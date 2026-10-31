@@ -1,6 +1,7 @@
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
-import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -19,12 +20,6 @@ class CardFormPage extends ConsumerStatefulWidget {
 
   /// O cartão que está sendo alterado; nulo num cadastro novo.
   final CreditCard? card;
-
-  /// Abre a tela; com [card], para alterá-lo.
-  static Future<void> open(BuildContext context, {CreditCard? card}) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => CardFormPage(card: card)));
-  }
 
   @override
   ConsumerState<CardFormPage> createState() => _CardFormPageState();
@@ -61,13 +56,14 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
   /// oferecido. A regra continua no domínio (`E-CARD-01`), e é ele que
   /// responde se um dia errado chegar por outro caminho.
   Future<int?> _pickDay(String title, int? selected) {
-    return OptionPickerPage.open<int>(
-      context,
-      title: title,
-      options: [for (var day = 1; day <= 31; day++) day],
-      labelOf: (day) => 'dia $day',
-      selected: selected,
-    );
+    return context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<int>(
+          title: title,
+          options: [for (var day = 1; day <= 31; day++) day],
+          labelOf: (day) => 'dia $day',
+          selected: selected,
+        );
   }
 
   /// Grava o cartão. A trava existe porque o identificador é sorteado a cada
@@ -77,7 +73,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
   Future<void> _save(int closingDay, int dueDay) async {
     if (_saving) return;
     setState(() => _saving = true);
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     final result = await ref
         .read(ledgerProvider.notifier)
         .defineCard(
@@ -109,7 +105,7 @@ class _CardFormPageState extends ConsumerState<CardFormPage> {
         _name.text.trim().isNotEmpty && closing != null && due != null;
     return CajuiScreen(
       title: widget.card == null ? 'Novo cartão' : 'Alterar cartão',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: CajuiButton(
         label: 'Guardar',
         expand: true,

@@ -1,8 +1,9 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/entry_days.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_detail_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_row.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:cajui/src/features/ledger/presentation/pending_cancels.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -50,7 +51,9 @@ class EntriesDayList extends ConsumerWidget {
       CajuiSwipeRow(
         id: entry.id,
         startLabel: 'Corrigir',
-        onStart: () => EntryDetailPage.correct(context, state.book, entry),
+        onStart: () => context
+            .coordinator(ledgerCoordinatorProvider)
+            .openCorrection(state.book, entry),
         endLabel: 'Cancelar',
         onEnd: () => ref.read(pendingCancelsProvider.notifier).hide(entry.id),
         child: EntryRow(entry: entry, book: state.book, today: state.today),

@@ -1,7 +1,7 @@
 import 'package:cajui/src/core/motion/tilt_providers.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
-import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
-import 'package:cajui/src/features/cards/presentation/statement_page.dart';
+import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
@@ -19,12 +19,6 @@ class CardsPage extends ConsumerWidget {
   /// Cria a tela de cartões.
   const new({super.key});
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => const CardsPage()));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final book = ref.watch(ledgerProvider).value;
@@ -36,7 +30,7 @@ class CardsPage extends ConsumerWidget {
     final tilt = _tilt(context, ref);
     return CajuiScreen(
       title: 'Cartões de crédito',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: ref.watch(ledgerUplinkProvider).isPaired
           ? _register(context)
           : null,
@@ -82,7 +76,8 @@ class CardsPage extends ConsumerWidget {
     label: 'Cadastrar cartão',
     icon: CajuiIconData.plus,
     expand: true,
-    onPressed: () => CardFormPage.open(context),
+    onPressed: () =>
+        context.coordinator(cardsCoordinatorProvider).openCardForm(),
   );
 
   /// Só à vista o sensor é lido: tela coberta por outra não balança.
@@ -136,7 +131,9 @@ class CardsPage extends ConsumerWidget {
         label: 'Informe o limite do cartão',
         icon: CajuiIconData.card,
         variant: CajuiButtonVariant.ghost,
-        onPressed: () => CardFormPage.open(context, card: card),
+        onPressed: () => context
+            .coordinator(cardsCoordinatorProvider)
+            .openCardForm(card: card),
       );
     }
     return Padding(
@@ -171,6 +168,7 @@ class CardsPage extends ConsumerWidget {
         subtitle: _usageText(card, usage),
         trailing: const CajuiIcon(CajuiIconData.chevronRight),
         semanticLabel: '${card.name}, ver a fatura',
-        onPressed: () => StatementPage.open(context, card),
+        onPressed: () =>
+            context.coordinator(cardsCoordinatorProvider).openStatement(card),
       );
 }

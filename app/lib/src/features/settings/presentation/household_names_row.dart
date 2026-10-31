@@ -1,6 +1,7 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
-import 'package:cajui/src/features/settings/presentation/household_names_page.dart';
+import 'package:cajui/src/features/settings/presentation/settings_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +31,8 @@ class HouseholdNamesRow extends ConsumerWidget {
       },
       trailing: const CajuiIcon(CajuiIconData.chevronRight),
       semanticLabel: 'Nomes da casa, abrir',
-      onPressed: () => HouseholdNamesPage.open(context),
+      onPressed: () =>
+          context.coordinator(settingsCoordinatorProvider).openHouseholdNames(),
     );
   }
 }

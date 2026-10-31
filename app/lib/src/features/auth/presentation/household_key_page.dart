@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/auth/application/household_key_store.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
@@ -12,11 +13,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class HouseholdKeyPage extends ConsumerStatefulWidget {
   /// Cria a tela.
   const new({super.key});
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const HouseholdKeyPage()));
 
   @override
   ConsumerState<HouseholdKeyPage> createState() => _HouseholdKeyPageState();
@@ -37,7 +33,7 @@ class _HouseholdKeyPageState extends ConsumerState<HouseholdKeyPage> {
     final key = ref.watch(householdKeyProvider).read();
     return CajuiScreen(
       title: 'Chave da casa',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       children: [
         _explanation(theme, key),
         if (key != null) ..._key(theme, key),

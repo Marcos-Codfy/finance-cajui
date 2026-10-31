@@ -1,4 +1,5 @@
-import 'package:cajui/src/features/budget/presentation/amount_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:cajui/src/features/cards/application/statement_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:design_system/design_system.dart';
@@ -42,29 +43,31 @@ class _StatementSectionState extends State<StatementSection> {
   String _brl(Money amount) => BrlFormatter.format(amount.cents);
 
   Future<void> _pay() async {
-    final cents = await AmountPage.open(
-      context,
-      title: 'Pagamento da fatura',
-      label: 'Quanto foi pago',
-      explanation:
-          'Pagar a fatura não é uma despesa nova: as compras já contaram '
-          'quando foram feitas. Aqui o Cajui só registra que a fatura foi '
-          'paga.',
-      initialCents: _view.openBalance.cents,
-    );
+    final cents = await context
+        .coordinator(budgetCoordinatorProvider)
+        .askAmount(
+          title: 'Pagamento da fatura',
+          label: 'Quanto foi pago',
+          explanation:
+              'Pagar a fatura não é uma despesa nova: as compras já contaram '
+              'quando foram feitas. Aqui o Cajui só registra que a fatura foi '
+              'paga.',
+          initialCents: _view.openBalance.cents,
+        );
     if (cents != null && cents > 0) widget.onSettle(Money.fromCents(cents));
   }
 
   Future<void> _compare() async {
-    final cents = await AmountPage.open(
-      context,
-      title: 'Conferir com o banco',
-      label: 'Total da fatura no app do banco',
-      explanation:
-          'Se o total do banco for maior, a diferença aparece como valor '
-          'ainda não identificado — um sinal de compra que falta lançar. O '
-          'Cajui nunca cria uma despesa de ajuste para fechar a conta.',
-    );
+    final cents = await context
+        .coordinator(budgetCoordinatorProvider)
+        .askAmount(
+          title: 'Conferir com o banco',
+          label: 'Total da fatura no app do banco',
+          explanation:
+              'Se o total do banco for maior, a diferença aparece como valor '
+              'ainda não identificado — um sinal de compra que falta lançar. O '
+              'Cajui nunca cria uma despesa de ajuste para fechar a conta.',
+        );
     if (cents != null) setState(() => _bankTotal = Money.fromCents(cents));
   }
 

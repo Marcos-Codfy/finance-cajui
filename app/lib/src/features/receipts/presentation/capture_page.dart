@@ -1,7 +1,8 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:cajui/src/features/receipts/application/capture_route.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_confirm_page.dart';
@@ -120,7 +121,7 @@ class CapturePage extends ConsumerWidget {
     }
     // "Digitar os dados" e "Digitar o valor" levam ao lançamento à mão.
     if (label.startsWith('Digitar') && context.mounted) {
-      await EntryFormPage.open(context);
+      await context.coordinator(ledgerCoordinatorProvider).openEntryForm();
     }
   }
 }

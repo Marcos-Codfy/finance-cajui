@@ -1,5 +1,6 @@
 import 'package:cajui/src/core/appearance/block_badge.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/presentation/month_ring.dart';
 import 'package:cajui/src/features/budget/presentation/month_timeline.dart';
@@ -18,16 +19,11 @@ class MonthPage extends ConsumerWidget {
   /// Cria a tela.
   const new({super.key});
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const MonthPage()));
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final view = ref.watch(homeViewProvider);
     final finances = ref.watch(financesProvider);
-    final back = Navigator.of(context).pop;
+    final back = context.back;
     if (view == null || finances == null) {
       return CajuiScreen(
         title: 'Meu mês',

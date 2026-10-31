@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
@@ -29,31 +30,9 @@ class OptionPickerPage<T> extends StatelessWidget {
   /// A opção já escolhida, se houver.
   final T? selected;
 
-  /// Abre a tela e espera a escolha.
-  static Future<T?> open<T>(
-    BuildContext context, {
-    required String title,
-    required List<T> options,
-    required String Function(T option) labelOf,
-    T? selected,
-  }) {
-    // Painel que sobe de baixo, e não tela inteira (17/10/2026): a escolha
-    // é curta, e o valor que a pessoa digitou continua à vista atrás.
-    return Navigator.of(context).push<T>(
-      CajuiSheetRoute(
-        builder: (_) => OptionPickerPage<T>(
-          title: title,
-          options: options,
-          labelOf: labelOf,
-          selected: selected,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     return CajuiSheet(
       title: title,
       children: [

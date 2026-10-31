@@ -1,5 +1,6 @@
-import 'package:cajui/src/features/budget/presentation/income_page.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
@@ -24,13 +25,15 @@ class HomeActions extends StatelessWidget {
       label: 'Gastei',
       icon: CajuiIconData.plus,
       expand: true,
-      onPressed: () => EntryFormPage.open(context),
+      onPressed: () =>
+          context.coordinator(ledgerCoordinatorProvider).openEntryForm(),
     );
     final received = CajuiButton(
       label: 'Recebi',
       variant: CajuiButtonVariant.secondary,
       expand: true,
-      onPressed: () => IncomePage.open(context),
+      onPressed: () =>
+          context.coordinator(budgetCoordinatorProvider).openIncome(),
     );
     if (MediaQuery.textScalerOf(context).scale(1) > _stackFrom) {
       return Column(spacing: CajuiSpacing.sm, children: [spent, received]);

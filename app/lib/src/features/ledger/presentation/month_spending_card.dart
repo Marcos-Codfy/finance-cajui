@@ -1,4 +1,5 @@
-import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -37,7 +38,8 @@ class MonthSpendingCard extends StatelessWidget {
               tone: CajuiAmountTone.accent,
             ),
             semanticLabel: 'Vale do mês, mudar em Minhas contas',
-            onPressed: () => MyBillsPage.open(context),
+            onPressed: () =>
+                context.coordinator(budgetCoordinatorProvider).openMyBills(),
           ),
         ],
       ),

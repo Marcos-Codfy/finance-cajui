@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:flutter/widgets.dart';
 
 /// O "+" do widget da tela inicial: abre o novo lançamento por cima do que
@@ -18,7 +19,7 @@ abstract final class NewEntryShortcut {
   /// o pedido era dele.
   static bool open(BuildContext context, String requested) {
     if (requested != route) return false;
-    unawaited(EntryFormPage.open(context));
+    unawaited(context.coordinator(ledgerCoordinatorProvider).openEntryForm());
     return true;
   }
 }

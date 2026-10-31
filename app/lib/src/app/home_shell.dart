@@ -1,5 +1,6 @@
 import 'package:cajui/src/app/home_tab.dart';
 import 'package:cajui/src/app/home_tab_controller.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_page.dart';
 import 'package:cajui/src/features/home/presentation/home_page.dart';
 import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
@@ -50,19 +51,19 @@ class HomeShell extends ConsumerWidget {
       if (now is CaptureIdle || (before != null && before is! CaptureIdle)) {
         return;
       }
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      context.navigator.popToRoot();
     });
     // O extrato que chega abre na conversa da Juju (RN-1100): a casca leva
     // a pessoa até lá, de qualquer aba e de qualquer tela empilhada.
     ref.listen(statementTalkProvider, (before, now) {
       if (before is! StatementTalkIdle || now is StatementTalkIdle) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      context.navigator.popToRoot();
       ref.read(homeTabProvider.notifier).select(HomeTab.conversar);
     });
     // O número do widget abre o Início, com a chegada pelo vidro.
     ref.listen(widgetArrivalProvider, (before, now) {
       if (now == 0 || now == before) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      context.navigator.popToRoot();
       ref.read(homeTabProvider.notifier).select(HomeTab.inicio);
     });
   }

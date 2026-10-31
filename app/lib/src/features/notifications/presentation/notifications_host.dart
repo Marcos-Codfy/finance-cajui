@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/home_widget/application/home_snapshot_provider.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
 import 'package:cajui/src/features/home_widget/presentation/new_entry_shortcut.dart';
@@ -8,7 +9,7 @@ import 'package:cajui/src/features/notifications/application/notification_provid
 import 'package:cajui/src/features/reminders/application/due_reminders_provider.dart';
 import 'package:cajui/src/features/reminders/application/reminders_providers.dart';
 import 'package:cajui/src/features/reminders/presentation/reminder_pages.dart';
-import 'package:cajui/src/features/review/presentation/review_page.dart';
+import 'package:cajui/src/features/review/presentation/review_coordinator.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,7 +83,7 @@ class _NotificationsHostState extends ConsumerState<NotificationsHost> {
     if (WidgetArrival.open(ref, route)) return;
     if (NewEntryShortcut.open(context, route)) return;
     if (route != NotificationsHost.reviewRoute) return;
-    unawaited(ReviewPage.open(context));
+    unawaited(context.coordinator(reviewCoordinatorProvider).openReview());
   }
 
   @override

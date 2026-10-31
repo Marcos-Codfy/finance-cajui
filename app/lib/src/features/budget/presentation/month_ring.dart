@@ -1,5 +1,6 @@
 import 'package:cajui/src/core/appearance/block_look.dart';
-import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -71,11 +72,12 @@ class _MonthRingState extends State<MonthRing> {
           semanticLabel:
               '${widget.categories[item.categoryId]?.name ?? 'Outra'}, '
               'ver os lançamentos',
-          onPressed: () => EntriesPage.open(
-            context,
-            categoryId: item.categoryId,
-            month: widget.budget.month,
-          ),
+          onPressed: () => context
+              .coordinator(ledgerCoordinatorProvider)
+              .openEntries(
+                categoryId: item.categoryId,
+                month: widget.budget.month,
+              ),
         ),
   ];
 }

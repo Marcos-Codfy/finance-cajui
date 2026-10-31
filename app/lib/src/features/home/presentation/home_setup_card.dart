@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:cajui/src/features/cards/presentation/cards_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
 import 'package:cajui/src/features/home/application/setup_steps.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
-import 'package:cajui/src/features/settings/presentation/household_names_page.dart';
-import 'package:cajui/src/features/settings/presentation/settings_page.dart';
+import 'package:cajui/src/features/settings/presentation/settings_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,10 +76,13 @@ class HomeSetupCard extends ConsumerWidget {
     SetupStep step,
   ) async {
     await switch (step) {
-      SetupStep.names => HouseholdNamesPage.open(context),
-      SetupStep.notifications => SettingsPage.open(context),
+      SetupStep.names =>
+        context.coordinator(settingsCoordinatorProvider).openHouseholdNames(),
+      SetupStep.notifications =>
+        context.coordinator(settingsCoordinatorProvider).openSettings(),
       SetupStep.widget => ref.read(homeScreenProvider).pin(),
-      SetupStep.cardLimits => CardsPage.open(context),
+      SetupStep.cardLimits =>
+        context.coordinator(cardsCoordinatorProvider).openCards(),
     };
     ref.invalidate(setupStepsProvider);
   }

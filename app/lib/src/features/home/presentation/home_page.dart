@@ -1,7 +1,8 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
-import 'package:cajui/src/features/budget/presentation/my_bills_page.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:cajui/src/features/export/application/export_month.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home/presentation/home_actions.dart';
@@ -14,9 +15,9 @@ import 'package:cajui/src/features/home/presentation/sync_badge.dart';
 import 'package:cajui/src/features/home/presentation/web_empty_state.dart';
 import 'package:cajui/src/features/home_widget/presentation/widget_arrival.dart';
 import 'package:cajui/src/features/ledger/application/sync_now.dart';
-import 'package:cajui/src/features/ledger/presentation/entries_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_tools.dart';
-import 'package:cajui/src/features/settings/presentation/settings_page.dart';
+import 'package:cajui/src/features/settings/presentation/settings_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -130,7 +131,8 @@ class HomePage extends ConsumerWidget {
       CajuiIconButton(
         icon: CajuiIconData.sliders,
         semanticLabel: 'Ajustes',
-        onPressed: () => SettingsPage.open(context),
+        onPressed: () =>
+            context.coordinator(settingsCoordinatorProvider).openSettings(),
       ),
     ],
   );
@@ -164,7 +166,8 @@ class HomePage extends ConsumerWidget {
           ? null
           : CajuiNoticeAction(
               label: 'Conferir agora',
-              onPressed: () => EntriesPage.open(context),
+              onPressed: () =>
+                  context.coordinator(ledgerCoordinatorProvider).openEntries(),
             ),
     );
   }
@@ -188,7 +191,8 @@ class HomePage extends ConsumerWidget {
       ),
       secondaryAction: CajuiNoticeAction(
         label: 'Ver minhas contas',
-        onPressed: () => MyBillsPage.open(context),
+        onPressed: () =>
+            context.coordinator(budgetCoordinatorProvider).openMyBills(),
       ),
     );
   }

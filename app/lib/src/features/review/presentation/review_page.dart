@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/errors/error_notice.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
@@ -19,17 +20,12 @@ class ReviewPage extends ConsumerWidget {
   /// Cria a tela.
   const new({super.key});
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const ReviewPage()));
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(reviewProvider);
     return CajuiScreen(
       title: 'Revisão da semana',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: state is ReviewPending ? _allGood(context, ref) : null,
       children: switch (state) {
         ReviewLoading() => const [],
@@ -106,7 +102,7 @@ class ReviewPage extends ConsumerWidget {
     label: 'Está tudo certo',
     expand: true,
     onPressed: () async {
-      final navigator = Navigator.of(context);
+      final navigator = context.navigator;
       final feedback = CajuiFeedbackScope.of(context);
       await ref.read(reviewProvider.notifier).allGood();
       feedback.saved();

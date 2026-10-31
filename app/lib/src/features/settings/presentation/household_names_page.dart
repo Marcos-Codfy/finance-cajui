@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/settings/application/household_names_service.dart';
@@ -15,10 +16,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class HouseholdNamesPage extends ConsumerStatefulWidget {
   /// Cria a tela.
   const new({super.key});
-
-  /// Abre a tela, a partir de Ajustes.
-  static Future<void> open(BuildContext context) => Navigator.of(context)
-      .push<void>(CajuiPageRoute(builder: (_) => const HouseholdNamesPage()));
 
   @override
   ConsumerState<HouseholdNamesPage> createState() => _HouseholdNamesPageState();
@@ -61,7 +58,7 @@ class _HouseholdNamesPageState extends ConsumerState<HouseholdNamesPage> {
     final suggestions = names.suggestedBy(salaries.map((s) => s.name));
     return CajuiScreen(
       title: 'Nomes da casa',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: CajuiButton(
         label: 'Incluir',
         expand: true,

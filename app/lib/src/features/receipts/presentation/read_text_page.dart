@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/receipts/presentation/understood_section.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
@@ -21,25 +22,12 @@ class ReadTextPage extends StatelessWidget {
   /// O que as regras entenderam do texto. Sem isto, a tela mostra só o texto.
   final EntryProposal? proposal;
 
-  /// Abre a tela.
-  static Future<void> open(
-    BuildContext context,
-    String text, {
-    EntryProposal? proposal,
-  }) {
-    return Navigator.of(context).push<void>(
-      CajuiPageRoute(
-        builder: (_) => ReadTextPage(text: text, proposal: proposal),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final understood = proposal;
     return CajuiScreen(
       title: 'O que foi lido',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       children: [
         if (understood != null) ...UnderstoodSection.of(understood, text: text),
         _section(

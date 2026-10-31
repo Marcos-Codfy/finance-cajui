@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
@@ -16,12 +17,6 @@ class SalaryPage extends ConsumerStatefulWidget {
 
   /// O salário que está sendo mudado, ou `null`.
   final IncomeSource? salary;
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context, {IncomeSource? salary}) =>
-      Navigator.of(
-        context,
-      ).push<void>(CajuiPageRoute(builder: (_) => SalaryPage(salary: salary)));
 
   @override
   ConsumerState<SalaryPage> createState() => _SalaryPageState();
@@ -67,13 +62,13 @@ class _SalaryPageState extends ConsumerState<SalaryPage> {
       expectedAmount: Money.fromCents(_cents),
       expectedDay: payDay,
     );
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     await ref.read(planServiceProvider).define(plan.withSalary(salary));
     navigator.pop();
   }
 
   Future<void> _remove(BudgetPlan plan, String id) async {
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     await ref.read(planServiceProvider).define(plan.withoutSalary(id));
     navigator.pop();
   }
@@ -83,7 +78,7 @@ class _SalaryPageState extends ConsumerState<SalaryPage> {
     final plan = ref.watch(financesProvider)?.plan ?? BudgetPlan.empty;
     return CajuiScreen(
       title: widget.salary?.name ?? 'Novo salário',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: _footer(plan),
       children: _fields(),
     );

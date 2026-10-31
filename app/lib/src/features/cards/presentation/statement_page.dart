@@ -1,7 +1,8 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/cards/application/statement_view.dart';
-import 'package:cajui/src/features/cards/presentation/card_form_page.dart';
+import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
 import 'package:cajui/src/features/cards/presentation/statement_section.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -24,12 +25,6 @@ class StatementPage extends ConsumerWidget {
   /// O cartão.
   final CreditCard card;
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context, CreditCard card) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => StatementPage(card: card)));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final book = ref.watch(ledgerProvider).value;
@@ -42,7 +37,7 @@ class StatementPage extends ConsumerWidget {
     return CajuiScreen(
       title: card.name,
       overline: 'fecha dia ${card.closingDay} · vence dia ${card.dueDay}',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       children: [
         if (limit != null) ...[
           _limitCard(limit),
@@ -73,7 +68,9 @@ class StatementPage extends ConsumerWidget {
     CajuiButton(
       label: 'Alterar cartão',
       variant: CajuiButtonVariant.ghost,
-      onPressed: () => CardFormPage.open(context, card: card),
+      onPressed: () => context
+          .coordinator(cardsCoordinatorProvider)
+          .openCardForm(card: card),
     ),
   ];
 

@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/core/presentation/loading_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_actions.dart';
 import 'package:cajui/src/features/debts/presentation/debt_kind_label.dart';
@@ -24,13 +25,6 @@ class DebtDetailPage extends ConsumerWidget {
   /// A dívida à vista.
   final String debtId;
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context, String debtId) {
-    return Navigator.of(context).push<void>(
-      CajuiPageRoute(builder: (_) => DebtDetailPage(debtId: debtId)),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final book = ref.watch(ledgerProvider).value;
@@ -46,7 +40,7 @@ class DebtDetailPage extends ConsumerWidget {
     final owed = DebtCalendar.outstandingOn(debt, today);
     return CajuiScreen(
       title: debt.creditor,
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: DebtActions(debt: debt, owed: owed),
       children: [
         _owedCard(debt, owed),

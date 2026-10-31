@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/assistant/application/answer_link.dart';
 import 'package:cajui/src/features/assistant/application/assistant_reply.dart';
 import 'package:cajui/src/features/assistant/application/assistant_suggestions.dart';
@@ -6,8 +7,8 @@ import 'package:cajui/src/features/assistant/presentation/assistant_reply_view.d
 import 'package:cajui/src/features/assistant/presentation/assistant_state.dart';
 import 'package:cajui/src/features/assistant/presentation/assistant_view_model.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
-import 'package:cajui/src/features/budget/presentation/month_page.dart';
-import 'package:cajui/src/features/debts/presentation/debts_page.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
+import 'package:cajui/src/features/debts/presentation/debts_coordinator.dart';
 import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
@@ -147,8 +148,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         canUndo: canUndo,
         onQuickReply: last ? assistant.ask : null,
         onLink: (link) => switch (link) {
-          AnswerLink.month => MonthPage.open(context),
-          AnswerLink.debts => DebtsPage.open(context),
+          AnswerLink.month =>
+            context.coordinator(budgetCoordinatorProvider).openMonth(),
+          AnswerLink.debts =>
+            context.coordinator(debtsCoordinatorProvider).openDebts(),
         },
         // Só o celular tem conferência: a web é consulta (ADR-013).
         onCapture: canUndo && SpokenExpense.looksLikeExpense(question)

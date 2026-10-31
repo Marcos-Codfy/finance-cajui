@@ -1,6 +1,7 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
-import 'package:cajui/src/features/budget/presentation/amount_page.dart';
+import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
@@ -65,15 +66,16 @@ class DebtActions extends ConsumerWidget {
       ]);
 
   Future<void> _balance(BuildContext context, WidgetRef ref) async {
-    final cents = await AmountPage.open(
-      context,
-      title: debt.creditor,
-      label: 'Quanto ainda devo',
-      explanation:
-          'Depois de negociar, ou para dizer que quitou: zero. O saldo volta '
-          'a cair sozinho a cada vencimento.',
-      initialCents: owed.cents,
-    );
+    final cents = await context
+        .coordinator(budgetCoordinatorProvider)
+        .askAmount(
+          title: debt.creditor,
+          label: 'Quanto ainda devo',
+          explanation:
+              'Depois de negociar, ou para dizer que quitou: zero. O saldo volta '
+              'a cair sozinho a cada vencimento.',
+          initialCents: owed.cents,
+        );
     if (cents == null) return;
     await ref
         .read(debtsServiceProvider)

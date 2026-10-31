@@ -1,8 +1,10 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart'
+    show EntryFormEdit;
 import 'package:cajui/src/features/receipts/application/capture.dart';
 import 'package:cajui/src/features/receipts/presentation/capture_warnings.dart';
-import 'package:cajui/src/features/receipts/presentation/read_text_page.dart';
+import 'package:cajui/src/features/receipts/presentation/receipts_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -81,11 +83,9 @@ class CaptureHeader extends StatelessWidget {
       label: 'Ver o que foi lido',
       variant: CajuiButtonVariant.ghost,
       size: CajuiButtonSize.compact,
-      onPressed: () => ReadTextPage.open(
-        context,
-        capture.source.text,
-        proposal: capture.proposal,
-      ),
+      onPressed: () => context
+          .coordinator(receiptsCoordinatorProvider)
+          .openReadText(capture.source.text, proposal: capture.proposal),
     ),
   );
 

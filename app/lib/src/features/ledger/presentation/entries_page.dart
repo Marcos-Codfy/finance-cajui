@@ -3,6 +3,7 @@ import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/error_text.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_day_list.dart';
@@ -11,14 +12,13 @@ import 'package:cajui/src/features/ledger/presentation/entries_filter_chips.dart
 import 'package:cajui/src/features/ledger/presentation/entries_search_field.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_view_model.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:cajui/src/features/ledger/presentation/month_spending_card.dart';
 import 'package:cajui/src/features/ledger/presentation/month_stepper.dart';
 import 'package:cajui/src/features/receipts/application/capture_service.dart';
 import 'package:cajui/src/features/receipts/application/receipt_providers.dart';
 import 'package:cajui/src/features/receipts/presentation/pending_captures_card.dart';
 import 'package:design_system/design_system.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,33 +29,12 @@ class EntriesPage extends ConsumerWidget {
   /// Cria a tela de lançamentos.
   const new({super.key});
 
-  /// Abre a tela, a partir do Início. Com [categoryId] e [month], já abre
-  /// filtrada — é o que o anel do Meu mês faz ao tocar uma categoria.
-  static Future<void> open(
-    BuildContext context, {
-    String? categoryId,
-    BudgetMonth? month,
-  }) {
-    final container = ProviderScope.containerOf(context);
-    final shown = Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => const EntriesPage()));
-    if (categoryId != null || month != null) {
-      // Depois do primeiro quadro a tela já existe, e o filtro dela também.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final filters = container.read(entriesViewModelProvider.notifier);
-        if (month != null) filters.showMonth(month);
-        if (categoryId != null) filters.filterCategory(categoryId);
-      });
-    }
-    return shown;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(entriesStateProvider);
     return CajuiScreen(
       title: 'Lançamentos',
-      onBack: Navigator.of(context).maybePop,
+      onBack: context.back,
       // A rolagem em profundidade e a entrada de câmera (ADR-028).
       depth: true,
       cinematic: true,
@@ -96,7 +75,11 @@ class EntriesPage extends ConsumerWidget {
           label: 'Lançar',
           icon: CajuiIconData.plus,
           expand: true,
-          onPressed: ready ? () => EntryFormPage.open(context) : null,
+          onPressed: ready
+              ? () => context
+                    .coordinator(ledgerCoordinatorProvider)
+                    .openEntryForm()
+              : null,
         ),
       ],
     );

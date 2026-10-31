@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:design_system/design_system.dart';
@@ -10,11 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class TithePage extends ConsumerWidget {
   /// Cria a tela.
   const new({super.key});
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const TithePage()));
 
   /// As opções, em centésimos de por cento: não pago, 5% e 10%.
   static const options = [0, 500, 1000];
@@ -32,7 +28,7 @@ class TithePage extends ConsumerWidget {
     final theme = CajuiTheme.of(context);
     return CajuiScreen(
       title: 'Dízimo',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       children: [
         Text(
           'O dízimo sai da renda em dinheiro, antes do dia a dia. O vale não '
@@ -62,7 +58,7 @@ class TithePage extends ConsumerWidget {
     BudgetPlan plan,
     int basisPoints,
   ) async {
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     await ref
         .read(planServiceProvider)
         .define(plan.copyWith(titheBasisPoints: basisPoints));

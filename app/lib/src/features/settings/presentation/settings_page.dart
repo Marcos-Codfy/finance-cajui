@@ -1,12 +1,13 @@
 import 'package:cajui/src/core/appearance/appearance_controller.dart';
 import 'package:cajui/src/core/feedback/sound_settings_controller.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/auth/application/household_key_store.dart';
-import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
 import 'package:cajui/src/features/home_widget/presentation/home_widget_row.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/notifications/presentation/bank_notifications_row.dart';
 import 'package:cajui/src/features/reminders/presentation/due_reminders_row.dart';
 import 'package:cajui/src/features/settings/presentation/household_names_row.dart';
+import 'package:cajui/src/features/settings/presentation/settings_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,16 +22,11 @@ class SettingsPage extends ConsumerWidget {
   /// Cria a tela de ajustes.
   const new({super.key});
 
-  /// Abre a tela, a partir do Início.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const SettingsPage()));
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CajuiScreen(
       title: 'Ajustes',
-      onBack: Navigator.of(context).maybePop,
+      onBack: context.back,
       // A rolagem em profundidade e a entrada de câmera (ADR-028).
       depth: true,
       cinematic: true,
@@ -56,7 +52,8 @@ class SettingsPage extends ConsumerWidget {
       _opens(
         title: 'Chave da casa',
         subtitle: 'Para entrar na consulta pela web de outro computador',
-        onPressed: () => HouseholdKeyPage.open(context),
+        onPressed: () =>
+            context.coordinator(settingsCoordinatorProvider).openHouseholdKey(),
       )
     else
       CajuiListRow(
@@ -74,7 +71,7 @@ class SettingsPage extends ConsumerWidget {
   /// chave é lida antes de a tela sair, porque depois o `ref` já não vale.
   static Future<void> _signOut(BuildContext context, WidgetRef ref) async {
     final keys = ref.read(householdKeyProvider);
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    context.navigator.popToRoot();
     await keys.forget();
   }
 

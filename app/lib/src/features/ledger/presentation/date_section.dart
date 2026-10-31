@@ -1,5 +1,6 @@
 import 'package:cajui/src/core/format/date_labels.dart';
-import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -38,13 +39,14 @@ class DateSection extends StatelessWidget {
       selected != null && selected != today && selected != today.addDays(-1);
 
   Future<void> _pickOther(BuildContext context) async {
-    final picked = await OptionPickerPage.open<LocalDate>(
-      context,
-      title: 'Quando foi',
-      options: [for (var i = 0; i <= _daysBack; i++) today.addDays(-i)],
-      labelOf: (day) => DateLabels.day(day, today: today),
-      selected: selected,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<LocalDate>(
+          title: 'Quando foi',
+          options: [for (var i = 0; i <= _daysBack; i++) today.addDays(-i)],
+          labelOf: (day) => DateLabels.day(day, today: today),
+          selected: selected,
+        );
     if (picked != null) onChanged(picked);
   }
 

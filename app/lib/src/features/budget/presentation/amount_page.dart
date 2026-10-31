@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
@@ -27,26 +28,6 @@ class AmountPage extends StatefulWidget {
   /// O valor que já estava cadastrado.
   final int initialCents;
 
-  /// Abre a tela e espera o valor.
-  static Future<int?> open(
-    BuildContext context, {
-    required String title,
-    required String label,
-    required String explanation,
-    int initialCents = 0,
-  }) {
-    return Navigator.of(context).push<int>(
-      CajuiPageRoute(
-        builder: (_) => AmountPage(
-          title: title,
-          label: label,
-          explanation: explanation,
-          initialCents: initialCents,
-        ),
-      ),
-    );
-  }
-
   @override
   State<AmountPage> createState() => _AmountPageState();
 }
@@ -57,7 +38,7 @@ class _AmountPageState extends State<AmountPage> {
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     return CajuiScreen(
       title: widget.title,
       onBack: navigator.pop,

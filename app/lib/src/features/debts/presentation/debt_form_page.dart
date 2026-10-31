@@ -1,10 +1,11 @@
 import 'package:api_contract/api_contract.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/debts/application/debts_service.dart';
 import 'package:cajui/src/features/debts/presentation/debt_kind_label.dart';
 import 'package:cajui/src/features/ledger/application/ledger_providers.dart';
-import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -19,11 +20,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class DebtFormPage extends ConsumerStatefulWidget {
   /// Cria a tela de cadastro.
   const new({super.key});
-
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const DebtFormPage()));
 
   @override
   ConsumerState<DebtFormPage> createState() => _DebtFormPageState();
@@ -93,7 +89,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     final feedback = CajuiFeedbackScope.of(context);
     final result = await _define();
     if (!mounted) return;
@@ -114,13 +110,14 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
     int selected,
     ValueChanged<int> onPicked,
   ) async {
-    final picked = await OptionPickerPage.open<int>(
-      context,
-      title: title,
-      options: [...options],
-      labelOf: (value) => '$value',
-      selected: selected,
-    );
+    final picked = await context
+        .coordinator(ledgerCoordinatorProvider)
+        .pick<int>(
+          title: title,
+          options: [...options],
+          labelOf: (value) => '$value',
+          selected: selected,
+        );
     if (picked != null) setState(() => onPicked(picked));
   }
 
@@ -130,7 +127,7 @@ class _DebtFormPageState extends ConsumerState<DebtFormPage> {
   Widget build(BuildContext context) {
     return CajuiScreen(
       title: 'Cadastrar dívida',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: _footer(),
       children: [
         CajuiTextField(

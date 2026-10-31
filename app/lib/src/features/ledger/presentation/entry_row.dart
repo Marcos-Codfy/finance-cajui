@@ -1,7 +1,8 @@
 import 'package:cajui/src/core/appearance/block_badge.dart';
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/ledger/application/ledger_book.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_detail_page.dart';
+import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
@@ -60,7 +61,8 @@ class EntryRow extends StatelessWidget {
           '$category, $_paidWith, $day$_backNote, abrir',
       // O toque abre o lançamento inteiro: é de lá que se corrige, estorna
       // ou cancela (RN-208).
-      onPressed: () => EntryDetailPage.open(context, entry.id),
+      onPressed: () =>
+          context.coordinator(ledgerCoordinatorProvider).openEntry(entry.id),
     );
   }
 }

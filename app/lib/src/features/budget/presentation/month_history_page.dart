@@ -1,4 +1,5 @@
 import 'package:cajui/src/core/format/date_labels.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
@@ -16,11 +17,6 @@ class MonthHistoryPage extends ConsumerWidget {
   /// Cria a tela.
   const new({super.key});
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) =>
-      Navigator.of(context)
-          .push<void>(CajuiPageRoute(builder: (_) => const MonthHistoryPage()));
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final finances = ref.watch(financesProvider);
@@ -29,7 +25,7 @@ class MonthHistoryPage extends ConsumerWidget {
     return CajuiScreen(
       title: 'Mês a mês',
       overline: 'Meta: sobrar dinheiro três meses seguidos',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       // A rolagem em profundidade e a entrada de câmera (ADR-028).
       depth: true,
       cinematic: true,

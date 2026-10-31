@@ -1,7 +1,7 @@
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
-import 'package:cajui/src/features/debts/presentation/debt_detail_page.dart';
-import 'package:cajui/src/features/debts/presentation/debt_form_page.dart';
 import 'package:cajui/src/features/debts/presentation/debt_row.dart';
+import 'package:cajui/src/features/debts/presentation/debts_coordinator.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:design_system/design_system.dart';
@@ -18,12 +18,6 @@ class DebtsPage extends ConsumerWidget {
   /// Cria a tela de dívidas.
   const new({super.key});
 
-  /// Abre a tela.
-  static Future<void> open(BuildContext context) {
-    return Navigator.of(context)
-        .push<void>(CajuiPageRoute(builder: (_) => const DebtsPage()));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final finances = ref.watch(financesProvider);
@@ -34,7 +28,7 @@ class DebtsPage extends ConsumerWidget {
     return CajuiScreen(
       title: 'Minhas dívidas',
       overline: 'Só o que você paga em mais de um mês',
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       // A rolagem em profundidade e a entrada de câmera (ADR-028).
       depth: true,
       cinematic: true,
@@ -60,7 +54,8 @@ class DebtsPage extends ConsumerWidget {
           label: 'Cadastrar dívida',
           icon: CajuiIconData.plus,
           expand: true,
-          onPressed: () => DebtFormPage.open(context),
+          onPressed: () =>
+              context.coordinator(debtsCoordinatorProvider).openDebtForm(),
         )
       : null;
 
@@ -83,7 +78,8 @@ class DebtsPage extends ConsumerWidget {
     debt: debt,
     owed: DebtCalendar.outstandingOn(debt, today),
     position: position,
-    onPressed: () => DebtDetailPage.open(context, debt.id),
+    onPressed: () =>
+        context.coordinator(debtsCoordinatorProvider).openDebt(debt.id),
   );
 }
 

@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/features/budget/application/book_finances.dart';
 import 'package:cajui/src/features/budget/application/plan_service.dart';
 import 'package:cajui/src/features/budget/presentation/bill_line_choices.dart';
@@ -20,17 +21,6 @@ class BillLinePage extends ConsumerStatefulWidget {
 
   /// A linha que está sendo mudada, ou `null`.
   final BudgetLine? line;
-
-  /// Abre a tela.
-  static Future<void> open(
-    BuildContext context,
-    LineGroup group, {
-    BudgetLine? line,
-  }) => Navigator.of(context).push<void>(
-    CajuiPageRoute(
-      builder: (_) => BillLinePage(group: group, line: line),
-    ),
-  );
 
   @override
   ConsumerState<BillLinePage> createState() => _BillLinePageState();
@@ -63,13 +53,13 @@ class _BillLinePageState extends ConsumerState<BillLinePage> {
       dueDay: widget.line?.dueDay,
     ).valueOrNull;
     if (line == null) return;
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     await ref.read(planServiceProvider).define(plan.withLine(line));
     navigator.pop();
   }
 
   Future<void> _delete(BudgetPlan plan, String id) async {
-    final navigator = Navigator.of(context);
+    final navigator = context.navigator;
     await ref.read(planServiceProvider).define(plan.withoutLine(id));
     navigator.pop();
   }
@@ -85,7 +75,7 @@ class _BillLinePageState extends ConsumerState<BillLinePage> {
     final category = choices.categoryFor(_group, _category);
     return CajuiScreen(
       title: widget.line == null ? 'Nova conta' : widget.line!.name,
-      onBack: Navigator.of(context).pop,
+      onBack: context.back,
       footer: _footer(plan, category),
       children: _fields(choices, category),
     );
