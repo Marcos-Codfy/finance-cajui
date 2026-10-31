@@ -23,8 +23,8 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-1.635-2E7D32)
-![Cobertura do domínio](https://img.shields.io/badge/domínio-92,8%25-2E7D32)
+![Testes](https://img.shields.io/badge/testes-1.850-2E7D32)
+![Cobertura do domínio](https://img.shields.io/badge/domínio-92,9%25-2E7D32)
 ![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
 
 **[Ver a gallery do design system ao vivo](https://cajui-teal.vercel.app/gallery/)**
@@ -61,8 +61,8 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
   não por disciplina.
 - **Privacidade:** o que vai para a IA sai do celular com nome de pessoa, CPF e conta mascarados. A resposta da IA é
   tratada como entrada não confiável: todo valor que ela devolve precisa estar escrito no documento.
-- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.635 testes nomeados pela
-  regra que provam, cobertura de 85% a 95% por pacote, 32 ADRs e esteira no GitHub Actions.
+- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.850 testes nomeados pela
+  regra que provam, cobertura de 86% a 93% por pacote, 32 ADRs e esteira no GitHub Actions.
 
 ## Visual
 
@@ -170,7 +170,7 @@ antes de fechar o passo.
   roda no pre-commit e na esteira. Ele reprova import de fora para dentro das camadas, arquivo com mais de 300
   linhas, função com mais de 30, mais de 3 níveis de bloco, dois tipos públicos no mesmo arquivo e cor escrita à mão
   numa tela.
-- **Resultado:** 1.007 arquivos conferidos a cada commit, nenhum limite estourado. Trocar a cor de todos os botões é
+- **Resultado:** 1.166 arquivos conferidos a cada commit, nenhum limite estourado. Trocar a cor de todos os botões é
   mudar um token.
 
 ### 7. A troca de tela que misturava duas telas
@@ -354,17 +354,17 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 
 | Item                | Situação                                                                                                  |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Testes              | **1.635**: app 489 · domínio 491 · servidor 222 · design system 213 · contrato 93 · gallery 76 · persistência 25 · verificador 26 |
-| Cobertura           | contrato 94,7% · domínio 92,8% · persistência 91,5% · servidor 90,7% · design system 87,7% · app 85,1%   |
+| Testes              | **1.850**: app 611 · domínio 493 · servidor 253 · design system 257 · contrato 104 · gallery 81 · persistência 25 · verificador 26 |
+| Cobertura           | contrato 93,2% · domínio 92,9% · persistência 91,5% · servidor 89,9% · design system 88,0% · app 86,4%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
 | Textos              | Todo erro que a pessoa lê vem de um catálogo de 47 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
 | Voz                 | Termos proibidos ("déficit", "estourou", exclamação) são reprovados por teste em todas as frases do app |
 | Analisador          | `very_good_analysis`, zero aviso                                                                          |
-| Verificador próprio | 1.007 arquivos, nenhum limite estourado                                                                     |
+| Verificador próprio | 1.166 arquivos, nenhum limite estourado                                                                     |
 | Acessibilidade      | Lighthouse 100 na web; semântica ligada desde a raiz; o leitor de tela diz quem fala na conversa         |
 
-**Em números:** 95 mil linhas de Dart em 1.009 arquivos (31 mil delas de teste), 2,7 mil de Kotlin, 420 regras de
-negócio, 114 requisitos não funcionais, 32 ADRs e 107 pull requests.
+**Em números:** 108 mil linhas de Dart em 1.168 arquivos (40 mil delas de teste), 2,9 mil de Kotlin, 420 regras de
+negócio, 134 requisitos não funcionais, 32 ADRs e 159 pull requests.
 
 ## O que deu errado
 

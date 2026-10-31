@@ -23,8 +23,8 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-1%2C635-2E7D32)
-![Domain coverage](https://img.shields.io/badge/domain-92.8%25-2E7D32)
+![Tests](https://img.shields.io/badge/tests-1%2C850-2E7D32)
+![Domain coverage](https://img.shields.io/badge/domain-92.9%25-2E7D32)
 ![Cost](https://img.shields.io/badge/fixed%20cost-R%24%200.00-B33A16)
 
 **[See the design system gallery live](https://cajui-teal.vercel.app/gallery/)**
@@ -65,8 +65,8 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
   discipline.
 - **Privacy:** what goes to the AI leaves the phone with people's names, tax IDs and account numbers masked. The AI's
   answer is treated as untrusted input: every amount it returns must be written in the document.
-- **Engineering:** clean architecture with the layers locked by a custom checker, 1,635 tests named after the rule
-  they prove, 85% to 95% coverage per package, 32 ADRs and a GitHub Actions pipeline.
+- **Engineering:** clean architecture with the layers locked by a custom checker, 1,850 tests named after the rule
+  they prove, 86% to 93% coverage per package, 32 ADRs and a GitHub Actions pipeline.
 
 ## Visuals
 
@@ -173,7 +173,7 @@ device before a step is closed.
 - **Solution:** a custom checker built on `package:analyzer` ([`tool/code_metrics`](tool/code_metrics)) runs on
   pre-commit and in the pipeline. It rejects imports that point outward across layers, files over 300 lines, functions
   over 30, more than 3 levels of nesting, two public types in one file, and colors written by hand on a screen.
-- **Result:** 1,007 files checked on every commit, no limit broken. Changing the color of every button is one token.
+- **Result:** 1,166 files checked on every commit, no limit broken. Changing the color of every button is one token.
 
 ### 7. The screen transition that mixed two screens
 
@@ -356,17 +356,17 @@ thing.
 
 | Item              | Status                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Tests             | **1,635**: app 489 · domain 491 · server 222 · design system 213 · contract 93 · gallery 76 · persistence 25 · checker 26 |
-| Coverage          | contract 94.7% · domain 92.8% · persistence 91.5% · server 90.7% · design system 87.7% · app 85.1%       |
+| Tests             | **1,850**: app 611 · domain 493 · server 253 · design system 257 · contract 104 · gallery 81 · persistence 25 · checker 26 |
+| Coverage          | contract 93.2% · domain 92.9% · persistence 91.5% · server 89.9% · design system 88.0% · app 86.4%       |
 | Rule ↔ test       | Every rule has a number (`RN-xxx`) and a test with the same number. A numeric example in the spec becomes a test, to the cent |
 | Texts             | Every error a person reads comes from a catalog of 47 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
 | Voice             | Banned terms ("déficit", "estourou", exclamation marks) are rejected by a test across every sentence in the app |
 | Analyzer          | `very_good_analysis`, zero warnings                                                                       |
-| Custom checker    | 1,007 files, no limit broken                                                                                |
+| Custom checker    | 1,166 files, no limit broken                                                                                |
 | Accessibility     | Lighthouse 100 on the web; semantics on from the root; the screen reader says who is speaking in the chat |
 
-**By the numbers:** 95 thousand lines of Dart in 1,009 files (31 thousand of them tests), 2.7 thousand of Kotlin, 420
-business rules, 114 non-functional requirements, 32 ADRs and 107 pull requests.
+**By the numbers:** 108 thousand lines of Dart in 1,168 files (40 thousand of them tests), 2.9 thousand of Kotlin, 420
+business rules, 134 non-functional requirements, 32 ADRs and 159 pull requests.
 
 ## What went wrong
 
