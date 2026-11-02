@@ -40,7 +40,7 @@ class ArchitectureChecker {
           path: path,
           line: lines.getLocation(offset).lineNumber,
           rule: 'orphan-todo',
-          message: 'TODO sem item do BACKLOG.md; cite o BL-nnn ou anote um',
+          message: 'TODO sem item de backlog; cite o BL-nnn ou abra um',
         ),
     ];
   }
