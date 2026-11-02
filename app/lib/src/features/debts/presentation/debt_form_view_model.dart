@@ -36,6 +36,9 @@ class DebtFormViewModel extends Notifier<DebtFormState> {
     if (state is DebtFormSaving) return;
     state = const DebtFormSaving();
     final result = await _define(draft);
+    // A tela pode ter fechado durante a gravação: o fato já está no livro,
+    // e mexer no estado de um provider descartado lança erro.
+    if (!ref.mounted) return;
     state = switch (result) {
       Ok() => const DebtFormSaved(),
       Err(:final failure) => DebtFormEditing(

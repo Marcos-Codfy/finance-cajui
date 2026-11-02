@@ -124,7 +124,10 @@ void main() {
       'nenhum', (tester) async {
     await _openCards(tester, _card());
 
-    expect(find.text('fecha dia 25 · vence dia 5'), findsOneWidget);
+    expect(
+      find.text('Usei R\$${_nbsp}800,00 este mês · fecha dia 25 · vence dia 5'),
+      findsOneWidget,
+    );
     expect(find.byType(CajuiCreditCard3D), findsNothing);
 
     await _tap(tester, find.bySemanticsLabel('Cartão da casa, ver a fatura'));
@@ -157,7 +160,10 @@ void main() {
     );
 
     expect(
-      find.text('contas do mês R\$${_nbsp}21,90 · fecha dia 25 · vence dia 5'),
+      find.text(
+        'Usei R\$${_nbsp}800,00 este mês · contas do mês R\$${_nbsp}21,90 · '
+        'fecha dia 25 · vence dia 5',
+      ),
       findsOneWidget,
     );
   });
