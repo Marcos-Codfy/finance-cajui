@@ -40,7 +40,16 @@ final class CajuiApi {
   late final Client _client = _given ?? Client();
 
   /// Onde o servidor mora: um nome, nunca um IP — o da VM muda ao religar.
-  static final Uri production = Uri.parse('https://api.cajui.example');
+  ///
+  /// Entra na compilação (`--dart-define=CAJUI_API_URL=https://…`) e **não é
+  /// versionado**. Sem ele, o app aponta para um endereço de exemplo e só
+  /// funciona sozinho no aparelho, sem sincronizar.
+  static final Uri production = Uri.parse(
+    const String.fromEnvironment(
+      'CAJUI_API_URL',
+      defaultValue: 'https://api.cajui.example',
+    ),
+  );
 
   /// Quanto tempo se espera pelo servidor antes de desistir.
   static const timeout = Duration(seconds: 20);

@@ -18,9 +18,10 @@
 # chave de depuração deste computador; o que sair de outra máquina, ou da
 # conferência do GitHub, não instala por cima.
 #
-# **A chave da casa vai compilada** (ADR-020): lida de
-# Documentos\Cajui\chave\cajui-chave-da-casa.txt, fora do repositório. Sem o
-# arquivo o APK nasce sem servidor — funciona sozinho, e não sincroniza.
+# **A chave da casa vai compilada** (ADR-020): lida do arquivo que
+# $env:CAJUI_KEY_FILE indica (ou de ~\.cajui\chave-da-casa.txt), fora do
+# repositório. O endereço do servidor vem de $env:CAJUI_API_URL. Sem a chave o
+# APK nasce sem servidor — funciona sozinho, e não sincroniza.
 
 param([switch]$Release)
 
@@ -28,7 +29,7 @@ $ErrorActionPreference = 'Stop'
 
 $raiz = Resolve-Path (Join-Path $PSScriptRoot '..')
 # Subpasta própria: na raiz, quatro APKs de 200 MB escondem os documentos.
-$copia = Join-Path $HOME 'Desktop\Relatorio Cajui\apk'
+$copia = Join-Path $HOME 'Desktop\cajui-apk'
 $adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
 $env:ANDROID_HOME = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
 
@@ -38,12 +39,13 @@ try {
     Write-Host "compilando o APK de $modo…"
     $numero = [int]((Get-Date) - (Get-Date '2026-01-01')).TotalMinutes
     $opcoes = @("--$modo", "--build-number=$numero")
-    $chaveDaCasa = Join-Path $HOME 'Documents\Cajui\chave\cajui-chave-da-casa.txt'
+    $chaveDaCasa = if ($env:CAJUI_KEY_FILE) { $env:CAJUI_KEY_FILE } else { Join-Path $HOME '.cajui\chave-da-casa.txt' }
     if (Test-Path $chaveDaCasa) {
         # Lida sem BOM e sem quebra de linha: qualquer um deles vira "chave
         # errada" no servidor.
         $chave = ([System.IO.File]::ReadAllText($chaveDaCasa)).Trim([char]0xFEFF, ' ', "`r", "`n", "`t")
         $opcoes += "--dart-define=CAJUI_ACCESS_KEY=$chave"
+        if ($env:CAJUI_API_URL) { $opcoes += "--dart-define=CAJUI_API_URL=$($env:CAJUI_API_URL)" }
         Write-Host 'com a chave da casa'
     } else {
         Write-Host "SEM a chave da casa ($chaveDaCasa não existe): o APK não fala com o servidor."
