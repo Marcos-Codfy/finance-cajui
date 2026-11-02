@@ -13,7 +13,7 @@ Este arquivo cobre desempenho, IA, confiabilidade, custo, manutenibilidade, oper
 | **⚑ validar** | Decisão de modelagem que o dono do produto ainda não viu |
 | p90 · p95 | 90% ou 95% das medições ficam no alvo ou abaixo dele |
 | Fase | 3 design system · 4 arquitetura e spikes · 5 segurança · 6 implementação e CI · 7 deploy e operação · 8 custo da IA · 9 abertura do repositório |
-| Origem | `prompt`, `decisão AAAA-MM-DD`, `marca` (documento aprovado em `docs/brand/`), um `D-…` da [pesquisa](../research/README.md), um `BL-…` do [backlog](../../BACKLOG.md) ou `modelagem` |
+| Origem | `prompt`, `decisão AAAA-MM-DD`, `marca` (documento aprovado em `docs/brand/`), um `D-…` da [pesquisa](../research/README.md), um `BL-…` do backlog do projeto ou `modelagem` |
 
 **Aparelho de referência**: o celular de uso do dono do produto, com modelo, versão do Android e memória registrados na ADR de compatibilidade (Fase 4). Todo número de Android abaixo é medido nele, em build `--profile` ou `--release`; emulador e modo debug não contam.
 
@@ -122,7 +122,7 @@ Tempos medidos **no servidor**, do primeiro byte recebido ao último enviado, na
 | RNF-MAINT-04 | Toda RN tem teste nomeado pelo ID, e todo teste que cita um ID aponta para RN que existe; regra revogada fica de fora. RNF automatizável segue a mesma convenção | 0 RN sem teste · 0 IDs pendurados | Script que extrai os IDs de `docs/spec/rules/*.md` e dos nomes de teste e compara | 6 | prompt |
 | RNF-MAINT-05 | Cada RN que rejeita algo tem ao menos um teste de abuso: valor negativo, data absurda, vale em categoria não elegível, fatura como despesa | ≥ 1 por RN com rejeição | Suíte de abuso rastreada por ID | 5 · 6 | D-TOP10-06 |
 | RNF-MAINT-06 | O domínio é puro e o design system é fonte única: `packages/domain` não importa Flutter, Shelf, JSON nem rede; `app/` não usa cor nem widget Material cru; `GestureDetector` só dentro do design system | 0 violações | Lints próprios e conferência de `pubspec.yaml` no CI | 6 | decisão 2026-09-19 · D-WCAG-10 |
-| RNF-MAINT-07 | Nenhum `TODO` solto: pendência vira item do [BACKLOG](../../BACKLOG.md) | 0 ocorrências de `TODO` ou `FIXME` | Busca no CI | 6 | prompt |
+| RNF-MAINT-07 | Nenhum `TODO` solto: pendência vira item do BACKLOG do projeto | 0 ocorrências de `TODO` ou `FIXME` | Busca no CI | 6 | prompt |
 | RNF-MAINT-08 | Evento antigo continua legível para sempre: todo par `type` + `v` já lançado tem fixture lida no CI | 100% dos esquemas já lançados | Teste de leitura de fixtures | 6 | modelagem |
 | RNF-MAINT-09 | Toda mudança entra por PR, com Conventional Commits validados e o check único `ci-ok` verde; mudança de comportamento altera a RN no mesmo PR | 100% dos commits de topo de `main` são merge de PR | Job `main-guard` | 6 | D-GHS-01 · D-GHS-03 · D-GHS-20 |
 | RNF-MAINT-10 | Build reprodutível: versões do Flutter e do Dart fixadas, `pubspec.lock` versionado, e o binário testado é o mesmo publicado | 1 build por release, reaproveitado por teste, Lighthouse e deploy | Revisão do workflow | 6 · 7 | D-VERCEL-04 · D-TOP10-03 |

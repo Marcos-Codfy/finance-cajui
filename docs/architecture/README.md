@@ -11,6 +11,8 @@ Como o Cajui é construído, e **por quê**. A especificação ([`docs/spec/`](.
 | [adr/](adr/) | As 32 decisões, cada uma com contexto, alternativas e consequências |
 | [desvios-do-plano.md](desvios-do-plano.md) | Onde a execução se afastou do plano de 19/09, uma a uma, e o que o app **não** faz hoje |
 
+> **Sobre esta cópia do repositório:** os scripts e o guia de operação da máquina do servidor (provisionamento, serviço, backup e acesso remoto) e os diários internos de trabalho (`PROGRESS.md`, `BACKLOG.md`) não estão aqui. As ADRs os citam como contexto da decisão, e o que importa para entender a arquitetura está nas próprias ADRs, no C4 e nos spikes.
+
 ## A arquitetura em um parágrafo
 
 Arquitetura limpa, organizada por feature, em quatro camadas — `domain`, `application`, `infrastructure`, `presentation`. **O domínio é Dart puro e único**: o mesmo pacote roda no aparelho e no servidor, de modo que cada uma das 345 regras tem uma implementação e um teste. No Android, a interface segue MVVM com Riverpod, com um estado selado por tela; o app lê do aparelho e escreve numa fila, então funciona sem rede. O servidor é um executável Dart único, atrás do Caddy, que grava um registro de eventos só de acréscimo, cifrado por registro e encadeado por hash. A IA é acessório: só o backend fala com ela, só sai texto mascarado, e o app funciona inteiro sem ela. A web é o mesmo Flutter, em WebAssembly, só para consulta.

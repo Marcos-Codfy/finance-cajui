@@ -30,8 +30,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 **[See the design system gallery live](https://cajui-teal.vercel.app/gallery/)**
 
 [Specification](docs/spec) · [Decisions (32 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
-[Security](docs/security) · [Operations](docs/ops/runbook.md) · [API](docs/api.md) ·
-[Wireframes](docs/design/wireframes.html) · [Progress](PROGRESS.md)
+[Security](docs/security) · [API](docs/api.md) · [Wireframes](docs/design/wireframes.html) · [License](LICENSE)
 
 <sub>The specification, the ADRs and the app itself are in Brazilian Portuguese.</sub>
 
@@ -408,18 +407,16 @@ flutter pub get
 cd app && flutter run
 ```
 
-Without the household key compiled in, the app starts with no server and works on its own on the device. The look-up
+Without the household key compiled in, the app starts with no server and works on its own on the device. The key
+(`CAJUI_ACCESS_KEY`) and the server address (`CAJUI_API_URL`) come in through `--dart-define` and are never versioned. The look-up
 web build comes from `flutter build web --no-web-resources-cdn` inside `app/`.
 
 ### Scripts
 
 | Command (PowerShell, from the root)    | What it does                                                                 |
 | -------------------------------------- | ---------------------------------------------------------------------------- |
-| `.\scripts\apk.ps1 -Release`           | Builds the APK with the household key and installs it on the phone on USB    |
+| `.\scripts\apk.ps1 -Release`           | Builds the APK and installs it on the phone on USB (key and server by environment variable) |
 | `.\scripts\servidor-local.ps1`         | Runs the server on this machine, reading the AI key from outside the repo    |
-| `.\scripts\servidor-atualizar.ps1`     | Ships the server from the latest green `main` run to the VM                  |
-| `.\scripts\backup-baixar.ps1`          | Brings the VM's encrypted backups to this computer                           |
-| `.\scripts\chave-da-casa.ps1`          | Generates the household key, outside the repository                          |
 | `dart run tool/code_metrics/bin/check.dart` | Runs the size and layer checker                                         |
 
 <details>
@@ -455,20 +452,22 @@ packages/
     gallery/              the browsable design system sample
 server/                   Dart + Shelf: API, AI reading, sync
 tool/                     checkers: size, layers, secrets, coverage
-docs/                     specification, ADRs, brand, security, operations
-scripts/                  APK, deploy, backup, keys
+docs/                     specification, ADRs, brand, security, cost and performance
+scripts/                  APK, local server and web build
 ```
 
 </details>
 
-### Deploy
+### Publishing
 
-- **Server:** every push to `main` builds the executable in the pipeline; `servidor-atualizar.ps1` ships it to the VM,
-  installs the systemd service, Caddy and the daily backup, and checks that it answers over the internet with TLS.
-  Running it again changes nothing. Step by step in the [runbook](docs/ops/runbook.md).
+- **Server:** a single Dart executable (`dart compile exe`), built in the pipeline and served behind a TLS proxy. The
+  operation of the machine (provisioning, service, backup) is not part of this copy; the decisions are in ADRs
+  [003](docs/architecture/adr/ADR-003-backend-dart-shelf.md),
+  [005](docs/architecture/adr/ADR-005-criptografia-em-repouso-e-dbtool.md) and
+  [011](docs/architecture/adr/ADR-011-hospedagem-a-custo-zero.md).
 - **Web:** Vercel publishes `main`: the read-only web at the root and the design system gallery at `/gallery/`, both
   built by [`scripts/web.sh`](scripts/web.sh).
-- **App:** the APK is built and installed over USB, with the household key compiled in.
+- **App:** the APK is built and installed over USB, with the household key and the server address compiled in.
 
 ## Roadmap
 
@@ -492,6 +491,10 @@ scripts/                  APK, deploy, backup, keys
 - **Touch sounds:** Pixabay, under the Pixabay Content License, processed in the project; the others are synthesized
   here ([origin of each file](packages/design_system/assets/CREDITS.md))
 - **Icons and illustrations:** drawn in the project
+
+## License
+
+[MIT](LICENSE). Fonts and sounds have their own licenses, listed in the credits above.
 
 ---
 

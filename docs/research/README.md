@@ -24,7 +24,7 @@ Total: **221 decisões** rastreáveis.
 
 ## O que a pesquisa mudou no plano
 
-Pontos em que as fontes contradizem ou apertam o que estava planejado. Cada um virou item no [BACKLOG](../../BACKLOG.md) com a fase em que se resolve.
+Pontos em que as fontes contradizem ou apertam o que estava planejado. Cada um virou item no BACKLOG do projeto com a fase em que se resolve.
 
 ### Segurança
 

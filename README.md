@@ -30,8 +30,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 **[Ver a gallery do design system ao vivo](https://cajui-teal.vercel.app/gallery/)**
 
 [Especificação](docs/spec) · [Decisões (32 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
-[Segurança](docs/security) · [Operação](docs/ops/runbook.md) · [API](docs/api.md) ·
-[Wireframes](docs/design/wireframes.html) · [Progresso](PROGRESS.md)
+[Segurança](docs/security) · [API](docs/api.md) · [Wireframes](docs/design/wireframes.html) · [Licença](LICENSE)
 
 </div>
 
@@ -405,18 +404,16 @@ flutter pub get
 cd app && flutter run
 ```
 
-Sem a chave da casa compilada, o app nasce sem servidor e funciona sozinho no aparelho. A web de consulta sai com
+Sem a chave da casa compilada, o app nasce sem servidor e funciona sozinho no aparelho. A chave
+(`CAJUI_ACCESS_KEY`) e o endereço do servidor (`CAJUI_API_URL`) entram por `--dart-define` e nunca são versionados. A web de consulta sai com
 `flutter build web --no-web-resources-cdn` dentro de `app/`.
 
 ### Scripts
 
 | Comando (PowerShell, da raiz)          | O que faz                                                                    |
 | -------------------------------------- | ---------------------------------------------------------------------------- |
-| `.\scripts\apk.ps1 -Release`           | Compila o APK de uso com a chave da casa e instala no celular ligado         |
+| `.\scripts\apk.ps1 -Release`           | Compila o APK de uso e instala no celular ligado (chave e servidor por variável de ambiente) |
 | `.\scripts\servidor-local.ps1`         | Sobe o servidor nesta máquina, lendo a chave da IA de fora do repositório    |
-| `.\scripts\servidor-atualizar.ps1`     | Leva à VM o servidor da última esteira verde da `main`                       |
-| `.\scripts\backup-baixar.ps1`          | Traz para este computador os backups cifrados da VM                          |
-| `.\scripts\chave-da-casa.ps1`          | Gera a chave da casa, fora do repositório                                    |
 | `dart run tool/code_metrics/bin/check.dart` | Roda o verificador de tamanho e camadas                                  |
 
 <details>
@@ -452,20 +449,22 @@ packages/
     gallery/              o sample navegável do design system
 server/                   Dart + Shelf: API, leitura com IA, sincronização
 tool/                     verificadores: tamanho, camadas, segredos, cobertura
-docs/                     especificação, ADRs, marca, segurança, operação
-scripts/                  APK, deploy, backup, chaves
+docs/                     especificação, ADRs, marca, segurança, custo e desempenho
+scripts/                  APK, servidor local e build da web
 ```
 
 </details>
 
-### Deploy
+### Publicação
 
-- **Servidor:** cada push na `main` compila o executável na esteira; `servidor-atualizar.ps1` o leva à VM, instala o
-  serviço do systemd, o Caddy e o backup diário, e confere se responde pela internet com TLS. Rodar de novo não muda
-  nada. O passo a passo está no [runbook](docs/ops/runbook.md).
+- **Servidor:** um executável único em Dart (`dart compile exe`), compilado na esteira e servido atrás de um proxy com
+  TLS. A operação da máquina (provisionamento, serviço, backup) não faz parte desta cópia; as decisões estão nas
+  ADRs [003](docs/architecture/adr/ADR-003-backend-dart-shelf.md),
+  [005](docs/architecture/adr/ADR-005-criptografia-em-repouso-e-dbtool.md) e
+  [011](docs/architecture/adr/ADR-011-hospedagem-a-custo-zero.md).
 - **Web:** a Vercel publica a `main`: a web de consulta na raiz e a gallery do design system em `/gallery/`, as duas
   compiladas pelo [`scripts/web.sh`](scripts/web.sh).
-- **App:** o APK de uso é gerado e instalado por cabo, com a chave da casa compilada.
+- **App:** o APK de uso é gerado e instalado por cabo, com a chave da casa e o endereço do servidor compilados.
 
 ## Roadmap
 
@@ -489,6 +488,10 @@ scripts/                  APK, deploy, backup, chaves
 - **Sons de toque:** Pixabay, sob a Pixabay Content License, tratados no projeto; os demais são sintetizados aqui
   ([origem de cada arquivo](packages/design_system/assets/CREDITS.md))
 - **Ícones e ilustrações:** desenhados no próprio projeto
+
+## Licença
+
+[MIT](LICENSE). As fontes e os sons têm as licenças próprias listadas nos créditos acima.
 
 ---
 
