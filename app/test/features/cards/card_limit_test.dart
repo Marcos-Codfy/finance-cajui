@@ -50,7 +50,11 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
   await _settle(tester);
 }
 
-Future<void> _openCards(WidgetTester tester, CreditCard card) async {
+Future<void> _openCards(
+  WidgetTester tester,
+  CreditCard card, {
+  List<LedgerEvent> plan = const [],
+}) async {
   tester.view.physicalSize = const Size(390, 2600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -59,6 +63,7 @@ Future<void> _openCards(WidgetTester tester, CreditCard card) async {
       overrides: testOverrides(
         journal: MemoryLedgerJournal([
           ...samplePlanEvents,
+          ...plan,
           CardDefined(id: 'card-fact-1', card: card),
           EntryRecorded(_market()),
         ]),
@@ -125,5 +130,35 @@ void main() {
     await _tap(tester, find.bySemanticsLabel('Cartão da casa, ver a fatura'));
 
     expect(find.text('Limite livre'), findsNothing);
+  });
+
+  testWidgets('a assinatura de "Minhas contas" paga no cartão aparece na '
+      'linha dele, e não some de tudo', (tester) async {
+    final withCardBill = MonthSetup(
+      cashIncome: samplePlan.cashIncome,
+      debtInstallments: samplePlan.debtInstallments,
+      variableBudgets: samplePlan.variableBudgets,
+      fixedExpenses: [
+        ...samplePlan.fixedExpenses,
+        const FixedExpense(
+          id: 'f-music',
+          name: 'Música',
+          amount: Money.fromCents(2190),
+          dueDay: 12,
+          categoryId: 'rent',
+          paymentMethodId: 'card-1',
+        ),
+      ],
+    );
+    await _openCards(
+      tester,
+      _card(),
+      plan: [PlanDefined(id: 'plan-2', setup: withCardBill)],
+    );
+
+    expect(
+      find.text('contas do mês R\$${_nbsp}21,90 · fecha dia 25 · vence dia 5'),
+      findsOneWidget,
+    );
   });
 }

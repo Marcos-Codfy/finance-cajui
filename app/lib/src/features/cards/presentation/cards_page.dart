@@ -27,6 +27,8 @@ class CardsPage extends ConsumerWidget {
     final month = ref.watch(todayProvider).budgetMonth;
     CardMonthUsage? usageOf(CreditCard card) =>
         finances?.cardUsage(card, month);
+    Money plannedOf(CreditCard card) =>
+        finances?.plannedOnCard(card, month) ?? Money.zero;
     final tilt = _tilt(context, ref);
     return CajuiScreen(
       title: 'Cartões de crédito',
@@ -43,7 +45,7 @@ class CardsPage extends ConsumerWidget {
             alert,
             const SizedBox(height: CajuiSpacing.md),
           ],
-        if (cards.isNotEmpty) _wallet(context, cards, usageOf, tilt),
+        if (cards.isNotEmpty) _wallet(context, cards, usageOf, plannedOf, tilt),
       ],
     );
   }
@@ -55,6 +57,7 @@ class CardsPage extends ConsumerWidget {
     BuildContext context,
     List<CreditCard> cards,
     CardMonthUsage? Function(CreditCard card) usageOf,
+    Money Function(CreditCard card) plannedOf,
     CajuiTilt? tilt,
   ) => CajuiWalletStack(
     // A chave guarda o leque aberto quando um aviso de limite aparece acima.
@@ -66,7 +69,7 @@ class CardsPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _plastic(context, card, usageOf(card), tilt),
-            _row(context, card, usageOf(card)),
+            _row(context, card, usageOf(card), plannedOf(card)),
           ],
         ),
     ],
@@ -150,25 +153,38 @@ class CardsPage extends ConsumerWidget {
   }
 
   /// O uso do mês em texto; sem limite informado, os dias do cartão.
-  static String _usageText(CreditCard card, CardMonthUsage? usage) {
+  static String _usageText(
+    CreditCard card,
+    CardMonthUsage? usage,
+    Money planned,
+  ) {
     final days = 'fecha dia ${card.closingDay} · vence dia ${card.dueDay}';
-    if (usage == null) return days;
+    // As contas de "Minhas contas" pagas neste cartão: sem esta linha, a
+    // assinatura cadastrada no cartão não aparecia em lugar nenhum.
+    final bills = planned.isPositive
+        ? 'contas do mês ${BrlFormatter.format(planned.cents)} · '
+        : '';
+    if (usage == null) return '$bills$days';
     final left = usage.left;
     final sobra = left.isNegative
         ? 'passou ${BrlFormatter.format(-left.cents)}'
         : 'sobra ${BrlFormatter.format(left.cents)}';
-    return 'Usei ${BrlFormatter.format(usage.used.cents)} este mês · $sobra'
-        ' · $days';
+    return 'Usei ${BrlFormatter.format(usage.used.cents)} este mês · $bills'
+        '$sobra · $days';
   }
 
-  Widget _row(BuildContext context, CreditCard card, CardMonthUsage? usage) =>
-      CajuiListRow(
-        leading: const CajuiIcon(CajuiIconData.card),
-        title: card.name,
-        subtitle: _usageText(card, usage),
-        trailing: const CajuiIcon(CajuiIconData.chevronRight),
-        semanticLabel: '${card.name}, ver a fatura',
-        onPressed: () =>
-            context.coordinator(cardsCoordinatorProvider).openStatement(card),
-      );
+  Widget _row(
+    BuildContext context,
+    CreditCard card,
+    CardMonthUsage? usage,
+    Money planned,
+  ) => CajuiListRow(
+    leading: const CajuiIcon(CajuiIconData.card),
+    title: card.name,
+    subtitle: _usageText(card, usage, planned),
+    trailing: const CajuiIcon(CajuiIconData.chevronRight),
+    semanticLabel: '${card.name}, ver a fatura',
+    onPressed: () =>
+        context.coordinator(cardsCoordinatorProvider).openStatement(card),
+  );
 }
