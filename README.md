@@ -19,7 +19,7 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 
 <sub>Gravado no app de verdade, rodando com uma casa inventada. Nenhum número é de alguém.</sub>
 
-![CI](https://github.com/Marcos-Codfy/cajui/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Marcos-Codfy/finance-cajui/actions/workflows/ci.yml/badge.svg)
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
@@ -399,8 +399,8 @@ lançamentos ([a conta está aqui](docs/ops/ai-cost-estimate.md)).
 verificadores da esteira.
 
 ```bash
-git clone https://github.com/Marcos-Codfy/cajui.git
-cd cajui
+git clone https://github.com/Marcos-Codfy/finance-cajui.git
+cd finance-cajui
 flutter pub get
 cd app && flutter run
 ```

@@ -19,7 +19,7 @@ Flutter app, own server, design system and a quality pipeline. Fixed cost: **R$ 
 
 <sub>Recorded from the real app, running with a made-up household. No number belongs to anyone.</sub>
 
-![CI](https://github.com/Marcos-Codfy/cajui/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Marcos-Codfy/finance-cajui/actions/workflows/ci.yml/badge.svg)
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
@@ -402,8 +402,8 @@ web on Vercel's Hobby plan. The only variable cost is the AI, **about R$ 0.60 a 
 the pipeline's checkers.
 
 ```bash
-git clone https://github.com/Marcos-Codfy/cajui.git
-cd cajui
+git clone https://github.com/Marcos-Codfy/finance-cajui.git
+cd finance-cajui
 flutter pub get
 cd app && flutter run
 ```
