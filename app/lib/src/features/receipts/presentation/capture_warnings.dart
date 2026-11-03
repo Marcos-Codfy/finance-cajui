@@ -49,6 +49,7 @@ class _CaptureWarningsState extends ConsumerState<CaptureWarnings> {
       if (twin != null) _twinNotice(twin),
       ?_householdNotice(),
       if (twin == null && !_another) ?_duplicateNotice(),
+      ?_otherMonthNotice(),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,6 +120,8 @@ class _CaptureWarningsState extends ConsumerState<CaptureWarnings> {
   /// O lançamento que **parece** ser este comprovante: mesmo valor, mesma
   /// data e mesmo lugar (RN-221). Dois cafés de R$ 8,50 no mesmo dia são
   /// legítimos: o aviso pergunta.
+  /// Com saída nos dois sentidos, como o aviso da notificação: só "É outro?"
+  /// deixava lançar o mesmo comprovante duas vezes (02/11/2026).
   Widget? _duplicateNotice() {
     final merchant = _proposal.merchant;
     final amount = _proposal.amount.value;
@@ -137,7 +140,31 @@ class _CaptureWarningsState extends ConsumerState<CaptureWarnings> {
       what:
           'Já existe um lançamento de ${MoneyFormat.brl(existing.amount)} '
           'em ${existing.description}, ${_when(existing.occurredOn)}.',
-      meaning: 'É outro?',
+      meaning: 'Se for o mesmo, lançar de novo conta o dinheiro duas vezes.',
+      primaryAction: CajuiNoticeAction(
+        label: 'É o mesmo — não lançar',
+        onPressed: _discard,
+      ),
+      secondaryAction: CajuiNoticeAction(
+        label: 'É outro — lançar',
+        onPressed: _launchAnother,
+      ),
+    );
+  }
+
+  /// O comprovante de outro mês entra naquele mês, e não no Painel de agora:
+  /// sem dizer isso, quem lança e olha o mês corrente acha que não lançou
+  /// (02/11/2026).
+  Widget? _otherMonthNotice() {
+    final on = _proposal.occurredOn.value;
+    if (on == null || on.budgetMonth == widget.today.budgetMonth) return null;
+    final month = CalendarWords.month(on.budgetMonth);
+    return CajuiNotice(
+      what: 'A data do comprovante é ${_when(on)}.',
+      meaning:
+          'O lançamento entra em $month, e não no mês de agora. Se a data '
+          'estiver errada, troque no campo da data.',
+      intent: CajuiNoticeIntent.info,
     );
   }
 
