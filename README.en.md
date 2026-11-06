@@ -50,7 +50,7 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
 Cajui is an Android personal-finance app that I started to keep track of my household's bills, in place of a
 spreadsheet that took work to maintain. The first version was the spreadsheet in app form, and I found filling everything in tiring. So I changed the focus: instead of screens to fill in, you chat with an assistant (Juju),
 and the app uses what the bank already sends, such as notifications, statements and receipts. Today two phones share the
-same ledger, synced, and there is a web page just for looking things up.
+same data, synced, and there is a web page just for looking things up.
 
 Besides being a personal tool, the project became my lab for learning and practicing software engineering for real:
 MVVM, DDD (the business language and rules inside the domain), SOLID principles, clean architecture, dependency
@@ -73,7 +73,7 @@ a programming assistant. The Claude API is also used inside the app, in the conv
   in, the app asks you to confirm.
 - **Receipts.** A photo, screenshot or PDF becomes an entry proposal for you to check. The text recognition happens on
   the device, and only text with personal data masked goes to the AI.
-- **Two phones, one ledger.** Entries sync between the devices, and the web look-up is protected by an authenticator
+- **Two phones, the same data.** Entries sync between the devices, and the web look-up is protected by an authenticator
   code.
 - **Explicit money rules.** A credit card is a way to pay, not an expense. A meal voucher is a separate currency that is
   not added to cash. Both rules live in the domain's types.
@@ -82,7 +82,7 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 
 | Area            | What was done                                                                                                  | Where to look |
 | --------------- | -------------------------------------------------------------------------------------------------------------- | ------------- |
-| Architecture    | Clean architecture by feature, MVVM with sealed state (Riverpod), Coordinator and a composition root; a custom checker verifies the layers | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
+| Architecture    | Clean architecture by feature, MVVM with sealed state (Riverpod), Coordinator and centralized dependency injection; a custom checker verifies the layers | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
 | Domain          | Pure Dart shared by app and server; sealed `Result` and `Failure`; money as integer cents; numbered business rules, each with a test | [`packages/domain`](packages/domain) |
 | AI              | Claude (Messages API, with *tool use*) behind a swappable interface; personal data masked before it leaves; every value the AI writes is checked | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
 | Server          | Dart + Shelf, single executable, on Oracle Cloud (OCI), with TLS; encrypted, hash-chained event log; documented API | [`server/`](server), [`docs/api.md`](docs/api.md) |
@@ -145,7 +145,7 @@ flowchart LR
     UI["Flutter screens<br/>ViewModels with sealed state"]
     APP["Use cases<br/>(application)"]
     NAT["Kotlin<br/>OCR · notifications · widget"]
-    LOG[("Local ledger<br/>encrypted events")]
+    LOG[("Local data<br/>encrypted events")]
   end
   DOM["Domain<br/>Dart"]
   subgraph VM["Server (VM)"]
@@ -202,18 +202,20 @@ The app is Flutter, in clean architecture organized by feature: each one has `ap
   hierarchy, so an exhaustive `switch` makes a new state without a design fail to compile.
 - **Navigation by Coordinator.** Each feature has a coordinator over the `SceneNavigator` port: the screen says what the
   person tapped, and the coordinator decides which scene to open. A ViewModel never navigates.
-- **A single composition root.** `composition.dart` is the only place that wires a port to its adapter, and a checker
-  rejects a layer importing the one outside it. No math lives in the app: it asks the domain.
-- **Offline first.** The ledger lives on the device, encrypted, as a sequence of events, and syncs when there is network.
-- **No loose styling.** The app is a `WidgetsApp`, not a `MaterialApp`: every color, type style and duration comes from
-  the design system, and the checker rejects anyone who tries to define one by hand.
+- **Centralized dependency injection.** Every dependency (repositories, services, adapters) is registered in one file,
+  `composition.dart`. An automatic checker stops an inner layer from importing an outer one. Business rules do not live
+  in the app: it asks the domain.
+- **Offline first.** The data lives on the device, encrypted, as an event history (each entry is an event), and syncs when there is network.
+- **Look and feel only through the design system.** Colors, typography, spacing and animation durations come from the
+  design system package, never from the screens' code. The app uses `WidgetsApp` instead of `MaterialApp` so it does
+  not inherit Material's look, and an automatic check blocks any color or style defined directly in a screen.
 
 ### The server
 
 A single Dart (Shelf) executable running on a VM on **Oracle Cloud Infrastructure (OCI)**, on the free tier, behind a
 proxy with automatic TLS and managed as a system service. What it does:
 
-- **Stores the ledger as an event log.** Each event is encrypted with AES-256-GCM and chained by SHA-256, so any change
+- **Stores the data as an event log.** Each event is encrypted with AES-256-GCM and chained by SHA-256, so any change
   to the past is detected. There are per-file summaries and a daily encrypted backup, copied off the machine.
 - **Validates everything that arrives.** JSON is read strictly (an extra, missing or wrong-type field is refused), the
   domain rules are checked again on the server, and every error carries a code from a catalog of 47.
@@ -245,9 +247,9 @@ decisions worth telling:
 
 ### Sync between devices
 
-The ledger is a sequence of facts, each with an idempotency key: resending the same request never records it again. The
+The data is a history of facts (entries, corrections and cancellations), each with an idempotency key: resending the same request never records it again. The
 server only stores and returns; each phone does the math, with the same domain. The app checks the top of the log every
-20 seconds and downloads the ledger only when it moved. A card or category edited on two devices is resolved by the
+20 seconds and downloads the data only when something changed. A card or category edited on two devices is resolved by the
 newest version, and a cancelled entry never comes back to life.
 
 ### The design system
@@ -321,14 +323,14 @@ reminders; voice input (speaking instead of typing); and the device key kept in 
 <details>
 <summary><b>5 more challenges: sync, a custom checker, screen transitions, sound and the glass widget</b></summary>
 
-### 5. Two phones, one ledger
+### 5. Two phones, the same data
 
 - **Problem:** the couple uses two phones, and each one sometimes records without a connection.
 - **Solution:** an event log (nothing is deleted; fixing and cancelling append), ids born from content, and "the
   newest edit wins" ([ADR-019](docs/architecture/adr/ADR-019-dois-aparelhos-um-livro.md)). With the app in front, each
-  phone asks the server, every 20 seconds, for a number that only moves when the ledger changes
+  phone asks the server, every 20 seconds, for a number that only moves when the data changes
   ([ADR-024](docs/architecture/adr/ADR-024-sincronia-ao-vivo-e-auth-simples.md)).
-- **Result:** what one records shows up on the other within seconds, and pulling the ledger again never duplicates.
+- **Result:** what one records shows up on the other within seconds, and downloading the data again never duplicates.
 
 ### 6. Code rules that a machine enforces
 
@@ -415,7 +417,7 @@ thing.
 | View                                  | `*_page.dart`, only draws, with design system components                                                                                                                                                                                                                                                                          |
 | ViewModel                             | `*_view_model.dart` (a `Notifier`), with the sealed state next to it                                                                                                                                                                                                                                                              |
 | Server                                | The feature's port (`AssistantGateway`, `LedgerDownlink`…) and the HTTP adapter in `infrastructure`                                                                                                                                                                                                                               |
-| Storage                               | `PreferencesStore`, `HouseholdKeyStore` and the event ledger, each with a real and an in-memory version                                                                                                                                                                                                                           |
+| Storage                               | `PreferencesStore`, `HouseholdKeyStore` and the event log, each with a real and an in-memory version                                                                                                                                                                                                                           |
 
 </details>
 

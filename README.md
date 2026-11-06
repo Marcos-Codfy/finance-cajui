@@ -46,8 +46,8 @@ comprovantes e responde com os números do mês. É um projeto completo, feito d
 
 O Cajui é um app Android de finanças pessoais que comecei para controlar as contas da minha casa, no lugar de uma
 planilha que dava trabalho para manter. A primeira versão era a planilha em formato de app, e eu mesmo achei cansativo preencher tudo. Por isso mudei o foco: em vez de telas para preencher, você conversa com uma assistente (a
-Juju), e o app aproveita o que o banco já envia, como notificações, extratos e comprovantes. Hoje dois celulares usam o
-mesmo livro de lançamentos, sincronizado, e existe uma página web só para consultar.
+Juju), e o app aproveita o que o banco já envia, como notificações, extratos e comprovantes. Hoje dois celulares usam os
+mesmos lançamentos, sincronizados, e existe uma página web só para consultar.
 
 Além de ferramenta pessoal, o projeto virou o meu laboratório para aprender e praticar engenharia de software de
 verdade: MVVM, DDD (linguagem do negócio e regras dentro do domínio), princípios SOLID, arquitetura limpa, injeção de
@@ -70,7 +70,7 @@ Claude, como assistente de programação. A API do Claude também é usada dentr
   dinheiro, o app pede para você confirmar.
 - **Comprovantes.** Foto, print ou PDF viram uma proposta de lançamento para você conferir. O reconhecimento do texto
   acontece no aparelho, e só texto com os dados pessoais mascarados vai para a IA.
-- **Dois celulares, um livro.** Os lançamentos sincronizam entre os aparelhos, e a consulta pela web é protegida por um
+- **Dois celulares, os mesmos dados.** Os lançamentos sincronizam entre os aparelhos, e a consulta pela web é protegida por um
   código de autenticador.
 - **Regras de dinheiro explícitas.** Cartão de crédito é forma de pagamento, não despesa. Vale-alimentação é uma moeda
   separada, que não se soma ao dinheiro. As duas regras estão nos tipos do domínio.
@@ -79,7 +79,7 @@ Claude, como assistente de programação. A API do Claude também é usada dentr
 
 | Área            | O que foi feito                                                                                                | Onde ver |
 | --------------- | -------------------------------------------------------------------------------------------------------------- | -------- |
-| Arquitetura     | Arquitetura limpa por feature, MVVM com estado selado (Riverpod), Coordinator e uma raiz de composição; um verificador próprio confere as camadas | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
+| Arquitetura     | Arquitetura limpa por feature, MVVM com estado selado (Riverpod), Coordinator e injeção de dependência centralizada; um verificador próprio confere as camadas | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
 | Domínio         | Dart, compartilhado entre app e servidor; `Result` e `Failure` selados; dinheiro em centavos inteiros; regras de negócio numeradas, cada uma com teste | [`packages/domain`](packages/domain) |
 | IA              | Claude (API de Mensagens, com *tool use*) atrás de uma interface trocável; dados pessoais mascarados antes de sair; todo valor que a IA escreve é conferido | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
 | Servidor        | Dart + Shelf, executável único, na Oracle Cloud (OCI), com TLS; registro de eventos cifrado e encadeado; API documentada | [`server/`](server), [`docs/api.md`](docs/api.md) |
@@ -142,7 +142,7 @@ flowchart LR
     UI["Telas Flutter<br/>ViewModels com estado selado"]
     APP["Casos de uso<br/>(application)"]
     NAT["Kotlin<br/>OCR · notificações · widget"]
-    LOG[("Livro local<br/>eventos cifrados")]
+    LOG[("Dados locais<br/>eventos cifrados")]
   end
   DOM["Domínio<br/>Dart"]
   subgraph VM["Servidor (VM)"]
@@ -199,18 +199,20 @@ O app é Flutter, em arquitetura limpa organizada por feature: cada uma tem `app
   selada, então um `switch` exaustivo faz estado novo sem desenho não compilar.
 - **Navegação por Coordinator.** Cada feature tem um coordinator sobre a porta `SceneNavigator`: a tela diz o que a
   pessoa tocou, e o coordinator decide qual cena abrir. ViewModel nunca navega.
-- **Uma raiz de composição.** `composition.dart` é o único lugar que liga uma porta ao adaptador, e um verificador
-  reprova camada que importa a de fora. Nenhuma conta mora no app: ele pergunta ao domínio.
-- **Offline primeiro.** O livro vive no aparelho, cifrado, como uma sequência de eventos, e sincroniza quando há rede.
-- **Sem aparência solta.** O app é um `WidgetsApp`, e não um `MaterialApp`: toda cor, tipo e duração vem do design
-  system, e o verificador reprova quem tentar definir uma na mão.
+- **Injeção de dependência centralizada.** Todas as dependências (repositórios, serviços, adaptadores) são cadastradas
+  em um único arquivo, o `composition.dart`. Um verificador automático impede que uma camada interna importe uma
+  externa. As regras de negócio não ficam no app: ele consulta o domínio.
+- **Offline primeiro.** Os dados ficam no aparelho, cifrados, como um histórico de eventos (cada lançamento é um evento), e sincronizam quando há rede.
+- **Aparência só pelo design system.** Cores, tipografia, espaçamentos e durações de animação vêm do pacote do design
+  system, nunca do código das telas. O app usa `WidgetsApp` em vez de `MaterialApp` para não herdar o visual do
+  Material, e uma verificação automática bloqueia qualquer cor ou estilo definido direto numa tela.
 
 ### O servidor
 
 Um executável único em Dart (Shelf), rodando numa VM na **Oracle Cloud Infrastructure (OCI)**, na camada gratuita,
 atrás de um proxy com TLS automático e gerenciado como serviço do sistema. O que ele faz:
 
-- **Guarda o livro como registro de eventos.** Cada evento é cifrado com AES-256-GCM e encadeado por SHA-256, então
+- **Guarda os dados como um registro de eventos.** Cada evento é cifrado com AES-256-GCM e encadeado por SHA-256, então
   qualquer mudança no passado é detectada. Há resumos por arquivo e um backup diário cifrado, copiado para fora da
   máquina.
 - **Valida tudo o que chega.** A leitura do JSON é estrita (campo a mais, faltando ou de tipo errado é recusado), as
@@ -242,9 +244,9 @@ uma dívida. As decisões que valem contar:
 
 ### Sincronização entre aparelhos
 
-O livro é uma sequência de fatos, cada um com uma chave de idempotência: reenviar o mesmo pedido não grava de novo. O
+Os dados são um histórico de fatos (lançamentos, correções e cancelamentos), cada um com uma chave de idempotência: reenviar o mesmo pedido não grava de novo. O
 servidor só guarda e devolve; quem faz conta é cada celular, com o mesmo domínio. O app olha o topo do registro a cada
-20 segundos e só baixa o livro quando ele andou. Cartão e categoria editados em dois aparelhos valem pela versão mais
+20 segundos e só baixa os dados quando algo mudou. Cartão e categoria editados em dois aparelhos valem pela versão mais
 nova, e um lançamento cancelado nunca ressuscita.
 
 ### O design system
@@ -318,14 +320,14 @@ tela inicial; lembretes de vencimento; entrada por voz (falar em vez de digitar)
 <details>
 <summary><b>Mais 5 desafios: sincronização, verificador próprio, troca de tela, som e o widget de vidro</b></summary>
 
-### 5. Dois celulares, um livro
+### 5. Dois celulares, os mesmos dados
 
 - **Problema:** o casal usa dois celulares, e cada um lança sem rede às vezes.
 - **Solução:** registro de eventos (nada é apagado; corrigir e cancelar acrescentam), ids que nascem do conteúdo e
   "a edição mais nova vence" ([ADR-019](docs/architecture/adr/ADR-019-dois-aparelhos-um-livro.md)). Com o app na
-  frente, cada aparelho pergunta ao servidor, a cada 20 segundos, um número que só anda quando o livro muda
+  frente, cada aparelho pergunta ao servidor, a cada 20 segundos, um número que só anda quando os dados mudam
   ([ADR-024](docs/architecture/adr/ADR-024-sincronia-ao-vivo-e-auth-simples.md)).
-- **Resultado:** o que um lança aparece no outro em segundos, e descer o livro de novo nunca duplica nada.
+- **Resultado:** o que um lança aparece no outro em segundos, e baixar os dados de novo nunca duplica nada.
 
 ### 6. Regras de código que a máquina reprova
 
@@ -413,7 +415,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 | View                                   | `*_page.dart`, só desenha, com os componentes do design system                                                                                                                                                                                                                                                                   |
 | ViewModel                              | `*_view_model.dart` (um `Notifier`), com o estado selado ao lado                                                                                                                                                                                                                                                                 |
 | Server                                 | A porta da feature (`AssistantGateway`, `LedgerDownlink`…) e o adaptador HTTP em `infrastructure`                                                                                                                                                                                                                                |
-| Storage                                | `PreferencesStore`, `HouseholdKeyStore` e o livro de eventos, cada um com versão real e em memória                                                                                                                                                                                                                               |
+| Storage                                | `PreferencesStore`, `HouseholdKeyStore` e o registro de eventos, cada um com versão real e em memória                                                                                                                                                                                                                               |
 
 </details>
 
