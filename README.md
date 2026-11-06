@@ -8,9 +8,10 @@
 
 **O dinheiro da casa, numa conversa.**
 
-App de finanças pessoais para Android, com uma assistente que lança o que você diz, lê o extrato que você
-compartilha do app do banco e pergunta só o que não sabe. Feito do zero: especificação, domínio em Dart puro, app em
-Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **R$ 0,00 por mês**.
+Aplicativo Android de finanças pessoais com uma **assistente de IA** que lança o que você diz, lê o extrato que você
+compartilha do app do banco e pergunta só o que não sabe. Projeto completo, do zero e sozinho: especificação, domínio em
+Dart puro, app Flutter com módulos nativos em Kotlin, servidor próprio na nuvem, design system com gallery publicada e
+esteira de qualidade. Custo fixo: **R$ 0,00 por mês**.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/extrato-pela-juju.png" />
@@ -29,39 +30,71 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
 
 **[Ver a gallery do design system ao vivo](https://cajui-teal.vercel.app/gallery/)**
 
-[Especificação](docs/spec) · [Decisões (32 ADRs)](docs/architecture/adr) · [Design system](packages/design_system) ·
-[Segurança](docs/security) · [API](docs/api.md) · [Wireframes](docs/design/wireframes.html) · [Licença](LICENSE)
+[Sobre o projeto](#sobre-o-projeto) · [Arquitetura](#arquitetura) · [Documentação da API](docs/api.md) ·
+[Decisões (32 ADRs)](docs/architecture/adr) · [Especificação](docs/spec) · [Design system](packages/design_system) ·
+[Segurança](docs/security) · [Wireframes](docs/design/wireframes.html)
 
 </div>
 
 ---
 
-**Para quem avalia:** [Em 30 segundos](#em-30-segundos) · [Visual](#visual) · [Bastidores](#bastidores) ·
-[Desafios que resolvi](#desafios-que-resolvi) · [Stack](#stack) · [Arquitetura](#arquitetura) ·
-[Padrões aplicados](#padrões-de-projeto-aplicados) · [Segurança e privacidade](#segurança-e-privacidade) ·
-[Qualidade](#qualidade) · [O que deu errado](#o-que-deu-errado)<br />
+**Para quem avalia:** [Sobre o projeto](#sobre-o-projeto) · [Visual](#visual) · [Arquitetura](#arquitetura) ·
+[Desafios que resolvi](#desafios-que-resolvi) · [Stack](#stack) · [Padrões aplicados](#padrões-de-projeto-aplicados) ·
+[Segurança e privacidade](#segurança-e-privacidade) · [Qualidade](#qualidade) · [O que deu errado](#o-que-deu-errado)<br />
 **Para quem desenvolve:** [Começando](#começando) · [Scripts](#scripts) · [Estrutura](#estrutura-do-projeto) ·
-[Deploy](#deploy) · [Roadmap](#roadmap)
+[Publicação](#publicação) · [Roadmap](#roadmap)
 
-## Em 30 segundos
+## Sobre o projeto
 
-- **Meu papel:** projeto pessoal, do zero e sozinho. Escrevi a especificação (420 regras de negócio numeradas), o
-  domínio, o app, a parte nativa em Kotlin, o servidor, o design system com a marca, a infraestrutura e a esteira.
-- **O que é:** o app que substituiu a planilha de finanças da minha casa. Dois celulares Android usam o mesmo livro,
-  sincronizado ao vivo, e uma página web serve para consultar.
-- **O diferencial:**
-  - a **Juju** lança o gasto que você diz ("gastei 35 no mercado") e responde com os seus números;
-  - ela **lê o extrato** que você compartilha do app do banco, página a página, e confere com você por blocos antes
-    de gravar qualquer coisa;
-  - a **notificação do banco** de uma compra aprovada vira lançamento sozinha, com "Desfazer"; dinheiro que entrou
-    pede um toque. O **comprovante** (foto, print ou PDF) vira proposta pronta para confirmar.
-- **Os dois conceitos que quase todo app de finanças erra:** cartão de crédito é forma de pagamento, nunca despesa;
-  e vale-alimentação é outra moeda, que nunca se soma ao dinheiro. Os dois são garantidos pelos tipos do domínio, e
-  não por disciplina.
-- **Privacidade:** o que vai para a IA sai do celular com nome de pessoa, CPF e conta mascarados. A resposta da IA é
-  tratada como entrada não confiável: todo valor que ela devolve precisa estar escrito no documento.
-- **Engenharia:** arquitetura limpa com as camadas travadas por um verificador próprio, 1.850 testes nomeados pela
-  regra que provam, cobertura de 86% a 93% por pacote, 32 ADRs e esteira no GitHub Actions.
+O Cajui nasceu para substituir a planilha de finanças da minha casa, que só funcionava porque alguém a alimentava à mão.
+A primeira versão copiava a planilha ao pé da letra, e o veredito de quem usava foi direto: "ficou chato de usar". A
+virada foi tirar telas e pôr uma conversa: você diz o que gastou, o app lê o que o banco manda, e o celular trabalha
+sozinho. Hoje dois celulares Android usam o mesmo livro, sincronizado ao vivo, e uma página web serve para consultar.
+
+**Autoria:** projeto pessoal, do zero e sozinho. Escrevi a especificação (420 regras de negócio numeradas), o domínio, o
+app, a parte nativa em Kotlin, o servidor, o design system com a marca, a infraestrutura e a esteira.
+
+### O que ele faz
+
+- **Lança o que você diz.** "Gastei 35 no mercado" vira um lançamento, com categoria e forma de pagamento, e um
+  "Desfazer" ao lado.
+- **Responde com os seus números.** Quanto sobra, o que vence, quanto falta para o mês fechar. A resposta nunca traz um
+  valor que a tela não mostra.
+- **Lê o extrato do banco.** Você compartilha o PDF ou o print; o celular lê página por página e a conversa confere por
+  blocos antes de gravar qualquer coisa. Ler o mesmo extrato duas vezes não lança nada em dobro.
+- **Aproveita a notificação do banco.** Uma compra aprovada vira lançamento sozinha, com "Desfazer"; dinheiro que entrou
+  pede um toque.
+- **Transforma o comprovante em proposta.** Foto, print ou PDF: o OCR roda no aparelho, e só texto mascarado sai dele.
+- **Mantém dois celulares no mesmo livro.** Sincronização ao vivo, e uma consulta pela web protegida por código do
+  autenticador.
+- **Não erra o que quase todo app de finanças erra.** Cartão de crédito é forma de pagamento, nunca despesa; e
+  vale-alimentação é outra moeda, que nunca se soma ao dinheiro. Os dois são garantidos pelos tipos do domínio, e não
+  por disciplina.
+
+### O que o projeto demonstra
+
+| Área            | O que foi feito                                                                                                | Onde ver |
+| --------------- | -------------------------------------------------------------------------------------------------------------- | -------- |
+| Arquitetura     | Arquitetura limpa por feature, MVVM com estado selado (Riverpod), Coordinator, composition root; camadas travadas por um verificador próprio | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
+| Domínio         | Dart puro compartilhado entre app e servidor; `Result` e `Failure` selados; dinheiro em centavos inteiros; 420 regras numeradas, cada uma com teste de mesmo número | [`packages/domain`](packages/domain) |
+| IA aplicada     | Claude (API de Mensagens, com *tool use*) atrás de uma porta trocável; máscara de dados pessoais antes de sair; conferência de todo valor que a IA escreve | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
+| Servidor        | Dart + Shelf, executável único, na Oracle Cloud (OCI), com TLS; registro de eventos cifrado e encadeado; API documentada | [`server/`](server), [`docs/api.md`](docs/api.md) |
+| Design system   | Pacote próprio com tokens, componentes, movimento 3D e sons; gallery publicada com 69 estados de tela; o app não pode definir uma cor sozinho | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
+| Android nativo  | Kotlin: compartilhamento, OCR no aparelho, notificações do banco, widget da tela inicial, lembretes e ditado | [`app/android`](app/android) |
+| Qualidade       | 1.850 testes nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Processo        | 32 ADRs, Conventional Commits atômicos, pull requests e CI no GitHub Actions | [`docs/architecture`](docs/architecture) |
+
+### Decisões que guiaram o projeto
+
+A IA entra onde ajuda, nunca onde decide. Quem faz conta é o domínio, em Dart puro, e o mesmo código roda no celular e
+no servidor. A IA lê texto e foto e devolve dado estruturado, que o domínio confere. Na conversa do extrato, nenhuma
+frase da Juju passa pelo modelo: o app monta cada uma a partir dos números do domínio, e por isso o que ela diz é
+sempre o que a tela mostra.
+
+O detalhe de que mais gosto é o teste no celular de verdade. O extrato passou em centenas de testes, e o primeiro PDF
+compartilhado no aparelho mostrou um restaurante com o valor do mercado. Era o OCR devolvendo a tabela por colunas
+([desafio 2](#2-a-tabela-que-o-ocr-desmonta)). Desde então, toda tela nova é conferida no navegador e no aparelho antes
+de fechar o passo.
 
 ## Visual
 
@@ -86,22 +119,143 @@ Flutter, servidor próprio, design system e esteira de qualidade. Custo fixo: **
   <br /><sub>O widget de vidro e a chegada no app, gravados na gallery com números inventados.</sub>
 </p>
 
-## Bastidores
+## Arquitetura
 
-O Cajui começou como substituto de uma planilha que funcionava, mas só funcionava porque alguém a alimentava à mão.
-A primeira versão seguia a planilha ao pé da letra, e o veredito de quem usava foi direto: "ficou chato de usar". Daí
-saiu a virada do projeto: menos telas, uma assistente que conversa e lança, e o celular trabalhando sozinho (a
-notificação do banco vira lançamento; o comprovante compartilhado vira proposta pronta para um toque).
+Arquitetura limpa, organizada por feature (`features/<x>/{application,infrastructure,presentation}`). O
+`composition.dart` é o único lugar que liga uma porta a um adaptador, e nenhuma conta mora no app: ele pergunta ao
+domínio.
 
-A IA entra onde ajuda, nunca onde decide. Quem faz conta é o domínio, em Dart puro, e o mesmo código roda no celular e
-no servidor. A IA lê texto e foto e devolve dado estruturado, que o domínio confere. Na conversa do extrato, nenhuma
-frase da Juju passa pelo modelo: o app monta cada uma a partir dos números do domínio, e por isso o que ela diz é
-sempre o que a tela mostra.
+```mermaid
+flowchart LR
+  subgraph PHONE["Celular Android"]
+    UI["Telas Flutter<br/>ViewModels com estado selado"]
+    APP["Casos de uso<br/>(application)"]
+    NAT["Kotlin<br/>OCR · notificações · widget"]
+    LOG[("Livro local<br/>eventos cifrados")]
+  end
+  DOM["Domínio<br/>Dart puro"]
+  subgraph VM["Servidor (VM)"]
+    API["API Shelf"]
+    STORE[("Registro de eventos<br/>AES-256-GCM + SHA-256")]
+    AI["Leitura com IA<br/>máscara e esquema"]
+  end
+  WEB["Web<br/>modo consulta"]
+  DS["IA (Claude)"]
 
-O detalhe de que mais gosto é o teste no celular de verdade. O extrato passou em centenas de testes, e o primeiro PDF
-compartilhado no aparelho mostrou um restaurante com o valor do mercado. Era o OCR devolvendo a tabela por colunas
-([desafio 2](#2-a-tabela-que-o-ocr-desmonta)). Desde então, toda tela nova é conferida no navegador e no aparelho
-antes de fechar o passo.
+  UI --> APP --> DOM
+  NAT --> APP
+  APP --> LOG
+  APP -- "fatos + chave da casa" --> API
+  WEB --> API
+  API --> DOM
+  API --> STORE
+  API --> AI --> DS
+```
+
+**O extrato pela Juju**, do compartilhamento ao lote gravado:
+
+```mermaid
+sequenceDiagram
+  participant P as Pessoa
+  participant C as Celular
+  participant S as Servidor
+  participant I as IA
+  P->>C: compartilha o PDF do app do banco
+  C->>C: OCR por página, linhas pela posição, número consertado
+  C->>C: reconhece o extrato e mascara nomes, CPF e conta
+  loop cada página
+    C->>S: linhas numeradas, já mascaradas
+    S->>I: instrução fixa + dados entre marcadores
+    I-->>S: movimentações em JSON
+    S-->>C: só as que passam no esquema e têm o valor escrito
+    C->>C: pede de novo as linhas com data e valor que faltaram
+  end
+  C->>P: resumo, blocos por categoria, dúvidas uma a uma
+  P->>C: Pode lançar (N)
+  C->>S: lote com chaves pelo conteúdo
+```
+
+Detalhes nas [ADRs](docs/architecture/adr): a [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) é a do
+extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso, a
+[022](docs/architecture/adr/ADR-022-a-ia-le-a-foto.md) é a da foto lida pela IA.
+
+### O app
+
+O app é Flutter, em arquitetura limpa organizada por feature: cada uma tem `application` (casos de uso),
+`infrastructure` (adaptadores) e `presentation` (telas e ViewModels).
+
+- **MVVM com estado selado.** A tela só desenha; o ViewModel é um `Notifier` do Riverpod, e o estado é uma hierarquia
+  selada, então um `switch` exaustivo faz estado novo sem desenho não compilar.
+- **Navegação por Coordinator.** Cada feature tem um coordinator sobre a porta `SceneNavigator`: a tela diz o que a
+  pessoa tocou, e o coordinator decide qual cena abrir. ViewModel nunca navega.
+- **Uma raiz de composição.** `composition.dart` é o único lugar que liga uma porta ao adaptador, e um verificador
+  reprova camada que importa a de fora. Nenhuma conta mora no app: ele pergunta ao domínio.
+- **Offline primeiro.** O livro vive no aparelho, cifrado, como uma sequência de eventos, e sincroniza quando há rede.
+- **Sem aparência solta.** O app é um `WidgetsApp`, e não um `MaterialApp`: toda cor, tipo e duração vem do design
+  system, e o verificador reprova quem tentar definir uma na mão.
+
+### O servidor
+
+Um executável único em Dart (Shelf), rodando numa VM na **Oracle Cloud Infrastructure (OCI)**, na camada gratuita,
+atrás de um proxy com TLS automático e gerenciado como serviço do sistema. O que ele faz:
+
+- **Guarda o livro como registro de eventos.** Cada evento é cifrado com AES-256-GCM e encadeado por SHA-256, então
+  qualquer mudança no passado é detectada. Há resumos por arquivo e um backup diário cifrado, copiado para fora da
+  máquina.
+- **Valida tudo o que chega.** A leitura do JSON é estrita (campo a mais, faltando ou de tipo errado é recusado), as
+  regras do domínio são conferidas de novo no servidor, e todo erro sai com o código de um catálogo de 47 códigos.
+- **Autentica.** O aparelho entra com a chave da casa (o servidor guarda só o hash e compara em tempo constante). A
+  consulta pela web entra com o código do autenticador (TOTP, RFC 6238), que abre uma sessão de leitura de 30 dias, com
+  trava depois de cinco erros.
+- **Protege.** Limite de taxa por origem, CORS de uma origem só, e segredos em credenciais cifradas do serviço, nunca no
+  repositório.
+- **Fala com a IA** (próxima seção) e só devolve o que passa no esquema.
+
+Cada rota está documentada, com request, response e erros, em [`docs/api.md`](docs/api.md).
+
+### A IA
+
+A Juju é uma assistente de conversa com ***tool use***: o servidor integra a API de Mensagens da Anthropic (Claude) e
+oferece ao modelo ferramentas de verdade: lançar um gasto, cancelar, listar, registrar renda, recategorizar e abater
+uma dívida. As decisões que valem contar:
+
+- **A IA lê, o domínio decide.** O modelo devolve dado estruturado; quem faz conta e aplica regra é o domínio.
+- **Uma porta, vários fornecedores.** O servidor só conhece a interface `ChatClient` (padrão Strategy). Há adaptadores
+  para o Claude e para a DeepSeek, escolhidos por configuração, e um cliente de mentira nos testes.
+- **Privacidade antes da IA.** Nome de pessoa, CPF e conta são mascarados no celular, antes de o texto sair dele.
+- **A resposta da IA é entrada não confiável.** Todo valor em reais que ela escreve é conferido contra o resumo que o
+  servidor mandou, as ferramentas e a pergunta (RN-943). Valor sem origem volta ao modelo uma vez; se ele insistir, sai
+  uma resposta de formato fixo.
+- **Limites.** Orçamento mensal de tokens, disjuntor (*circuit breaker*) e prazo por chamada; se a IA cai, o app avisa e
+  continua lançando à mão.
+
+### Sincronização entre aparelhos
+
+O livro é uma sequência de fatos, cada um com uma chave de idempotência: reenviar o mesmo pedido não grava de novo. O
+servidor só guarda e devolve; quem faz conta é cada celular, com o mesmo domínio. O app olha o topo do registro a cada
+20 segundos e só baixa o livro quando ele andou. Cartão e categoria editados em dois aparelhos valem pela versão mais
+nova, e um lançamento cancelado nunca ressuscita.
+
+### O design system
+
+O design system é um pacote Dart próprio, [`packages/design_system`](packages/design_system), e o app é a primeira
+aplicação dele:
+
+- **Tokens por papel**: cor, tipo, espaço, raio, sombra, duração, curva e som saem do pacote por nome de papel.
+  Trocar a cor de todos os botões de ação é editar uma linha, e o teste de contraste roda em seguida.
+- **Componentes** em todos os estados: botões, valores, cartões, campos, avisos, conversa, anéis e linha do tempo do
+  mês, cartão de crédito em 3D, vidro, carrossel e pilha de cartões.
+- **Movimento e som**: rolagem em profundidade, entrada cinematográfica e um som por família de controle, com três
+  níveis de movimento e respeito a "reduzir movimento".
+- **Acessibilidade**: contraste calculado, alvos de toque de 48 dp, fonte do sistema ampliada e leitor de tela.
+- **A gallery** ([ao vivo](https://cajui-teal.vercel.app/gallery/)) é o app de exemplo: mostra cada componente, cada tela do app em 69 estados e cada
+  decisão de design, com tema escuro, som e movimento ajustáveis.
+
+### O lado nativo (Android)
+
+Os módulos em Kotlin cobrem o que o Flutter não alcança: receber compartilhamento de imagem, PDF e texto; OCR no
+aparelho com ML Kit (o PDF é rasterizado pelo próprio Android); leitura das notificações dos bancos; o widget de vidro da
+tela inicial; lembretes de vencimento; ditado de voz; e a chave do aparelho guardada no Keystore.
 
 ## Desafios que resolvi
 
@@ -214,72 +368,12 @@ antes de fechar o passo.
 | App               | Flutter 3.47 (Android para usar, web para consultar), Riverpod 3 com estado selado, Dart 3.13          |
 | Nativo (Android)  | Kotlin: compartilhamento, OCR com ML Kit no aparelho, leitura de notificações, widget, lembretes       |
 | Domínio           | Dart puro, sem Flutter e sem `dart:io`: o mesmo código no celular e no servidor                        |
-| Servidor          | Dart + Shelf, compilado em executável único, numa VM da Oracle com Caddy (TLS) e systemd               |
+| Servidor          | Dart + Shelf, compilado em executável único, numa VM da Oracle Cloud (OCI), com proxy TLS e serviço do sistema               |
 | Dados             | Registro de eventos cifrado com AES-256-GCM e encadeado por SHA-256, backup diário                     |
-| IA                | DeepSeek (`deepseek-flash`) com ferramentas: lançar, cancelar, listar, registrar renda, ler extrato     |
+| IA                | Claude (API de Mensagens, com ferramentas) ou DeepSeek, atrás da mesma porta `ChatClient`                  |
 | Design system     | Pacote próprio com tokens, componentes, vidro, movimento 3D e sons; gallery publicada na Vercel        |
 | Qualidade         | `very_good_analysis`, verificador próprio, cobertura com piso por pacote, varredura de segredos        |
 | Esteira           | GitHub Actions, Conventional Commits, Vercel para a web                                                |
-
-## Arquitetura
-
-Arquitetura limpa, organizada por feature (`features/<x>/{application,infrastructure,presentation}`). O
-`composition.dart` é o único lugar que liga uma porta a um adaptador, e nenhuma conta mora no app: ele pergunta ao
-domínio.
-
-```mermaid
-flowchart LR
-  subgraph PHONE["Celular Android"]
-    UI["Telas Flutter<br/>ViewModels com estado selado"]
-    APP["Casos de uso<br/>(application)"]
-    NAT["Kotlin<br/>OCR · notificações · widget"]
-    LOG[("Livro local<br/>eventos cifrados")]
-  end
-  DOM["Domínio<br/>Dart puro"]
-  subgraph VM["Servidor (VM)"]
-    API["API Shelf"]
-    STORE[("Registro de eventos<br/>AES-256-GCM + SHA-256")]
-    AI["Leitura com IA<br/>máscara e esquema"]
-  end
-  WEB["Web<br/>modo consulta"]
-  DS["IA (DeepSeek)"]
-
-  UI --> APP --> DOM
-  NAT --> APP
-  APP --> LOG
-  APP -- "fatos + chave da casa" --> API
-  WEB --> API
-  API --> DOM
-  API --> STORE
-  API --> AI --> DS
-```
-
-**O extrato pela Juju**, do compartilhamento ao lote gravado:
-
-```mermaid
-sequenceDiagram
-  participant P as Pessoa
-  participant C as Celular
-  participant S as Servidor
-  participant I as IA
-  P->>C: compartilha o PDF do app do banco
-  C->>C: OCR por página, linhas pela posição, número consertado
-  C->>C: reconhece o extrato e mascara nomes, CPF e conta
-  loop cada página
-    C->>S: linhas numeradas, já mascaradas
-    S->>I: instrução fixa + dados entre marcadores
-    I-->>S: movimentações em JSON
-    S-->>C: só as que passam no esquema e têm o valor escrito
-    C->>C: pede de novo as linhas com data e valor que faltaram
-  end
-  C->>P: resumo, blocos por categoria, dúvidas uma a uma
-  P->>C: Pode lançar (N)
-  C->>S: lote com chaves pelo conteúdo
-```
-
-Detalhes nas [ADRs](docs/architecture/adr): a [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) é a do
-extrato, a [020](docs/architecture/adr/ADR-020-chave-da-casa.md) é a do acesso, a
-[022](docs/architecture/adr/ADR-022-a-ia-le-a-foto.md) é a da foto lida pela IA.
 
 ## Padrões de projeto aplicados
 
@@ -385,8 +479,9 @@ Cada um foi achado por revisão adversarial ou por uso real, e cada um tem hoje 
 ## Custo
 
 **R$ 0,00 fixo.** VM gratuita na Oracle, TLS do Let's Encrypt, DNS dinâmico gratuito, repositório e esteira no GitHub
-e a web na Vercel, no plano Hobby. O único custo variável é a IA, de **cerca de R$ 0,60 por mês** no cenário de 120
-lançamentos ([a conta está aqui](docs/ops/ai-cost-estimate.md)).
+e a web na Vercel, no plano Hobby. O único custo variável é a IA, cobrada por uso: com a DeepSeek a conta fica em **cerca de R$ 0,60 por mês** no
+cenário de 120 lançamentos ([a conta está aqui](docs/ops/ai-cost-estimate.md)); o Claude custa mais por token, e a
+troca é só de configuração.
 
 ---
 
