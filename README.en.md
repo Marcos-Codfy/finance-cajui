@@ -8,10 +8,9 @@
 
 **A household's money, in one conversation.**
 
-An Android personal-finance app with an **AI assistant** that records what you say, reads the statement you share
-from your bank's app and asks only what it doesn't know. A complete project, built from scratch and on my own:
-specification, a pure-Dart domain, a Flutter app with native Kotlin modules, a cloud server of my own, a design system
-with a published gallery and a quality pipeline. Fixed cost: **R$ 0.00 per month**.
+An Android personal-finance app with an AI assistant: you chat to record expenses, and the app reads statements and
+receipts and answers with the month's numbers. It is a complete project built from scratch: specification, a pure-Dart
+domain, a Flutter app, a cloud server of my own and a design system with a published gallery.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/extrato-pela-juju.png" />
@@ -48,56 +47,74 @@ with a published gallery and a quality pipeline. Fixed cost: **R$ 0.00 per month
 
 ## About the project
 
-Cajui was born to replace my household's finance spreadsheet, which only worked because someone fed it by hand. The
-first version followed the spreadsheet to the letter, and the verdict from the people using it was blunt: "it got boring
-to use". The turning point was removing screens and adding a conversation: you say what you spent, the app reads what
-the bank sends, and the phone does the rest. Today two Android phones share the same ledger, synced live, and a web page
-is there for look-ups.
+Cajui is an Android personal-finance app that I started to keep track of my household's bills, in place of a
+spreadsheet that took work to maintain. The first version was the spreadsheet in app form, and the people using it found
+filling everything in tiring. So I changed the focus: instead of screens to fill in, you chat with an assistant (Juju),
+and the app uses what the bank already sends, such as notifications, statements and receipts. Today two phones share the
+same ledger, synced, and there is a web page just for looking things up.
 
-**Authorship:** a personal project, from scratch and on my own. I wrote the specification (420 numbered business rules),
-the domain, the app, the native Kotlin part, the server, the design system with its brand, the infrastructure and the
-pipeline.
+Besides being a personal tool, the project became my lab for learning and practicing software engineering for real:
+MVVM, DDD (the business language and rules inside the domain), SOLID principles, clean architecture, dependency
+injection and design patterns such as Factory, Strategy, Adapter, Repository, Observer and Singleton (here, the single
+instances are handled by Riverpod's providers). The [patterns table](#design-patterns-applied) shows where each one
+appears in the code, and the decisions are recorded in [ADRs](docs/architecture/adr).
+
+**How it was built:** I wrote the specifications for what the app should do and built the project with Claude's help, as
+a programming assistant. The Claude API is also used inside the app, in the conversation with Juju.
 
 ### What it does
 
-- **Records what you say.** "Spent 35 at the market" becomes an entry, with a category and a payment method, and an
-  "Undo" right next to it.
-- **Answers with your numbers.** What is left, what is due, how much is missing for the month to close. The answer never
-  carries a value the screen doesn't show.
-- **Reads your bank statement.** You share the PDF or a screenshot; the phone reads it page by page and the conversation
-  checks it in blocks before recording anything. Reading the same statement twice never records anything twice.
-- **Uses the bank's notifications.** An approved purchase becomes an entry on its own, with "Undo"; money that came in
-  asks for one tap.
-- **Turns a receipt into a proposal.** Photo, screenshot or PDF: the OCR runs on the device, and only masked text leaves
-  it.
-- **Keeps two phones on one ledger.** Live sync, and a web look-up protected by an authenticator code.
-- **Gets right what almost every finance app gets wrong.** A credit card is a way to pay, never an expense; and a meal
-  voucher is another currency that is never added to cash. Both are guaranteed by the domain's types, not by discipline.
+- **Entries by conversation.** You type or dictate "spent 35 at the market", and the app creates the entry with a
+  category and a payment method. You can undo it right after.
+- **Questions about the month.** The assistant answers how much is left, what is due and how much is missing to close
+  the month, using the app's own numbers.
+- **Statement reading.** You share the statement's PDF or screenshot; the phone reads it page by page, and the
+  conversation checks it in blocks before saving. Reading the same statement twice does not duplicate entries.
+- **Bank notifications.** An approved purchase becomes an entry automatically, with an option to undo. When money comes
+  in, the app asks you to confirm.
+- **Receipts.** A photo, screenshot or PDF becomes an entry proposal for you to check. The text recognition happens on
+  the device, and only text with personal data masked goes to the AI.
+- **Two phones, one ledger.** Entries sync between the devices, and the web look-up is protected by an authenticator
+  code.
+- **Explicit money rules.** A credit card is a way to pay, not an expense. A meal voucher is a separate currency that is
+  not added to cash. Both rules live in the domain's types.
 
-### What the project demonstrates
+### Technical overview
 
 | Area            | What was done                                                                                                  | Where to look |
 | --------------- | -------------------------------------------------------------------------------------------------------------- | ------------- |
-| Architecture    | Clean architecture by feature, MVVM with sealed state (Riverpod), Coordinator, composition root; layers locked by a custom checker | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
-| Domain          | Pure Dart shared by app and server; sealed `Result` and `Failure`; money as integer cents; 420 numbered rules, each with a same-numbered test | [`packages/domain`](packages/domain) |
-| Applied AI      | Claude (Messages API, with *tool use*) behind a swappable port; personal data masked before it leaves; every value the AI writes is checked | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
+| Architecture    | Clean architecture by feature, MVVM with sealed state (Riverpod), Coordinator and a composition root; a custom checker verifies the layers | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
+| Domain          | Pure Dart shared by app and server; sealed `Result` and `Failure`; money as integer cents; numbered business rules, each with a test | [`packages/domain`](packages/domain) |
+| AI              | Claude (Messages API, with *tool use*) behind a swappable interface; personal data masked before it leaves; every value the AI writes is checked | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
 | Server          | Dart + Shelf, single executable, on Oracle Cloud (OCI), with TLS; encrypted, hash-chained event log; documented API | [`server/`](server), [`docs/api.md`](docs/api.md) |
-| Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with 69 screen states; the app cannot define a color on its own | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
-| Native Android | Kotlin: share intake, on-device OCR, bank notifications, home screen widget, reminders and dictation | [`app/android`](app/android) |
-| Quality         | 1,850 tests named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
-| Process         | 32 ADRs, atomic Conventional Commits, pull requests and CI on GitHub Actions | [`docs/architecture`](docs/architecture) |
+| Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with 69 screen states; the app does not define colors on its own | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
+| Native Android  | Share intake, on-device OCR, bank notifications, home screen widget, reminders and dictation | [`app/android`](app/android) |
+| Quality         | 1,850 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Process         | 32 ADRs, Conventional Commits, pull requests and CI on GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Decisions that guided the project
 
-The AI enters where it helps, never where it decides. The domain does the math, in pure Dart, and the same code runs on
-the phone and on the server. The AI reads text and photos and returns structured data, which the domain checks. In the
-statement conversation, no sentence from Juju goes through the model: the app builds each one from the domain's numbers,
-so what she says is always what the screen shows.
+Two decisions shaped the rest. The first: the AI only reads and suggests; the domain does the math and applies the
+rules, in pure Dart, used by both the app and the server. The second: in the statement conversation, Juju's sentences
+are built by the app from the domain's numbers, not by the model, so what she says matches what the screen shows.
 
-The detail I like most is testing on a real phone. The statement flow passed hundreds of tests, and the first PDF shared
-on the device showed a restaurant with the market's amount. It was the OCR returning the table by columns
-([challenge 2](#2-the-table-the-ocr-takes-apart)). Since then, every new screen is checked in the browser and on the
-device before the step closes.
+I also learned that tests alone are not enough. The statement flow passed hundreds of tests and, on the first real PDF,
+the OCR returned the table by columns and mixed up two lines ([challenge 2](#2-the-table-the-ocr-takes-apart)). Since
+then I check every new screen in the browser and on the phone.
+
+### How to make use of this project
+
+- **Run the app.** Clone the repository, run `flutter pub get` and `flutter run`. With no server configured, it works on
+  its own on the device (see [Getting started](#getting-started)).
+- **Connect it to a server of your own.** The server in [`server/`](server) runs on your machine with
+  `scripts/servidor-local.ps1`; the app points to it through the `CAJUI_API_URL` and `CAJUI_ACCESS_KEY` variables. The
+  AI key stays outside the repository.
+- **Reuse the design system.** The [`packages/design_system`](packages/design_system) package depends on neither the app
+  nor Riverpod, and the [gallery](https://cajui-teal.vercel.app/gallery/) shows every component in every state.
+- **Reuse the domain.** The [`packages/domain`](packages/domain) package is pure Dart (money, installments, card
+  statements, the month's budget) and fits another app or server.
+- **Study the decisions.** The [ADRs](docs/architecture/adr) explain the reason behind each choice, and the
+  [API documentation](docs/api.md) describes every server route.
 
 ## Visuals
 
@@ -147,7 +164,7 @@ flowchart LR
   UI --> APP --> DOM
   NAT --> APP
   APP --> LOG
-  APP -- "facts + household key" --> API
+  APP -- "entries + access key" --> API
   WEB --> API
   API --> DOM
   API --> STORE
@@ -205,7 +222,7 @@ proxy with automatic TLS and managed as a system service. What it does:
   to the past is detected. There are per-file summaries and a daily encrypted backup, copied off the machine.
 - **Validates everything that arrives.** JSON is read strictly (an extra, missing or wrong-type field is refused), the
   domain rules are checked again on the server, and every error carries a code from a catalog of 47.
-- **Authenticates.** The device signs in with the house key (the server keeps only the hash and compares in constant
+- **Authenticates.** The device signs in with an access key, a random secret shared by the phones of the same household (called the "house key" in the project); the server keeps only the hash and compares in constant
   time). The web look-up signs in with an authenticator code (TOTP, RFC 6238), which opens a 30-day read-only session,
   locked after five wrong attempts.
 - **Protects.** Per-origin rate limiting, CORS for a single origin, and secrets in the service's encrypted credentials,
@@ -432,7 +449,7 @@ thing.
 
 ## Security and privacy
 
-- **A household key** of 32 random bytes, generated on the owner's computer and compiled into the APK. The server
+- **An access key** of 32 random bytes, generated on the installer's computer and compiled into the APK. The server
   keeps only its hash, in an encrypted systemd credential ([ADR-020](docs/architecture/adr/ADR-020-chave-da-casa.md)).
 - **The web signs in with an authenticator code** (TOTP, RFC 6238), and that secret is also encrypted on the VM
   ([ADR-027](docs/architecture/adr/ADR-027-codigo-do-autenticador.md)).
@@ -457,12 +474,11 @@ thing.
 | Custom checker    | 1,166 files, no limit broken                                                                                |
 | Accessibility     | Lighthouse 100 on the web; semantics on from the root; the screen reader says who is speaking in the chat |
 
-**By the numbers:** 108 thousand lines of Dart in 1,168 files (40 thousand of them tests), 2.9 thousand of Kotlin, 420
-business rules, 134 non-functional requirements, 32 ADRs and 159 pull requests.
+**By the numbers:** 108 thousand lines of Dart in 1,168 files (40 thousand of them tests), 2.9 thousand of Kotlin, 134 non-functional requirements, 32 ADRs and 159 pull requests.
 
 ## What went wrong
 
-The most honest part of the project, and the most useful to read:
+Problems that showed up along the way, and how each one was solved:
 
 - **Green tests missed what the device caught.** The statement feature passed hundreds of tests, and the first real
   PDF mixed up columns ([challenge 2](#2-the-table-the-ocr-takes-apart)). Before that, the app read the API's error
@@ -501,7 +517,7 @@ flutter pub get
 cd app && flutter run
 ```
 
-Without the household key compiled in, the app starts with no server and works on its own on the device. The key
+Without the access key compiled in, the app starts with no server and works on its own on the device. The key
 (`CAJUI_ACCESS_KEY`) and the server address (`CAJUI_API_URL`) come in through `--dart-define` and are never versioned. The look-up
 web build comes from `flutter build web --no-web-resources-cdn` inside `app/`.
 
@@ -561,7 +577,7 @@ scripts/                  APK, local server and web build
   [011](docs/architecture/adr/ADR-011-hospedagem-a-custo-zero.md).
 - **Web:** Vercel publishes `main`: the read-only web at the root and the design system gallery at `/gallery/`, both
   built by [`scripts/web.sh`](scripts/web.sh).
-- **App:** the APK is built and installed over USB, with the household key and the server address compiled in.
+- **App:** the APK is built and installed over USB, with the access key and the server address compiled in.
 
 ## Roadmap
 
