@@ -29,7 +29,7 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
 
 **[See the design system gallery live](https://cajui-teal.vercel.app/gallery/)**
 
-[About](#about-the-project) · [Architecture](#architecture) · [API documentation](docs/api.md) ·
+[About](#overview) · [Architecture](#architecture) · [API documentation](docs/api.md) ·
 [Decisions (32 ADRs)](docs/architecture/adr) · [Specification](docs/spec) · [Design system](packages/design_system) ·
 [Security](docs/security) · [Wireframes](docs/design/wireframes.html)
 
@@ -39,13 +39,13 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
 
 ---
 
-**If you want to get to know the project:** [About the project](#about-the-project) · [Visuals](#visuals) · [Architecture](#architecture) ·
-[Challenges I solved](#challenges-i-solved) · [Stack](#stack) · [Patterns applied](#design-patterns-applied) ·
-[Security and privacy](#security-and-privacy) · [Quality](#quality) · [What went wrong](#what-went-wrong)<br />
-**If you want to run it:** [Getting started](#getting-started) · [Scripts](#scripts) · [Structure](#project-structure) ·
-[Publishing](#publishing) · [Roadmap](#roadmap)
+**If you want to get to know the project:** [Overview](#overview) · [Screens](#screens-and-design-system) · [Architecture](#architecture) ·
+[Problems and solutions](#technical-problems-and-solutions) · [Technologies](#technologies) · [Design patterns](#design-patterns-applied) ·
+[Security](#security-and-privacy) · [Quality](#quality-and-tests) · [Problems found](#problems-found-and-fixes)<br />
+**If you want to run it:** [How to run](#how-to-run-the-project) · [Scripts](#scripts) · [Structure](#project-structure) ·
+[Publishing](#how-it-is-published)
 
-## About the project
+## Overview
 
 Cajui is an Android personal-finance app that I started to keep track of my household's bills, in place of a
 spreadsheet that took work to maintain. The first version was the spreadsheet in app form, and I found filling everything in tiring. So I changed the focus: instead of screens to fill in, you chat with an assistant (Juju),
@@ -61,7 +61,7 @@ appears in the code, and the decisions are recorded in [ADRs](docs/architecture/
 **How it was built:** I wrote the specifications for what the app should do and built the project with Claude's help, as
 a programming assistant. The Claude API is also used inside the app, in the conversation with Juju.
 
-### What it does
+### What the app does
 
 - **Entries by conversation.** You type or speak "spent 35 at the market", and the app creates the entry with a
   category and a payment method. You can undo it right after.
@@ -78,12 +78,12 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 - **Explicit money rules.** A credit card is a way to pay, not an expense. A meal voucher is a separate currency that is
   not added to cash. Both rules live in the domain's types.
 
-### Technical overview
+### Technical summary
 
 | Area            | What was done                                                                                                  | Where to look |
 | --------------- | -------------------------------------------------------------------------------------------------------------- | ------------- |
 | Architecture    | Clean architecture by feature, MVVM with sealed state (Riverpod), Coordinator and centralized dependency injection; a custom checker verifies the layers | [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md), [002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md) |
-| Domain          | Pure Dart shared by app and server; sealed `Result` and `Failure`; money as integer cents; numbered business rules, each with a test | [`packages/domain`](packages/domain) |
+| Domain          | Dart shared by app and server; sealed `Result` and `Failure`; money as integer cents; numbered business rules, each with a test | [`packages/domain`](packages/domain) |
 | AI              | Claude (Messages API, with *tool use*) behind a swappable interface; personal data masked before it leaves; every value the AI writes is checked | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
 | Server          | Dart + Shelf, single executable, on Oracle Cloud (OCI), with TLS; encrypted, hash-chained event log; documented API | [`server/`](server), [`docs/api.md`](docs/api.md) |
 | Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with the screen states | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
@@ -91,16 +91,16 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 | Quality         | 1,850 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Process         | 32 ADRs, Conventional Commits, pull requests and CI on GitHub Actions | [`docs/architecture`](docs/architecture) |
 
-### Decisions that guided the project
+### Two decisions that shaped the project
 
 Two decisions shaped the rest. The first: the AI only reads and suggests; the domain does the math and applies the
 rules, in Dart, used by both the app and the server. The second: in the statement conversation, Juju's sentences
 are built by the app from the domain's numbers, not by the model, so what she says matches what the screen shows.
 
-### How to make use of this project
+### How to use this repository
 
 - **Run the app.** Clone the repository, run `flutter pub get` and `flutter run`. With no server configured, it works on
-  its own on the device (see [Getting started](#getting-started)).
+  its own on the device (see [How to run the project](#how-to-run-the-project)).
 - **Connect it to a server of your own.** The server in [`server/`](server) runs on your machine with
   `scripts/servidor-local.ps1`; the app points to it through the `CAJUI_API_URL` and `CAJUI_ACCESS_KEY` variables. The
   AI key stays outside the repository.
@@ -111,7 +111,7 @@ are built by the app from the domain's numbers, not by the model, so what she sa
 - **Study the decisions.** The [ADRs](docs/architecture/adr) explain the reason behind each choice, and the
   [API documentation](docs/api.md) describes every server route.
 
-## Visuals
+## Screens and design system
 
 <p align="center">
   <img src="docs/media/extrato-pela-juju.png" width="960" alt="Three screens of the conversation with Juju: the statement summary and the Groceries block with Confirm, See the lines and Fix; the question about a Pix to a person, with the options It is an expense, Someone in the household, My own account and Do not record; and the end, with 9 entries saved and the Done and Undo all buttons." />
@@ -193,7 +193,7 @@ More in the [ADRs](docs/architecture/adr): [030](docs/architecture/adr/ADR-030-e
 statement, [020](docs/architecture/adr/ADR-020-chave-da-casa.md) access, and
 [022](docs/architecture/adr/ADR-022-a-ia-le-a-foto.md) the photo read by the AI.
 
-### The app
+### Flutter app
 
 The app is Flutter, in clean architecture organized by feature: each one has `application` (use cases),
 `infrastructure` (adapters) and `presentation` (screens and ViewModels).
@@ -210,7 +210,7 @@ The app is Flutter, in clean architecture organized by feature: each one has `ap
   design system package, never from the screens' code. The app uses `WidgetsApp` instead of `MaterialApp` so it does
   not inherit Material's look, and an automatic check blocks any color or style defined directly in a screen.
 
-### The server
+### Server
 
 A single Dart (Shelf) executable running on a VM on **Oracle Cloud Infrastructure (OCI)**, on the free tier, behind a
 proxy with automatic TLS and managed as a system service. What it does:
@@ -228,7 +228,7 @@ proxy with automatic TLS and managed as a system service. What it does:
 
 Every route is documented, with request, response and errors, in [`docs/api.md`](docs/api.md).
 
-### The AI
+### Juju assistant and AI integration
 
 Juju is a conversational assistant with ***tool use***: the server integrates Anthropic's Messages API (Claude) and
 gives the model real tools: record an expense, cancel, list, record income, recategorize and pay down a debt. The
@@ -240,148 +240,158 @@ decisions worth telling:
   for Claude and for DeepSeek, chosen by configuration, and a fake client in the tests.
 - **Privacy before the AI.** Person names, CPF numbers and accounts are masked on the phone, before the text leaves it.
 - **The AI's answer is untrusted input.** Every amount in reais it writes is checked against the summary the server
-  sent, the tools and the question (RN-943). A value with no source goes back to the model once; if it insists, a
-  fixed-format answer is returned.
-- **Limits.** A monthly token budget, a circuit breaker and a per-call timeout; if the AI is down, the app says so and
-  keeps recording by hand.
+  sent, the tools and the question. A value with no source goes back to the model once; if it insists, a fixed-format
+  answer is returned.
+- **Usage and failure controls.** There is a monthly token budget, a maximum time per call and a circuit breaker that
+  stops calling the AI when it starts failing. If the AI is unavailable, the app tells you and you keep recording
+  entries by hand.
 
 ### Sync between devices
 
-The data is a history of facts (entries, corrections and cancellations), each with an idempotency key: resending the same request never records it again. The
-server only stores and returns; each phone does the math, with the same domain. The app checks the top of the log every
-20 seconds and downloads the data only when something changed. A card or category edited on two devices is resolved by the
-newest version, and a cancelled entry never comes back to life.
+The data is a history of facts (entries, corrections and cancellations). Every write request carries a unique
+identifier: if the phone sends the same request again, for example after a network drop, the server recognizes it and
+does not record it twice. The server only stores and returns; each phone does the math, with the same domain. The app
+checks the top of the log every 20 seconds and downloads the data only when something changed. If the same card or
+category is edited on both devices, the most recent edit wins, and a cancelled entry stays cancelled even if the other
+device still shows it.
 
-### The design system
+### Design system
 
-The design system is an own Dart package, [`packages/design_system`](packages/design_system), and the app is its first
-consumer:
+The design system is a package of its own in Dart, [`packages/design_system`](packages/design_system), and the app is
+its first user:
 
-- **Tokens by role**: color, type, spacing, radius, shadow, duration, curve and sound come from the package by role name.
-  Changing the color of every action button means editing one line, and the contrast test runs right after.
-- **Components** in every state: buttons, amounts, cards, fields, notices, chat, the month's rings and timeline, a 3D
-  credit card, glass, carousel and card stack.
-- **Motion and sound**: depth scrolling, a cinematic entrance and one sound per control family, with three motion levels
-  and respect for "reduce motion".
-- **Accessibility**: computed contrast, 48 dp touch targets, enlarged system fonts and screen readers.
-- **The gallery** ([live](https://cajui-teal.vercel.app/gallery/)) is the sample app: it shows every component, every app screen in its states and every
-  design decision, with dark theme, sound and motion adjustable.
+- **Centralized styles.** Colors, fonts, spacing, borders, shadows, animation timings and sounds live in one place and
+  are used by the role they play (for example, "action button color"). Changing the color of every button means editing
+  one line, and the contrast test runs right after.
+- **Components.** Buttons, amounts in reais, cards, fields, notices, chat bubbles, the month's rings and timeline, a 3D
+  credit card, glass panels, a carousel and a card stack. Each one appears in all of its states.
+- **Animation and sound.** A depth effect when scrolling, transitions between screens and one sound for each kind of
+  control. Animation has three intensity levels and respects the system's "reduce motion" setting.
+- **Accessibility.** Computed and tested color contrast, touch targets of at least 48 dp, support for enlarged fonts
+  and for screen readers.
+- **Gallery.** A [sample site](https://cajui-teal.vercel.app/gallery/) with every component, every app screen in its
+  states and the design decisions, with a dark theme and sound and animation options.
 
-### The native side (Android)
+### Native modules (Android)
 
 The Kotlin modules cover what Flutter doesn't reach: receiving image, PDF and text shares; on-device OCR with ML Kit
 (the PDF is rasterized by Android itself); reading the banks' notifications; the glass home screen widget; due-date
 reminders; voice input (speaking instead of typing); and the device key kept in the Keystore.
 
-## Challenges I solved
+## Technical problems and solutions
 
-### 1. A whole statement in one conversation, without recording anything twice
+Each item describes the problem, the solution and the result.
 
-- **Problem:** a monthly statement has dozens of lines, and the old reading stopped at 30. Reading it again, sharing
-  it twice, or undoing and recording again could not duplicate anything.
-- **Solution:** the phone reads page by page (`POST /v1/statements/read-part`), and the AI only reads. The
-  conversation is built by the app ([`StatementDigest`](packages/domain/lib/src/statements/statement_digest.dart),
-  [`StatementWords`](packages/domain/lib/src/statements/statement_words.dart)). Each saved line carries a key made
-  from its content, not its position ([`StatementLineKey`](packages/domain/lib/src/statements/statement_line_key.dart)),
-  plus the stamp of that batch. "Already in Cajui" is a one-to-one match by amount, day and name
-  ([`StatementMatches`](app/lib/src/features/statements/application/statement_matches.dart)).
-- **Result:** reading the same statement again shows "already in Cajui"; two identical purchases at the same bakery
-  stay two; and "Undo all" followed by "Record" saves again, with ids that were never undone.
+### 1. Reading a whole statement without duplicating entries
 
-### 2. The table the OCR takes apart
+- **Problem:** a monthly statement has dozens of lines, and the first version read only the first 30. On top of that,
+  reading the same statement twice, or undoing and recording again, could not create duplicate entries.
+- **Solution:** the phone sends the statement to the AI page by page (`POST /v1/statements/read-part`), and the AI only
+  reads the text. The sentences of the conversation are built by the app ([`StatementDigest`](packages/domain/lib/src/statements/statement_digest.dart), [`StatementWords`](packages/domain/lib/src/statements/statement_words.dart)). To avoid
+  duplicates, each saved line gets an identifier calculated from its content, not from its position on the page
+  ([`StatementLineKey`](packages/domain/lib/src/statements/statement_line_key.dart)), plus a stamp that identifies that entry. When reading a statement, the app compares each line with
+  what is already saved, one by one, by amount, day and name ([`StatementMatches`](app/lib/src/features/statements/application/statement_matches.dart)), and marks the repeated ones as "already in
+  Cajui".
+- **Result:** reading the same statement again shows "already in Cajui". Two identical purchases at the same bakery stay
+  two, because each one matches its own statement line. And "Undo all" followed by "Record" saves the entries again,
+  with identifiers that have not been cancelled.
 
-- **Problem:** in the first test on the device, the line "Restaurante Sabor" came with the supermarket's amount. ML
-  Kit returns text by blocks, and on a table-shaped page each column becomes a block. On top of that, the OCR sometimes
-  breaks a number ("+3.120,,00", "-32, 80"), and the server dropped the line without a word.
-- **Solution:** the native side rebuilds each page into rows by the height of each piece
-  ([`TextRows.kt`](app/android/app/src/main/kotlin/app/cajui/capture/TextRows.kt)); the domain repairs numbers the OCR
-  broke ([`OcrLine`](packages/domain/lib/src/statements/ocr_line.dart)); and the phone checks the AI's answer: a line
-  with a date and an amount that it did not cite is asked again, and whatever is still missing is said out loud
+### 2. OCR that scrambles tables
+
+- **Problem:** in the first test on the phone, the line "Restaurante Sabor" showed up with the supermarket's amount. ML
+  Kit (Google's OCR) returns text in blocks, and on a table-shaped page each column becomes a separate block. The OCR
+  also sometimes breaks a number ("+3.120,,00", "-32, 80"), and the server dropped those lines without warning.
+- **Solution:** the native code regroups each page's text into rows, by the vertical position of the pieces
+  ([`TextRows.kt`](app/android/app/src/main/kotlin/app/cajui/capture/TextRows.kt)); the domain repairs the broken numbers ([`OcrLine`](packages/domain/lib/src/statements/ocr_line.dart)); and the phone checks the AI's answer: if a line with
+  a date and an amount was not cited, it is requested again, and whatever is still missing is reported to the user
   ([`MissedLines`](app/lib/src/features/statements/application/missed_lines.dart)).
-- **Result:** no line disappears silently. The device cases became tests with the exact lines the OCR read.
+- **Result:** no line disappears without notice. The cases found on the phone became tests, using the exact lines the
+  OCR read.
 
-### 3. A card is a way to pay; a voucher is another currency
+### 3. Card and meal voucher: money rules in the domain
 
-- **Problem:** the spreadsheet knew that a card purchase counts in the month it was made, not in the month of the
-  bill, and that a meal voucher is not money. An app that adds everything into one total gets the whole month wrong.
-- **Solution:** every monthly amount is a `TenderAmounts`, with cash and voucher in separate fields, and no operation
-  joins them. The card bill is a computed view, never an entry; an installment purchase becomes a commitment in the
-  debts block, one installment at a time.
-- **Result:** the compiler rejects the wrong sum. A bill payment read from a statement shows up as "doesn't count".
+- **Problem:** in the spreadsheet I used, a card purchase counted in the month it was made, not in the month of the
+  bill, and the meal voucher was not treated as money. An app that adds everything into one total gets the whole month
+  wrong.
+- **Solution:** every monthly amount is a `TenderAmounts`, which keeps cash and voucher in separate fields; no operation
+  adds the two. The card bill is a computed view, never an entry, and an installment purchase becomes a commitment in
+  the debts list, one installment at a time.
+- **Result:** the compiler rejects the wrong sum. A bill payment that shows up on a statement is marked "doesn't count",
+  so the same expense is not counted twice.
 
-### 4. Privacy before the AI
+### 4. Protecting personal data before the AI
 
-- **Problem:** statements and receipts carry the name of whoever got the Pix, tax IDs and account numbers.
-- **Solution:** masking runs on the phone before anything is sent
-  ([`PiiRedactor`](packages/domain/lib/src/receipts/pii_redactor.dart),
-  [`TransferLine`](packages/domain/lib/src/statements/transfer_line.dart)). The real name stays on the device and only
-  shows up there, in the question ("Pix para Carla M Souza"). The AI's answer goes through a closed schema, and every
-  amount must be written in the text. A remembered answer about a person never becomes an example for the AI.
-- **Result:** the AI sees "PIX ENVIADO [NOME] 150,00" and the phone shows the name. A suite of malicious receipts tries
-  prompt injection.
+- **Problem:** statements and receipts carry the name of whoever received the Pix, the tax ID and the account number.
+- **Solution:** masking runs on the phone, before anything is sent ([`PiiRedactor`](packages/domain/lib/src/receipts/pii_redactor.dart), [`TransferLine`](packages/domain/lib/src/statements/transfer_line.dart)). The real name stays on the
+  device and only appears in the question asked to the user ("Pix para Carla M Souza"). The AI's answer goes through a
+  closed schema of fields, and every amount must be written in the text that was sent. Saved answers that mention a
+  person are never used as examples for the AI.
+- **Result:** the AI receives "PIX ENVIADO [NOME] 150,00", and the phone shows the name. A test suite of malicious
+  receipts tries to inject instructions into the text (*prompt injection*).
 
 <details>
-<summary><b>5 more challenges: sync, a custom checker, screen transitions, sound and the glass widget</b></summary>
+<summary><b>5 more problems: sync, a code checker, screen transitions, sound and the glass widget</b></summary>
 
-### 5. Two phones, the same data
+### 5. Syncing two phones
 
-- **Problem:** the couple uses two phones, and each one sometimes records without a connection.
-- **Solution:** an event log (nothing is deleted; fixing and cancelling append), ids born from content, and "the
-  newest edit wins" ([ADR-019](docs/architecture/adr/ADR-019-dois-aparelhos-um-livro.md)). With the app in front, each
-  phone asks the server, every 20 seconds, for a number that only moves when the data changes
+- **Problem:** two phones use the same accounts, and each one sometimes records without internet.
+- **Solution:** the data is an event log: nothing is deleted, and fixing or cancelling adds a new event. Identifiers are
+  born from the content, and if the same thing is edited on both sides, the most recent edit wins ([ADR-019](docs/architecture/adr/ADR-019-dois-aparelhos-um-livro.md)). With the
+  app open, each device asks the server every 20 seconds for a number that only changes when the data changes
   ([ADR-024](docs/architecture/adr/ADR-024-sincronia-ao-vivo-e-auth-simples.md)).
-- **Result:** what one records shows up on the other within seconds, and downloading the data again never duplicates.
+- **Result:** what one phone records shows up on the other within seconds, and downloading the data again never
+  duplicates anything.
 
-### 6. Code rules that a machine enforces
+### 6. Code rules checked automatically
 
-- **Problem:** clean architecture held only by convention falls apart at the first tight deadline.
-- **Solution:** a custom checker built on `package:analyzer` ([`tool/code_metrics`](tool/code_metrics)) runs on
-  pre-commit and in the pipeline. It rejects imports that point outward across layers, files over 300 lines, functions
-  over 30, more than 3 levels of nesting, two public types in one file, and colors written by hand on a screen.
-- **Result:** 1,166 files checked on every commit, no limit broken. Changing the color of every button is one token.
+- **Problem:** a clean architecture kept only by agreement falls apart at the first tight deadline.
+- **Solution:** a custom checker built on `package:analyzer` ([`tool/code_metrics`](tool/code_metrics)) runs before every commit and in CI. It rejects
+  an import that goes from an outer layer to an inner one, a file over 300 lines, a function over 30, more than 3 levels
+  of nesting, two public types in one file, and a color written directly in a screen.
+- **Result:** every file is checked on each commit, and none goes over the limits. Changing the color of every button
+  means changing one value in the design system.
 
-### 7. The screen transition that mixed two screens
+### 7. A transition that showed two screens at once
 
-- **Problem:** when a screen opened, the previous one still showed under the new one for a few frames.
-- **Solution:** the camera move between screens became a hand-over on one shared linear clock
-  ([`CameraMove`](packages/design_system/lib/src/motion/camera_move.dart)): the screen behind leaves entirely before
-  the new one arrives.
-- **Result:** checked on the device with a screen recording, frame by frame, and pinned by a test that fails with the
+- **Problem:** when a screen opened, the previous one stayed visible under the new one for a few frames.
+- **Solution:** the transition between screens now uses a single linear clock ([`CameraMove`](packages/design_system/lib/src/motion/camera_move.dart)): the screen behind leaves
+  completely before the new one enters.
+- **Result:** checked on the phone with a screen recording, frame by frame, and protected by a test that fails with the
   old code.
 
-### 8. One sound per control family
+### 8. Sounds that a phone speaker can actually play
 
-- **Problem:** the chosen sounds came as MP3, with leading silence and different loudness. On the phone, even at full
-  volume, they almost vanished: a phone speaker barely plays below 300–400 Hz, and the button click had 99% of its
-  energy between 150 and 300 Hz.
-- **Solution:** leading silence cut, a 2 ms fade-in and a cosine fade-out; then a custom mastering tool
-  ([`level_sounds.py`](tool/sound/level_sounds.py)) creates harmonics from the lows (the ear rebuilds the note), cuts
-  the sub-bass and gently saturates each family up to its target, measured the way the phone plays it (ITU-R BS.1770
-  K-weighting). The origin and license of each file are in [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
-- **Result:** action buttons, cards, keys, switches and chips each have their own sound, as a design system token, and
-  a test fails any sound that drops back below what the speaker can play.
+- **Problem:** the chosen sounds came as MP3, with silence at the start and different volumes. On the phone they were
+  barely audible even at full volume: a phone speaker hardly plays anything below 300–400 Hz, and the button click had
+  99% of its energy between 150 and 300 Hz.
+- **Solution:** I cut the leading silence and smoothed the start (2 ms) and the end of each sound. Then I wrote a
+  mastering script ([`level_sounds.py`](tool/sound/level_sounds.py)) that creates harmonics from the lows (the ear rebuilds the note), cuts the sub-bass and
+  gently saturates each group of controls up to its target volume, measured the way the phone plays it (K-weighting, from
+  ITU-R BS.1770). The origin and license of each file are in [`CREDITS.md`](packages/design_system/assets/CREDITS.md).
+- **Result:** action buttons, cards, keys, switches and chips each have their own sound, defined as a design system
+  item, and a test fails any sound that becomes too quiet for the speaker again.
 
-### 9. A glass widget that Android won't let you blur
+### 9. A glass-effect widget on Android
 
-- **Problem:** the home screen widget should look like glass, but an Android widget is drawn by another process
-  (`RemoteViews`): no wallpaper blur, no shader, no animation of its own.
-- **Solution:** the aurora is only diffuse light, in layers of radial gradients, and the glass is a translucent veil
-  with a rim of light: it looks frosted because what is behind it has no edges anymore. The widget's root is marked as
-  `@android:id/background`, so Android 12+ opens the app growing out of it. In the app, the `widget` route plays the
-  arrival ([`CajuiGlassArrival`](packages/design_system/lib/src/motion/cajui_glass_arrival.dart)): the Home numbers
-  come through the glass, with the aurora lit behind them.
+- **Problem:** the home screen widget should look like glass, but Android draws widgets in another process
+  (`RemoteViews`), with no wallpaper blur, no shaders and no animation of its own.
+- **Solution:** the background is an "aurora" of diffuse light, made of layers of radial gradients, and the glass is a
+  translucent film with a rim of light: it looks frosted because what is behind it has no defined edges. The widget's
+  root is marked as `@android:id/background`, which makes Android 12 or newer open the app growing out of the widget.
+  Inside the app, the `widget` route plays the arrival animation ([`CajuiGlassArrival`](packages/design_system/lib/src/motion/cajui_glass_arrival.dart)), in which the Home numbers come through the
+  glass with the aurora lit behind them.
 - **Result:** the same composition exists as design system components (`CajuiAurora`, `CajuiGlassPanel`, `CajuiOrb`),
-  and the gallery shows the whole gesture, from the tap on the widget to the arrival.
+  and the gallery shows the whole gesture, from the tap on the widget to the arrival in the app.
 
 </details>
 
-## Stack
+## Technologies
 
 | Layer             | Technologies                                                                                    |
 | ----------------- | ----------------------------------------------------------------------------------------------- |
 | App               | Flutter 3.47 (Android to use, web to look things up), Riverpod 3 with sealed state, Dart 3.13   |
 | Native (Android)  | Kotlin: share intake, on-device OCR with ML Kit, notification reading, widget, reminders        |
-| Domain            | Pure Dart, no Flutter and no `dart:io`: the same code on the phone and on the server            |
+| Domain            | Dart, no Flutter and no `dart:io`: the same code on the phone and on the server            |
 | Server            | Dart + Shelf, compiled to a single executable, on an Oracle Cloud (OCI) VM, with a TLS proxy and a system service     |
 | Data              | Event log encrypted with AES-256-GCM and chained with SHA-256, daily backup                     |
 | AI                | Claude (Messages API, with tools) or DeepSeek, behind the same `ChatClient` port                         |
@@ -400,14 +410,14 @@ thing.
 | One screen    | MVVM: the page only draws, a Riverpod `Notifier` decides, the state is sealed      | [`entries_view_model.dart`](app/lib/src/features/ledger/presentation/entries_view_model.dart)                                                                                                   |
 | The whole app | Layers (Clean), locked by a checker                                                | [`layer_rules.dart`](tool/code_metrics/lib/src/layer_rules.dart) · [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md)                                                 |
 | Navigation    | Coordinator: the ViewModel says what happened, the Coordinator decides where to go | [`core/navigation`](app/lib/src/core/navigation) · [ADR-031](docs/architecture/adr/ADR-031-navegacao-com-coordinator.md)                                                                        |
-| Dependencies  | Injection with Riverpod, wired in a single composition root                        | [`composition.dart`](app/lib/src/app/composition.dart) · [ADR-002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md) |
+| Dependencies  | Dependency injection with Riverpod, set up in a single file                        | [`composition.dart`](app/lib/src/app/composition.dart) · [ADR-002](docs/architecture/adr/ADR-002-estado-com-riverpod.md), [ADR-032](docs/architecture/adr/ADR-032-injecao-e-factory-de-cena.md) |
 | Folders       | By feature: `features/<x>/{application,infrastructure,presentation}`               | one folder per scene                                                                                                                                                                            |
 | Repository    | Monorepo of packages                                                               | [`packages/`](packages) · [ADR-001](docs/architecture/adr/ADR-001-monorepo-e-dominio-compartilhado.md)                                                                                          |
 
 <details>
-<summary><b>The class pieces and where they live in Cajui</b></summary>
+<summary><b>Architecture components and where they are in the code</b></summary>
 
-| Class piece                           | In Cajui                                                                                                                                                                                                                                                                                                                          |
+| Component                           | In the code                                                                                                                                                                                                                                                                                                                          |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Core (models, repositories, `Result`) | [`packages/domain`](packages/domain) and [`packages/api_contract`](packages/api_contract)                                                                                                                                                                                                                                         |
 | Design System                         | [`packages/design_system`](packages/design_system)                                                                                                                                                                                                                                                                                |
@@ -422,9 +432,9 @@ thing.
 </details>
 
 <details>
-<summary><b>Design patterns: where each one appears</b></summary>
+<summary><b>Design patterns: examples in the code</b></summary>
 
-| Pattern    | Where it appears                                                                                                                                                                                                                                                    |
+| Pattern    | Example in the code                                                                                                                                                                                                                                                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Factory    | `factory of(...)` in [`home_view.dart`](app/lib/src/features/home/application/home_view.dart) and [`statement_view.dart`](app/lib/src/features/cards/application/statement_view.dart)                                                                               |
 | Adapter    | [`NativeReceiptReader`](app/lib/src/features/receipts/infrastructure/native_receipt_reader.dart) fits Android's OCR into the `ReceiptReader` port; [`HttpAssistantGateway`](app/lib/src/features/assistant/infrastructure/http_assistant_gateway.dart) fits the API |
@@ -454,11 +464,11 @@ thing.
   tree **and the whole history** on every commit and every PR.
 - **Data encrypted at rest:** each record with AES-256-GCM, chained with SHA-256. It is possible to prove nobody
   touched the past.
-- **Masking before the AI, and the AI's answer treated as hostile input**, as in [challenge 4](#4-privacy-before-the-ai).
+- **Masking before the AI, and the AI's answer treated as hostile input**, as in [problem 4](#4-protecting-personal-data-before-the-ai).
 - A STRIDE threat model and an ASVS level 2 checklist live in [`docs/security`](docs/security). Where a control is
   **not** implemented, it says so.
 
-## Quality
+## Quality and tests
 
 | Item              | Status                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
@@ -468,30 +478,28 @@ thing.
 | Texts             | Every error a person reads comes from a catalog of 47 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
 | Voice             | Banned terms ("déficit", "estourou", exclamation marks) are rejected by a test across every sentence in the app |
 | Analyzer          | `very_good_analysis`, zero warnings                                                                       |
-| Custom checker    | 1,166 files, no limit broken                                                                                |
+| Custom checker    | no size or layer limit broken                                                                                |
 | Accessibility     | Lighthouse 100 on the web; semantics on from the root; the screen reader says who is speaking in the chat |
 
-**By the numbers:** 108 thousand lines of Dart in 1,168 files (40 thousand of them tests), 2.9 thousand of Kotlin, 134 non-functional requirements, 32 ADRs and 159 pull requests.
+## Problems found and fixes
 
-## What went wrong
+Real problems that showed up during development and what each one taught:
 
-Problems that showed up along the way, and how each one was solved:
+- **Tests passing, defect on the phone.** The statement reading passed hundreds of tests, but the first real PDF mixed
+  up columns ([problem 2](#2-ocr-that-scrambles-tables)). Before that, the app read the API's error body in the wrong
+  place, and the test did not notice because the fake server imitated what the app expected, not what the real server
+  sends.
+- **Installment purchase counted in full in the month it was made.** The domain already calculated it correctly, but a
+  layer of the app added things up on its own instead of asking it. A core concept of the product was working wrongly.
+- **Three error messages came out with a blank value.** A test that walks through every error code of the statement
+  reading found three texts with an unfilled placeholder.
+- **The web version had never run.** The `dart:io` HTTP client fails when created in the browser, and the app stopped
+  before its first frame, with no error message.
+- **An unreadable share closed the app on launch.** Any app can send an invalid file on purpose.
 
-- **Green tests missed what the device caught.** The statement feature passed hundreds of tests, and the first real
-  PDF mixed up columns ([challenge 2](#2-the-table-the-ocr-takes-apart)). Before that, the app read the API's error
-  body in the wrong place, and the test missed it because the fake server mimicked the client's assumption, not the
-  server.
-- **An installment purchase counted in full in the month it was made.** The domain always knew how to do it right;
-  the layer above added things up on its own instead of asking. It was the core concept of the product, broken.
-- **Three error texts came out broken.** A test that walks through every error code the statement reading can bring
-  found three unfilled placeholders.
-- **The web had never run.** The `dart:io` HTTP client breaks when created in the browser, and the app died before its
-  first frame, with no message.
-- **An unreadable share closed the app on launch.** A hostile app sends exactly that on purpose.
+All of them were found in code review or in real use, and today each one has a test that covers the case.
 
-Each one was found by an adversarial review or by real use, and each one has a test that pins the case today.
-
-## Cost
+## Operating cost
 
 **R$ 0.00 fixed.** A free Oracle VM, Let's Encrypt TLS, free dynamic DNS, repository and pipeline on GitHub, and the
 web on Vercel's Hobby plan. The only variable cost is the AI, billed per use: with DeepSeek it comes to **about R$ 0.60 a month** for 120
@@ -500,9 +508,9 @@ configuration change.
 
 ---
 
-## For developers
+## Developer guide
 
-### Getting started
+### How to run the project
 
 **Requirements:** Flutter 3.47 (with Dart 3.13), the Android SDK and an Android device or emulator. Python 3 only for
 the pipeline's checkers.
@@ -565,7 +573,7 @@ scripts/                  APK, local server and web build
 
 </details>
 
-### Publishing
+### How it is published
 
 - **Server:** a single Dart executable (`dart compile exe`), built in the pipeline and served behind a TLS proxy. The
   operation of the machine (provisioning, service, backup) is not part of this copy; the decisions are in ADRs
@@ -575,21 +583,6 @@ scripts/                  APK, local server and web build
 - **Web:** Vercel publishes `main`: the read-only web at the root and the design system gallery at `/gallery/`, both
   built by [`scripts/web.sh`](scripts/web.sh).
 - **App:** the APK is built and installed over USB, with the access key and the server address compiled in.
-
-## Roadmap
-
-- [x] Specification, brand and design system approved
-- [x] Domain with the card as a way to pay and the voucher as another currency
-- [x] Receipts by photo, screenshot and PDF, with on-device OCR and AI when the rules are not enough
-- [x] Bank notifications that become entries
-- [x] Juju: record by talking, ask with the household's numbers, speak instead of typing
-- [x] Two phones synced live and a look-up web with an authenticator
-- [x] Statements with Juju, page by page, with a batch and "Undo all"
-- [x] Due-date reminders, widget, monthly spreadsheet and 3D motion
-- [ ] Check the reading against real statements from each bank
-- [ ] Several files from the same share in a single reading
-- [x] Publish the design system gallery ([live](https://cajui-teal.vercel.app/gallery/))
-- [ ] Read the PDF's text layer, besides the OCR
 
 ## Credits
 
