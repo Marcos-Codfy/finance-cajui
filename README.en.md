@@ -6,10 +6,10 @@
 
 # Cajui
 
-**A household's money, in one conversation.**
+**Manage your finances by chatting with the app.**
 
 An Android personal-finance app with an AI assistant: you chat to record expenses, and the app reads statements and
-receipts and answers with the month's numbers. It is a complete project built from scratch: specification, a pure-Dart
+receipts and answers with the month's numbers. It is a complete project built from scratch: specification, a Dart
 domain, a Flutter app, a cloud server of my own and a design system with a published gallery.
 
 <picture>
@@ -17,7 +17,7 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
   <img src="docs/media/demo.webp" width="320" alt="A 45-second demo of Cajui with made-up data: a shared bank statement opens in the conversation with Juju, who summarizes 12 movements; the Groceries block is checked with its lines open, the next blocks are confirmed, the bakery gets a category, a Pix to a person becomes 'someone in the household' and 9 entries are recorded at once. Then the camera moves to Home, the 3D carousel shows what is left, what comes in and what goes out, My month opens and the card wallet appears." />
 </picture>
 
-<sub>Recorded from the real app, running with a made-up household. No number belongs to anyone.</sub>
+<sub>Recorded from the real app, running with made-up data. No number is real.</sub>
 
 ![CI](https://github.com/Marcos-Codfy/finance-cajui/actions/workflows/ci.yml/badge.svg)
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
@@ -39,17 +39,16 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
 
 ---
 
-**For reviewers:** [About the project](#about-the-project) · [Visuals](#visuals) · [Architecture](#architecture) ·
+**If you want to get to know the project:** [About the project](#about-the-project) · [Visuals](#visuals) · [Architecture](#architecture) ·
 [Challenges I solved](#challenges-i-solved) · [Stack](#stack) · [Patterns applied](#design-patterns-applied) ·
 [Security and privacy](#security-and-privacy) · [Quality](#quality) · [What went wrong](#what-went-wrong)<br />
-**For developers:** [Getting started](#getting-started) · [Scripts](#scripts) · [Structure](#project-structure) ·
+**If you want to run it:** [Getting started](#getting-started) · [Scripts](#scripts) · [Structure](#project-structure) ·
 [Publishing](#publishing) · [Roadmap](#roadmap)
 
 ## About the project
 
 Cajui is an Android personal-finance app that I started to keep track of my household's bills, in place of a
-spreadsheet that took work to maintain. The first version was the spreadsheet in app form, and the people using it found
-filling everything in tiring. So I changed the focus: instead of screens to fill in, you chat with an assistant (Juju),
+spreadsheet that took work to maintain. The first version was the spreadsheet in app form, and I found filling everything in tiring. So I changed the focus: instead of screens to fill in, you chat with an assistant (Juju),
 and the app uses what the bank already sends, such as notifications, statements and receipts. Today two phones share the
 same ledger, synced, and there is a web page just for looking things up.
 
@@ -64,7 +63,7 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 
 ### What it does
 
-- **Entries by conversation.** You type or dictate "spent 35 at the market", and the app creates the entry with a
+- **Entries by conversation.** You type or speak "spent 35 at the market", and the app creates the entry with a
   category and a payment method. You can undo it right after.
 - **Questions about the month.** The assistant answers how much is left, what is due and how much is missing to close
   the month, using the app's own numbers.
@@ -87,20 +86,16 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 | Domain          | Pure Dart shared by app and server; sealed `Result` and `Failure`; money as integer cents; numbered business rules, each with a test | [`packages/domain`](packages/domain) |
 | AI              | Claude (Messages API, with *tool use*) behind a swappable interface; personal data masked before it leaves; every value the AI writes is checked | [ADR-010](docs/architecture/adr/ADR-010-integracao-com-a-deepseek.md), [021](docs/architecture/adr/ADR-021-assistente-que-age.md), [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) |
 | Server          | Dart + Shelf, single executable, on Oracle Cloud (OCI), with TLS; encrypted, hash-chained event log; documented API | [`server/`](server), [`docs/api.md`](docs/api.md) |
-| Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with 69 screen states; the app does not define colors on its own | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
-| Native Android  | Share intake, on-device OCR, bank notifications, home screen widget, reminders and dictation | [`app/android`](app/android) |
+| Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with the screen states | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
+| Native Android  | Share intake, on-device OCR, bank notifications, home screen widget, reminders and voice input | [`app/android`](app/android) |
 | Quality         | 1,850 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Process         | 32 ADRs, Conventional Commits, pull requests and CI on GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Decisions that guided the project
 
 Two decisions shaped the rest. The first: the AI only reads and suggests; the domain does the math and applies the
-rules, in pure Dart, used by both the app and the server. The second: in the statement conversation, Juju's sentences
+rules, in Dart, used by both the app and the server. The second: in the statement conversation, Juju's sentences
 are built by the app from the domain's numbers, not by the model, so what she says matches what the screen shows.
-
-I also learned that tests alone are not enough. The statement flow passed hundreds of tests and, on the first real PDF,
-the OCR returned the table by columns and mixed up two lines ([challenge 2](#2-the-table-the-ocr-takes-apart)). Since
-then I check every new screen in the browser and on the phone.
 
 ### How to make use of this project
 
@@ -111,7 +106,7 @@ then I check every new screen in the browser and on the phone.
   AI key stays outside the repository.
 - **Reuse the design system.** The [`packages/design_system`](packages/design_system) package depends on neither the app
   nor Riverpod, and the [gallery](https://cajui-teal.vercel.app/gallery/) shows every component in every state.
-- **Reuse the domain.** The [`packages/domain`](packages/domain) package is pure Dart (money, installments, card
+- **Reuse the domain.** The [`packages/domain`](packages/domain) package is plain Dart, with no Flutter (money, installments, card
   statements, the month's budget) and fits another app or server.
 - **Study the decisions.** The [ADRs](docs/architecture/adr) explain the reason behind each choice, and the
   [API documentation](docs/api.md) describes every server route.
@@ -152,7 +147,7 @@ flowchart LR
     NAT["Kotlin<br/>OCR · notifications · widget"]
     LOG[("Local ledger<br/>encrypted events")]
   end
-  DOM["Domain<br/>pure Dart"]
+  DOM["Domain<br/>Dart"]
   subgraph VM["Server (VM)"]
     API["Shelf API"]
     STORE[("Event log<br/>AES-256-GCM + SHA-256")]
@@ -171,27 +166,27 @@ flowchart LR
   API --> AI --> DS
 ```
 
-**The statement with Juju**, from sharing to the saved batch:
+**How a statement becomes entries**, from the moment you share it to the moment it is saved:
 
 ```mermaid
 sequenceDiagram
-  participant P as Person
+  participant Y as You
   participant C as Phone
   participant S as Server
   participant I as AI
-  P->>C: shares the PDF from the bank's app
-  C->>C: OCR per page, rows by position, numbers repaired
-  C->>C: recognizes the statement and masks names, tax IDs and accounts
-  loop each page
-    C->>S: numbered lines, already masked
-    S->>I: fixed instructions + data between markers
-    I-->>S: movements as JSON
-    S-->>C: only those that pass the schema and have the amount written
+  Y->>C: shares the statement's PDF
+  C->>C: reads each page with OCR and rebuilds the lines
+  C->>C: recognizes the statement and hides names, CPF and account
+  loop for each page
+    C->>S: sends the lines, with the personal data already hidden
+    S->>I: asks for the page's transactions
+    I-->>S: returns the transactions as JSON
+    S-->>C: passes on only those that pass validation and whose amount is written in the text
     C->>C: asks again for dated lines with an amount that went missing
   end
-  C->>P: summary, blocks by category, one question at a time
-  P->>C: Record (N)
-  C->>S: batch with content-based keys
+  C->>Y: shows the summary, the blocks by category and the questions
+  Y->>C: confirms ("Record it")
+  C->>S: saves the batch, with keys built from the content (nothing duplicates)
 ```
 
 More in the [ADRs](docs/architecture/adr): [030](docs/architecture/adr/ADR-030-extrato-pela-juju.md) covers the
@@ -267,14 +262,14 @@ consumer:
 - **Motion and sound**: depth scrolling, a cinematic entrance and one sound per control family, with three motion levels
   and respect for "reduce motion".
 - **Accessibility**: computed contrast, 48 dp touch targets, enlarged system fonts and screen readers.
-- **The gallery** ([live](https://cajui-teal.vercel.app/gallery/)) is the sample app: it shows every component, every app screen in 69 states and every
+- **The gallery** ([live](https://cajui-teal.vercel.app/gallery/)) is the sample app: it shows every component, every app screen in its states and every
   design decision, with dark theme, sound and motion adjustable.
 
 ### The native side (Android)
 
 The Kotlin modules cover what Flutter doesn't reach: receiving image, PDF and text shares; on-device OCR with ML Kit
 (the PDF is rasterized by Android itself); reading the banks' notifications; the glass home screen widget; due-date
-reminders; voice dictation; and the device key kept in the Keystore.
+reminders; voice input (speaking instead of typing); and the device key kept in the Keystore.
 
 ## Challenges I solved
 
@@ -555,7 +550,7 @@ app/                      Flutter: Android to use, web to look things up
   lib/src/features/       assistant, statements, receipts, ledger, budget, cards, home, export, reminders…
   android/                Kotlin: share intake, OCR, notifications, widget, reminders
 packages/
-  domain/                 business rules in pure Dart
+  domain/                 business rules in Dart
   api_contract/           DTOs, strict JSON reading, error catalog
   persistence/            encrypted event log with a hash chain
   design_system/          tokens, components, motion, sounds
@@ -585,7 +580,7 @@ scripts/                  APK, local server and web build
 - [x] Domain with the card as a way to pay and the voucher as another currency
 - [x] Receipts by photo, screenshot and PDF, with on-device OCR and AI when the rules are not enough
 - [x] Bank notifications that become entries
-- [x] Juju: record by talking, ask with the household's numbers, dictate
+- [x] Juju: record by talking, ask with the household's numbers, speak instead of typing
 - [x] Two phones synced live and a look-up web with an authenticator
 - [x] Statements with Juju, page by page, with a batch and "Undo all"
 - [x] Due-date reminders, widget, monthly spreadsheet and 3D motion
