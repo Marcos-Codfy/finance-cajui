@@ -45,7 +45,32 @@ abstract final class StatementMovements {
       if (line != null && !seen.add('$line-${movement.amount.cents}')) continue;
       movements.add(movement);
     }
-    return movements;
+    return _withoutTotal(movements);
+  }
+
+  /// O cabeçalho de mês com a soma dele ("Novembro  -R$ 2.150,00") não é
+  /// movimentação, diga a IA o nome que disser (17/11/2026).
+  static bool _isMonthHeader(Object? description, String written) =>
+      AiStatementLines.isMonthHeader(description) ||
+      AiStatementLines.isMonthHeader(
+        written.replaceAll(RegExp(r'R\$|[-+\d.,]'), ' '),
+      );
+
+  /// Sem a saída que é a soma das outras saídas da página: o total escrito
+  /// sem a palavra "total" (17/11/2026). Só com duas saídas ou mais
+  /// somando, para não tirar uma compra repetida.
+  static List<StatementMovement> _withoutTotal(List<StatementMovement> all) {
+    final out = [
+      for (final m in all)
+        if (m.kind == StatementLineKind.expense) m,
+    ];
+    if (out.length < 3) return all;
+    final sum = out.fold(Money.zero, (total, m) => total + m.amount);
+    return [
+      for (final m in all)
+        if (m.kind != StatementLineKind.expense || sum - m.amount != m.amount)
+          m,
+    ];
   }
 
   static StatementMovement? _movement(
@@ -58,6 +83,7 @@ abstract final class StatementMovements {
     final line = _sourceLine(_int(item['line']), numbers.amount, page);
     if (line == null && !page.hasImage) return null;
     final written = line == null ? '' : page.lines[line - 1];
+    if (_isMonthHeader(item['description'], written)) return null;
     if (!_dateFits(numbers, written, text, page)) return null;
     final description = _description(item['description'], written);
     final (kind, doubtful) = _kind(item['kind'], written, description);

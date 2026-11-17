@@ -99,6 +99,8 @@ abstract final class ReceiptFieldReader {
     ],
     DocumentKind.ownTransfer: [
       'saque',
+      'aplicação',
+      'resgate',
       'transferência entre contas',
       'transf entre contas',
     ],

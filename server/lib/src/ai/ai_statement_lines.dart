@@ -18,8 +18,28 @@ abstract final class AiStatementLines {
   static List<StatementLine> parse(Object? raw, ClassificationRequest request) {
     if (raw is! List<Object?>) return const [];
     final inText = ReceiptFieldReader.amountsIn(request.text);
-    return [
+    return withoutTotals([
       for (final item in raw.take(maxLines)) ?_line(item, request, inText),
+    ]);
+  }
+
+  /// [lines] sem a linha que é a soma das outras saídas: o total do mês ou
+  /// da página que o banco escreve sem a palavra "total". Lida como linha,
+  /// ela conta o mês inteiro duas vezes. Só vale com duas saídas ou mais
+  /// somando — uma só seria a mesma compra, e não um total.
+  static List<StatementLine> withoutTotals(List<StatementLine> lines) {
+    final spending = [
+      for (final line in lines)
+        if (line.kind == StatementLineKind.expense) line,
+    ];
+    if (spending.length < 3) return lines;
+    final all = spending.fold(Money.zero, (sum, line) => sum + line.amount);
+    bool isTotal(StatementLine line) =>
+        line.kind == StatementLineKind.expense &&
+        all - line.amount == line.amount;
+    return [
+      for (final line in lines)
+        if (!isTotal(line)) line,
     ];
   }
 
