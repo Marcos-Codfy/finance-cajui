@@ -394,7 +394,7 @@ Each item describes the problem, the solution and the result.
 | Domain            | Dart, no Flutter and no `dart:io`: the same code on the phone and on the server            |
 | Server            | Dart + Shelf, compiled to a single executable, on an Oracle Cloud (OCI) VM, with a TLS proxy and a system service     |
 | Data              | Event log encrypted with AES-256-GCM and chained with SHA-256, daily backup                     |
-| AI                | Claude (Messages API, with tools) or DeepSeek, behind the same `ChatClient` port                         |
+| AI                | DeepSeek V4 (`deepseek-v4-pro` for chat and statements, `deepseek-v4-flash` for receipts) or Claude, behind the same `ChatClient` port |
 | Design system     | Own package with tokens, components, glass, 3D motion and sounds; gallery published on Vercel   |
 | Quality           | `very_good_analysis`, custom checker, per-package coverage floors, secret scanning              |
 | Pipeline          | GitHub Actions, Conventional Commits, Vercel for the web                                        |

@@ -66,3 +66,14 @@ O domínio conhece duas portas, `ReceiptClassifier` e `Assistant`. A DeepSeek é
 - **Suíte de comprovantes maliciosos** (Fase 5): textos com "ignore as instruções", com JSON embutido, com categoria falsa, com valor adulterado. Critério: a classificação não muda, e nada fora do esquema é aceito.
 - Teste do mascaramento com um texto por tipo de dado pessoal, e a garantia de que o marcador saiu no lugar do dado.
 - Teste do orçamento: no teto, nenhuma chamada sai.
+
+## Atualização de 17/11/2026 — DeepSeek V4 e a auditoria dos números do mês
+
+- **Modelos.** A conversa da Juju e a leitura de extrato usam `deepseek-v4-pro`, o modelo mais forte. A classificação de comprovante continua no `deepseek-v4-flash`, porque precisa caber no prazo de 8 s. Os prazos subiram para 40 s (conversa) e 50 s (página de extrato). O modo de raciocínio continua desligado: com ferramentas, ele obrigaria a devolver o raciocínio a cada volta, e a resposta ficaria mais lenta sem ganho para escolher numa lista.
+- **Auditoria.** O mês foi refeito a partir do registro de eventos do servidor, com o mesmo `Finances` do domínio que o app usa. Servidor e app chegaram ao mesmo número: a conta estava certa, e os dados que entraram estavam errados.
+  - Um cabeçalho de mês do app do banco ("Novembro", com a soma das linhas do mês) entrou como despesa.
+  - Um "Pagamento da fatura" entrou como gasto. O dinheiro foi contado duas vezes: nas compras do cartão e no pagamento.
+- **Correções.**
+  - A leitura de extrato descarta linha cujo nome é só um mês.
+  - "Pagamento da fatura", "pagamento fatura", "pgto da fatura" e "fatura paga" passam a ser reconhecidos pelas palavras da linha, e a palavra vence o que a IA disser (RN-756).
+  - A Juju (prompt v9) não concorda com número que não está no resumo e, quando a pessoa estranhar o mês, procura o lançamento fora do padrão.
