@@ -7,6 +7,7 @@ import 'package:server/src/assistant/assistant_tool_catalog.dart';
 import 'package:server/src/assistant/debt_paydown.dart';
 import 'package:server/src/assistant/due_bills_listing.dart';
 import 'package:server/src/assistant/entry_listing.dart';
+import 'package:server/src/assistant/income_undo.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
 import 'package:server/src/assistant/tool_refusal.dart';
@@ -52,6 +53,12 @@ final class AssistantTools {
 
   final AssistantActions _actions;
 
+  late final IncomeUndo _incomes = IncomeUndo(
+    state: state,
+    store: store,
+    clock: clock,
+  );
+
   /// As ferramentas que vão para o modelo: na sessão só de leitura, só a
   /// consulta — o que não é oferecido o modelo nem tenta.
   List<ChatTool> get offered => readOnly
@@ -81,7 +88,7 @@ final class AssistantTools {
 
   Future<ToolOutcome> _dispatch(ToolCall call) => switch (call.name) {
     AssistantToolCatalog.recordExpense => _actions.record(call.arguments),
-    AssistantToolCatalog.cancelEntry => _actions.cancel(call.arguments),
+    AssistantToolCatalog.cancelEntry => _cancel(call.arguments),
     AssistantToolCatalog.recordIncome => _actions.income(call.arguments),
     AssistantToolCatalog.recategorize => _actions.recategorize(call.arguments),
     AssistantToolCatalog.payDownDebt => _paydown.pay(call.arguments),
@@ -93,6 +100,14 @@ final class AssistantTools {
       ToolOutcome.failed('ferramenta desconhecida: ${call.name}'),
     ),
   };
+
+  /// O mesmo pedido cancela despesa ou desfaz recebimento: a pessoa diz
+  /// "tira isso", e o id que a listagem deu diz o que é.
+  Future<ToolOutcome> _cancel(Map<String, Object?> args) {
+    final id = args['id'];
+    if (id is String && _incomes.owns(id)) return _incomes.cancel(id);
+    return _actions.cancel(args);
+  }
 
   Future<ToolOutcome> _list(Map<String, Object?> args) async {
     final month = ToolArgs.month(args, 'mes') ?? clock.today().budgetMonth;
