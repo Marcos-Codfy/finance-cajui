@@ -48,7 +48,7 @@ final class AiStatementReader {
     required this.client,
     required this.budget,
     required this.breaker,
-    this.timeout = const Duration(seconds: 35),
+    this.timeout = const Duration(seconds: 50),
     SuggestionCache? cache,
   }) : cache = cache ?? SuggestionCache();
 

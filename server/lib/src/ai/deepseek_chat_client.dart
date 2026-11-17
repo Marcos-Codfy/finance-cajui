@@ -25,8 +25,12 @@ final class DeepSeekChatClient extends ChatClient {
   /// O nome da credencial que o systemd entrega ao serviço.
   static const credentialName = 'cajui-deepseek-key';
 
-  /// O modelo leve: responde em segundos e sabe pedir ferramentas.
-  static const model = 'deepseek-flash';
+  /// O modelo leve, para classificar um comprovante dentro do prazo de 8 s.
+  static const model = 'deepseek-v4-flash';
+
+  /// O modelo mais forte, para a conversa da Juju e a leitura de extrato:
+  /// é onde um número errado vira lançamento errado (17/11/2026).
+  static const converseModel = 'deepseek-v4-pro';
 
   static final Uri _endpoint = Uri.https(
     'api.deepseek.com',
@@ -68,7 +72,7 @@ final class DeepSeekChatClient extends ChatClient {
     List<ChatTool> tools = const [],
     bool json = false,
   }) => _send({
-    'model': model,
+    'model': converseModel,
     'messages': [for (final message in messages) message.toJson()],
     if (tools.isNotEmpty) 'tools': [for (final tool in tools) tool.toJson()],
     if (json) 'response_format': {'type': 'json_object'},
