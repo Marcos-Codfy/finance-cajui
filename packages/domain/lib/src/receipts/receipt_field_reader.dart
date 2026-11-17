@@ -77,7 +77,12 @@ abstract final class ReceiptFieldReader {
   static const Map<DocumentKind, List<String>> _kindWords = {
     DocumentKind.statementPayment: [
       'pagamento de fatura',
+      'pagamento da fatura',
+      'pagamento fatura',
+      'pagto fatura',
       'pgto fatura',
+      'pgto da fatura',
+      'fatura paga',
       'fatura do cartão',
       'pagamento cartão de crédito',
     ],

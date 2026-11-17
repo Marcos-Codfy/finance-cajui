@@ -14,7 +14,7 @@ import 'package:server/src/auth/secure_random.dart';
 abstract final class StatementPrompt {
   /// A versão das instruções. Entra na chave do cache: mudar as instruções
   /// invalida o que foi guardado (RN-778).
-  static const version = 3;
+  static const version = 4;
 
   /// As instruções fixas: sem segredo, sem dado de ninguém (RN-771).
   static const system = r'''
@@ -62,6 +62,8 @@ nesta ordem:
       débito, "debit" — "creditCard" só na fatura do cartão de crédito
 Linha de saldo ("Saldo do dia", "Saldo disponível", "Saldo anterior"), de
 total, de limite ou de juros previstos fica de fora: não é movimentação.
+Cabeçalho de mês com o total do mês ("Novembro  - R$ 2.150,00", "Outubro
+2026 R$ 1.200,00") também fica de fora: é a soma das linhas, não um gasto.
 "[NOME]" é o nome de uma pessoa, escondido de propósito: não tente adivinhar.
 Os "examples" são escolhas anteriores do usuário para estabelecimentos:
 siga-as.

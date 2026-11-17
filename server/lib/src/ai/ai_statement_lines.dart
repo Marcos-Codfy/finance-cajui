@@ -30,7 +30,7 @@ abstract final class AiStatementLines {
   ) {
     if (item is! Map<String, Object?>) return null;
     final amount = amountOf(item['amountCents']);
-    if (amount == null) return null;
+    if (amount == null || isMonthHeader(item['description'])) return null;
     // Sem a foto, número fora do texto é número inventado (RN-774).
     if (!request.hasImages && !inText.contains(amount)) return null;
     final date = AiSuggestion.plausibleDate(item['occurredOn'], request);
@@ -65,6 +65,21 @@ abstract final class AiStatementLines {
       null => (StatementLineKind.expense, true),
     };
   }
+
+  /// Se [raw] é só o nome de um mês, com ou sem o ano: o cabeçalho que o
+  /// app do banco põe sobre as linhas de cada mês, com a soma delas. Lido
+  /// como linha, ele vira um gasto do tamanho do mês inteiro — foi assim
+  /// que um "Novembro" com a soma do mês entrou como despesa (17/11/2026).
+  static bool isMonthHeader(Object? raw) =>
+      raw is String &&
+      _monthHeader.hasMatch(
+        raw.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' '),
+      );
+
+  static final RegExp _monthHeader = RegExp(
+    '^(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|'
+    r'outubro|novembro|dezembro)( de)?( \d{4})?$',
+  );
 
   static const Map<DocumentKind, StatementLineKind> _byWords = {
     DocumentKind.statementPayment: StatementLineKind.cardPayment,
