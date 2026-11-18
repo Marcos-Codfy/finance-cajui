@@ -29,6 +29,19 @@ final class CardMonthUsage {
   }) {
     final limit = card.creditLimit;
     if (limit == null) return null;
+    final used = spentIn(card, month, entries: entries, reversals: reversals);
+    return CardMonthUsage(limit: limit, used: used);
+  }
+
+  /// O que passou por [card] em [month], já descontados os estornos — com ou
+  /// sem limite cadastrado. Sem limite, a tela de Cartões continua dizendo
+  /// quanto se usou: antes a compra no cartão só aparecia dentro da fatura.
+  static Money spentIn(
+    CreditCard card,
+    BudgetMonth month, {
+    required Iterable<Entry> entries,
+    Iterable<Reversal> reversals = const [],
+  }) {
     var used = Money.zero;
     for (final entry in entries) {
       if (entry.occurredOn.budgetMonth != month) continue;
@@ -42,7 +55,7 @@ final class CardMonthUsage {
         used -= reversal.line.amount;
       }
     }
-    return CardMonthUsage(limit: limit, used: used.orZeroIfNegative);
+    return used.orZeroIfNegative;
   }
 
   /// O limite do cartão.

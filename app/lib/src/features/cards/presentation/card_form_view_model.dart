@@ -41,6 +41,9 @@ class CardFormViewModel extends Notifier<CardFormState> {
           creditLimit: draft.creditLimit,
           skin: draft.skin,
         );
+    // A tela pode ter fechado durante a gravação: o fato já está no livro,
+    // e mexer no estado de um provider descartado lança erro.
+    if (!ref.mounted) return;
     state = switch (result) {
       Ok() => const CardFormSaved(),
       Err(:final failure) => CardFormEditing(

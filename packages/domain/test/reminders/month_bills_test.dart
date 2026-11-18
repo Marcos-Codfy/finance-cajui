@@ -44,4 +44,27 @@ void main() {
       expect(paid['Internet'], isFalse);
     });
   });
+
+  group('as contas pagas no cartão vão para a aba de cartões', () {
+    test('o que "Minhas contas" cobra no cartão aparece nele, e só nele', () {
+      final finances = reminderFinances();
+
+      expect(
+        finances.plannedOnCard(nubank, october),
+        const Money.fromCents(2000),
+        reason: 'a Música é a única conta paga no Nubank',
+      );
+    });
+
+    test('cartão sem conta do plano não ganha previsto', () {
+      final other = CreditCard.create(
+        id: 'outro',
+        name: 'Outro',
+        closingDay: 1,
+        dueDay: 8,
+      ).valueOrNull!;
+
+      expect(reminderFinances().plannedOnCard(other, october), Money.zero);
+    });
+  });
 }

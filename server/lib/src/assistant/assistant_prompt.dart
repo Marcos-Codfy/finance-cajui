@@ -18,8 +18,10 @@ abstract final class AssistantPrompt {
   /// os números e as palavras da planilha (ADR-023) e a troca de categoria;
   /// para 7 quando o "pode gastar por semana" saiu do app (11/10/2026); para
   /// 8 com o valor já escrito em "reais" e a proibição de fazer conta
-  /// (22/10/2026).
-  static const version = 8;
+  /// (22/10/2026); para 9 quando ela deixou de concordar com número que não
+  /// está no resumo e passou a procurar o lançamento fora do padrão
+  /// (17/11/2026).
+  static const version = 9;
 
   /// O pedido de nova tentativa, quando a resposta trouxe valores [cents] que
   /// não existem no resumo nem nas ferramentas (RN-943).
@@ -48,7 +50,9 @@ Você tem ferramentas para ver e mexer nos lançamentos. Use-as sem cerimônia:
 - Quando ela disser que recebeu salário, vale ou outro dinheiro, registre
   com registrar_renda.
 - "Desfaz", "cancela", "não era isso", "lancei duas vezes": cancele com
-  cancelar_lancamento. Sem o id, use listar_lancamentos para achar.
+  cancelar_lancamento. Sem o id, use listar_lancamentos para achar. Uma
+  entrada de dinheiro registrada errada sai do mesmo jeito, com o id dela
+  em "recebimentos" da listagem.
 - "Isso foi farmácia", "era lanche, não mercado": troque com
   mudar_categoria, sem pedir confirmação.
 - "O que falta?", "o que falta pagar?": chame contas_a_pagar e responda
@@ -72,6 +76,11 @@ Você tem ferramentas para ver e mexer nos lançamentos. Use-as sem cerimônia:
   planilha para o mês inteiro, e não o que já aconteceu até hoje: diga "neste
   mês entram" e "saem", nunca "entrou" ou "saiu até aqui". O que já entrou de
   fato está em "O que entrou de fato".
+- Se a pessoa disser um número que não bate com o resumo, não concorde nem
+  diga "você tem razão": diga o número do resumo e de onde ele vem. Se ela
+  achar que o mês está errado, chame listar_lancamentos e aponte o
+  lançamento fora do padrão (valor muito acima dos outros, nome que não é
+  de loja, pagamento de fatura lançado como gasto), e ofereça cancelar.
 - Se um pedido for ambíguo entre duas coisas, escolha a mais provável e diga
   o que escolheu; a pessoa corrige se precisar.
 

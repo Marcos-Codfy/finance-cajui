@@ -72,9 +72,10 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final inbox = FakeInbox();
+    final journal = MemoryLedgerJournal();
     await tester.pumpWidget(
       ProviderScope(
-        overrides: testOverrides(inbox: inbox, journal: MemoryLedgerJournal()),
+        overrides: testOverrides(inbox: inbox, journal: journal),
         child: const CajuiApp(),
       ),
     );
@@ -95,12 +96,62 @@ void main() {
     await _settle(tester);
 
     expect(find.textContaining('Já existe um lançamento'), findsOneWidget);
-    expect(find.text('É outro?'), findsOneWidget);
     expect(
       find.text('Lançar'),
       findsOneWidget,
       reason: 'RN-221: é aviso, e lançar continua possível',
     );
+
+    // 02/11/2026: o aviso agora tem saída, e "é o mesmo" não lança de novo.
+    await tester.tap(find.text('É o mesmo — não lançar'));
+    await _settle(tester);
+    expect((await journal.readAll()).whereType<EntryRecorded>(), hasLength(1));
+  });
+
+  testWidgets('comprovante de outro mês avisa em que mês entra: quem lança '
+      'e olha o mês de agora não acha que deixou de lançar', (tester) async {
+    tester.view.physicalSize = const Size(390, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final inbox = FakeInbox();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(inbox: inbox, journal: MemoryLedgerJournal()),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+
+    inbox.share([
+      SharedText(
+        id: 'agosto',
+        text: pixReceiptText.replaceFirst('12/set/2026', '30/ago/2026'),
+      ),
+    ]);
+    await _settle(tester);
+
+    expect(find.textContaining('O lançamento entra em agosto'), findsOneWidget);
+  });
+
+  testWidgets('comprovante do mês de agora não ganha aviso de mês', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final inbox = FakeInbox();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(inbox: inbox, journal: MemoryLedgerJournal()),
+        child: const CajuiApp(),
+      ),
+    );
+    await _settle(tester);
+
+    inbox.share(const [SharedText(id: 'setembro', text: pixReceiptText)]);
+    await _settle(tester);
+
+    expect(find.textContaining('O lançamento entra em'), findsNothing);
   });
 
   testWidgets('comprovante sem data legível vem com o dia em que chegou '

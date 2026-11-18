@@ -27,6 +27,8 @@ class CardsPage extends ConsumerWidget {
     final month = ref.watch(todayProvider).budgetMonth;
     CardMonthUsage? usageOf(CreditCard card) =>
         finances?.cardUsage(card, month);
+    ({Money planned, Money spent}) amountsOf(CreditCard card) =>
+        _amounts(finances, card, month);
     final tilt = _tilt(context, ref);
     return CajuiScreen(
       title: 'Cartões de crédito',
@@ -43,7 +45,7 @@ class CardsPage extends ConsumerWidget {
             alert,
             const SizedBox(height: CajuiSpacing.md),
           ],
-        if (cards.isNotEmpty) _wallet(context, cards, usageOf, tilt),
+        if (cards.isNotEmpty) _wallet(context, cards, usageOf, amountsOf, tilt),
       ],
     );
   }
@@ -55,6 +57,7 @@ class CardsPage extends ConsumerWidget {
     BuildContext context,
     List<CreditCard> cards,
     CardMonthUsage? Function(CreditCard card) usageOf,
+    ({Money planned, Money spent}) Function(CreditCard card) amountsOf,
     CajuiTilt? tilt,
   ) => CajuiWalletStack(
     // A chave guarda o leque aberto quando um aviso de limite aparece acima.
@@ -66,10 +69,20 @@ class CardsPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _plastic(context, card, usageOf(card), tilt),
-            _row(context, card, usageOf(card)),
+            _row(context, card, usageOf(card), amountsOf(card)),
           ],
         ),
     ],
+  );
+
+  /// O que as contas do mês cobram no cartão e o que passou por ele no mês.
+  static ({Money planned, Money spent}) _amounts(
+    Finances? finances,
+    CreditCard card,
+    BudgetMonth month,
+  ) => (
+    planned: finances?.plannedOnCard(card, month) ?? Money.zero,
+    spent: finances?.spentOnCard(card, month) ?? Money.zero,
   );
 
   static Widget _register(BuildContext context) => CajuiButton(
@@ -150,25 +163,43 @@ class CardsPage extends ConsumerWidget {
   }
 
   /// O uso do mês em texto; sem limite informado, os dias do cartão.
-  static String _usageText(CreditCard card, CardMonthUsage? usage) {
+  static String _usageText(
+    CreditCard card,
+    CardMonthUsage? usage,
+    ({Money planned, Money spent}) month,
+  ) {
     final days = 'fecha dia ${card.closingDay} · vence dia ${card.dueDay}';
-    if (usage == null) return days;
-    final left = usage.left;
+    // As contas de "Minhas contas" pagas neste cartão: sem esta linha, a
+    // assinatura cadastrada no cartão não aparecia em lugar nenhum.
+    final bills = month.planned.isPositive
+        ? 'contas do mês ${BrlFormatter.format(month.planned.cents)} · '
+        : '';
+    final used = 'Usei ${BrlFormatter.format(month.spent.cents)} este mês · ';
+    if (usage == null) {
+      // Sem limite não há sobra, mas a compra no cartão aparece aqui, e não
+      // só dentro da fatura.
+      return '${month.spent.isPositive ? used : ''}$bills$days';
+    }
+    // A sobra desconta as contas do mês no cartão: elas vão cair nele.
+    final left = usage.left - month.planned;
     final sobra = left.isNegative
         ? 'passou ${BrlFormatter.format(-left.cents)}'
         : 'sobra ${BrlFormatter.format(left.cents)}';
-    return 'Usei ${BrlFormatter.format(usage.used.cents)} este mês · $sobra'
-        ' · $days';
+    return '$used$bills$sobra · $days';
   }
 
-  Widget _row(BuildContext context, CreditCard card, CardMonthUsage? usage) =>
-      CajuiListRow(
-        leading: const CajuiIcon(CajuiIconData.card),
-        title: card.name,
-        subtitle: _usageText(card, usage),
-        trailing: const CajuiIcon(CajuiIconData.chevronRight),
-        semanticLabel: '${card.name}, ver a fatura',
-        onPressed: () =>
-            context.coordinator(cardsCoordinatorProvider).openStatement(card),
-      );
+  Widget _row(
+    BuildContext context,
+    CreditCard card,
+    CardMonthUsage? usage,
+    ({Money planned, Money spent}) month,
+  ) => CajuiListRow(
+    leading: const CajuiIcon(CajuiIconData.card),
+    title: card.name,
+    subtitle: _usageText(card, usage, month),
+    trailing: const CajuiIcon(CajuiIconData.chevronRight),
+    semanticLabel: '${card.name}, ver a fatura',
+    onPressed: () =>
+        context.coordinator(cardsCoordinatorProvider).openStatement(card),
+  );
 }

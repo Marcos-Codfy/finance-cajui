@@ -37,7 +37,7 @@ final class AssistantService {
     required this.budget,
     required this.breaker,
     ConversationWindow? window,
-    this.timeout = const Duration(seconds: 25),
+    this.timeout = const Duration(seconds: 40),
   }) : window = window ?? ConversationWindow();
 
   /// O cliente da IA.

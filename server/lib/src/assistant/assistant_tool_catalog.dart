@@ -80,12 +80,17 @@ abstract final class AssistantToolCatalog {
     ChatTool(
       name: cancelEntry,
       description:
-          'Cancela um lançamento pelo id: "desfaz", "não era isso", "lancei '
-          'duas vezes". Sem o id, liste os lançamentos antes.',
+          'Cancela um lançamento, ou desfaz um recebimento, pelo id: '
+          '"desfaz", "não era isso", "lancei duas vezes", "essa entrada está '
+          'errada". Sem o id, liste os lançamentos antes: a listagem traz os '
+          'lançamentos e os recebimentos do mês.',
       parameters: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'O id do lançamento.'},
+          'id': {
+            'type': 'string',
+            'description': 'O id do lançamento ou do recebimento.',
+          },
         },
         'required': ['id'],
       },
@@ -158,7 +163,10 @@ abstract final class AssistantToolCatalog {
       parameters: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'O id do lançamento.'},
+          'id': {
+            'type': 'string',
+            'description': 'O id do lançamento ou do recebimento.',
+          },
           'categoria_id': {
             'type': 'string',
             'description': 'O id da categoria nova, do cadastro.',

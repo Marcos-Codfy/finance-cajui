@@ -203,6 +203,24 @@ final class Finances {
   CardMonthUsage? cardUsage(CreditCard card, BudgetMonth month) =>
       CardMonthUsage.of(card, month, entries: entries, reversals: reversals);
 
+  /// O que passou por [card] em [month], com ou sem limite cadastrado.
+  Money spentOnCard(CreditCard card, BudgetMonth month) =>
+      CardMonthUsage.spentIn(
+        card,
+        month,
+        entries: entries,
+        reversals: reversals,
+      );
+
+  /// O que as contas de "Minhas contas" pagas em [card] cobram nele em
+  /// [month]. Elas saem das contas a pagar porque chegam pela fatura, e sem
+  /// isto sumiam também da aba de cartões: a assinatura cadastrada no cartão
+  /// não aparecia em lugar nenhum (02/11/2026).
+  Money plannedOnCard(CreditCard card, BudgetMonth month) =>
+      planFor(month).lines
+          .where((line) => line.paymentMethodId == card.id)
+          .fold(Money.zero, (sum, line) => sum + line.amount);
+
   /// "Minhas contas" sugeridas, quando cabe sugerir.
   PlanSuggestion? suggestion(LocalDate today) => PlanSuggestion.of(
     plan: plan,

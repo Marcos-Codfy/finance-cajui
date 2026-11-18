@@ -36,8 +36,22 @@ abstract final class EntryListing {
       'lancamentos': [
         for (final entry in entries.take(maxLines)) _line(state, entry),
       ],
+      'recebimentos': [
+        for (final receipt in state.receipts.values)
+          if (receipt.receivedOn.budgetMonth == month) _receipt(receipt),
+      ],
     };
   }
+
+  /// O que entrou no mês, com o id que `cancelar_lancamento` aceita para
+  /// desfazer uma entrada registrada errada (RN-1120).
+  static Map<String, Object?> _receipt(IncomeReceipt receipt) => {
+    'id': receipt.id,
+    'data': '${receipt.receivedOn}',
+    'valor_centavos': receipt.amount.cents,
+    'moeda': receipt.tender == Tender.mealVoucher ? 'vale' : 'dinheiro',
+    'salario': receipt.sourceId != null,
+  };
 
   static Map<String, Object?> _line(LedgerState state, Entry entry) => {
     'id': entry.id,
