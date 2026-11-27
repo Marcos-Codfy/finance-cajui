@@ -22,7 +22,7 @@ comprovantes e responde com os números do mês. É um projeto completo, feito d
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-1.877-2E7D32)
+![Testes](https://img.shields.io/badge/testes-1.900-2E7D32)
 ![Cobertura do domínio](https://img.shields.io/badge/domínio-92,9%25-2E7D32)
 ![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
 
@@ -85,7 +85,7 @@ Claude, como assistente de programação. A API do Claude também é usada dentr
 | Servidor        | Dart + Shelf, executável único, na Oracle Cloud (OCI), com TLS; registro de eventos cifrado e encadeado; API documentada | [`server/`](server), [`docs/api.md`](docs/api.md) |
 | Design system   | Pacote próprio com tokens, componentes, movimento 3D e sons; gallery publicada com os estados de tela | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
 | Android nativo  | Compartilhamento, OCR no aparelho, notificações do banco, widget da tela inicial, lembretes e entrada por voz | [`app/android`](app/android) |
-| Qualidade       | 1.877 testes, nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Qualidade       | 1.900 testes, nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Processo        | 32 ADRs, Conventional Commits, pull requests e CI no GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Duas decisões que moldaram o projeto
@@ -467,7 +467,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 
 | Item                | Situação                                                                                                  |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Testes              | **1.877**: app 618 · domínio 495 · servidor 271 · design system 257 · contrato 104 · gallery 81 · persistência 25 · verificador 26 |
+| Testes              | **1.900**: app 632 · domínio 504 · servidor 271 · design system 257 · contrato 104 · gallery 81 · persistência 25 · verificador 26 |
 | Cobertura           | contrato 93,2% · domínio 92,9% · persistência 91,5% · servidor 89,9% · design system 88,0% · app 86,4%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
 | Textos              | Todo erro que a pessoa lê vem de um catálogo de 47 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
@@ -475,7 +475,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 | Analisador          | `very_good_analysis`, zero aviso                                                                          |
 | Verificador próprio | nenhum limite de tamanho ou de camadas estourado                                                                     |
 | Acessibilidade      | Lighthouse 100 na web; semântica ligada desde a raiz; o leitor de tela diz quem fala na conversa         |
-| Usabilidade         | Revisado pelas 10 heurísticas de Nielsen: cada número do Painel tem nome e abre a conta por trás dele, o botão de lançar diz o que falta, os ícones têm nome escrito e os termos são os do dia a dia (renda, gastos, vale alimentação) |
+| Usabilidade         | Revisado pelas 10 heurísticas de Nielsen: cada número do Painel tem nome e abre a conta por trás dele, o botão de lançar diz o que falta, os ícones têm nome escrito e os termos são os do dia a dia (renda, gastos, vale alimentação). Há atalhos para o uso diário (filtros de um toque, repetir um gasto de sempre), confirmação antes de gravar um valor muito acima do normal e uma tela de ajuda que explica cada número |
 
 ## Falhas encontradas e correções
 
