@@ -31,33 +31,33 @@ Todos os valores de exemplo são **fictícios** (estabelecimento "Mercado do Bai
 Legenda de autenticação:
 
 - **Nenhuma**: a rota responde sem token.
-- **Token**: serve a chave da casa **ou** a sessão aberta pelo código do autenticador.
-- **Chave da casa**: só a chave da casa escreve. A sessão do código recebe `403 E-AUTH-03`.
+- **Token**: serve a chave de API **ou** a sessão aberta pelo código do autenticador.
+- **Chave de API**: só a chave de API escreve. A sessão do código recebe `403 E-AUTH-03`.
 
 | # | Método | Caminho | Autenticação | O que faz |
 |---|---|---|---|---|
 | 1 | GET | `/health` | Nenhuma | Diz se o servidor está de pé. |
 | 2 | POST | `/v1/auth/code` | Nenhuma | Troca o código de 6 dígitos do autenticador por um token de sessão (só leitura e conversa). |
-| 3 | POST | `/v1/receipts/classify` | Chave da casa | Lê o texto (e as fotos) de um comprovante e devolve uma proposta de lançamento. |
-| 4 | POST | `/v1/statements/read-part` | Chave da casa | Lê uma página de extrato e devolve as movimentações conferidas. |
+| 3 | POST | `/v1/receipts/classify` | Chave de API | Lê o texto (e as fotos) de um comprovante e devolve uma proposta de lançamento. |
+| 4 | POST | `/v1/statements/read-part` | Chave de API | Lê uma página de extrato e devolve as movimentações conferidas. |
 | 5 | POST | `/v1/assistant/ask` | Token | Faz uma pergunta ao assistente (Juju). |
 | 6 | GET | `/v1/head` | Token | Devolve o topo do registro de eventos (para saber se há novidade). |
 | 7 | GET | `/v1/categories` | Token | Lista as categorias. |
-| 8 | POST | `/v1/categories` | Chave da casa | Cria ou atualiza uma categoria. |
+| 8 | POST | `/v1/categories` | Chave de API | Cria ou atualiza uma categoria. |
 | 9 | GET | `/v1/cards` | Token | Lista os cartões de crédito. |
-| 10 | POST | `/v1/cards` | Chave da casa | Cria ou atualiza um cartão. |
+| 10 | POST | `/v1/cards` | Chave de API | Cria ou atualiza um cartão. |
 | 11 | GET | `/v1/income` | Token | Lista recebimentos, acertos do vale e o saldo do vale. |
-| 12 | POST | `/v1/income` | Chave da casa | Registra um recebimento. |
-| 13 | POST | `/v1/voucher/adjustments` | Chave da casa | Registra um acerto do saldo do vale. |
+| 12 | POST | `/v1/income` | Chave de API | Registra um recebimento. |
+| 13 | POST | `/v1/voucher/adjustments` | Chave de API | Registra um acerto do saldo do vale. |
 | 14 | GET | `/v1/facts` | Token | Lista os fatos que o servidor só guarda e devolve. |
-| 15 | POST | `/v1/facts` | Chave da casa | Guarda um fato (fatura paga, dívida, plano da planilha etc.). |
+| 15 | POST | `/v1/facts` | Chave de API | Guarda um fato (fatura paga, dívida, plano da planilha etc.). |
 | 16 | GET | `/v1/plan` | Token | Lê o plano do mês. |
-| 17 | POST | `/v1/plan` | Chave da casa | Define o plano do mês, inteiro. |
+| 17 | POST | `/v1/plan` | Chave de API | Define o plano do mês, inteiro. |
 | 18 | GET | `/v1/entries` | Token | Lista os lançamentos (opcionalmente de um mês). |
-| 19 | POST | `/v1/entries` | Chave da casa | Cria um lançamento. |
-| 20 | PUT | `/v1/entries/{id}` | Chave da casa | Corrige um lançamento. |
-| 21 | DELETE | `/v1/entries/{id}` | Chave da casa | Cancela um lançamento. |
-| 22 | POST | `/v1/entries/{id}/reversals` | Chave da casa | Registra um estorno de uma compra. |
+| 19 | POST | `/v1/entries` | Chave de API | Cria um lançamento. |
+| 20 | PUT | `/v1/entries/{id}` | Chave de API | Corrige um lançamento. |
+| 21 | DELETE | `/v1/entries/{id}` | Chave de API | Cancela um lançamento. |
+| 22 | POST | `/v1/entries/{id}/reversals` | Chave de API | Registra um estorno de uma compra. |
 | 23 | GET | `/v1/reversals` | Token | Lista os estornos. |
 
 A ordem acima é a do código (`server/lib/src/app.dart`): `health`, `auth`, `receipts`, `statements`, `assistant`, `head`, cadastro, entradas, fatos e livro.
@@ -121,7 +121,7 @@ Toda rota exige `Authorization: Bearer <token>`, **exceto** `GET /health` e `POS
 
 O código implementa duas formas de obter acesso. Nenhuma das duas é descrita aqui com valores reais.
 
-### 4.1 Chave da casa (acesso completo)
+### 4.1 Chave de API (acesso completo)
 
 - É **um segredo só**, o mesmo em todos os aparelhos do dono, configurado no servidor.
 - O app Android leva a chave de fábrica; a web pede que a pessoa a digite uma vez.
@@ -378,7 +378,7 @@ content-type: application/json; charset=utf-8
 
 **Para que serve:** recebe o texto que o celular leu de um comprovante (e, se houver, até 3 fotos) e devolve uma **proposta** de lançamento: valor, data, categoria, forma de pagamento e o que ficou em dúvida.
 
-**Autenticação:** chave da casa. Sessão da web só de leitura recebe `403`.
+**Autenticação:** chave de API. Sessão da web só de leitura recebe `403`.
 
 **Parâmetros:** nenhum de caminho nem de consulta.
 
@@ -467,7 +467,7 @@ Falhas da IA **não** viram erro HTTP nesta rota: viram `warnings` (veja acima).
 
 **Para que serve:** lê **uma página** de extrato por pedido e devolve as movimentações que passaram na conferência do servidor. Quem faz o laço página a página é o celular ("Lendo a página 3 de 7"). A sessão da web, que só consulta, não lê extrato.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum de caminho nem de consulta.
 
@@ -567,7 +567,7 @@ Content-Type: application/json
 
 **Para que serve:** faz uma pergunta ao assistente (a Juju). O servidor monta o resumo do mês e o cadastro a partir do **seu próprio estado**; o app manda só a pergunta (e, opcionalmente, os números que a tela dele mostra). Na sessão completa, o assistente também pode agir: lançar, cancelar, registrar renda e abater dívida.
 
-**Autenticação:** token (chave da casa **ou** sessão do código). É a **única** rota de escrita liberada para a sessão só de leitura. Nessa sessão, o assistente só consulta e responde que lançar se faz no celular.
+**Autenticação:** token (chave de API **ou** sessão do código). É a **única** rota de escrita liberada para a sessão só de leitura. Nessa sessão, o assistente só consulta e responde que lançar se faz no celular.
 
 **Parâmetros:** nenhum de caminho nem de consulta. A conversa é separada por aparelho (cabeçalho opcional `X-Cajui-Device`, seção 4.1).
 
@@ -723,7 +723,7 @@ Authorization: Bearer <token>
 
 **Para que serve:** cria uma categoria ou atualiza uma existente (mesmo `id`). Entre duas versões vale a de `definedAt` mais novo.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -825,7 +825,7 @@ Authorization: Bearer <token>
 
 **Para que serve:** cria ou atualiza um cartão (mesmo `id`). Vale a versão de `definedAt` mais novo.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -928,7 +928,7 @@ Authorization: Bearer <token>
 
 **Para que serve:** registra um recebimento (salário, crédito do vale, entrada avulsa).
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -979,7 +979,7 @@ Content-Type: application/json
 
 **Para que serve:** registra um **acerto do saldo do vale**: o app admite que o saldo de verdade é o do cartão do vale, e não o que ele calculou. Não é renda nem despesa. O valor **pode ser negativo**.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -1066,7 +1066,7 @@ Cada fato volta com `id`, `type` e `payload` (já **normalizado**: só os campos
 
 **Para que serve:** guarda um fato. A chave é o `id` que o aparelho deu a ele; mandar de novo não grava de novo.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -1180,7 +1180,7 @@ Mesmo formato do corpo de `POST /v1/plan` (seção 7.17). Sem plano definido, vo
 
 **Para que serve:** define o plano do mês **inteiro, de uma vez** (não campo a campo), para o servidor nunca ficar com meio plano. Reenviar o mesmo plano não cria fato novo; um plano diferente cria.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -1305,7 +1305,7 @@ Cada item de `entries` tem o mesmo formato do corpo de `POST /v1/entries` (seç�
 
 **Para que serve:** cria um lançamento (uma compra). O servidor **confere de novo** as regras do domínio: nunca confia no que o app já validou.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros:** nenhum.
 
@@ -1389,7 +1389,7 @@ Exemplo de erro:
 
 **Para que serve:** corrige um lançamento. **Nada é reescrito**: o fato antigo continua no registro, e o lançamento passa a mostrar a versão nova no lugar dele, na mesma posição da lista.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros de caminho**
 
@@ -1452,7 +1452,7 @@ Pelo código, se o servidor não conhece o `id` e ele não foi cancelado, a corr
 
 **Para que serve:** cancela um lançamento. **Cancelar não apaga**: grava o fato de que ele não vale mais. O cancelado sai de toda visão, mas continua no registro, e seu id aparece em `cancelledIds` de `GET /v1/entries`.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros de caminho**
 
@@ -1492,7 +1492,7 @@ Cancelar o que já está cancelado é repetição e também responde `200`, com 
 
 **Para que serve:** registra um **estorno**: o dinheiro de uma compra que voltou. O estorno não altera o lançamento original; é um fato próprio, ligado a ele, que reduz o gasto da categoria no mês da data do estorno e volta pela mesma forma de pagamento. O servidor confere de novo se ainda resta o que estornar naquela linha.
 
-**Autenticação:** chave da casa.
+**Autenticação:** chave de API.
 
 **Parâmetros de caminho**
 
@@ -1585,9 +1585,9 @@ Authorization: Bearer <token>
 
 Os exemplos usam só valores fictícios. `<token>` é um marcador: troque pelo valor que você tem.
 
-### 8.1 Fluxo do app: criar e listar lançamentos (chave da casa)
+### 8.1 Fluxo do app: criar e listar lançamentos (chave de API)
 
-A criação de lançamentos exige a **chave da casa**. A sessão aberta pelo código do autenticador é só de leitura e recebe `403 E-AUTH-03` ao tentar escrever (fluxo 8.2).
+A criação de lançamentos exige a **chave de API**. A sessão aberta pelo código do autenticador é só de leitura e recebe `403 E-AUTH-03` ao tentar escrever (fluxo 8.2).
 
 **Passo 1. Cadastrar a categoria**
 

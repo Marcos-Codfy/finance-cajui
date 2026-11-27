@@ -217,7 +217,7 @@ atrás de um proxy com TLS automático e gerenciado como serviço do sistema. O 
   máquina.
 - **Valida tudo o que chega.** A leitura do JSON é estrita (campo a mais, faltando ou de tipo errado é recusado), as
   regras do domínio são conferidas de novo no servidor, e todo erro sai com o código de um catálogo de 47 códigos.
-- **Autentica.** O aparelho entra com uma chave de acesso, um segredo aleatório compartilhado pelos celulares da mesma casa (no projeto, a "chave da casa"); o servidor guarda só o hash e compara em tempo constante. A
+- **Autentica.** O aparelho entra com uma chave de acesso, um segredo aleatório compartilhado pelos celulares da mesma casa (no projeto, a "chave de API"); o servidor guarda só o hash e compara em tempo constante. A
   consulta pela web entra com o código do autenticador (TOTP, RFC 6238), que abre uma sessão de leitura de 30 dias, com
   trava depois de cinco erros.
 - **Protege.** Limite de taxa por origem, CORS de uma origem só, e segredos em credenciais cifradas do serviço, nunca no
