@@ -3,8 +3,8 @@ import 'package:domain/domain.dart';
 import 'package:server/src/assistant/context_number.dart';
 import 'package:server/src/assistant/context_number_kind.dart';
 
-/// Os números da planilha do dono (ADR-023) no contexto da Juju: o que
-/// entra, o que sai por grupo, quanto o vale cobre, se sobra ou falta e
+/// Os números da planilha do dono (ADR-023) no contexto da Juju: a renda,
+/// os gastos por grupo, quanto o vale cobre, se sobra ou falta e
 /// quanto ainda se deve. O "pode gastar por semana" saiu em 11/10/2026, a
 /// pedido do dono.
 ///
@@ -33,7 +33,7 @@ abstract final class SheetNumbers {
     final period = budget.period;
     ContextNumber plan(String label, Money amount) =>
         _number(label, amount, period, kind: ContextNumberKind.plan);
-    yield plan('O que entra no mês, em dinheiro', budget.cashIncome);
+    yield plan('Renda do mês, em dinheiro', budget.cashIncome);
     if (budget.voucher.isPositive) {
       yield plan('Vale do mês (só compra comida)', budget.voucher);
     }
@@ -47,7 +47,7 @@ abstract final class SheetNumbers {
     if (budget.tithe.isPositive) yield plan('Dízimo do mês', budget.tithe);
     yield plan('Total que sai no mês', budget.totalOut);
     yield plan('Parte que o vale paga', budget.voucherCovered);
-    yield plan('O que sai do bolso no mês', budget.outOfPocket);
+    yield plan('Gastos do mês', budget.outOfPocket);
     yield budget.closes
         ? _number('Sobra do mês', budget.result, period, kind: _projection)
         : _number(

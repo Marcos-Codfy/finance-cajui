@@ -13,7 +13,7 @@ void main() {
 
   test('ADR-023 · as instruções falam com as palavras da planilha e proíbem '
       'as de banco', () {
-    expect(AssistantPrompt.version, 9);
+    expect(AssistantPrompt.version, 10);
     // O "pode gastar por semana" saiu do app em 11/10/2026: a Juju não fala
     // de um número que nenhuma tela mostra.
     expect(AssistantPrompt.system, isNot(contains('por semana')));

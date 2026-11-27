@@ -81,7 +81,7 @@ void main() {
       final sent = client.calls.single.system;
 
       expect(sent, contains('"kind":"plan"'));
-      expect(sent, contains('O que entra no mês, em dinheiro'));
+      expect(sent, contains('Renda do mês, em dinheiro'));
       expect(sent, contains('"cents":320000'));
       expect(sent, contains('Contas fixas do mês'));
       expect(sent, contains('"cents":120000'));
