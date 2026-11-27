@@ -28,12 +28,14 @@ class CaptureTools extends ConsumerWidget {
           CajuiIconButton(
             icon: CajuiIconData.camera,
             semanticLabel: 'Fotografar comprovante',
+            caption: 'Foto',
             onPressed: () => _open(context, capture.photograph),
           ),
         if (!readOnly && capture.canPickFiles)
           CajuiIconButton(
             icon: CajuiIconData.image,
             semanticLabel: 'Escolher da galeria ou dos arquivos',
+            caption: 'Galeria',
             onPressed: () => _open(context, capture.pickFromDevice),
           ),
         ...extra,

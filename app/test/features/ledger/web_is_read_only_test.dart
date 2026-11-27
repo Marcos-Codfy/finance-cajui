@@ -39,15 +39,15 @@ void main() {
 
       // Tocar em "Lançar" levava ao formulário e só estourava na hora de
       // salvar, porque a consulta não grava. Agora a porta nem aparece.
-      expect(find.text('Lançar'), findsNothing);
-      expect(find.text('Fotografar'), findsNothing);
-      expect(find.text('Da galeria'), findsNothing);
+      expect(find.text('Gastei'), findsNothing);
+      expect(find.text('Foto'), findsNothing);
+      expect(find.text('Galeria'), findsNothing);
     });
 
     testWidgets('no celular, o botão de lançar continua lá', (tester) async {
       await _openAsWeb(tester, web: false);
 
-      expect(find.text('Lançar'), findsOneWidget);
+      expect(find.text('Gastei'), findsOneWidget);
     });
   });
 }

@@ -65,7 +65,7 @@ void main() {
       SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
     ];
 
-    await _tap(tester, find.text('Fotografar'));
+    await _tap(tester, find.text('Foto'));
 
     expect(inbox.photoRequests, 1);
     expect(find.text('Conferir comprovante'), findsOneWidget);
@@ -86,7 +86,7 @@ void main() {
       SharedFile(id: 'foto-1', path: '/inbox/foto-1', isPdf: false),
     ];
 
-    await _tap(tester, find.text('Da galeria'));
+    await _tap(tester, find.text('Galeria'));
 
     expect(inbox.pickRequests, 1);
     expect(find.text('Conferir comprovante'), findsOneWidget);
@@ -113,8 +113,8 @@ void main() {
   testWidgets('aparelho sem câmera mostra só a galeria', (tester) async {
     await _openEntries(tester, hasCamera: false);
 
-    expect(find.text('Fotografar'), findsNothing);
-    expect(find.text('Da galeria'), findsOneWidget);
-    expect(find.text('Lançar'), findsOneWidget);
+    expect(find.text('Foto'), findsNothing);
+    expect(find.text('Galeria'), findsOneWidget);
+    expect(find.text('Gastei'), findsOneWidget);
   });
 }

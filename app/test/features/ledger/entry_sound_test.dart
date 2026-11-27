@@ -40,7 +40,7 @@ void main() {
     );
     await tester.pump();
     await openFromHome(tester, 'Lançamentos');
-    await tester.tap(find.text('Lançar'));
+    await tester.tap(find.text('Gastei'));
     await settleAfterTap(tester);
     await tester.enterText(_field('Valor'), '850');
     await settleAfterTap(tester);

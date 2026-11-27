@@ -9,6 +9,7 @@ import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
+import 'package:cajui/src/features/ledger/presentation/entry_form_missing.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
@@ -36,7 +37,7 @@ class EntryFormPage extends ConsumerStatefulWidget {
   /// ([header]), as ações a mais no pé ([extraActions]) e o que acontece
   /// depois de gravar. A correção de um lançamento faz o mesmo.
   const new({
-    this.title = 'Novo lançamento',
+    this.title = 'Novo gasto',
     this.submitLabel = 'Lançar',
     this.header,
     this.extraActions = const [],
@@ -160,7 +161,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     ref.listen(entryFormProvider, _closeWhenSaved);
     final state = ref.watch(entryFormProvider);
     final book = ref.watch(ledgerProvider).value;
-    if (book == null) return const LoadingPage(title: 'Novo lançamento');
+    if (book == null) return const LoadingPage(title: 'Novo gasto');
     final problem = switch (state) {
       EntryFormEditing(:final problem) => problem,
       EntryFormSaving() || EntryFormSaved() => null,
@@ -198,6 +199,9 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
         today: ref.watch(todayProvider),
         onChanged: (day) => _form.edit((d) => d.copyWith(occurredOn: day)),
       ),
+      // Respiro no fim: o último campo não para colado no botão de baixo,
+      // e não parece escondido atrás dele (27/11/2026).
+      const SizedBox(height: CajuiSpacing.xxl),
     ];
   }
 
@@ -278,7 +282,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
           const SizedBox(height: CajuiSpacing.md),
         ],
         CajuiButton(
-          label: widget.submitLabel,
+          label: EntryFormMissing.of(state.draft) ?? widget.submitLabel,
           expand: true,
           loading: state is EntryFormSaving,
           // Mudo: o toque abafaria a semente, que soa logo depois.
