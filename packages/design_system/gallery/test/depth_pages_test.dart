@@ -55,7 +55,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Página 2 de 4 · O que entra'), findsOneWidget);
+    expect(find.text('Página 2 de 4 · Renda do mês'), findsOneWidget);
     semantics.dispose();
   });
 

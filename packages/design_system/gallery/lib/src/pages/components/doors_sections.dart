@@ -26,7 +26,7 @@ class _Doors extends StatelessWidget {
       CajuiTile(
         icon: CajuiIconData.calendar,
         title: 'Meu mês',
-        subtitle: 'Entra e sai do bolso',
+        subtitle: 'Renda e gastos',
         onPressed: _nothing,
       ),
       CajuiTile(
@@ -60,7 +60,7 @@ class _Doors extends StatelessWidget {
           CajuiDisclosure(
             title: 'Mais',
             children: [
-              CajuiListRow(title: 'Minhas contas', subtitle: 'O que entra'),
+              CajuiListRow(title: 'Minhas contas', subtitle: 'Renda do mês'),
               CajuiListRow(title: 'Mês a mês', subtitle: 'Cada mês'),
             ],
           ),

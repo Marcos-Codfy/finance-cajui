@@ -78,7 +78,10 @@ enum CajuiIconData {
   info(_info),
 
   /// Sem rede.
-  offline(drawOffline);
+  offline(drawOffline),
+
+  /// Engrenagem: os ajustes.
+  gear(drawGear);
 
   new(this.build);
 

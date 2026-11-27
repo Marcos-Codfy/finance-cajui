@@ -28,6 +28,8 @@ class CajuiStatCard extends StatelessWidget {
     this.heroTag,
     this.glowing = false,
     this.celebrate = false,
+    this.onPressed,
+    this.actionLabel,
     super.key,
   });
 
@@ -67,6 +69,13 @@ class CajuiStatCard extends StatelessWidget {
   /// notícia é nova, senão a festa se repete a cada abertura.
   final bool celebrate;
 
+  /// Tocar no cartão abre a conta por trás do número. Número que não se
+  /// explica é número em que não se confia (27/11/2026).
+  final VoidCallback? onPressed;
+
+  /// O convite ao toque, escrito no pé do cartão: "Ver a conta".
+  final String? actionLabel;
+
   @override
   Widget build(BuildContext context) {
     final theme = CajuiTheme.of(context);
@@ -83,8 +92,11 @@ class CajuiStatCard extends StatelessWidget {
   }
 
   Widget _card(CajuiThemeData theme, String? support, double? used) {
+    final action = actionLabel;
     return CajuiCard(
       sunken: sunken,
+      onPressed: onPressed,
+      semanticLabel: onPressed == null ? null : '$label, ${action ?? ''}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -96,10 +108,19 @@ class CajuiStatCard extends StatelessWidget {
             const SizedBox(height: CajuiSpacing.sm),
             Text(support, style: _muted(theme, theme.typography.caption)),
           ],
+          if (onPressed != null && action != null) _action(theme, action),
         ],
       ),
     );
   }
+
+  Widget _action(CajuiThemeData theme, String action) => Padding(
+    padding: const EdgeInsets.only(top: CajuiSpacing.sm),
+    child: Text(
+      '$action ›',
+      style: theme.typography.label.copyWith(color: theme.colors.text.link),
+    ),
+  );
 
   Widget _meter(double used) {
     return Padding(

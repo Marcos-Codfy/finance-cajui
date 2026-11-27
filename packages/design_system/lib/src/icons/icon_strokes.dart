@@ -32,3 +32,20 @@ void drawOffline(Path p) {
     ..moveTo(4, 4)
     ..lineTo(20, 20);
 }
+
+/// Engrenagem: os ajustes. Um anel com oito dentes curtos, para não se
+/// confundir com o filtro de lista (27/11/2026).
+void drawGear(Path p) {
+  const center = Offset(12, 12);
+  p
+    ..addOval(Rect.fromCircle(center: center, radius: 3))
+    ..addOval(Rect.fromCircle(center: center, radius: 6.5));
+  for (var i = 0; i < 8; i++) {
+    final angle = i * math.pi / 4;
+    final dx = math.cos(angle);
+    final dy = math.sin(angle);
+    p
+      ..moveTo(12 + dx * 6.5, 12 + dy * 6.5)
+      ..lineTo(12 + dx * 9, 12 + dy * 9);
+  }
+}
