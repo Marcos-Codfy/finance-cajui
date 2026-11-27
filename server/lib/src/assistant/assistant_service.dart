@@ -38,6 +38,7 @@ final class AssistantService {
     required this.breaker,
     ConversationWindow? window,
     this.timeout = const Duration(seconds: 40),
+    this.deadline = const Duration(seconds: 45),
   }) : window = window ?? ConversationWindow();
 
   /// O cliente da IA.
@@ -54,6 +55,12 @@ final class AssistantService {
 
   /// Quanto esperar por cada chamada à IA.
   final Duration timeout;
+
+  /// Quanto a pergunta inteira pode levar, somadas todas as chamadas. Fica
+  /// abaixo do que o app espera (50 s): a resposta — mesmo a de "fiz, mas
+  /// não consegui redigir" — chega antes de o aparelho desistir e dizer que
+  /// não deu, o que levava a pessoa a pedir de novo e lançar em dobro.
+  final Duration deadline;
 
   /// Quantas rodadas de ferramenta uma pergunta pode disparar. Lançar, ver
   /// e cancelar cabem em três; a quarta existe para o modelo corrigir um
@@ -83,15 +90,45 @@ final class AssistantService {
       message: question,
     );
     final known = _known(context, catalog, question);
+    return await _answer(sessionId, question, messages, context, tools, known);
+  }
+
+  /// A conversa, e o que fazer quando a IA não responde no meio dela.
+  Future<AssistantOutcome> _answer(
+    String sessionId,
+    String question,
+    List<ChatMessage> messages,
+    AssistantContext context,
+    AssistantTools tools,
+    Set<int> known,
+  ) async {
+    final actions = <AssistantAction>[];
     try {
-      final answer = await _converse(messages, context, tools, known);
+      final answer = await _converse(messages, context, tools, known, actions);
       window.add(sessionId, question, answer.text);
       return (answer: answer, error: null, retryAfterSeconds: null);
     } on ChatUnavailable catch (unavailable) {
-      return _down(unavailable.retryAfterSeconds);
+      return _recover(sessionId, question, actions) ??
+          _down(unavailable.retryAfterSeconds);
     } on TimeoutException {
-      return _down(null);
+      return _recover(sessionId, question, actions) ?? _down(null);
     }
+  }
+
+  /// A IA caiu **depois** de mexer no livro. O que foi gravado não pode
+  /// sumir da resposta: antes, a pessoa lia "fora do ar", pedia de novo, e
+  /// o gasto entrava duas vezes. Agora a resposta diz o que foi feito, com
+  /// as ações para o app mostrar e desfazer. Sem ação, segue o erro.
+  AssistantOutcome? _recover(
+    String sessionId,
+    String question,
+    List<AssistantAction> actions,
+  ) {
+    if (actions.isEmpty) return null;
+    breaker.recordFailure();
+    final answer = AssistantAnswer.fallback(actions: actions);
+    window.add(sessionId, question, answer.text);
+    return (answer: answer, error: null, retryAfterSeconds: null);
   }
 
   /// Os valores que a resposta pode citar (RN-943): os do resumo, os do
@@ -138,14 +175,14 @@ final class AssistantService {
     AssistantContext context,
     AssistantTools tools,
     Set<int> known,
+    List<AssistantAction> actions,
   ) async {
-    final actions = <AssistantAction>[];
+    final elapsed = Stopwatch()..start();
     var corrected = false;
     for (var round = 0; round <= maxToolRounds; round++) {
-      final offered = round < maxToolRounds
-          ? tools.offered
-          : const <ChatTool>[];
-      final reply = await _call(messages, offered, context);
+      // Na última rodada, sem ferramentas: o modelo responde com o que tem.
+      final offered = round < maxToolRounds ? tools.offered : <ChatTool>[];
+      final reply = await _call(messages, offered, context, elapsed);
       if (reply.wantsTools) {
         await _runTools(reply, messages, tools, actions, known);
         continue;
@@ -186,14 +223,18 @@ final class AssistantService {
     }
   }
 
+  /// Uma chamada à IA, com o que sobra do prazo da pergunta inteira.
   Future<ChatReply> _call(
     List<ChatMessage> messages,
     List<ChatTool> tools,
     AssistantContext context,
+    Stopwatch elapsed,
   ) async {
+    final left = deadline - elapsed.elapsed;
+    if (left <= Duration.zero) throw TimeoutException('prazo da pergunta');
     final reply = await client
         .converse(messages: messages, tools: tools, maxTokens: 600)
-        .timeout(timeout);
+        .timeout(left < timeout ? left : timeout);
     breaker.recordSuccess();
     await budget.record(context.month, reply);
     return reply;
