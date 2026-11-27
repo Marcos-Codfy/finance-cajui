@@ -4,6 +4,7 @@ import 'package:cajui/src/features/home/application/home_view.dart';
 import 'package:cajui/src/features/home_widget/application/home_snapshot.dart';
 import 'package:cajui/src/features/home_widget/application/widget_bill.dart';
 import 'package:cajui/src/features/home_widget/application/widget_bills.dart';
+import 'package:cajui/src/features/home_widget/application/widget_voucher.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/review/application/review_providers.dart';
 import 'package:domain/domain.dart';
@@ -46,6 +47,7 @@ abstract final class _HomeWords {
     required List<WidgetBill> bills,
   }) {
     final (label, amount, caption) = _words(view);
+    final voucher = WidgetVoucher.of(view);
     return HomeSnapshot(
       label: label,
       amount: MoneyFormat.brl(amount),
@@ -53,6 +55,8 @@ abstract final class _HomeWords {
       validUntil: view.budget.month.lastDay,
       reviewDates: reviewDates,
       bills: bills,
+      voucherLabel: voucher?.label,
+      voucherAmount: voucher?.amount,
     );
   }
 
