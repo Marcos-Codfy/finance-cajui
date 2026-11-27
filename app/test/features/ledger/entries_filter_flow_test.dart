@@ -89,7 +89,11 @@ Finder get _search => find.descendant(
   matching: find.byType(EditableText),
 );
 
+/// Abre a busca pela lupa, se ainda estiver fechada, e digita [text].
 Future<void> _type(WidgetTester tester, String text) async {
+  if (_search.evaluate().isEmpty) {
+    await _tap(tester, find.bySemanticsLabel('Buscar nos lançamentos'));
+  }
   await tester.enterText(_search, text);
   await settleAfterTap(tester);
 }
@@ -159,6 +163,43 @@ void main() {
 
     await _tap(tester, find.text('Tirar os filtros'));
     _expectListed([..._september, 'FARMACIA SAO JOAO']);
+  });
+
+  testWidgets('BL-127 · a busca fica atrás da lupa, abre com foco, não o '
+      'perde ao apagar a última letra, e fechar apaga o texto', (tester) async {
+    await _openEntries(tester);
+    expect(_search, findsNothing);
+
+    await _tap(tester, find.bySemanticsLabel('Buscar nos lançamentos'));
+    expect(tester.widget<EditableText>(_search).focusNode.hasFocus, isTrue);
+
+    await _type(tester, 'p');
+    await _type(tester, '');
+    expect(_search, findsOneWidget);
+    expect(tester.widget<EditableText>(_search).focusNode.hasFocus, isTrue);
+
+    await _type(tester, 'farmácia');
+    await _tap(tester, find.bySemanticsLabel('Fechar a busca'));
+    expect(_search, findsNothing);
+    _expectListed([..._september, 'FARMACIA SAO JOAO']);
+  });
+
+  testWidgets('os atalhos filtram com um toque e saem com outro; sem '
+      'nada no vale, o vazio diz qual atalho tirar', (tester) async {
+    await _openEntries(tester);
+
+    await _tap(tester, find.text('Esta semana'));
+    _expectListed(['Padaria Pão Quente'], hidden: ['Mercado Boa Compra']);
+    await _tap(tester, find.text('Esta semana'));
+    _expectListed(_september);
+
+    await _tap(tester, find.text('Só vale alimentação'));
+    expect(
+      find.text('Tire “Só vale alimentação” para ver mais.'),
+      findsOneWidget,
+    );
+    await _tap(tester, find.text('Só vale alimentação'));
+    _expectListed(_september);
   });
 
   testWidgets('as setas trocam o mês; não há mês depois do de hoje, e o '

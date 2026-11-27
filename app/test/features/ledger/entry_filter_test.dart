@@ -221,4 +221,55 @@ void main() {
       expect(cleared.isNarrowed, isFalse);
     });
   });
+
+  group('atalhos: tipo de pagamento e semana', () {
+    final card = Entry.create(
+      id: 'card',
+      description: 'Loja de roupas',
+      amount: const Money.fromCents(9000),
+      occurredOn: LocalDate(2026, 9, 15),
+      category: DefaultCatalog.categories.firstWhere((c) => c.id == 'other'),
+      paymentLines: [_line('nubank', PaymentMethodKind.creditCard, 9000)],
+      today: _today,
+    ).valueOrNull!;
+    final withCard = [...book, card];
+
+    test('"Só cartão" pega o tipo, qualquer que seja o cartão', () {
+      final filter = const EntryFilter(
+        month: _september,
+      ).withPaymentKind(PaymentMethodKind.creditCard);
+
+      expect(_ids(filter.apply(withCard)), ['card']);
+      expect(filter.isNarrowed, isTrue);
+    });
+
+    test('RN-204 · "Só vale alimentação" inclui a compra dividida com o '
+        'Pix', () {
+      final filter = const EntryFilter(
+        month: _september,
+      ).withPaymentKind(PaymentMethodKind.mealVoucher);
+
+      expect(_ids(filter.apply(withCard)), ['split']);
+    });
+
+    test('"Esta semana" vai de segunda a domingo: num domingo (20/09), a '
+        'semana começa em 14/09 e o sábado 12 fica de fora', () {
+      final filter = const EntryFilter(
+        month: _september,
+      ).withWeekOf(LocalDate(2026, 9, 20));
+
+      expect(filter.weekStart, LocalDate(2026, 9, 14));
+      expect(_ids(filter.apply(withCard)), ['bakery', 'card']);
+    });
+
+    test('trocar de mês tira a semana, e o tipo fica', () {
+      final filter = const EntryFilter(month: _september)
+          .withWeekOf(LocalDate(2026, 9, 18))
+          .withPaymentKind(PaymentMethodKind.creditCard)
+          .withMonth(_september.previous);
+
+      expect(filter.weekStart, isNull);
+      expect(filter.paymentKind, PaymentMethodKind.creditCard);
+    });
+  });
 }

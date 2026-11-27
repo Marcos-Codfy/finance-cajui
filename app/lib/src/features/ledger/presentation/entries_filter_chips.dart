@@ -48,7 +48,40 @@ class EntriesFilterChips extends ConsumerWidget {
           ),
         if (!state.isCurrentMonth)
           _on(DateLabels.month(state.month), filters.currentMonth),
+        ..._shortcuts(filters),
       ],
+    );
+  }
+
+  /// Os atalhos de um toque, para o que se procura toda semana sem ter de
+  /// lembrar o nome do lançamento nem abrir lista nenhuma.
+  List<Widget> _shortcuts(EntriesViewModel filters) {
+    final filter = state.filter;
+    return [
+      _kind('Só vale alimentação', PaymentMethodKind.mealVoucher, filters),
+      _kind('Só cartão', PaymentMethodKind.creditCard, filters),
+      // Fora do mês de hoje, "esta semana" não está na lista.
+      if (state.isCurrentMonth)
+        CajuiChip(
+          label: 'Esta semana',
+          selected: filter.weekStart != null,
+          onSelected: (_) => filters.toggleThisWeek(),
+        ),
+    ];
+  }
+
+  /// Um atalho de tipo de pagamento: tocar liga; tocar de novo desliga. Um
+  /// tipo por vez — "só vale" e "só cartão" juntos não teriam o que mostrar.
+  Widget _kind(
+    String label,
+    PaymentMethodKind kind,
+    EntriesViewModel filters,
+  ) {
+    final on = state.filter.paymentKind == kind;
+    return CajuiChip(
+      label: label,
+      selected: on,
+      onSelected: (_) => filters.filterPaymentKind(on ? null : kind),
     );
   }
 

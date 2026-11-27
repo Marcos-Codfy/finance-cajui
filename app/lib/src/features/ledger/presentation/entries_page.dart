@@ -8,8 +8,7 @@ import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/ledger_uplink.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_day_list.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_empty.dart';
-import 'package:cajui/src/features/ledger/presentation/entries_filter_chips.dart';
-import 'package:cajui/src/features/ledger/presentation/entries_search_field.dart';
+import 'package:cajui/src/features/ledger/presentation/entries_filters_bar.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entries_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
@@ -193,14 +192,8 @@ class EntriesPage extends ConsumerWidget {
     ];
   }
 
-  /// A busca e os chips, num bloco só.
-  static Widget _filters(EntriesReady state) => Column(
-    key: const ValueKey('entries-filters'),
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const EntriesSearchField(),
-      const SizedBox(height: CajuiSpacing.md),
-      EntriesFilterChips(state: state),
-    ],
-  );
+  /// A busca e os chips, num bloco só, com chave: a lista embaixo muda a
+  /// cada letra, e sem chave o campo perdia o foco no meio da digitação.
+  static Widget _filters(EntriesReady state) =>
+      EntriesFiltersBar(key: const ValueKey('entries-filters'), state: state);
 }

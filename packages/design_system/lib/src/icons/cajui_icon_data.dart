@@ -81,7 +81,10 @@ enum CajuiIconData {
   offline(drawOffline),
 
   /// Engrenagem: os ajustes.
-  gear(drawGear);
+  gear(drawGear),
+
+  /// Lupa: buscar.
+  search(drawSearch);
 
   new(this.build);
 

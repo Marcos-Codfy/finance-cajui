@@ -41,7 +41,17 @@ class EntriesViewModel extends Notifier<EntryFilter> {
   /// Mostra só o que foi pago por [id]; `null` volta a todas.
   void filterPaymentMethod(String? id) => state = state.withPaymentMethod(id);
 
-  /// Tira a busca, a categoria e a forma de pagamento; o mês fica.
+  /// Mostra só o que saiu pelo tipo [kind] — o vale alimentação, o cartão;
+  /// `null` volta a todos.
+  void filterPaymentKind(PaymentMethodKind? kind) =>
+      state = state.withPaymentKind(kind);
+
+  /// Liga ou desliga o atalho "Esta semana", que é sempre a semana de hoje.
+  void toggleThisWeek() => state = state.withWeekOf(
+    state.weekStart == null ? ref.read(todayProvider) : null,
+  );
+
+  /// Tira todos os recortes; o mês fica.
   void clear() => state = state.cleared;
 }
 
