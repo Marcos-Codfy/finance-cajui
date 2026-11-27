@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O widget do vale (2×1): o saldo do vale alimentação. Atualiza-se como
+     os outros: quando o app publica, e de três em três horas. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/home_widget_voucher_description"
+    android:initialLayout="@layout/home_widget_voucher"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:previewLayout="@layout/home_widget_voucher"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="10800000"
+    android:widgetCategory="home_screen" />

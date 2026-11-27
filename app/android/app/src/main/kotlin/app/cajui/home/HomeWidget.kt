@@ -21,18 +21,20 @@ class HomeWidget : AppWidgetProvider() {
     }
 
     companion object {
-        /** Redesenha todos os widgets do Cajui na tela inicial, dos dois tamanhos. */
+        /** Redesenha todos os widgets do Cajui na tela inicial: o grande, o pequeno e o do vale. */
         fun refresh(context: Context) {
             val manager = AppWidgetManager.getInstance(context) ?: return
             val large = manager.getAppWidgetIds(ComponentName(context, HomeWidget::class.java))
             if (large.isNotEmpty()) manager.updateAppWidget(large, HomeWidgetViews.large(context))
             val small = manager.getAppWidgetIds(ComponentName(context, HomeWidgetSmall::class.java))
             if (small.isNotEmpty()) manager.updateAppWidget(small, HomeWidgetViews.small(context))
+            val voucher = manager.getAppWidgetIds(ComponentName(context, HomeWidgetVoucher::class.java))
+            if (voucher.isNotEmpty()) manager.updateAppWidget(voucher, HomeWidgetViews.voucher(context))
         }
 
         /** Se há algum widget do Cajui na tela inicial, de qualquer tamanho. */
         fun isPlaced(context: Context, manager: AppWidgetManager): Boolean =
-            listOf(HomeWidget::class.java, HomeWidgetSmall::class.java).any {
+            listOf(HomeWidget::class.java, HomeWidgetSmall::class.java, HomeWidgetVoucher::class.java).any {
                 manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty()
             }
     }

@@ -118,4 +118,18 @@ void main() {
       contains('<string name="home_widget_new_entry">Novo gasto</string>'),
     );
   });
+
+  test('o "Gastei" da barra rápida abre o Novo gasto pela mesma rota do '
+      '"+" do widget, e o Android o encontra pelo manifesto', () {
+    const android = 'android/app/src/main';
+    final tile = File('$android/kotlin/app/cajui/home/SpendTileService.kt')
+        .readAsStringSync();
+    final manifest = File('$android/AndroidManifest.xml').readAsStringSync();
+
+    expect(tile, contains('MainActivity.ACTION_NEW_ENTRY'));
+    expect(manifest, contains('android:name=".home.SpendTileService"'));
+    expect(manifest, contains('android.permission.BIND_QUICK_SETTINGS_TILE'));
+    expect(manifest, contains('android:name=".home.HomeWidgetVoucher"'));
+    expect(manifest, contains('android:name=".home.WidgetPrivacyReceiver"'));
+  });
 }

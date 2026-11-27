@@ -9,9 +9,10 @@ import app.cajui.MainActivity
 import app.cajui.R
 
 /**
- * O desenho dos dois tamanhos do widget, a partir do último retrato que o
- * app publicou: o pequeno (2×1) só com o número do mês, e o grande (4×2)
- * com o número, as próximas contas a vencer e os três atalhos.
+ * O desenho dos widgets, a partir do último retrato que o app publicou: o
+ * pequeno (2×1) só com o número do mês, o do vale (2×1) com o vale
+ * alimentação, e o grande (4×2) com o número, de quando ele é, as próximas
+ * contas a vencer, os três atalhos e o olho que esconde os valores.
  *
  * Aqui não há conta: o número, as frases e a lista chegam prontos do Dart.
  * Passado o mês a que o número se refere, os dois pedem para abrir o app,
@@ -31,15 +32,36 @@ object HomeWidgetViews {
         val store = HomeSnapshotStore(context)
         val views = RemoteViews(context.packageName, R.layout.home_widget)
         val current = number(context, store, views)
-        views.setTextViewText(
-            R.id.home_caption,
-            if (current) store.caption else context.getString(R.string.home_widget_stale_caption),
-        )
+        views.setTextViewText(R.id.home_caption, caption(context, store, current))
         bills(views, if (current) store.bills() else emptyList(), current)
         arrival(context, views)
+        privacy(context, store, views)
         views.setOnClickPendingIntent(R.id.home_camera, open(context, MainActivity.ACTION_PHOTO, 1))
         views.setOnClickPendingIntent(R.id.home_gallery, open(context, MainActivity.ACTION_PICK, 2))
         views.setOnClickPendingIntent(R.id.home_new_entry, open(context, MainActivity.ACTION_NEW_ENTRY, 3))
+        return views
+    }
+
+    /**
+     * O do vale: o saldo do vale alimentação, ou o do mês. Nunca somado ao
+     * número do mês (RN-111). Sem vale, diz isso, em vez de "R$ 0,00".
+     */
+    fun voucher(context: Context): RemoteViews {
+        val store = HomeSnapshotStore(context)
+        val views = RemoteViews(context.packageName, R.layout.home_widget_voucher)
+        val current = store.exists && store.isCurrent()
+        val label = store.voucherLabel
+        val amount = store.voucherAmount
+        val (shownLabel, shownAmount) = when {
+            !current -> context.getString(R.string.home_widget_stale_label) to
+                context.getString(R.string.home_widget_stale_amount)
+            label == null || amount == null -> context.getString(R.string.home_widget_voucher_none_label) to
+                context.getString(R.string.home_widget_voucher_none_amount)
+            else -> label to masked(context, store, amount)
+        }
+        views.setTextViewText(R.id.home_label, shownLabel)
+        views.setTextViewText(R.id.home_amount, shownAmount)
+        arrival(context, views)
         return views
     }
 
@@ -63,10 +85,48 @@ object HomeWidgetViews {
         )
         views.setTextViewText(
             R.id.home_amount,
-            if (current) store.amount else context.getString(R.string.home_widget_stale_amount),
+            if (current) masked(context, store, store.amount) else context.getString(R.string.home_widget_stale_amount),
         )
         return current
     }
+
+    /** O valor, ou os pontinhos quando a pessoa escondeu os valores. */
+    private fun masked(context: Context, store: HomeSnapshotStore, amount: String): String =
+        if (store.hidden) context.getString(R.string.home_widget_hidden_amount) else amount
+
+    /**
+     * A frase de baixo do grande, com de quando é o número na frente: a
+     * frase corta no fim quando falta lugar, e a data é o que não pode
+     * sumir.
+     */
+    private fun caption(context: Context, store: HomeSnapshotStore, current: Boolean): String {
+        if (!current) return context.getString(R.string.home_widget_stale_caption)
+        val updated = WidgetUpdatedLine.of(context, store.savedAt)
+        return if (updated.isEmpty()) store.caption else "$updated · ${store.caption}"
+    }
+
+    /** O olho: o desenho diz o estado, e o toque troca. */
+    private fun privacy(context: Context, store: HomeSnapshotStore, views: RemoteViews) {
+        val hidden = store.hidden
+        views.setImageViewResource(
+            R.id.home_privacy,
+            if (hidden) R.drawable.ic_widget_eye_off else R.drawable.ic_widget_eye,
+        )
+        views.setContentDescription(
+            R.id.home_privacy,
+            context.getString(if (hidden) R.string.home_widget_show else R.string.home_widget_hide),
+        )
+        val toggle = PendingIntent.getBroadcast(
+            context,
+            PRIVACY_REQUEST,
+            Intent(context, WidgetPrivacyReceiver::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        views.setOnClickPendingIntent(R.id.home_privacy, toggle)
+    }
+
+    /** Diferente dos pedidos de abrir o app (0 a 3). */
+    private const val PRIVACY_REQUEST = 20
 
     /**
      * As linhas de conta: uma por conta, até três. Sem nenhuma, a frase de

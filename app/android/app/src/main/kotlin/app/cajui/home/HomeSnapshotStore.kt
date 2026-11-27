@@ -28,6 +28,9 @@ class HomeSnapshotStore(context: Context) {
             .putString(VALID_UNTIL, snapshot["validUntil"] as? String)
             .putString(REVIEW_DATES, dates.joinToString(","))
             .putString(BILLS, encodeBills(snapshot["bills"]))
+            .putString(VOUCHER_LABEL, snapshot["voucherLabel"] as? String)
+            .putString(VOUCHER_AMOUNT, snapshot["voucherAmount"] as? String)
+            .putLong(SAVED_AT, System.currentTimeMillis())
             .apply()
     }
 
@@ -67,6 +70,24 @@ class HomeSnapshotStore(context: Context) {
     val amount: String get() = preferences.getString(AMOUNT, null).orEmpty()
     val caption: String get() = preferences.getString(CAPTION, null).orEmpty()
 
+    /** O rótulo do vale; `null` para quem não tem vale. */
+    val voucherLabel: String? get() = preferences.getString(VOUCHER_LABEL, null)
+
+    /** O valor do vale, já em texto; `null` para quem não tem vale. */
+    val voucherAmount: String? get() = preferences.getString(VOUCHER_AMOUNT, null)
+
+    /** Quando o app publicou o retrato pela última vez, em milissegundos; 0 se nunca. */
+    val savedAt: Long get() = preferences.getLong(SAVED_AT, 0L)
+
+    /**
+     * Se os valores estão escondidos. É do aparelho, e não do retrato: o
+     * `save` não mexe nisso, e esconder continua valendo depois de o app
+     * publicar um número novo.
+     */
+    var hidden: Boolean
+        get() = preferences.getBoolean(HIDDEN, false)
+        set(value) = preferences.edit().putBoolean(HIDDEN, value).apply()
+
     /**
      * Se o número ainda é deste mês. No dia 1, o do mês passado não vale
      * mais, e mostrá-lo seria dizer uma sobra que já não existe.
@@ -97,6 +118,10 @@ class HomeSnapshotStore(context: Context) {
         const val VALID_UNTIL = "validUntil"
         const val REVIEW_DATES = "reviewDates"
         const val BILLS = "bills"
+        const val VOUCHER_LABEL = "voucherLabel"
+        const val VOUCHER_AMOUNT = "voucherAmount"
+        const val SAVED_AT = "savedAt"
+        const val HIDDEN = "hidden"
 
         /** A mesma janela de `weekly_review.dart`. */
         const val WINDOW_DAYS = 7
