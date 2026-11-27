@@ -57,15 +57,22 @@ class SyncBadge extends ConsumerWidget {
   }
 
   /// A frase do selo em [now]; nula antes da primeira conversa.
+  ///
+  /// Sem conexão, diz também de quando é o que está na tela: o número do
+  /// Painel pode ser de ontem, e quem o lê precisa saber (27/11/2026).
   static String? wordsOf(SyncStatus status, {required DateTime now}) {
     if (status.running) return 'Sincronizando…';
-    if (status.failing) {
-      return 'Sem conexão com o servidor · o que você lançar sobe depois';
-    }
     final at = status.lastOkAt;
+    if (status.failing) {
+      final since = at == null
+          ? ''
+          : ' · atualizado ${DateLabels.when(at, now: now)}';
+      return 'Sem conexão com o servidor$since · o que você lançar sobe '
+          'depois';
+    }
     if (at == null) return null;
     return now.difference(at).inMinutes < 1
         ? 'Sincronizado agora'
-        : 'Sincronizado às ${DateLabels.time(at)}';
+        : 'Sincronizado ${DateLabels.when(at, now: now)}';
   }
 }

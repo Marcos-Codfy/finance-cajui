@@ -54,4 +54,18 @@ abstract final class DateLabels {
     final local = moment.toUtc().add(BusinessTime.offset);
     return '${local.hour}h${local.minute.toString().padLeft(2, '0')}';
   }
+
+  /// Quando foi [moment], visto de [now], para "atualizado …": "às 14h32"
+  /// no mesmo dia da casa, "ontem às 14h32" no anterior e "em 19 de set."
+  /// antes disso. A hora sozinha engana quem abre o app no dia seguinte.
+  static String when(DateTime moment, {required DateTime now}) {
+    LocalDate dayOf(DateTime at) =>
+        LocalDate.fromDateTime(at.toUtc().add(BusinessTime.offset));
+    final day = dayOf(moment);
+    return switch (day.daysUntil(dayOf(now))) {
+      0 => 'às ${time(moment)}',
+      1 => 'ontem às ${time(moment)}',
+      _ => 'em ${dayMonth(day)}',
+    };
+  }
 }
