@@ -57,3 +57,27 @@ void drawSearch(Path p) {
     ..moveTo(15.2, 15.2)
     ..lineTo(20, 20);
 }
+
+/// Olho: os valores estão à vista. O mesmo desenho do olho do widget.
+void drawEye(Path p) {
+  _drawEyeLids(p);
+  p.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 3));
+}
+
+/// Olho riscado: os valores estão escondidos.
+void drawEyeOff(Path p) {
+  _drawEyeLids(p);
+  p
+    ..moveTo(4, 4)
+    ..lineTo(20, 20);
+}
+
+void _drawEyeLids(Path p) {
+  p
+    ..moveTo(2, 12)
+    ..cubicTo(4.5, 7, 8, 5, 12, 5)
+    ..cubicTo(16, 5, 19.5, 7, 22, 12)
+    ..cubicTo(19.5, 17, 16, 19, 12, 19)
+    ..cubicTo(8, 19, 4.5, 17, 2, 12)
+    ..close();
+}
