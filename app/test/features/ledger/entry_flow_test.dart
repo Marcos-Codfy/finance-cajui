@@ -57,7 +57,7 @@ void main() {
     final journal = MemoryLedgerJournal();
     await _openEntries(tester, journal);
 
-    await tester.tap(find.text('Lançar'));
+    await tester.tap(find.text('Gastei'));
     await _settle(tester);
     await tester.enterText(_field('Valor'), '850');
     await tester.enterText(_field('O que foi'), 'Ônibus');
@@ -66,7 +66,7 @@ void main() {
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(find.text('Novo lançamento'), findsNothing);
+    expect(find.text('Novo gasto'), findsNothing);
     expect(find.text('Ônibus'), findsOneWidget);
     expect(find.text('Transporte · Pix · hoje'), findsOneWidget);
     expect(await journal.readAll(), hasLength(1));
@@ -77,13 +77,15 @@ void main() {
     final journal = MemoryLedgerJournal();
     await _openEntries(tester, journal);
 
-    await tester.tap(find.text('Lançar'));
+    await tester.tap(find.text('Gastei'));
     await _settle(tester);
     await tester.enterText(_field('O que foi'), 'Ônibus');
-    await tester.tap(find.text('Lançar'));
+    // O botão diz o que falta, em vez de só ficar apagado.
+    expect(find.text('Lançar'), findsNothing);
+    await tester.tap(find.text('Falta o valor'));
     await _settle(tester);
 
-    expect(find.text('Novo lançamento'), findsOneWidget);
+    expect(find.text('Novo gasto'), findsOneWidget);
     expect(await journal.readAll(), isEmpty);
   });
 
@@ -92,14 +94,14 @@ void main() {
     final journal = MemoryLedgerJournal();
     await _openEntries(tester, journal);
 
-    await tester.tap(find.text('Lançar'));
+    await tester.tap(find.text('Gastei'));
     await _settle(tester);
     await tester.enterText(_field('Valor'), '1250');
     await _settle(tester);
     await tester.tap(find.text('Lançar'));
     await _settle(tester);
 
-    expect(find.text('Novo lançamento'), findsNothing);
+    expect(find.text('Novo gasto'), findsNothing);
     expect(find.text('Outros'), findsOneWidget);
     expect(find.text('Outros · Pix · hoje'), findsOneWidget);
     expect(await journal.readAll(), hasLength(1));
@@ -110,7 +112,7 @@ void main() {
     final journal = MemoryLedgerJournal();
     await _openEntries(tester, journal);
 
-    await tester.tap(find.text('Lançar'));
+    await tester.tap(find.text('Gastei'));
     await _settle(tester);
     await tester.enterText(_field('Valor'), '850');
     await tester.enterText(_field('O que foi'), 'Padaria Central');
@@ -136,9 +138,9 @@ void main() {
     ]);
     await _openEntries(tester, book);
 
-    expect(find.text('Gasto em dinheiro'), findsOneWidget);
-    expect(find.text('Gasto no vale'), findsOneWidget);
+    expect(find.text('Já gasto em dinheiro'), findsOneWidget);
+    expect(find.text('Já gasto no vale alimentação'), findsOneWidget);
     expect(find.textContaining('Total'), findsNothing);
-    expect(find.text('Vale do mês'), findsOneWidget);
+    expect(find.text('O que é cada número?'), findsOneWidget);
   });
 }

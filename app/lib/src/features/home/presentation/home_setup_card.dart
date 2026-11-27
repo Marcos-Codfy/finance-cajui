@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cajui/src/core/navigation/coordinator_access.dart';
+import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:cajui/src/features/cards/presentation/cards_coordinator.dart';
 import 'package:cajui/src/features/home/application/setup_steps.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
@@ -10,7 +11,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// "Primeiros passos": o que falta configurar, cada linha levando ao lugar.
-/// Some quando não falta nada — não é aviso, é atalho.
+/// Some quando não falta nada — não é aviso, é atalho — ou quando a pessoa
+/// o dispensa: o que falta continua nos Ajustes (27/11/2026).
 class HomeSetupCard extends ConsumerWidget {
   /// Cria o cartão.
   const new({super.key});
@@ -27,6 +29,15 @@ class HomeSetupCard extends ConsumerWidget {
           children: [
             const CajuiSectionTitle('Primeiros passos'),
             for (final step in steps) _row(context, ref, step),
+            Align(
+              alignment: Alignment.centerRight,
+              child: CajuiButton(
+                label: 'Agora não',
+                variant: CajuiButtonVariant.ghost,
+                size: CajuiButtonSize.compact,
+                onPressed: () => unawaited(_dismiss(ref)),
+              ),
+            ),
           ],
         ),
       ),
@@ -68,6 +79,13 @@ class HomeSetupCard extends ConsumerWidget {
           CajuiIconData.card,
         ),
       };
+
+  static Future<void> _dismiss(WidgetRef ref) async {
+    await ref
+        .read(preferencesStoreProvider)
+        .update((current) => current.copyWith(setupDismissed: true));
+    ref.invalidate(setupStepsProvider);
+  }
 
   /// Leva ao lugar e, na volta, confere de novo o que falta.
   static Future<void> _go(

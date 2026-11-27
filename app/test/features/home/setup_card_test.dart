@@ -1,4 +1,6 @@
 import 'package:cajui/src/app/cajui_app.dart';
+import 'package:cajui/src/core/settings/preferences.dart';
+import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:cajui/src/features/home/application/setup_steps.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,21 @@ import '../../support/home_navigation.dart';
 import '../../support/memory_ledger_journal.dart';
 import '../../support/sample_plan.dart';
 import '../../support/test_scope.dart';
+
+/// As preferências em memória: o que se grava, se lê de volta.
+final class _MemoryPreferences implements PreferencesStore {
+  new([this.current = const Preferences()]);
+
+  Preferences current;
+
+  @override
+  Preferences read() => current;
+
+  @override
+  Future<void> update(Preferences Function(Preferences current) change) async {
+    current = change(current);
+  }
+}
 
 Future<void> _open(WidgetTester tester, List<SetupStep> steps) async {
   tester.view.physicalSize = const Size(390, 2400);
@@ -62,5 +79,47 @@ void main() {
     // No teste não há nomes da casa nem acesso às notificações; o widget
     // não se põe por pedido, e o plano de exemplo não tem cartão.
     expect(steps, [SetupStep.names, SetupStep.notifications]);
+  });
+
+  testWidgets('"Agora não" dispensa o cartão, e ele não volta', (tester) async {
+    tester.view.physicalSize = const Size(390, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final preferences = _MemoryPreferences();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: testOverrides(
+          journal: MemoryLedgerJournal(samplePlanEvents),
+          preferences: preferences,
+        ),
+        child: const CajuiApp(),
+      ),
+    );
+    await settleAfterTap(tester);
+    await tester.tap(find.bySemanticsLabel('Painel'));
+    await settleAfterTap(tester);
+    expect(find.text('Primeiros passos'), findsOneWidget);
+
+    final dismiss = find.text('Agora não');
+    await tester.ensureVisible(dismiss);
+    await tester.tap(dismiss);
+    await settleAfterTap(tester);
+
+    expect(find.text('Primeiros passos'), findsNothing);
+    expect(preferences.current.setupDismissed, isTrue);
+  });
+
+  test('dispensado, o cartão fica vazio mesmo faltando passos', () async {
+    final container = ProviderContainer(
+      overrides: testOverrides(
+        journal: MemoryLedgerJournal(samplePlanEvents),
+        preferences: _MemoryPreferences(
+          const Preferences(setupDismissed: true),
+        ),
+      ),
+    );
+    addTearDown(container.dispose);
+
+    expect(await container.read(setupStepsProvider.future), isEmpty);
   });
 }

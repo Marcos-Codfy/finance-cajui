@@ -2,16 +2,17 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/widgets.dart';
 
 /// Os números do Início, como o app os mostra: num carrossel 3D, na ordem da
-/// planilha do dono — se o mês fecha, o que entra, o que sai do bolso e o
-/// vale.
+/// planilha do dono — se o mês fecha, a renda, os gastos e o vale
+/// alimentação —, com o nome de cada página embaixo e o "Ver a conta" que
+/// leva ao Meu mês.
 ///
 /// O mês é outubro de alguém que recebe R$ 3.700,00 de salário e um freela
 /// de R$ 500,00, tem R$ 600,00 de vale e paga as contas do bolso. As contas
-/// fecham entre si: a sobra é o que entra menos o que sai do bolso, e o que
-/// sai do bolso é o total que sai menos o que o vale cobre. O vale nunca
+/// fecham entre si: a sobra é a renda menos os gastos, e os gastos são o
+/// total que sai menos o que o vale cobre. O vale nunca
 /// entra em soma nenhuma do dinheiro (RN-111).
 abstract final class HomeNumbers {
-  /// O que entra em dinheiro: salário e freela.
+  /// A renda em dinheiro: salário e freela.
   static const int income = 420000;
 
   /// O vale do mês. Cobre o mercado inteiro, que passou de R$ 600,00.
@@ -29,7 +30,7 @@ abstract final class HomeNumbers {
   /// No mês que não fecha, o total que sai.
   static const int tightTotalOut = 509400;
 
-  /// No mês que não fecha, o que sai do bolso: R$ 4.494,00.
+  /// No mês que não fecha, os gastos em dinheiro: R$ 4.494,00.
   static const int tightOutOfPocket = tightTotalOut - voucher;
 
   /// O que já saiu nos primeiros dias de uso, antes de haver plano.
@@ -37,11 +38,17 @@ abstract final class HomeNumbers {
 
   static String _brl(int cents) => BrlFormatter.format(cents);
 
+  static void _nothing() {}
+
   /// O carrossel com [pages]. A chave guarda a página escolhida quando um
   /// aviso aparece acima, como no app.
   static Widget carousel(List<Widget> pages) => CajuiCoverFlow(
     key: const ValueKey('numeros-do-mes'),
     semanticLabel: 'Números do mês',
+    pageLabels: [
+      for (final (index, _) in pages.indexed)
+        const ['Sobra', 'Renda', 'Gastos', 'Vale'][index],
+    ],
     children: pages,
   );
 
@@ -84,7 +91,7 @@ abstract final class HomeNumbers {
     const CajuiStatCard(
       label: 'Sobrou ou faltou em outubro',
       large: true,
-      caption: 'Cadastre o que entra em Minhas contas para ver se o mês fecha.',
+      caption: 'Cadastre sua renda em Minhas contas para ver se o mês fecha.',
     ),
     comesIn(0),
     goesOut(totalOut),
@@ -95,34 +102,40 @@ abstract final class HomeNumbers {
   /// diz onde se cadastra o resto. O plano não é obrigatório (RN-1050).
   static List<Widget> noPlan() => [
     const CajuiStatCard(
-      label: 'Já saiu este mês',
+      label: 'Gastos do mês',
       cents: firstSpent,
       large: true,
       caption:
-          'Cadastre o que entra e suas contas em Minhas contas para ver se o '
+          'Cadastre sua renda e suas contas em Minhas contas para ver se o '
           'mês fecha.',
     ),
   ];
 
-  /// O que entra, em dinheiro.
+  /// A renda, em dinheiro.
   static Widget comesIn(int cents) => CajuiStatCard(
-    label: 'O que entra',
+    label: 'Renda do mês',
     cents: cents,
     large: true,
-    caption: 'Em dinheiro, pelo que está em Minhas contas e no recebido',
+    caption: 'Em dinheiro: salários e o que mais entrou',
+    onPressed: _nothing,
+    actionLabel: 'Ver a conta',
   );
 
-  /// O que sai do bolso: o total que sai menos o que o vale paga.
+  /// Os gastos: o total previsto menos o que o vale paga.
   static Widget goesOut(int total) => CajuiStatCard(
-    label: 'O que sai do bolso',
+    label: 'Gastos do mês',
     cents: total - voucher,
     large: true,
-    caption: 'Sai ${_brl(total)} · o vale paga ${_brl(voucher)}',
+    caption:
+        'Previsto para o mês todo, em dinheiro · o vale alimentação '
+        'cobre mais ${_brl(voucher)}',
+    onPressed: _nothing,
+    actionLabel: 'Ver a conta',
   );
 
   /// O vale: outra moeda, rebaixada ao lado do dinheiro.
   static Widget voucherCard() => CajuiStatCard(
-    label: 'Vale do mês',
+    label: 'Vale alimentação do mês',
     cents: voucher,
     large: true,
     tone: CajuiAmountTone.accent,

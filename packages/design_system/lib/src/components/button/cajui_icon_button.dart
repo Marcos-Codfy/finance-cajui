@@ -20,6 +20,7 @@ class CajuiIconButton extends StatelessWidget {
     required this.semanticLabel,
     required this.onPressed,
     this.variant = CajuiButtonVariant.ghost,
+    this.caption,
     super.key,
   });
 
@@ -35,6 +36,9 @@ class CajuiIconButton extends StatelessWidget {
   /// O peso do botão. Por padrão é discreto.
   final CajuiButtonVariant variant;
 
+  /// O nome curto, escrito embaixo do ícone: "Foto", "Ajustes".
+  final String? caption;
+
   static const _radius = BorderRadius.all(CajuiRadius.md);
 
   @override
@@ -46,7 +50,7 @@ class CajuiIconButton extends StatelessWidget {
       builder: (context, states) {
         final colors = CajuiTheme.of(context).colors;
         final tokens = CajuiButtonTokens.resolve(colors, variant, states);
-        return AnimatedContainer(
+        final box = AnimatedContainer(
           duration: CajuiDurations.fast,
           width: CajuiSpacing.touchTarget,
           height: CajuiSpacing.touchTarget,
@@ -57,7 +61,29 @@ class CajuiIconButton extends StatelessWidget {
           ),
           child: CajuiIcon(icon, color: tokens.foreground),
         );
+        final text = caption;
+        return text == null ? box : _captioned(context, box, text);
       },
+    );
+  }
+
+  /// O ícone com o nome embaixo: ícone sozinho obriga a lembrar o que ele
+  /// faz (27/11/2026, heurística de reconhecer em vez de lembrar).
+  Widget _captioned(BuildContext context, Widget box, String text) {
+    final theme = CajuiTheme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        box,
+        ExcludeSemantics(
+          child: Text(
+            text,
+            style: theme.typography.caption.copyWith(
+              color: theme.colors.text.muted,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

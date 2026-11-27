@@ -47,10 +47,11 @@ class EntriesPage extends ConsumerWidget {
     );
   }
 
-  /// As portas de entrada de uma despesa: fotografar o comprovante de papel,
-  /// escolher do aparelho um print, uma foto ou o PDF de um extrato, e
-  /// lançar à mão. As duas primeiras vêm lado a lado, em cima: são os
-  /// caminhos de quem tem o comprovante na mão (ADR-017).
+  /// As portas de entrada de uma despesa, numa linha só: "Gastei" à mão e,
+  /// ao lado, fotografar o comprovante ou escolher do aparelho um print,
+  /// uma foto ou o PDF de um extrato (ADR-017). Eram três botões grandes
+  /// empilhados, e a lista — o assunto da tela — começava no rodapé
+  /// (27/11/2026).
   ///
   /// Na web não há rodapé nenhum: lá o livro **desce** do servidor e não há
   /// onde gravar — tocar em "Lançar" levava ao formulário e só estourava na
@@ -63,72 +64,64 @@ class EntriesPage extends ConsumerWidget {
     }
     final ready = state is EntriesReady;
     final capture = ref.watch(captureServiceProvider);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: [
-        if (capture.canPhotograph || capture.canPickFiles) ...[
-          _captureRow(context, capture, ready: ready),
-          const SizedBox(height: CajuiSpacing.sm),
-        ],
-        CajuiButton(
-          label: 'Lançar',
-          icon: CajuiIconData.plus,
-          expand: true,
-          onPressed: ready
-              ? () => context
-                    .coordinator(ledgerCoordinatorProvider)
-                    .openEntryForm()
-              : null,
+        Expanded(
+          child: CajuiButton(
+            label: 'Gastei',
+            icon: CajuiIconData.plus,
+            expand: true,
+            onPressed: ready
+                ? () => context
+                      .coordinator(ledgerCoordinatorProvider)
+                      .openEntryForm()
+                : null,
+          ),
         ),
+        ..._capture(context, capture, ready: ready),
       ],
     );
   }
 
-  /// Fotografar e escolher do aparelho, lado a lado.
-  Widget _captureRow(
+  /// Fotografar e escolher do aparelho, como ícones com nome ao lado do
+  /// "Gastei".
+  List<Widget> _capture(
     BuildContext context,
     CaptureService capture, {
     required bool ready,
-  }) {
-    final camera = capture.canPhotograph
-        ? _captureButton(
-            context,
-            label: 'Fotografar',
-            icon: CajuiIconData.camera,
-            open: ready ? capture.photograph : null,
-          )
-        : null;
-    final gallery = capture.canPickFiles
-        ? _captureButton(
-            context,
-            label: 'Da galeria',
-            icon: CajuiIconData.image,
-            open: ready ? capture.pickFromDevice : null,
-          )
-        : null;
-    return Row(
-      children: [
-        ?camera,
-        if (camera != null && gallery != null)
-          const SizedBox(width: CajuiSpacing.sm),
-        ?gallery,
-      ],
-    );
-  }
+  }) => [
+    if (capture.canPhotograph)
+      _captureButton(
+        context,
+        caption: 'Foto',
+        label: 'Fotografar comprovante',
+        icon: CajuiIconData.camera,
+        open: ready ? capture.photograph : null,
+      ),
+    if (capture.canPickFiles)
+      _captureButton(
+        context,
+        caption: 'Galeria',
+        label: 'Escolher da galeria ou dos arquivos',
+        icon: CajuiIconData.image,
+        open: ready ? capture.pickFromDevice : null,
+      ),
+  ];
 
-  /// Um dos dois botões de captura, com metade da largura.
+  /// Um dos botões de captura.
   static Widget _captureButton(
     BuildContext context, {
+    required String caption,
     required String label,
     required CajuiIconData icon,
     required Future<bool> Function()? open,
-  }) => Expanded(
-    child: CajuiButton(
-      label: label,
-      variant: CajuiButtonVariant.secondary,
+  }) => Padding(
+    padding: const EdgeInsets.only(left: CajuiSpacing.sm),
+    child: CajuiIconButton(
       icon: icon,
-      expand: true,
+      caption: caption,
+      semanticLabel: label,
+      variant: CajuiButtonVariant.secondary,
       onPressed: open == null ? null : () => _open(context, open),
     ),
   );
@@ -188,11 +181,11 @@ class EntriesPage extends ConsumerWidget {
         onPrevious: filters.previousMonth,
         onNext: state.isCurrentMonth ? null : filters.nextMonth,
       ),
+      const SizedBox(height: CajuiSpacing.sm),
+      MonthSpendingCard(spent: state.spent),
       const SizedBox(height: CajuiSpacing.lg),
-      MonthSpendingCard(spent: state.spent, voucher: state.voucher),
-      const SizedBox(height: CajuiSpacing.xl),
       _filters(state),
-      const SizedBox(height: CajuiSpacing.xl),
+      const SizedBox(height: CajuiSpacing.lg),
       if (state.entries.isEmpty)
         EntriesEmpty(state: state)
       else

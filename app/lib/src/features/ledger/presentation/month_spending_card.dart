@@ -1,65 +1,69 @@
-import 'package:cajui/src/core/navigation/coordinator_access.dart';
-import 'package:cajui/src/features/budget/presentation/budget_coordinator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
 
-/// O gasto do mês, **uma linha por moeda**, e o vale do mês.
+/// O que já foi gasto no mês, **uma linha por moeda**, num cartão baixo: a
+/// lista de lançamentos é o assunto da tela e precisa aparecer logo
+/// (27/11/2026).
 ///
-/// Não há linha de total: dinheiro e vale não se somam em lugar nenhum do
-/// Cajui (RN-111). Quem vê "R$ 640" quer saber de qual bolso saiu. O vale é
-/// o da planilha, que se muda em Minhas contas — o mesmo número do Início.
+/// Não há linha de total: dinheiro e vale alimentação não se somam em lugar
+/// nenhum do Cajui (RN-111). Quem vê "R$ 640" quer saber de qual bolso saiu.
+/// O "O que é cada número?" explica por que este número não é o "Gastos" do
+/// Painel: aqui é o já lançado; lá, o previsto do mês inteiro.
 class MonthSpendingCard extends StatelessWidget {
-  /// Cria o cartão com o gasto [spent] e o vale do mês [voucher].
-  const new({required this.spent, required this.voucher, super.key});
+  /// Cria o cartão com o gasto [spent].
+  const new({required this.spent, super.key});
 
   /// O gasto do mês, por moeda.
   final TenderAmounts spent;
 
-  /// O vale do mês (RN-1006).
-  final Money voucher;
+  /// A explicação curta, no tom do guia de voz.
+  static const String explanation =
+      'Aqui está o que já foi lançado neste mês. No Painel, "Gastos do mês" '
+      'é o previsto para o mês todo: conta as contas que ainda vão vencer e '
+      'o que a planilha reserva para o dia a dia. O vale alimentação é '
+      'outra moeda e nunca se soma ao dinheiro.';
 
   @override
   Widget build(BuildContext context) {
+    final theme = CajuiTheme.of(context);
     return CajuiCard(
       sunken: true,
+      padding: const EdgeInsets.symmetric(
+        horizontal: CajuiSpacing.lg,
+        vertical: CajuiSpacing.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _line(context, 'Gasto em dinheiro', spent.cash),
-          const SizedBox(height: CajuiSpacing.sm),
-          _line(context, 'Gasto no vale', spent.mealVoucher),
-          const SizedBox(height: CajuiSpacing.lg),
-          CajuiListRow(
-            title: 'Vale do mês',
-            subtitle: 'Só compra comida · muda em Minhas contas',
-            trailing: CajuiAmountText(
-              voucher.cents,
-              tone: CajuiAmountTone.accent,
-            ),
-            semanticLabel: 'Vale do mês, mudar em Minhas contas',
-            onPressed: () =>
-                context.coordinator(budgetCoordinatorProvider).openMyBills(),
+          _line(theme, 'Já gasto em dinheiro', spent.cash),
+          const SizedBox(height: CajuiSpacing.xs),
+          _line(theme, 'Já gasto no vale alimentação', spent.mealVoucher),
+          CajuiDisclosure(
+            title: 'O que é cada número?',
+            children: [
+              Text(
+                explanation,
+                style: theme.typography.caption.copyWith(
+                  color: theme.colors.text.muted,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _line(BuildContext context, String label, Money amount) {
-    final theme = CajuiTheme.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: theme.typography.body.copyWith(
-              color: theme.colors.text.muted,
-            ),
-          ),
+  Widget _line(CajuiThemeData theme, String label, Money amount) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: theme.typography.body.copyWith(color: theme.colors.text.muted),
         ),
-        CajuiAmountText(amount.cents),
-      ],
-    );
-  }
+      ),
+      CajuiAmountText(amount.cents),
+    ],
+  );
 }

@@ -1,3 +1,4 @@
+import 'package:cajui/src/core/settings/preferences_store.dart';
 import 'package:cajui/src/features/home_widget/application/home_widget_providers.dart';
 import 'package:cajui/src/features/home_widget/application/widget_placement.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
@@ -25,6 +26,10 @@ enum SetupStep {
 /// Os passos que faltam, na ordem do cartão; vazio quando está tudo pronto.
 final FutureProvider<List<SetupStep>> setupStepsProvider =
     FutureProvider.autoDispose<List<SetupStep>>((ref) async {
+      // Dispensado é dispensado: o cartão não volta por ter um passo novo.
+      if (ref.read(preferencesStoreProvider).read().setupDismissed) {
+        return const [];
+      }
       final book = await ref.watch(ledgerProvider.future);
       final granted = await ref.read(notificationAccessProvider).isGranted();
       final placement = await ref.read(homeScreenProvider).placement();

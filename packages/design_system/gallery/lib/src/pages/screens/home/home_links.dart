@@ -25,16 +25,13 @@ abstract final class HomeLinks {
     bool debts = true,
   }) => [
     const CajuiSectionTitle('Seu dinheiro'),
-    _row(
-      'Meu mês',
-      'Entra ${_brl(income)} · sai do bolso ${_brl(outOfPocket)}',
-    ),
+    _row('Meu mês', 'Renda ${_brl(income)} · gastos ${_brl(outOfPocket)}'),
     _row('Lançamentos', entries == 1 ? '1 este mês' : '$entries este mês'),
-    _row('Minhas contas', 'O que entra, o que sai todo mês e o dízimo'),
+    _row('Minhas contas', 'Renda, contas do mês e o dízimo'),
     if (voucher)
       _row(
         'Vale',
-        'Vale do mês ${_brl(HomeNumbers.voucher)} · conferir com a operadora',
+        'Vale alimentação do mês ${_brl(HomeNumbers.voucher)} · conferir com a operadora',
       ),
     _row('Cartões', 'Quanto do limite já foi usado no mês'),
     _row(

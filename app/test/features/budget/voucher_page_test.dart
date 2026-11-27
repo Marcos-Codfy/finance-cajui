@@ -55,7 +55,7 @@ Future<ProviderContainer> _openVoucher(
   await tester.pumpWidget(scope);
   await tester.pump();
   if (paired) {
-    await openFromHome(tester, 'Vale');
+    await openFromHome(tester, 'Vale alimentação');
   } else {
     // Na web sem lançamento, o Início é a tela vazia, sem as portas.
     unawaited(
@@ -152,7 +152,9 @@ void main() {
     await settleAfterTap(tester);
 
     expect(
-      find.text('Vale do mês ${_brl('500,00')} · conferir com a operadora'),
+      find.text(
+        'Vale alimentação do mês ${_brl('500,00')} · conferir com a operadora',
+      ),
       findsOneWidget,
     );
   });

@@ -32,7 +32,7 @@ class _HouseholdKeyPageState extends ConsumerState<HouseholdKeyPage> {
     final theme = CajuiTheme.of(context);
     final key = ref.watch(householdKeyProvider).read();
     return CajuiScreen(
-      title: 'Chave da casa',
+      title: 'Chave de API',
       onBack: context.back,
       children: [
         _explanation(theme, key),
@@ -43,7 +43,7 @@ class _HouseholdKeyPageState extends ConsumerState<HouseholdKeyPage> {
 
   Widget _explanation(CajuiThemeData theme, String? key) => Text(
     key == null
-        ? 'Este app foi montado sem a chave da casa: ele funciona '
+        ? 'Este app foi montado sem a chave de API: ele funciona '
               'sozinho, sem servidor. O APK de uso vem com ela.'
         : 'É com ela que este celular, o outro e a consulta na web '
               'falam com o seu servidor. Para entrar na web de um '
@@ -56,7 +56,7 @@ class _HouseholdKeyPageState extends ConsumerState<HouseholdKeyPage> {
     Text(
       _shown ? key : '•' * 24,
       style: theme.typography.body,
-      semanticsLabel: _shown ? 'A chave da casa' : 'Chave escondida',
+      semanticsLabel: _shown ? 'A chave de API' : 'Chave escondida',
     ),
     const SizedBox(height: CajuiSpacing.lg),
     CajuiButton(label: 'Copiar', expand: true, onPressed: () => _copy(key)),

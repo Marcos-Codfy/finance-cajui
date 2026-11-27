@@ -45,7 +45,7 @@ class HomePage extends StatelessWidget {
     _ready(
       'Com dados',
       'Outubro andando. A sobra vem na frente do carrossel; arraste de '
-          'lado para o que entra, o que sai do bolso e o vale.',
+          'lado para a renda, os gastos e o vale alimentação.',
       HomeNumbers.closing(),
     ),
     _party(),

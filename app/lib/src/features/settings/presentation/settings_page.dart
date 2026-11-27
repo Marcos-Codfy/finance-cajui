@@ -50,7 +50,7 @@ class SettingsPage extends ConsumerWidget {
   List<Widget> _cadastros(BuildContext context, WidgetRef ref) => [
     if (ref.watch(ledgerUplinkProvider).isPaired)
       _opens(
-        title: 'Chave da casa',
+        title: 'Chave de API',
         subtitle: 'Para entrar na consulta pela web de outro computador',
         onPressed: () =>
             context.coordinator(settingsCoordinatorProvider).openHouseholdKey(),

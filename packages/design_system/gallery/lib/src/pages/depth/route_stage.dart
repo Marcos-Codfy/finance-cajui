@@ -82,9 +82,9 @@ class _Detail extends StatelessWidget {
         CajuiCard(
           child: Column(
             children: [
-              _line('O que entra', HomeNumbers.income),
-              _line('O que sai do bolso', HomeNumbers.outOfPocket),
-              _line('Vale do mês', HomeNumbers.voucher),
+              _line('Renda do mês', HomeNumbers.income),
+              _line('Gastos do mês', HomeNumbers.outOfPocket),
+              _line('Vale alimentação do mês', HomeNumbers.voucher),
             ],
           ),
         ),

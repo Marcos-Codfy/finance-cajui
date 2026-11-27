@@ -85,11 +85,17 @@ class ContentPage extends StatelessWidget {
       child: GallerySpecimens(
         children: [
           _card(context, 'Padrão', 'Sobra de outubro', 131240),
-          _card(context, 'Rebaixado', 'Vale do mês', 40000, sunken: true),
+          _card(
+            context,
+            'Rebaixado',
+            'Vale alimentação do mês',
+            40000,
+            sunken: true,
+          ),
           _card(
             context,
             'Tocável',
-            'O que sai do bolso',
+            'Gastos do mês',
             288760,
             onPressed: _nothing,
           ),

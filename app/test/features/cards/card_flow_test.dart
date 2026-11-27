@@ -63,7 +63,7 @@ void main() {
     // Compra em 3×, paga no cartão.
     await _tap(tester, find.bySemanticsLabel('Voltar'));
     await openFromHome(tester, 'Lançamentos');
-    await _tap(tester, find.text('Lançar'));
+    await _tap(tester, find.text('Gastei'));
     await tester.enterText(_field('Valor'), '96000');
     await tester.enterText(_field('O que foi'), 'Fogão');
     await _tap(tester, find.text('Categoria'));

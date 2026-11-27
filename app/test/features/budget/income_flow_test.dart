@@ -59,7 +59,7 @@ void main() {
     await _tap(tester, find.bySemanticsLabel('Voltar'));
 
     // O crédito do mês vale no lugar do vale previsto (RN-1006).
-    expect(find.text('Vale do mês'), findsOneWidget);
+    expect(find.text('Vale alimentação do mês'), findsOneWidget);
     expect(find.text('R\$${_nbsp}600,00'), findsWidgets);
     await openFromHome(tester, 'Lançamentos');
     expect(find.text('Nada lançado ainda'), findsOneWidget);

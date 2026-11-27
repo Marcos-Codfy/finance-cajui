@@ -36,7 +36,7 @@ void main() {
   ) async {
     await _open(tester, FakeUplink());
 
-    expect(find.text('Chave da casa'), findsOneWidget);
+    expect(find.text('Chave de API'), findsOneWidget);
     expect(find.text('Sair'), findsNothing);
   });
 
@@ -44,7 +44,7 @@ void main() {
       'como se fosse a chave da casa', (tester) async {
     await _open(tester, const NoLedgerUplink());
 
-    expect(find.text('Chave da casa'), findsNothing);
+    expect(find.text('Chave de API'), findsNothing);
   });
 
   testWidgets('ADR-027 · na consulta, "Sair" esquece a entrada e volta à '
@@ -56,7 +56,7 @@ void main() {
     await settleAfterTap(tester);
 
     expect(keys.key, isNull);
-    expect(find.text('Código ou chave da casa'), findsOneWidget);
+    expect(find.text('Código do autenticador ou chave de API'), findsOneWidget);
     expect(find.text('Ajustes'), findsNothing);
   });
 }

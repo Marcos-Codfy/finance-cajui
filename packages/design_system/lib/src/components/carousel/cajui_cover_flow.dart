@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:design_system/src/components/carousel/carousel_pose.dart';
 import 'package:design_system/src/components/carousel/cover_flow_indicator.dart';
 import 'package:design_system/src/components/carousel/cover_flow_slide.dart';
+import 'package:design_system/src/components/carousel/cover_flow_tabs.dart';
 import 'package:design_system/src/feedback/cajui_feedback_scope.dart';
 import 'package:design_system/src/motion/motion_level.dart';
 import 'package:design_system/src/motion/motion_of.dart';
@@ -43,10 +44,15 @@ class CajuiCoverFlow extends StatefulWidget {
     this.initialPage = 0,
     this.onPageChanged,
     this.viewportFraction = 0.8,
+    this.pageLabels,
     super.key,
   }) : assert(
          viewportFraction > 0.5 && viewportFraction <= 1,
          'A página do centro precisa ocupar a maior parte do palco.',
+       ),
+       assert(
+         pageLabels == null || pageLabels.length == children.length,
+         'Um nome para cada página.',
        );
 
   /// As páginas, da primeira à última. Sem nenhuma, o carrossel não ocupa
@@ -66,6 +72,10 @@ class CajuiCoverFlow extends StatefulWidget {
   /// A fração da largura que a página do centro ocupa. O resto mostra um
   /// pedaço das vizinhas: é o que conta que há mais para ver.
   final double viewportFraction;
+
+  /// O nome de cada página. Com isto, os nomes ficam no lugar dos pontos e
+  /// a pessoa sabe o que há em cada página antes de ir até ela.
+  final List<String>? pageLabels;
 
   @override
   State<CajuiCoverFlow> createState() => _CajuiCoverFlowState();
@@ -190,15 +200,23 @@ class _CajuiCoverFlowState extends State<CajuiCoverFlow>
             builder: (context, constraints) => _stage(constraints.maxWidth),
           ),
           const SizedBox(height: CajuiSpacing.sm),
-          CoverFlowIndicator(
-            count: widget.children.length,
-            page: _page,
-            current: _current,
-            label: widget.semanticLabel,
-            onSelect: _goTo,
-          ),
+          _indicator(),
         ],
       ),
+    );
+  }
+
+  Widget _indicator() {
+    final labels = widget.pageLabels;
+    if (labels != null) {
+      return CoverFlowTabs(labels: labels, current: _current, onSelect: _goTo);
+    }
+    return CoverFlowIndicator(
+      count: widget.children.length,
+      page: _page,
+      current: _current,
+      label: widget.semanticLabel,
+      onSelect: _goTo,
     );
   }
 

@@ -150,7 +150,8 @@ class _ActionPageState extends State<ActionPage> {
       title: 'Botão de ícone',
       description:
           'O desenho tem 24, o alvo tem 48. O nome para o leitor de tela é '
-          'obrigatório: ícone sozinho não diz nada a quem não vê.',
+          'obrigatório: ícone sozinho não diz nada a quem não vê. Com '
+          '`caption`, o nome curto fica escrito embaixo, para quem vê também.',
       child: GallerySpecimens(
         children: [
           for (final variant in CajuiButtonVariant.values)
@@ -160,6 +161,7 @@ class _ActionPageState extends State<ActionPage> {
               variant: variant,
             ),
           _iconButton('Inativo', enabled: false),
+          _iconButton('Com nome', token: 'caption', caption: 'Ajustes'),
         ],
       ),
     );
@@ -170,13 +172,15 @@ class _ActionPageState extends State<ActionPage> {
     String? token,
     CajuiButtonVariant variant = CajuiButtonVariant.ghost,
     bool enabled = true,
+    String? caption,
   }) {
     return GallerySpecimen(
       state: state,
       token: token,
       child: CajuiIconButton(
-        icon: CajuiIconData.share,
-        semanticLabel: 'Compartilhar',
+        icon: caption == null ? CajuiIconData.share : CajuiIconData.gear,
+        semanticLabel: caption ?? 'Compartilhar',
+        caption: caption,
         variant: variant,
         onPressed: enabled ? _nothing : null,
       ),

@@ -45,7 +45,7 @@ void main() {
       await openGallery(tester, page: GalleryDestination.home);
       await pickVariant(tester, 'Primeiro uso');
 
-      expect(find.text('Já saiu este mês'), findsOneWidget);
+      expect(find.text('Gastos do mês'), findsOneWidget);
       expect(find.text('Sobra de outubro'), findsNothing);
     });
 

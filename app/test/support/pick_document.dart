@@ -92,7 +92,7 @@ Future<(FakeInbox, LedgerBook Function())> pickDocument(
   inbox.picked = const [
     SharedFile(id: 'doc', path: '/inbox/doc', isPdf: false),
   ];
-  await tapAndSettle(tester, find.text('Da galeria'));
+  await tapAndSettle(tester, find.text('Galeria'));
   final container = ProviderScope.containerOf(
     tester.element(find.byType(CajuiApp)),
   );
