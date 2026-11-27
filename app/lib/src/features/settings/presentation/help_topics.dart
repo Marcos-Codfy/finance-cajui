@@ -23,8 +23,9 @@ const List<HelpTopic> helpTopics = [
   (
     title: 'Sobra ou falta',
     text:
-        'Renda do mês menos gastos do mês. Com renda de R\$ 3.000,00 e '
-        'gastos de R\$ 2.400,00, sobram R\$ 600,00. Se os gastos passam da '
+        'Renda do mês menos gastos do mês. Com renda de '
+        r'R$ 3.000,00 e gastos de R$ 2.400,00, sobram R$ 600,00. '
+        'Se os gastos passam da '
         'renda, o Painel mostra quanto falta para fechar.',
   ),
   (
