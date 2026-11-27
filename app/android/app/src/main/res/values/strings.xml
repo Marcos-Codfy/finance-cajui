@@ -13,7 +13,7 @@
     <string name="home_widget_bills_empty">Nenhuma conta a vencer por agora.</string>
     <string name="home_widget_camera">Fotografar comprovante</string>
     <string name="home_widget_gallery">Escolher da galeria</string>
-    <string name="home_widget_new_entry">Novo lançamento</string>
+    <string name="home_widget_new_entry">Novo gasto</string>
 
     <string name="channel_auto">Lançamentos automáticos</string>
     <string name="channel_review">Revisão da semana</string>

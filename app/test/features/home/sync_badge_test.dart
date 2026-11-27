@@ -41,6 +41,30 @@ void main() {
       expect(words, isNot(contains('!')));
     });
 
+    test('sem conexão, diz de quando é o que está na tela; e no dia '
+        'seguinte a hora ganha o "ontem"', () {
+      final later = now.add(const Duration(hours: 2));
+      expect(
+        SyncBadge.wordsOf(SyncStatus(lastOkAt: now, failing: true), now: later),
+        'Sem conexão com o servidor · atualizado às 14h32 · o que você '
+        'lançar sobe depois',
+      );
+      expect(
+        SyncBadge.wordsOf(
+          SyncStatus(lastOkAt: now),
+          now: now.add(const Duration(days: 1)),
+        ),
+        'Sincronizado ontem às 14h32',
+      );
+      expect(
+        SyncBadge.wordsOf(
+          SyncStatus(lastOkAt: now),
+          now: now.add(const Duration(days: 3)),
+        ),
+        'Sincronizado em 17 de out.',
+      );
+    });
+
     test('o controle anota começo, acerto e falha', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);

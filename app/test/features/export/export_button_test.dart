@@ -56,7 +56,7 @@ void main() {
     expect(exporter.received.single.month, testToday.budgetMonth);
     expect(exporter.received.single.rows, hasLength(1));
     // Não abre tela: o Início continua ali.
-    expect(find.text('Seu dinheiro'), findsOneWidget);
+    expect(find.text('Meu mês'), findsWidgets);
   });
 
   testWidgets('RN-1090 · "Levar para planilha" no Meu mês entrega o mês '

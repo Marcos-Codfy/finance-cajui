@@ -49,3 +49,11 @@ void drawGear(Path p) {
       ..lineTo(12 + dx * 9, 12 + dy * 9);
   }
 }
+
+/// Lupa: buscar. Um círculo e o cabo na diagonal de baixo.
+void drawSearch(Path p) {
+  p
+    ..addOval(Rect.fromCircle(center: const Offset(10.5, 10.5), radius: 6.5))
+    ..moveTo(15.2, 15.2)
+    ..lineTo(20, 20);
+}

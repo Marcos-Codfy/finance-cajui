@@ -79,7 +79,7 @@ void main() {
     final budget = container.read(homeViewProvider)!.budget;
 
     expect(budget.closes, isFalse);
-    expect(snapshot.label, 'Sai do bolso em setembro');
+    expect(snapshot.label, 'Gastos de setembro');
     expect(snapshot.amount, MoneyFormat.brl(budget.outOfPocket));
     expect(snapshot.amount, isNot(MoneyFormat.brl(budget.shortfall)));
     expect(snapshot.caption, contains('Abra o Cajui'));
@@ -88,7 +88,7 @@ void main() {
   test('RN-872 RN-1050 · sem plano, o widget mostra o que já saiu', () async {
     final snapshot = await snapshotOf(open(const []));
 
-    expect(snapshot.label, 'Já saiu este mês');
+    expect(snapshot.label, 'Gastos do mês');
     expect(snapshot.amount, _brl(0));
     expect(snapshot.validUntil, LocalDate(2026, 9, 30));
   });

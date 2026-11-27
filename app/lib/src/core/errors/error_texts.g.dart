@@ -156,7 +156,7 @@ abstract final class ErrorTexts {
     ),
     ErrorCode.storage01 => const ErrorText(
       'O aparelho está sem espaço, e não deu para guardar {item}. O que já estava salvo continua salvo.',
-      actions: ['Abrir armazenamento'],
+      actions: ['Abrir armazenamento', 'Tentar de novo'],
     ),
     ErrorCode.req01 => const ErrorText(
       'O app enviou um pedido que o servidor não entendeu. É uma falha do app, não sua; o que você preencheu continua na tela.',

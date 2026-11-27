@@ -215,7 +215,7 @@ class GlassWidget extends StatelessWidget {
     final colors = CajuiTheme.of(context).colors;
     return Semantics(
       button: true,
-      label: 'Novo lançamento',
+      label: 'Novo gasto',
       child: Container(
         width: 96,
         height: 44,

@@ -62,7 +62,7 @@ abstract final class _HomeWords {
     return switch (view) {
       // Sem plano, o widget mostra o que já saiu, como o Início (RN-1050).
       HomeView(hasPlan: false) => (
-        'Já saiu este mês',
+        'Gastos do mês',
         budget.outOfPocket,
         'Com Minhas contas, aqui aparece a sobra do mês.',
       ),
@@ -72,7 +72,7 @@ abstract final class _HomeWords {
         'Depois de pagar tudo, pelo que está lançado.',
       ),
       _ => (
-        'Sai do bolso em $month',
+        'Gastos de $month',
         budget.outOfPocket,
         'O mês ainda não fecha. Abra o Cajui para ver o que fazer.',
       ),

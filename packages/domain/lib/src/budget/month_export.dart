@@ -88,9 +88,9 @@ final class MonthExport {
   }
 
   static List<ExportLine> _summary(MonthBudget budget) => [
-    (label: 'O que entra, em dinheiro', amount: budget.cashIncome),
+    (label: 'Renda do mês, em dinheiro', amount: budget.cashIncome),
     if (budget.voucher.isPositive)
-      (label: 'Vale do mês', amount: budget.voucher),
+      (label: 'Vale alimentação do mês', amount: budget.voucher),
     (label: 'Contas fixas', amount: budget.fixedBills),
     (label: 'Assinaturas', amount: budget.subscriptions),
     (
@@ -101,7 +101,7 @@ final class MonthExport {
     if (budget.tithe.isPositive) (label: 'Dízimo', amount: budget.tithe),
     (label: 'Total que sai', amount: budget.totalOut),
     (label: 'O vale paga', amount: budget.voucherCovered),
-    (label: 'Sai do bolso', amount: budget.outOfPocket),
+    (label: 'Gastos do mês', amount: budget.outOfPocket),
     if (budget.closes)
       (label: 'Sobra do mês', amount: budget.result)
     else

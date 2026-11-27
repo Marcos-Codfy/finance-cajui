@@ -23,7 +23,7 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-1%2C877-2E7D32)
+![Tests](https://img.shields.io/badge/tests-1%2C900-2E7D32)
 ![Domain coverage](https://img.shields.io/badge/domain-92.9%25-2E7D32)
 ![Cost](https://img.shields.io/badge/fixed%20cost-R%24%200.00-B33A16)
 
@@ -88,7 +88,7 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 | Server          | Dart + Shelf, single executable, on Oracle Cloud (OCI), with TLS; encrypted, hash-chained event log; documented API | [`server/`](server), [`docs/api.md`](docs/api.md) |
 | Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with the screen states | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
 | Native Android  | Share intake, on-device OCR, bank notifications, home screen widget, reminders and voice input | [`app/android`](app/android) |
-| Quality         | 1,877 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Quality         | 1,900 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Process         | 32 ADRs, Conventional Commits, pull requests and CI on GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Two decisions that shaped the project
@@ -472,7 +472,7 @@ thing.
 
 | Item              | Status                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Tests             | **1,877**: app 618 · domain 495 · server 271 · design system 257 · contract 104 · gallery 81 · persistence 25 · checker 26 |
+| Tests             | **1,900**: app 632 · domain 504 · server 271 · design system 257 · contract 104 · gallery 81 · persistence 25 · checker 26 |
 | Coverage          | contract 93.2% · domain 92.9% · persistence 91.5% · server 89.9% · design system 88.0% · app 86.4%       |
 | Rule ↔ test       | Every rule has a number (`RN-xxx`) and a test with the same number. A numeric example in the spec becomes a test, to the cent |
 | Texts             | Every error a person reads comes from a catalog of 47 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
@@ -480,7 +480,7 @@ thing.
 | Analyzer          | `very_good_analysis`, zero warnings                                                                       |
 | Custom checker    | no size or layer limit broken                                                                                |
 | Accessibility     | Lighthouse 100 on the web; semantics on from the root; the screen reader says who is speaking in the chat |
-| Usability         | Reviewed against Nielsen's 10 heuristics: every number on the dashboard has a name and opens the math behind it, the save button says what is missing, icons have written names, and the words are everyday ones (income, spending, meal voucher) |
+| Usability         | Reviewed against Nielsen's 10 heuristics: every number on the dashboard has a name and opens the math behind it, the save button says what is missing, icons have written names, and the words are everyday ones (income, spending, meal voucher). There are shortcuts for daily use (one-tap filters, repeating a usual spend), a confirmation before saving an amount far above normal, and a help screen that explains each number |
 
 ## Problems found and fixes
 

@@ -7,6 +7,7 @@ import 'package:cajui/src/features/ledger/presentation/entries_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_detail_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_page.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
+import 'package:cajui/src/features/ledger/presentation/frequent_spends_row.dart';
 import 'package:cajui/src/features/ledger/presentation/installments_picker.dart';
 import 'package:cajui/src/features/ledger/presentation/option_picker_page.dart';
 import 'package:cajui/src/features/ledger/presentation/reversal_page.dart';
@@ -68,8 +69,10 @@ final class LedgerCoordinator {
     );
   }
 
-  /// O formulário de lançar à mão.
-  Future<void> openEntryForm() => _navigator.push<void>(const EntryFormPage());
+  /// O formulário de lançar à mão, com os gastos de sempre no alto.
+  Future<void> openEntryForm() => _navigator.push<void>(
+    EntryFormPage(header: (_, edit) => FrequentSpendsRow(edit: edit)),
+  );
 
   /// O estorno de [entry].
   Future<void> openReversal(Entry entry) =>

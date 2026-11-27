@@ -14,7 +14,7 @@ abstract final class HomeLinks {
 
   static String _brl(int cents) => BrlFormatter.format(cents);
 
-  /// As linhas da seção "Seu dinheiro". [outOfPocket] e [income] vão para a
+  /// As portas do Início, sem título de seção. [outOfPocket] e [income] vão para a
   /// linha do Meu mês; [entries] é quantos lançamentos o mês tem; sem
   /// [voucher], a linha do vale some, como some no app para quem não tem.
   static List<Widget> of({
@@ -24,7 +24,6 @@ abstract final class HomeLinks {
     bool voucher = true,
     bool debts = true,
   }) => [
-    const CajuiSectionTitle('Seu dinheiro'),
     _row('Meu mês', 'Renda ${_brl(income)} · gastos ${_brl(outOfPocket)}'),
     _row('Lançamentos', entries == 1 ? '1 este mês' : '$entries este mês'),
     _row('Minhas contas', 'Renda, contas do mês e o dízimo'),
@@ -33,7 +32,7 @@ abstract final class HomeLinks {
         'Vale',
         'Vale alimentação do mês ${_brl(HomeNumbers.voucher)} · conferir com a operadora',
       ),
-    _row('Cartões', 'Quanto do limite já foi usado no mês'),
+    _row('Cartões', 'Limite usado no mês'),
     _row(
       'Dívidas',
       debts ? 'Ainda devo ${_brl(owed)}' : 'Nenhuma dívida cadastrada',

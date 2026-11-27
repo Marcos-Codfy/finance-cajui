@@ -1,6 +1,7 @@
 import 'package:cajui/src/core/navigation/navigation_providers.dart';
 import 'package:cajui/src/core/navigation/scene_navigator.dart';
 import 'package:cajui/src/features/auth/presentation/household_key_page.dart';
+import 'package:cajui/src/features/settings/presentation/help_page.dart';
 import 'package:cajui/src/features/settings/presentation/household_names_page.dart';
 import 'package:cajui/src/features/settings/presentation/settings_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +20,10 @@ final class SettingsCoordinator {
   Future<void> openHouseholdNames() =>
       _navigator.push<void>(const HouseholdNamesPage());
 
-  /// A chave da casa, para entrar na consulta pela web de outro computador.
+  /// "Como o Cajui conta": o que é cada número.
+  Future<void> openHelp() => _navigator.push<void>(const HelpPage());
+
+  /// A chave de API, para entrar na consulta pela web de outro computador.
   Future<void> openHouseholdKey() =>
       _navigator.push<void>(const HouseholdKeyPage());
 }

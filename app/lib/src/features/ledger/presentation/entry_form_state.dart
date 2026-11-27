@@ -23,6 +23,16 @@ final class EntryFormEditing extends EntryFormState {
   final PresentedError? problem;
 }
 
+/// O valor está muito acima do normal da categoria, e a tela pergunta antes
+/// de gravar: "confere?". Não é recusa — compra grande existe.
+final class EntryFormConfirming extends EntryFormState {
+  /// Cria a pergunta sobre o valor de [draft], com o normal [typical].
+  const new(super.draft, {required this.typical});
+
+  /// O normal da categoria, para a pessoa comparar.
+  final Money typical;
+}
+
 /// O lançamento está sendo gravado. O botão segura o segundo toque.
 final class EntryFormSaving extends EntryFormState {
   /// Cria o estado de gravação de [draft].

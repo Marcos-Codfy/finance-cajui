@@ -66,6 +66,10 @@ class EntriesEmpty extends ConsumerWidget {
         'a categoria ${state.categoryName ?? ''}'.trim(),
       if (filter.paymentMethodId != null)
         'a forma de pagamento ${state.paymentMethodName ?? ''}'.trim(),
+      if (filter.paymentKind == PaymentMethodKind.mealVoucher)
+        '“Só vale alimentação”',
+      if (filter.paymentKind == PaymentMethodKind.creditCard) '“Só cartão”',
+      if (filter.weekStart != null) '“Esta semana”',
     ];
     if (parts.length == 1) return parts.single;
     final last = parts.removeLast();

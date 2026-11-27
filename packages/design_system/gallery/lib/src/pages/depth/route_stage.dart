@@ -46,7 +46,6 @@ class _Home extends StatelessWidget {
       ),
       children: [
         HomeNumbers.closing().first,
-        const CajuiSectionTitle('Seu dinheiro'),
         for (final title in const ['Meu mês', 'Dívidas', 'Mês a mês'])
           CajuiListRow(
             title: title,

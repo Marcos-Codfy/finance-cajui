@@ -31,6 +31,12 @@ class SettingsPage extends ConsumerWidget {
       depth: true,
       cinematic: true,
       children: [
+        _opens(
+          title: 'Como o Cajui conta',
+          subtitle: 'O que é cada número: renda, gastos, vale e cartão',
+          onPressed: () =>
+              context.coordinator(settingsCoordinatorProvider).openHelp(),
+        ),
         ..._cadastros(context, ref),
         const BankNotificationsRow(),
         const HouseholdNamesRow(),
