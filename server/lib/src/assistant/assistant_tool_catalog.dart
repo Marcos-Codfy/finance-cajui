@@ -31,6 +31,10 @@ abstract final class AssistantToolCatalog {
   /// O nome da ferramenta que troca a categoria de um lançamento.
   static const recategorize = 'mudar_categoria';
 
+  /// O nome da ferramenta que corrige valor, data, descrição ou forma de
+  /// pagamento de um lançamento que já existe.
+  static const correctEntry = 'corrigir_lancamento';
+
   /// O nome da ferramenta que abate um valor de uma dívida (BL-117).
   static const payDownDebt = 'abater_divida';
 
@@ -73,8 +77,44 @@ abstract final class AssistantToolCatalog {
             'type': 'integer',
             'description': 'Só em cartão de crédito, quando parcelado.',
           },
+          'repetido': {
+            'type': 'boolean',
+            'description':
+                'Só depois de a pessoa confirmar que é outro gasto, igual a '
+                'um que já existe no mesmo dia.',
+          },
         },
         'required': ['valor_centavos', 'categoria_id'],
+      },
+    ),
+    ChatTool(
+      name: correctEntry,
+      description:
+          'Corrige um lançamento que já existe, pelo id: valor, data, '
+          'descrição ou forma de pagamento. Use para "era 50, não 500", '
+          '"foi ontem", "foi no débito". Nunca lance outro para corrigir. '
+          'Sem o id, liste os lançamentos antes.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'id': {'type': 'string', 'description': 'O id do lançamento.'},
+          'valor_centavos': {
+            'type': 'integer',
+            'description': 'O valor certo, em centavos.',
+          },
+          'data': {
+            'type': 'string',
+            'description': 'A data certa, AAAA-MM-DD.',
+          },
+          'descricao': {'type': 'string', 'description': 'A descrição certa.'},
+          'forma': {
+            'type': 'string',
+            'description':
+                'A forma certa: ${PaymentChoice.options}, ou o id de um '
+                'cartão do cadastro.',
+          },
+        },
+        'required': ['id'],
       },
     ),
     ChatTool(

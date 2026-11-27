@@ -22,7 +22,7 @@ comprovantes e responde com os números do mês. É um projeto completo, feito d
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-1.904-2E7D32)
+![Testes](https://img.shields.io/badge/testes-1.910-2E7D32)
 ![Cobertura do domínio](https://img.shields.io/badge/domínio-92,9%25-2E7D32)
 ![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
 
@@ -85,7 +85,7 @@ Claude, como assistente de programação. A API do Claude também é usada dentr
 | Servidor        | Dart + Shelf, executável único, na Oracle Cloud (OCI), com TLS; registro de eventos cifrado e encadeado; API documentada | [`server/`](server), [`docs/api.md`](docs/api.md) |
 | Design system   | Pacote próprio com tokens, componentes, movimento 3D e sons; gallery publicada com os estados de tela | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
 | Android nativo  | Compartilhamento, OCR no aparelho, notificações do banco, widget da tela inicial, lembretes e entrada por voz | [`app/android`](app/android) |
-| Qualidade       | 1.904 testes, nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Qualidade       | 1.910 testes, nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Processo        | 32 ADRs, Conventional Commits, pull requests e CI no GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Duas decisões que moldaram o projeto
@@ -326,7 +326,7 @@ Cada item descreve o problema, a solução e o resultado.
   comprovantes maliciosos tenta injetar instruções no texto (*prompt injection*).
 
 <details>
-<summary><b>Mais 5 problemas: sincronização, verificador de código, transição de telas, som e widget de vidro</b></summary>
+<summary><b>Mais 6 problemas: sincronização, verificador de código, transição de telas, som, widget de vidro e assistente que lançava em dobro</b></summary>
 
 ### 5. Sincronizar dois celulares
 
@@ -378,6 +378,20 @@ Cada item descreve o problema, a solução e o resultado.
   com a aurora acesa ao fundo.
 - **Resultado:** a mesma composição existe como componentes do design system (`CajuiAurora`, `CajuiGlassPanel`,
   `CajuiOrb`), e a gallery mostra o gesto inteiro, do toque no widget à chegada no app.
+
+### 10. Assistente que lançava em dobro
+
+- **Problema:** pela conversa, um gasto às vezes entrava duas vezes, a resposta dizia que não tinha lançado, e o
+  pedido de corrigir o valor somava outro lançamento em vez de trocar.
+- **Causa:** três pontos juntos. Quando a IA caía depois de gravar, o servidor respondia só "fora do ar" e a ação
+  gravada sumia da resposta; o app desistia de esperar antes do prazo do servidor; e não havia ferramenta para
+  corrigir valor, data ou forma de pagamento, então o modelo lançava de novo.
+- **Solução:** a resposta sempre leva o que foi gravado, mesmo quando a IA cai no meio, e a pergunta inteira tem um
+  prazo menor que a espera do app. Lançamento com o mesmo valor, dia e forma de um que já existe volta como pergunta,
+  e só entra se a pessoa confirmar que é outro gasto. A ferramenta de correção grava a versão nova do mesmo
+  lançamento, com o original guardado no registro.
+- **Resultado:** cada caso tem teste no servidor: repetido recusado, repetido confirmado, queda depois de gravar e
+  correção que substitui.
 
 </details>
 
@@ -467,7 +481,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 
 | Item                | Situação                                                                                                  |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Testes              | **1.904**: app 635 · domínio 504 · servidor 271 · design system 257 · contrato 104 · gallery 82 · persistência 25 · verificador 26 |
+| Testes              | **1.910**: app 635 · domínio 504 · servidor 277 · design system 257 · contrato 104 · gallery 82 · persistência 25 · verificador 26 |
 | Cobertura           | contrato 93,2% · domínio 92,9% · persistência 91,5% · servidor 89,9% · design system 88,0% · app 86,4%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
 | Textos              | Todo erro que a pessoa lê vem de um catálogo de 47 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |

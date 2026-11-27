@@ -50,7 +50,7 @@ void main() {
           .map((message) => message.content)
           .join('\n');
 
-      expect(sent, contains('O que entra no mês, em dinheiro'));
+      expect(sent, contains('Renda do mês, em dinheiro'));
       expect(sent, contains('"cents":330000'));
       expect(sent, contains('Dízimo do mês'));
       expect(sent, contains('"cents":33000'));
