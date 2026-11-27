@@ -22,6 +22,16 @@ final class FrequentSpend {
     required this.count,
   });
 
+  /// A sugestão a partir do último lançamento [last] de um grupo que
+  /// apareceu [count] vezes.
+  factory _of(Entry last, int count) => FrequentSpend(
+    description: last.description,
+    categoryId: last.categoryId,
+    paymentMethodId: last.paymentLines.first.paymentMethodId,
+    amount: last.amount,
+    count: count,
+  );
+
   /// Quantos dias para trás se olha: dois meses pegam o que é hábito, e não
   /// o que foi hábito um dia.
   static const lookbackDays = 60;
@@ -55,33 +65,49 @@ final class FrequentSpend {
     required LocalDate today,
     int limit = 4,
   }) {
+    final recent = _recent(entries, today: today);
+    final habits = _habits(recent);
+    if (habits.isEmpty && recent.isNotEmpty) {
+      return [FrequentSpend._of(recent.first, 1)];
+    }
+    return [
+      for (final group in habits.take(limit))
+        FrequentSpend._of(group.first, group.length),
+    ];
+  }
+
+  /// Os lançamentos do período, do mais recente para o mais antigo.
+  static List<Entry> _recent(
+    Iterable<Entry> entries, {
+    required LocalDate today,
+  }) {
     final since = today.addDays(-lookbackDays);
-    final recent = [
+    return [
       for (final entry in entries)
         if (!entry.occurredOn.isBefore(since) &&
             !entry.occurredOn.isAfter(today))
           entry,
     ]..sort((a, b) => b.occurredOn.compareTo(a.occurredOn));
+  }
+
+  /// Os grupos do mesmo lugar que se repetem, do maior para o menor. Cada
+  /// grupo começa pelo lançamento mais recente.
+  static List<List<Entry>> _habits(List<Entry> recent) {
     final groups = <String, List<Entry>>{};
     for (final entry in recent) {
       final key = PossibleDuplicate.normalize(entry.description);
       if (key.isNotEmpty) (groups[key] ??= []).add(entry);
     }
-    final ranked = [
+    // `sort` do Dart não promete manter a ordem dos empates: o desempate
+    // pelo mais recente é explícito.
+    return [
       for (final group in groups.values)
-        if (group.length >= minimumCount) _of(group.first, group.length),
-    ]..sort((a, b) => b.count.compareTo(a.count));
-    if (ranked.isEmpty && recent.isNotEmpty) return [_of(recent.first, 1)];
-    return ranked.take(limit).toList();
+        if (group.length >= minimumCount) group,
+    ]..sort((a, b) {
+      final byCount = b.length.compareTo(a.length);
+      return byCount != 0
+          ? byCount
+          : b.first.occurredOn.compareTo(a.first.occurredOn);
+    });
   }
-
-  /// A lista já vem do mais recente para o mais antigo, e o `sort` do Dart
-  /// é estável: no empate de contagem, o mais recente continua na frente.
-  static FrequentSpend _of(Entry last, int count) => FrequentSpend(
-    description: last.description,
-    categoryId: last.categoryId,
-    paymentMethodId: last.paymentLines.first.paymentMethodId,
-    amount: last.amount,
-    count: count,
-  );
 }

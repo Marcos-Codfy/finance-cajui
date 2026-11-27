@@ -18,8 +18,8 @@ void main() {
       _market('c', 16000, 15),
     ];
 
-    test('o zero a mais: R\$ 1.500,00 num mercado de R\$ 150,00 pede '
-        'confirmação, com o normal de R\$ 150,00', () {
+    test(r'o zero a mais: R$ 1.500,00 num mercado de R$ 150,00 pede '
+        r'confirmação, com o normal de R$ 150,00', () {
       final unusual = UnusualAmount.check(
         const Money.fromCents(150000),
         categoryId: 'groceries',

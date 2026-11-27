@@ -118,9 +118,9 @@ void main() {
       };
       final month = household().budgetFor(october);
 
-      expect(summary['O que entra, em dinheiro'], month.cashIncome);
+      expect(summary['Renda do mês, em dinheiro'], month.cashIncome);
       expect(summary['Total que sai'], month.totalOut);
-      expect(summary['Sai do bolso'], month.outOfPocket);
+      expect(summary['Gastos do mês'], month.outOfPocket);
       expect(summary['Sobra do mês'], month.result);
       expect(summary.keys, isNot(contains('Faltam para fechar o mês')));
       expect(
