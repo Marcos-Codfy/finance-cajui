@@ -19,7 +19,17 @@ final class HttpAssistantGateway implements AssistantGateway {
   Future<AssistantReply> ask(String message, {MonthFigures? month}) async {
     final body = {'message': message, 'month': ?month?.toJson()};
     final outcome = await _api.authenticated(
-      (token) => _api.post('/v1/assistant/ask', body, token: token),
+      // A conversa pode levar várias chamadas à IA, e o servidor tem um
+      // prazo de 45 s para ela inteira: o app espera mais que isso, para a
+      // resposta chegar mesmo quando demora. Com os 20 s de um pedido
+      // comum, o app dizia "não respondeu" enquanto o servidor ainda
+      // lançava — e a pessoa pedia de novo (27/11/2026).
+      (token) => _api.post(
+        '/v1/assistant/ask',
+        body,
+        token: token,
+        waitFor: CajuiApi.readingTimeout,
+      ),
     );
     if (outcome.body case final answer?) return _answer(answer);
     // O tempo de espera vem do servidor, que é quem sabe quanto falta do
