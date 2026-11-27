@@ -69,7 +69,7 @@ void main() {
     expect([
       for (final row in summary.skip(2))
         if (row.first case XlsxText(:final text)) text,
-    ], contains('Sai do bolso'));
+    ], contains('Gastos do mês'));
   });
 
   test('RN-1016 · com renda, o Resumo fecha com o já está gasto em %', () {

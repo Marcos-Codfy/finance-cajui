@@ -21,7 +21,7 @@ class HomeWidgetPage extends StatelessWidget {
       'do Cerrado à noite, em dois tamanhos: o grande (4×2) traz as '
       'próximas contas a vencer e os atalhos; o pequeno (2×1), só o '
       'número. Tocar no número abre o Cajui de dentro do widget; o "+" '
-      'abre direto o novo lançamento.';
+      'abre direto o novo gasto.';
 
   @override
   Widget build(BuildContext context) {

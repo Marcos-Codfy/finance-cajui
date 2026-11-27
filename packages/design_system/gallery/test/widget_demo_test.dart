@@ -77,11 +77,11 @@ void main() {
   });
 
   testWidgets('o widget tem os três atalhos, cada um com nome para o leitor '
-      'de tela, e o "+" é o novo lançamento', (tester) async {
+      'de tela, e o "+" é o novo gasto', (tester) async {
     await openGallery(tester, page: GalleryDestination.homeWidget);
 
     expect(find.bySemanticsLabel('Fotografar comprovante'), findsOneWidget);
     expect(find.bySemanticsLabel('Escolher da galeria'), findsOneWidget);
-    expect(find.bySemanticsLabel('Novo lançamento'), findsOneWidget);
+    expect(find.bySemanticsLabel('Novo gasto'), findsOneWidget);
   });
 }

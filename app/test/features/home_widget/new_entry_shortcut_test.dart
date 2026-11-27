@@ -115,7 +115,7 @@ void main() {
     );
     expect(
       strings,
-      contains('<string name="home_widget_new_entry">Novo lançamento</string>'),
+      contains('<string name="home_widget_new_entry">Novo gasto</string>'),
     );
   });
 }
