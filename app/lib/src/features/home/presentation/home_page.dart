@@ -60,11 +60,20 @@ class HomePage extends ConsumerWidget {
 
   /// Os números do mês. Tocar no número do widget os traz atravessando o
   /// vidro.
-  Widget _cards(WidgetRef ref, HomeView view, {required bool visible}) =>
-      CajuiGlassArrival(
-        arrival: ref.watch(widgetArrivalProvider),
-        child: HomeCards.of(view, party: _party(ref, view, visible: visible)),
-      );
+  Widget _cards(
+    BuildContext context,
+    WidgetRef ref,
+    HomeView view, {
+    required bool visible,
+  }) => CajuiGlassArrival(
+    arrival: ref.watch(widgetArrivalProvider),
+    child: HomeCards.of(
+      view,
+      party: _party(ref, view, visible: visible),
+      onExplain: () =>
+          context.coordinator(budgetCoordinatorProvider).openMonth(),
+    ),
+  );
 
   Widget _ready(
     BuildContext context,
@@ -89,7 +98,7 @@ class HomePage extends ConsumerWidget {
       children: [
         if (!state.readOnly) const SyncBadge(),
         ..._notice(context, ref, state),
-        _cards(ref, view, visible: visible),
+        _cards(context, ref, view, visible: visible),
         const SizedBox(height: CajuiSpacing.xl),
         if (!state.readOnly) const HomeSetupCard(),
         ..._links(context, ref, view),
@@ -129,8 +138,9 @@ class HomePage extends ConsumerWidget {
     readOnly: readOnly,
     extra: [
       CajuiIconButton(
-        icon: CajuiIconData.sliders,
+        icon: CajuiIconData.gear,
         semanticLabel: 'Ajustes',
+        caption: 'Ajustes',
         onPressed: () =>
             context.coordinator(settingsCoordinatorProvider).openSettings(),
       ),

@@ -2,8 +2,9 @@ import 'package:meta/meta.dart';
 
 /// O que a pessoa escolheu e espera encontrar do mesmo jeito amanhã.
 ///
-/// São cinco chaves, e só elas: som, vibração, tema, o último mês que
-/// ganhou a festa de fechar no verde e os lembretes de vencimento. Nada aqui é fato
+/// São seis chaves, e só elas: som, vibração, tema, o último mês que
+/// ganhou a festa de fechar no verde, os lembretes de vencimento e se o
+/// cartão "Primeiros passos" foi dispensado. Nada aqui é fato
 /// financeiro — é preferência —, mas mora no mesmo registro cifrado do
 /// resto, porque um segundo lugar para guardar coisa seria um segundo lugar
 /// para esquecer de cifrar.
@@ -18,6 +19,7 @@ final class Preferences {
     this.dark = false,
     this.celebratedMonth,
     this.remindDueBills = true,
+    this.setupDismissed = false,
   });
 
   /// Lê o que foi gravado. Campo que falta volta ao padrão: um registro
@@ -28,6 +30,7 @@ final class Preferences {
     dark: json['dark'] as bool? ?? false,
     celebratedMonth: json['celebratedMonth'] as String?,
     remindDueBills: json['remindDueBills'] as bool? ?? true,
+    setupDismissed: json['setupDismissed'] as bool? ?? false,
   );
 
   /// Se os sons tocam.
@@ -47,6 +50,10 @@ final class Preferences {
   /// na véspera é o que evita a multa, e quem não quer desliga em Ajustes.
   final bool remindDueBills;
 
+  /// Se a pessoa dispensou o cartão "Primeiros passos" do Início: o que
+  /// falta continua em Ajustes, sem ocupar o Painel (27/11/2026).
+  final bool setupDismissed;
+
   /// As mesmas preferências com as partes dadas trocadas.
   Preferences copyWith({
     bool? soundEnabled,
@@ -54,12 +61,14 @@ final class Preferences {
     bool? dark,
     String? celebratedMonth,
     bool? remindDueBills,
+    bool? setupDismissed,
   }) => Preferences(
     soundEnabled: soundEnabled ?? this.soundEnabled,
     hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     dark: dark ?? this.dark,
     celebratedMonth: celebratedMonth ?? this.celebratedMonth,
     remindDueBills: remindDueBills ?? this.remindDueBills,
+    setupDismissed: setupDismissed ?? this.setupDismissed,
   );
 
   /// O que gravar.
@@ -69,6 +78,7 @@ final class Preferences {
     'dark': dark,
     'celebratedMonth': ?celebratedMonth,
     'remindDueBills': remindDueBills,
+    'setupDismissed': setupDismissed,
   };
 
   @override
@@ -78,7 +88,8 @@ final class Preferences {
       other.hapticsEnabled == hapticsEnabled &&
       other.dark == dark &&
       other.celebratedMonth == celebratedMonth &&
-      other.remindDueBills == remindDueBills;
+      other.remindDueBills == remindDueBills &&
+      other.setupDismissed == setupDismissed;
 
   @override
   int get hashCode => Object.hash(
@@ -87,5 +98,6 @@ final class Preferences {
     dark,
     celebratedMonth,
     remindDueBills,
+    setupDismissed,
   );
 }

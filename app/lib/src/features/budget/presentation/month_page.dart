@@ -111,7 +111,7 @@ class MonthPage extends ConsumerWidget {
   );
 
   static List<Widget> _comesIn(MonthBudget budget, BudgetPlan plan) => [
-    const CajuiSectionTitle('O que entra'),
+    const CajuiSectionTitle('Renda do mês'),
     _row(
       'Dinheiro',
       budget.cashIncome,

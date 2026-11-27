@@ -19,5 +19,12 @@ enum AnswerLink {
   }
 
   static const _debts = ['dívida', 'divida', 'devo', 'deve '];
-  static const _month = ['sobra', 'falta', 'entra', 'sai do bolso', 'gast'];
+  static const _month = [
+    'sobra',
+    'falta',
+    'entra',
+    'renda',
+    'sai do bolso',
+    'gast',
+  ];
 }

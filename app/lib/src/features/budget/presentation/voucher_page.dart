@@ -89,7 +89,7 @@ class _VoucherPageState extends ConsumerState<VoucherPage> {
     ),
     const SizedBox(height: CajuiSpacing.lg),
     CajuiStatCard(
-      label: 'Vale do mês',
+      label: 'Vale alimentação do mês',
       cents: view.budget.voucher.cents,
       caption: '${_brl(view.budget.voucherCovered)} cobre o mercado neste mês',
       sunken: true,

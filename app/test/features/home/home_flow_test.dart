@@ -128,7 +128,7 @@ void main() {
       'plano não é cobrado', (tester) async {
     await _openHome(tester, [_bakery(4500, testToday)]);
 
-    expect(find.text('Já saiu este mês'), findsOneWidget);
+    expect(find.text('Gastos do mês'), findsOneWidget);
     expect(find.text(_brl('45,00')), findsOneWidget);
     expect(find.textContaining('Pode gastar'), findsNothing);
     expect(find.text('Usar como minhas contas'), findsNothing);

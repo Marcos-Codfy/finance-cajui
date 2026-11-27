@@ -82,7 +82,7 @@ abstract final class HomeLinks {
   ) => CajuiTile(icon: icon, title: title, subtitle: subtitle, onPressed: open);
 
   static String _monthLine(MonthBudget budget) =>
-      'Entra ${_brl(budget.cashIncome.cents)} · sai do bolso '
+      'Renda ${_brl(budget.cashIncome.cents)} · gastos '
       '${_brl(budget.outOfPocket.cents)}';
 
   static String _cardsLine(HomeView view) => view.cardsNearLimit.isEmpty
@@ -106,7 +106,7 @@ abstract final class HomeLinks {
   static List<Widget> _more(BuildContext context, HomeView view) => [
     _row(
       title: 'Minhas contas',
-      subtitle: 'O que entra, o que sai todo mês e o dízimo',
+      subtitle: 'Renda, contas do mês e o dízimo',
       open: () => context.coordinator(budgetCoordinatorProvider).openMyBills(),
     ),
     ?_voucher(context, view),
@@ -127,9 +127,9 @@ abstract final class HomeLinks {
     // de um vale de R$ 500 no plano confunde: aí o número é o do mês.
     final number = view.voucherBalance.isPositive
         ? 'Saldo de ${_brl(view.voucherBalance.cents)}'
-        : 'Vale do mês ${_brl(view.budget.voucher.cents)}';
+        : 'Vale alimentação do mês ${_brl(view.budget.voucher.cents)}';
     return _row(
-      title: 'Vale',
+      title: 'Vale alimentação',
       subtitle: '$number · conferir com a operadora',
       open: () => context.coordinator(budgetCoordinatorProvider).openVoucher(),
     );

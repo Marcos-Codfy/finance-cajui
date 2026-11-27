@@ -68,7 +68,7 @@ final class MyBillsRows {
   ];
 
   List<Widget> _comesIn() => [
-    const CajuiSectionTitle('O que entra'),
+    const CajuiSectionTitle('Renda do mês'),
     for (final salary in plan.salaries)
       _row(
         title: salary.name,
