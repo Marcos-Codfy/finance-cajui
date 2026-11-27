@@ -23,7 +23,7 @@ domain, a Flutter app, a cloud server of my own and a design system with a publi
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-1%2C904-2E7D32)
+![Tests](https://img.shields.io/badge/tests-1%2C910-2E7D32)
 ![Domain coverage](https://img.shields.io/badge/domain-92.9%25-2E7D32)
 ![Cost](https://img.shields.io/badge/fixed%20cost-R%24%200.00-B33A16)
 
@@ -88,7 +88,7 @@ a programming assistant. The Claude API is also used inside the app, in the conv
 | Server          | Dart + Shelf, single executable, on Oracle Cloud (OCI), with TLS; encrypted, hash-chained event log; documented API | [`server/`](server), [`docs/api.md`](docs/api.md) |
 | Design system   | Own package with tokens, components, 3D motion and sounds; a published gallery with the screen states | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
 | Native Android  | Share intake, on-device OCR, bank notifications, home screen widget, reminders and voice input | [`app/android`](app/android) |
-| Quality         | 1,904 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Quality         | 1,910 tests, named after the rule they prove; 86% to 93% coverage per package; secret scan over the history | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Process         | 32 ADRs, Conventional Commits, pull requests and CI on GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Two decisions that shaped the project
@@ -330,7 +330,7 @@ Each item describes the problem, the solution and the result.
   receipts tries to inject instructions into the text (*prompt injection*).
 
 <details>
-<summary><b>5 more problems: sync, a code checker, screen transitions, sound and the glass widget</b></summary>
+<summary><b>6 more problems: sync, a code checker, screen transitions, sound, the glass widget and an assistant that recorded twice</b></summary>
 
 ### 5. Syncing two phones
 
@@ -382,6 +382,20 @@ Each item describes the problem, the solution and the result.
   glass with the aurora lit behind them.
 - **Result:** the same composition exists as design system components (`CajuiAurora`, `CajuiGlassPanel`, `CajuiOrb`),
   and the gallery shows the whole gesture, from the tap on the widget to the arrival in the app.
+
+### 10. An assistant that recorded twice
+
+- **Problem:** through the chat, a spend sometimes went in twice, the answer said it had not been recorded, and asking
+  to fix the amount added another entry instead of changing it.
+- **Cause:** three things together. When the AI failed after writing, the server answered only "unavailable" and the
+  recorded action vanished from the reply; the app gave up waiting before the server's deadline; and there was no
+  tool to fix the amount, date or payment method, so the model recorded again.
+- **Solution:** the reply always carries what was recorded, even when the AI fails midway, and the whole answer has a
+  deadline shorter than the app's wait. An entry with the same amount, day and payment method as an existing one comes
+  back as a question, and only goes in if the person confirms it is a different spend. The correction tool saves a new
+  version of the same entry, with the original kept in the log.
+- **Result:** each case has a server test: repeat refused, repeat confirmed, failure after writing and a correction
+  that replaces.
 
 </details>
 
@@ -472,7 +486,7 @@ thing.
 
 | Item              | Status                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Tests             | **1,904**: app 635 · domain 504 · server 271 · design system 257 · contract 104 · gallery 82 · persistence 25 · checker 26 |
+| Tests             | **1,910**: app 635 · domain 504 · server 277 · design system 257 · contract 104 · gallery 82 · persistence 25 · checker 26 |
 | Coverage          | contract 93.2% · domain 92.9% · persistence 91.5% · server 89.9% · design system 88.0% · app 86.4%       |
 | Rule ↔ test       | Every rule has a number (`RN-xxx`) and a test with the same number. A numeric example in the spec becomes a test, to the cent |
 | Texts             | Every error a person reads comes from a catalog of 47 codes, and the code that shows it is **generated** from it. A test per code makes sure no text goes out with an unfilled placeholder |
