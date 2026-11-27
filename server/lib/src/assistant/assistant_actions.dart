@@ -2,17 +2,19 @@ import 'package:api_contract/api_contract.dart';
 import 'package:domain/domain.dart';
 import 'package:persistence/persistence.dart';
 import 'package:server/src/assistant/assistant_action.dart';
+import 'package:server/src/assistant/entry_rules.dart';
 import 'package:server/src/assistant/payment_choice.dart';
+import 'package:server/src/assistant/repeat_guard.dart';
 import 'package:server/src/assistant/salary_choice.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
 import 'package:server/src/assistant/tool_refusal.dart';
 import 'package:server/src/auth/secure_random.dart';
-import 'package:server/src/ledger/fingerprint.dart';
 import 'package:server/src/ledger/ledger_state.dart';
 
 /// O que o assistente **escreve** no livro a pedido da pessoa (ADR-021):
-/// lançar uma despesa, cancelar um lançamento, registrar uma renda.
+/// lançar uma despesa, cancelar um lançamento, registrar uma renda. As
+/// correções de um lançamento ficam em `EntryRevisions`.
 ///
 /// O caminho é o mesmo das rotas: aplicar as regras do domínio, gravar o
 /// evento e só então atualizar a projeção. O que nasce aqui é um fato comum
@@ -39,7 +41,7 @@ final class AssistantActions {
     final category = _category(args);
     final choice = _choice(args);
     final request = _requestFor(args, category, choice);
-    _checked(request);
+    _guard(request, args);
     await _append(
       id: 'entry-${request.id}',
       type: LedgerState.entryCreated,
@@ -139,54 +141,6 @@ final class AssistantActions {
     return (receipt, salary);
   }
 
-  /// Troca a categoria do lançamento de [args] (RN-208): uma correção, com
-  /// o original guardado no registro, que desce aos celulares como a de
-  /// qualquer aparelho.
-  Future<ToolOutcome> recategorize(Map<String, Object?> args) async {
-    final id = ToolArgs.required(args, 'id');
-    final entry =
-        state.entryOf(id) ??
-        (throw const ToolRefusal(
-          'não há lançamento vivo com esse id; liste os lançamentos',
-        ));
-    final category = _category(args);
-    final revised = _revised(entry, category.id);
-    // As mesmas regras de qualquer correção: o vale continua pagando só
-    // comida, e o que recusa volta ao modelo com o motivo.
-    _checked(revised);
-    final payload = revised.toJson();
-    await _append(
-      id: 'entry-revised-$id-${Fingerprint.of(payload)}',
-      type: LedgerState.entryRevised,
-      payload: payload,
-    );
-    return ToolOutcome.done({
-      'ok': true,
-      'id': id,
-      'descricao': entry.description,
-      'categoria': category.name,
-    });
-  }
-
-  /// O mesmo lançamento na categoria [categoryId], carimbado agora: a
-  /// correção mais nova vence (BL-062).
-  CreateEntryRequest _revised(Entry entry, String categoryId) {
-    final before = EntryCodec.fromEntry(entry);
-    return CreateEntryRequest(
-      id: before.id,
-      description: before.description,
-      amountCents: before.amountCents,
-      occurredOn: before.occurredOn,
-      categoryId: categoryId,
-      paymentLines: before.paymentLines,
-      isExceptional: before.isExceptional,
-      installments: before.installments,
-      installmentAmountCents: before.installmentAmountCents,
-      origin: before.origin,
-      revisedAt: clock.now(),
-    );
-  }
-
   static String _incomeLabel(IncomeReceipt receipt, IncomeSource? salary) {
     if (receipt.tender == Tender.mealVoucher) return 'Crédito do vale';
     return salary == null ? 'Dinheiro extra' : 'Salário · ${salary.name}';
@@ -212,6 +166,16 @@ final class AssistantActions {
         ),
       ],
       installments: _installments(args, choice),
+    );
+  }
+
+  /// As regras do domínio, e o freio contra o lançamento em dobro.
+  void _guard(CreateEntryRequest request, Map<String, Object?> args) {
+    EntryRules.check(request, state, today: clock.today());
+    RepeatGuard.check(
+      request,
+      state,
+      confirmed: ToolArgs.flag(args, 'repetido'),
     );
   }
 
@@ -256,29 +220,6 @@ final class AssistantActions {
     }
     return count;
   }
-
-  /// As regras do domínio, as mesmas de qualquer lançamento (T-05). O que
-  /// recusa volta ao modelo com o motivo, para ele pedir o que falta.
-  void _checked(CreateEntryRequest request) {
-    final Result<Entry> result;
-    try {
-      result = state.tryCreate(request, today: clock.today());
-    } on FormatException {
-      throw const ToolRefusal(
-        'pedido fora do formato: confira data e parcelas',
-      );
-    }
-    if (result.failureOrNull case final failure?) {
-      throw ToolRefusal(_reason(failure));
-    }
-  }
-
-  static String _reason(Failure failure) => switch (failure) {
-    PurchaseDateInFuture() => 'a data da compra não pode estar no futuro',
-    CategoryNotVoucherEligible() =>
-      'o vale alimentação só paga categoria de alimentação',
-    _ => 'recusado pela regra ${FailureMapper.map(failure).$1.code}',
-  };
 
   /// Hora em base 36 e quatro letras ao acaso: ordena por criação e não
   /// repete, no mesmo molde dos identificadores do app.

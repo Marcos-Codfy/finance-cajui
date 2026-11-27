@@ -7,6 +7,7 @@ import 'package:server/src/assistant/assistant_tool_catalog.dart';
 import 'package:server/src/assistant/debt_paydown.dart';
 import 'package:server/src/assistant/due_bills_listing.dart';
 import 'package:server/src/assistant/entry_listing.dart';
+import 'package:server/src/assistant/entry_revisions.dart';
 import 'package:server/src/assistant/income_undo.dart';
 import 'package:server/src/assistant/tool_args.dart';
 import 'package:server/src/assistant/tool_outcome.dart';
@@ -53,6 +54,12 @@ final class AssistantTools {
 
   final AssistantActions _actions;
 
+  late final EntryRevisions _revisions = EntryRevisions(
+    state: state,
+    store: store,
+    clock: clock,
+  );
+
   late final IncomeUndo _incomes = IncomeUndo(
     state: state,
     store: store,
@@ -90,7 +97,10 @@ final class AssistantTools {
     AssistantToolCatalog.recordExpense => _actions.record(call.arguments),
     AssistantToolCatalog.cancelEntry => _cancel(call.arguments),
     AssistantToolCatalog.recordIncome => _actions.income(call.arguments),
-    AssistantToolCatalog.recategorize => _actions.recategorize(call.arguments),
+    AssistantToolCatalog.recategorize => _revisions.recategorize(
+      call.arguments,
+    ),
+    AssistantToolCatalog.correctEntry => _revisions.correct(call.arguments),
     AssistantToolCatalog.payDownDebt => _paydown.pay(call.arguments),
     AssistantToolCatalog.listEntries => _list(call.arguments),
     AssistantToolCatalog.dueBills => Future.value(

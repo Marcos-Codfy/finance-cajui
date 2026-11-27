@@ -36,6 +36,12 @@ abstract final class ToolArgs {
     return int.tryParse('$raw');
   }
 
+  /// Se [name] veio como verdadeiro. O modelo às vezes escreve `"true"`.
+  static bool flag(Map<String, Object?> args, String name) {
+    final raw = args[name];
+    return raw == true || raw == 'true';
+  }
+
   /// Um valor em centavos, obrigatório e maior que zero.
   static int positiveCents(Map<String, Object?> args, String name) {
     final cents = integer(args, name);
