@@ -54,8 +54,8 @@ class _KeyPageState extends ConsumerState<KeyPage> {
   Widget _intro(BuildContext context) {
     final theme = CajuiTheme.of(context);
     return Text(
-      'Esta é a consulta do Cajui. Digite o código de seis dígitos do '
-      'Cajui no seu autenticador, ou a chave da casa. Fica neste '
+      'Esta é a consulta do Cajui. Digite o código de seis dígitos que o '
+      'app autenticador mostra para o Cajui, ou a chave de API. Fica neste '
       'navegador até você sair.',
       style: theme.typography.body.copyWith(color: theme.colors.text.muted),
     );
@@ -79,7 +79,7 @@ class _KeyPageState extends ConsumerState<KeyPage> {
         const SizedBox(height: CajuiSpacing.xl),
         if (problem != null) ..._notice(problem),
         CajuiTextField(
-          label: 'Código ou chave da casa',
+          label: 'Código do autenticador ou chave de API',
           controller: _key,
           hint: '123456',
           onChanged: (_) => setState(() {}),
