@@ -13,8 +13,14 @@ import 'package:gallery/src/pages/screens/widget/glass_widget_small.dart';
 /// (`CajuiGlassArrival`). "Voltar à tela inicial" fecha o app, e o toque
 /// pode ser repetido.
 class WidgetDemo extends StatefulWidget {
-  /// Cria a demonstração; com [stale], o widget é o de mês novo.
-  const new({this.stale = false, this.bills = sampleBills, super.key});
+  /// Cria a demonstração; com [stale], o widget é o de mês novo; com
+  /// [hidden], os valores já começam escondidos.
+  const new({
+    this.stale = false,
+    this.hidden = false,
+    this.bills = sampleBills,
+    super.key,
+  });
 
   /// As contas a vencer do exemplo, fictícias, como o app as escreve: as do
   /// mês dizem só o dia, as do mês seguinte levam o mês junto.
@@ -26,6 +32,12 @@ class WidgetDemo extends StatefulWidget {
 
   /// O widget do mês que virou, antes de o app publicar o novo.
   final bool stale;
+
+  /// Se os valores começam escondidos pelo olho.
+  final bool hidden;
+
+  /// O que o widget mostra no lugar do valor escondido.
+  static const hiddenAmount = r'R$ ••••';
 
   /// As contas a vencer que o widget grande mostra.
   final List<(String, String)> bills;
@@ -41,6 +53,13 @@ class _WidgetDemoState extends State<WidgetDemo>
     duration: CajuiDurations.slow,
   );
   int _arrival = 0;
+  late bool _hidden = widget.hidden;
+
+  /// O valor, ou os pontinhos quando o olho escondeu.
+  String _shown(int cents) =>
+      _hidden ? WidgetDemo.hiddenAmount : BrlFormatter.format(cents);
+
+  void _togglePrivacy() => setState(() => _hidden = !_hidden);
 
   @override
   void dispose() {
@@ -95,17 +114,30 @@ class _WidgetDemoState extends State<WidgetDemo>
     ),
   );
 
-  /// Os dois tamanhos, como numa tela inicial: o grande no alto e o
-  /// pequeno embaixo, à esquerda, ocupando duas células.
+  /// Os três, como numa tela inicial: o grande no alto, e embaixo o
+  /// pequeno e o do vale, lado a lado, de duas células cada.
   Widget _widget() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     mainAxisSize: MainAxisSize.min,
     children: [
       _large(),
       const SizedBox(height: CajuiSpacing.md),
-      _small(),
+      Wrap(
+        spacing: CajuiSpacing.md,
+        runSpacing: CajuiSpacing.md,
+        children: [_small(), _voucher()],
+      ),
     ],
   );
+
+  /// O do vale: outra moeda, outro widget, nunca somado ao do mês.
+  Widget _voucher() => widget.stale
+      ? const GlassWidgetSmall(label: 'Mês novo', amount: r'R$ —')
+      : GlassWidgetSmall(
+          label: 'Saldo do vale',
+          amount: _shown(HomeNumbers.voucher),
+          onNumber: _open,
+        );
 
   Widget _large() => widget.stale
       ? const GlassWidget(
@@ -115,17 +147,21 @@ class _WidgetDemoState extends State<WidgetDemo>
         )
       : GlassWidget(
           label: 'Sobra de outubro',
-          amount: BrlFormatter.format(HomeNumbers.leftover),
-          caption: 'Depois de pagar tudo, pelo que está lançado.',
+          amount: _shown(HomeNumbers.leftover),
+          caption:
+              'Atualizado às 14h32 · Depois de pagar tudo, pelo que está '
+              'lançado.',
           bills: widget.bills,
           onNumber: _open,
+          onPrivacy: _togglePrivacy,
+          hidden: _hidden,
         );
 
   Widget _small() => widget.stale
       ? const GlassWidgetSmall(label: 'Mês novo', amount: r'R$ —')
       : GlassWidgetSmall(
           label: 'Sobra de outubro',
-          amount: BrlFormatter.format(HomeNumbers.leftover),
+          amount: _shown(HomeNumbers.leftover),
           onNumber: _open,
         );
 
