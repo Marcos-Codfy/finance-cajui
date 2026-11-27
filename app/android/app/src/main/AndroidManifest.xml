@@ -147,6 +147,39 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/home_widget_small_info"/>
         </receiver>
+        <!-- O widget do vale (2×1): o saldo do vale alimentação, à parte do
+             dinheiro (RN-111). -->
+        <receiver
+            android:name=".home.HomeWidgetVoucher"
+            android:exported="false"
+            android:label="@string/home_widget_voucher_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/home_widget_voucher_info"/>
+        </receiver>
+        <!-- O olho do widget grande: esconde ou mostra os valores de todos
+             os widgets. Só o próprio widget o chama. -->
+        <receiver
+            android:name=".home.WidgetPrivacyReceiver"
+            android:exported="false"/>
+        <!-- O "Gastei" na barra rápida do Android (o painel que desce do
+             topo): abre o Novo gasto sem procurar o app. -->
+        <service
+            android:name=".home.SpendTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_widget_plus_tile"
+            android:label="@string/spend_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="false"/>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

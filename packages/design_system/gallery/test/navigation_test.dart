@@ -64,8 +64,8 @@ void main() {
 
     await tapVisible(tester, find.bySemanticsLabel(RegExp('^Widget de vidro')));
     expect(find.text(GalleryDestination.homeWidget.title), findsWidgets);
-    // Uma aurora por tamanho do widget: o grande e o pequeno.
-    expect(find.byType(CajuiAurora), findsNWidgets(2));
+    // Uma aurora por widget: o grande, o pequeno e o do vale.
+    expect(find.byType(CajuiAurora), findsNWidgets(3));
   });
 
   testWidgets('no celular, "Páginas" abre o menu agrupado, e escolher fecha '

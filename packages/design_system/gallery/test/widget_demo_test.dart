@@ -11,7 +11,7 @@ void main() {
   testWidgets('o número do widget abre o Cajui crescendo de dentro dele, e '
       'os números do Início chegam pelo vidro', (tester) async {
     await openGallery(tester, page: GalleryDestination.homeWidget);
-    expect(find.byType(CajuiAurora), findsNWidgets(2));
+    expect(find.byType(CajuiAurora), findsNWidgets(3));
     expect(find.byType(CajuiGlassArrival), findsNothing);
 
     await tapVisible(
@@ -36,8 +36,8 @@ void main() {
     await openGallery(tester, page: GalleryDestination.homeWidget);
     await pickVariant(tester, 'Mês novo');
 
-    // Os dois tamanhos.
-    expect(anywhere('MÊS NOVO'), findsNWidgets(2));
+    // Os três widgets.
+    expect(anywhere('MÊS NOVO'), findsNWidgets(3));
     expect(anywhere('Abra o Cajui para ver o mês.'), findsOneWidget);
     expect(anywhere('Aluguel'), findsNothing);
     expect(anywhere('Nenhuma conta a vencer por agora.'), findsNothing);
@@ -83,5 +83,20 @@ void main() {
     expect(find.bySemanticsLabel('Fotografar comprovante'), findsOneWidget);
     expect(find.bySemanticsLabel('Escolher da galeria'), findsOneWidget);
     expect(find.bySemanticsLabel('Novo gasto'), findsOneWidget);
+  });
+
+  testWidgets('o olho do grande esconde os valores dos três widgets, e o '
+      'grande diz de quando é o número', (tester) async {
+    await openGallery(tester, page: GalleryDestination.homeWidget);
+    expect(anywhere('SALDO DO VALE'), findsOneWidget);
+    expect(
+      find.textContaining('Atualizado às', skipOffstage: false),
+      findsOneWidget,
+    );
+
+    await tapVisible(tester, find.bySemanticsLabel('Esconder os valores'));
+
+    expect(anywhere(WidgetDemo.hiddenAmount), findsNWidgets(3));
+    expect(find.bySemanticsLabel('Mostrar os valores'), findsOneWidget);
   });
 }

@@ -18,10 +18,12 @@ class HomeWidgetPage extends StatelessWidget {
   /// O papel da tela no app.
   static const lead =
       'A sobra do mês na tela inicial, num painel de vidro sobre a aurora '
-      'do Cerrado à noite, em dois tamanhos: o grande (4×2) traz as '
-      'próximas contas a vencer e os atalhos; o pequeno (2×1), só o '
-      'número. Tocar no número abre o Cajui de dentro do widget; o "+" '
-      'abre direto o novo gasto.';
+      'do Cerrado à noite, em três widgets: o grande (4×2) traz de quando '
+      'é o número, as próximas contas a vencer, os atalhos e o olho que '
+      'esconde os valores; o pequeno (2×1), só o número; o do vale (2×1), '
+      'o saldo do vale alimentação, que nunca se soma ao dinheiro. Tocar '
+      'no número abre o Cajui de dentro do widget; o "+" abre direto o '
+      'novo gasto, como o "Gastei" da barra rápida do Android.';
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,11 @@ class HomeWidgetPage extends StatelessWidget {
           'todas já foram pagas: o grande diz isso, em vez de uma lista '
           'vazia.',
       builder: (_) => const WidgetDemo(bills: []),
+    ),
+    ScreenVariant(
+      label: 'Valores escondidos',
+      note: 'O olho do grande esconde os valores dos três widgets.',
+      builder: (_) => const WidgetDemo(hidden: true),
     ),
     ScreenVariant(
       label: 'Mês novo',

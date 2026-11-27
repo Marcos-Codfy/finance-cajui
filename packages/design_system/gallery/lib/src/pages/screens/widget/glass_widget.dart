@@ -18,6 +18,8 @@ class GlassWidget extends StatelessWidget {
     required this.caption,
     this.bills,
     this.onNumber,
+    this.onPrivacy,
+    this.hidden = false,
     super.key,
   });
 
@@ -37,6 +39,13 @@ class GlassWidget extends StatelessWidget {
 
   /// O toque no número.
   final VoidCallback? onNumber;
+
+  /// O toque no olho: esconde ou mostra os valores de todos os widgets.
+  /// Sem isto, o olho não aparece — o widget de mês novo não tem valor.
+  final VoidCallback? onPrivacy;
+
+  /// Se os valores estão escondidos: o olho aparece riscado.
+  final bool hidden;
 
   @override
   Widget build(BuildContext context) {
@@ -151,27 +160,51 @@ class GlassWidget extends StatelessWidget {
     final light = theme.colors.brand.sheen;
     final muted = light.withValues(alpha: 0.8);
     final type = theme.typography;
-    return CajuiPressable(
+    // O olho fica fora do toque do número: um botão dentro do outro
+    // juntaria os dois num só para o leitor de tela.
+    final number = CajuiPressable(
       onPressed: onNumber,
       semanticLabel: '$label: $amount. Abrir o Cajui',
       touch: CajuiTouch.card,
-      builder: (context, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: type.overline.copyWith(color: muted),
-          ),
-          Text(amount, style: type.amountLarge.copyWith(color: light)),
-          // Uma linha, como no aparelho: a segunda ficou para as contas.
-          Text(
-            caption,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: type.caption.copyWith(color: muted),
-          ),
-        ],
+      builder: (context, _) => _texts(type, light, muted),
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: number),
+        ?_privacy(light),
+      ],
+    );
+  }
+
+  /// O rótulo, o número e a frase de baixo.
+  Widget _texts(CajuiTypography type, Color light, Color muted) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(label.toUpperCase(), style: type.overline.copyWith(color: muted)),
+      Text(amount, style: type.amountLarge.copyWith(color: light)),
+      // Uma linha, como no aparelho: a segunda ficou para as contas.
+      Text(
+        caption,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: type.caption.copyWith(color: muted),
+      ),
+    ],
+  );
+
+  /// O olho ao lado do rótulo, como no `home_widget.xml`.
+  Widget? _privacy(Color light) {
+    final toggle = onPrivacy;
+    if (toggle == null) return null;
+    return CajuiPressable(
+      onPressed: toggle,
+      semanticLabel: hidden ? 'Mostrar os valores' : 'Esconder os valores',
+      builder: (context, _) => CajuiIcon(
+        hidden ? CajuiIconData.eyeOff : CajuiIconData.eye,
+        size: 18,
+        color: light,
       ),
     );
   }

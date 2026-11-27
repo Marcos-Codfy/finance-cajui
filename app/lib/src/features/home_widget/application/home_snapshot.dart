@@ -18,6 +18,8 @@ final class HomeSnapshot {
     required this.validUntil,
     required this.reviewDates,
     this.bills = const [],
+    this.voucherLabel,
+    this.voucherAmount,
   });
 
   /// O que o número é: "Sobra de outubro".
@@ -43,6 +45,13 @@ final class HomeSnapshot {
   /// o número.
   final List<WidgetBill> bills;
 
+  /// O rótulo do widget do vale: "Saldo do vale". `null` para quem não tem
+  /// vale; aí o widget do vale pede para abrir o app.
+  final String? voucherLabel;
+
+  /// O valor do vale, já formatado. Nunca somado ao número do mês (RN-111).
+  final String? voucherAmount;
+
   @override
   bool operator ==(Object other) =>
       other is HomeSnapshot &&
@@ -51,7 +60,9 @@ final class HomeSnapshot {
       other.caption == caption &&
       other.validUntil == validUntil &&
       listEquals(other.reviewDates, reviewDates) &&
-      listEquals(other.bills, bills);
+      listEquals(other.bills, bills) &&
+      other.voucherLabel == voucherLabel &&
+      other.voucherAmount == voucherAmount;
 
   @override
   int get hashCode => Object.hash(
@@ -61,6 +72,8 @@ final class HomeSnapshot {
     validUntil,
     reviewDates.length,
     bills.length,
+    voucherLabel,
+    voucherAmount,
   );
 
   /// O que atravessa o canal.
@@ -71,5 +84,7 @@ final class HomeSnapshot {
     'validUntil': '$validUntil',
     'reviewDates': [for (final day in reviewDates) '$day'],
     'bills': [for (final bill in bills) bill.toMap()],
+    'voucherLabel': voucherLabel,
+    'voucherAmount': voucherAmount,
   };
 }

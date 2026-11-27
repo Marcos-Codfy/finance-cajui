@@ -45,18 +45,38 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/home_label"
-                android:layout_width="wrap_content"
+            <!-- O rótulo e o olho: tocar no olho esconde os valores de
+                 todos os widgets do Cajui, para a tela inicial não mostrar
+                 o dinheiro a quem estiver olhando (27/11/2026). -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="0.06"
-                android:maxLines="1"
-                android:text="@string/home_widget_stale_label"
-                android:textAllCaps="true"
-                android:textColor="@color/cajui_glass_text_muted"
-                android:textSize="11sp" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/home_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.06"
+                    android:maxLines="1"
+                    android:text="@string/home_widget_stale_label"
+                    android:textAllCaps="true"
+                    android:textColor="@color/cajui_glass_text_muted"
+                    android:textSize="11sp" />
+
+                <ImageButton
+                    android:id="@+id/home_privacy"
+                    android:layout_width="32dp"
+                    android:layout_height="24dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/home_widget_hide"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_widget_eye" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/home_amount"

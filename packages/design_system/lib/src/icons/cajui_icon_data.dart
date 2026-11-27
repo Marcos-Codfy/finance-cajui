@@ -67,8 +67,7 @@ enum CajuiIconData {
   /// Voltar.
   chevronLeft(_chevronLeft),
 
-  /// Ajustes: dois controles deslizantes, e não engrenagem — o que se faz
-  /// ali é regular, não consertar.
+  /// Dois controles deslizantes: regular, e não consertar.
   sliders(_sliders),
 
   /// Repete todo mês: as assinaturas. Duas setas num círculo.
@@ -84,7 +83,13 @@ enum CajuiIconData {
   gear(drawGear),
 
   /// Lupa: buscar.
-  search(drawSearch);
+  search(drawSearch),
+
+  /// Olho: os valores à vista.
+  eye(drawEye),
+
+  /// Olho riscado: os valores escondidos.
+  eyeOff(drawEyeOff);
 
   new(this.build);
 

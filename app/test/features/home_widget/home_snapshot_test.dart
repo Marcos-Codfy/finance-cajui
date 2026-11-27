@@ -85,6 +85,24 @@ void main() {
     expect(snapshot.caption, contains('Abra o Cajui'));
   });
 
+  test('RN-111 · o widget do vale leva o saldo do vale, à parte do número '
+      'do mês, e nunca somado a ele', () async {
+    final container = open(samplePlanEvents);
+    final snapshot = await snapshotOf(container);
+
+    expect(snapshot.voucherLabel, 'Saldo do vale');
+    expect(snapshot.voucherAmount, _brl(65000));
+    expect(snapshot.amount, isNot(snapshot.voucherAmount));
+    expect(snapshot.toMap()['voucherAmount'], _brl(65000));
+  });
+
+  test('sem vale, o widget do vale não recebe número nenhum', () async {
+    final snapshot = await snapshotOf(open(const []));
+
+    expect(snapshot.voucherLabel, isNull);
+    expect(snapshot.voucherAmount, isNull);
+  });
+
   test('RN-872 RN-1050 · sem plano, o widget mostra o que já saiu', () async {
     final snapshot = await snapshotOf(open(const []));
 
