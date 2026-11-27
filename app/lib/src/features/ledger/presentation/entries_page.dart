@@ -1,4 +1,5 @@
 import 'package:api_contract/api_contract.dart';
+import 'package:cajui/src/core/device/storage_settings.dart';
 import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/error_text.dart';
 import 'package:cajui/src/core/errors/error_texts.g.dart';
@@ -150,19 +151,24 @@ class EntriesPage extends ConsumerWidget {
   /// Por que o livro não abriu, com o texto do código certo: cadeia
   /// quebrada e falta de espaço pedem saídas diferentes de "reabrir".
   ///
-  /// Só o `E-APP-01` tem as duas saídas de pé — reabrir e copiar o código.
-  /// As do `E-DATA-01` ("Ver o roteiro de restauração") e do `E-STORAGE-01`
-  /// ("Abrir armazenamento") saem do app e ainda não existem: aparecem sem
-  /// botão, porque um botão que faz outra coisa é pior do que nenhum
-  /// (BL-033).
+  /// O `E-APP-01` reabre e copia o código; o `E-STORAGE-01` abre o
+  /// armazenamento do aparelho e, depois de liberar espaço, tenta de novo
+  /// (27/11/2026). A do `E-DATA-01` ("Ver o roteiro de restauração") sai do
+  /// app e ainda não existe: aparece sem botão, porque um botão que faz
+  /// outra coisa é pior do que nenhum (BL-033).
   Widget _failure(WidgetRef ref, ErrorCode code) {
-    final text = ErrorTexts.of(code).fill(const {'fila': ''});
-    final generic = code == ErrorCode.app01;
+    final text = ErrorTexts.of(code)
+        .fill(const {'fila': '', 'item': 'os lançamentos novos'});
+    final withExits = code == ErrorCode.app01 || code == ErrorCode.storage01;
     return ErrorNotice(
-      error: (code: code, text: generic ? text : ErrorText(text.message)),
-      onAction: (index) => index == 0
-          ? ref.invalidate(ledgerProvider)
-          : Clipboard.setData(ClipboardData(text: code.code)),
+      error: (code: code, text: withExits ? text : ErrorText(text.message)),
+      onAction: (index) => switch ((code, index)) {
+        (ErrorCode.storage01, 0) => ref.read(storageSettingsProvider).open(),
+        (ErrorCode.app01, 1) => Clipboard.setData(
+          ClipboardData(text: code.code),
+        ),
+        _ => ref.invalidate(ledgerProvider),
+      },
     );
   }
 

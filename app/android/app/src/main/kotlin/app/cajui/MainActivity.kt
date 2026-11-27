@@ -12,6 +12,7 @@ import app.cajui.notifications.NoticeChannel
 import app.cajui.notifications.NoticeRouter
 import app.cajui.notifications.NotificationAccess
 import app.cajui.reminders.ReminderChannel
+import app.cajui.settings.SettingsChannel
 import app.cajui.reminders.ReminderPoster
 import app.cajui.voice.SpeechChannel
 import io.flutter.embedding.android.FlutterActivity
@@ -84,6 +85,7 @@ class MainActivity : FlutterActivity() {
         val channel = MethodChannel(messenger, NoticeChannel.NAME)
         NoticeChannel(applicationContext, channel, this)
         HomeChannel(applicationContext, messenger)
+        SettingsChannel(applicationContext, messenger)
         ReminderChannel(applicationContext, messenger, this)
         MethodChannel(messenger, BackgroundEngine.BACKGROUND_CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "waitIdle") {

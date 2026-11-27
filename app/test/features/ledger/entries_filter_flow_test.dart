@@ -212,10 +212,9 @@ void main() {
 
     expect(find.text('Lançar'), findsOneWidget);
     final fields = tester.widgetList<EditableText>(find.byType(EditableText));
-    expect(
-      [for (final field in fields) field.controller.text],
-      contains('Padaria Pão Quente'),
-    );
+    expect([
+      for (final field in fields) field.controller.text,
+    ], contains('Padaria Pão Quente'));
   });
 
   testWidgets('as setas trocam o mês; não há mês depois do de hoje, e o '

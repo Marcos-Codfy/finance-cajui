@@ -1,3 +1,5 @@
+import 'package:cajui/src/core/device/native_storage_settings.dart';
+import 'package:cajui/src/core/device/storage_settings.dart';
 import 'package:cajui/src/core/motion/accelerometer_tilt_source.dart';
 import 'package:cajui/src/core/motion/tilt_providers.dart';
 import 'package:cajui/src/core/settings/event_store_preferences.dart';
@@ -117,6 +119,8 @@ abstract final class Composition {
       notificationAccessProvider.overrideWithValue(channel),
       launchRequestsProvider.overrideWithValue(channel),
       homeScreenProvider.overrideWithValue(const NativeHomeScreen()),
+      // A saída do E-STORAGE-01: a tela de armazenamento do Android.
+      storageSettingsProvider.overrideWithValue(const NativeStorageSettings()),
       // Os lembretes de vencimento, nos alarmes do aparelho (RN-1081).
       reminderScheduleProvider.overrideWithValue(
         const NativeReminderSchedule(),
