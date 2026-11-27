@@ -32,7 +32,7 @@ class _Doors extends StatelessWidget {
       CajuiTile(
         icon: CajuiIconData.card,
         title: 'Cartões',
-        subtitle: 'Quanto do limite já foi usado no mês',
+        subtitle: 'Limite usado no mês',
         onPressed: _nothing,
       ),
       CajuiTile(

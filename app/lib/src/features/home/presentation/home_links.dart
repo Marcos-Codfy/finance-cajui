@@ -19,9 +19,10 @@ abstract final class HomeLinks {
     HomeView view, {
     required VoidCallback export,
   }) => [
-    const CajuiSectionTitle('Seu dinheiro'),
     // As quatro portas mais usadas em grade, e o resto no "Mais": oito
-    // linhas pediam rolagem até "Cartões" (16/10/2026).
+    // linhas pediam rolagem até "Cartões" (16/10/2026). Sem título de
+    // seção: os números de cima já dizem do que se trata, e o título só
+    // empurrava as portas para baixo (27/11/2026).
     CajuiTileGrid(children: _doors(context, view)),
     const SizedBox(height: CajuiSpacing.sm),
     CajuiDisclosure(
@@ -86,7 +87,7 @@ abstract final class HomeLinks {
       '${_brl(budget.outOfPocket.cents)}';
 
   static String _cardsLine(HomeView view) => view.cardsNearLimit.isEmpty
-      ? 'Quanto do limite já foi usado no mês'
+      ? 'Limite usado no mês'
       : '${view.cardsNearLimit.join(', ')} passou de 80% do limite';
 
   static String _entries(HomeView view) => switch (view.entriesThisMonth) {
