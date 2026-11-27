@@ -72,11 +72,7 @@ class EntriesFilterChips extends ConsumerWidget {
 
   /// Um atalho de tipo de pagamento: tocar liga; tocar de novo desliga. Um
   /// tipo por vez — "só vale" e "só cartão" juntos não teriam o que mostrar.
-  Widget _kind(
-    String label,
-    PaymentMethodKind kind,
-    EntriesViewModel filters,
-  ) {
+  Widget _kind(String label, PaymentMethodKind kind, EntriesViewModel filters) {
     final on = state.filter.paymentKind == kind;
     return CajuiChip(
       label: label,

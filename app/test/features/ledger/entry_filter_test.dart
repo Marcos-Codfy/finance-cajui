@@ -235,9 +235,8 @@ void main() {
     final withCard = [...book, card];
 
     test('"Só cartão" pega o tipo, qualquer que seja o cartão', () {
-      final filter = const EntryFilter(
-        month: _september,
-      ).withPaymentKind(PaymentMethodKind.creditCard);
+      final filter = const EntryFilter(month: _september)
+          .withPaymentKind(PaymentMethodKind.creditCard);
 
       expect(_ids(filter.apply(withCard)), ['card']);
       expect(filter.isNarrowed, isTrue);
@@ -245,18 +244,16 @@ void main() {
 
     test('RN-204 · "Só vale alimentação" inclui a compra dividida com o '
         'Pix', () {
-      final filter = const EntryFilter(
-        month: _september,
-      ).withPaymentKind(PaymentMethodKind.mealVoucher);
+      final filter = const EntryFilter(month: _september)
+          .withPaymentKind(PaymentMethodKind.mealVoucher);
 
       expect(_ids(filter.apply(withCard)), ['split']);
     });
 
     test('"Esta semana" vai de segunda a domingo: num domingo (20/09), a '
         'semana começa em 14/09 e o sábado 12 fica de fora', () {
-      final filter = const EntryFilter(
-        month: _september,
-      ).withWeekOf(LocalDate(2026, 9, 20));
+      final filter = const EntryFilter(month: _september)
+          .withWeekOf(LocalDate(2026, 9, 20));
 
       expect(filter.weekStart, LocalDate(2026, 9, 14));
       expect(_ids(filter.apply(withCard)), ['bakery', 'card']);

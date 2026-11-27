@@ -59,10 +59,14 @@ class EntryFormViewModel extends Notifier<EntryFormState> {
     );
   }
 
-  /// Tenta gravar. Recusa de regra vira o aviso do catálogo; sucesso fecha.
-  Future<void> submit() async {
+  /// Tenta gravar. Valor fora do comum pergunta antes; recusa de regra vira
+  /// o aviso do catálogo; sucesso fecha.
+  ///
+  /// [confirmed] é a resposta "está certo" à pergunta do valor.
+  Future<void> submit({bool confirmed = false}) async {
     final draft = _draft;
     if (!draft.isComplete || state is EntryFormSaving) return;
+    if (!confirmed && await _askAboutAmount(draft)) return;
     state = EntryFormSaving(draft);
     try {
       final ledger = ref.read(ledgerProvider.notifier);
@@ -78,6 +82,26 @@ class EntryFormViewModel extends Notifier<EntryFormState> {
       state = EntryFormEditing(draft, problem: _unexpected);
       Zone.current.handleUncaughtError(error, stack);
     }
+  }
+
+  /// Volta a editar depois da pergunta do valor, para corrigi-lo.
+  void reviewAmount() => edit((draft) => draft);
+
+  /// Se o valor está fora do comum, troca o estado pela pergunta e diz
+  /// `true`. Quem decide o que é comum é o domínio (`UnusualAmount`); a
+  /// correção não se compara consigo mesma.
+  Future<bool> _askAboutAmount(EntryDraft draft) async {
+    final book = await ref.read(ledgerProvider.future);
+    final category = DraftDefaults.complete(draft, book).category;
+    if (category == null) return false;
+    final unusual = UnusualAmount.check(
+      Money.fromCents(draft.amountCents),
+      categoryId: category.id,
+      history: book.entries.where((entry) => entry.id != draft.correctionOf),
+    );
+    if (unusual == null) return false;
+    state = EntryFormConfirming(draft, typical: unusual.typical);
+    return true;
   }
 
   EntryFormState _after(EntryDraft draft, Result<Entry> result) {

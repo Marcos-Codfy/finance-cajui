@@ -1,5 +1,3 @@
-import 'package:api_contract/api_contract.dart';
-import 'package:cajui/src/core/errors/error_notice.dart';
 import 'package:cajui/src/core/errors/failure_presenter.dart';
 import 'package:cajui/src/core/navigation/coordinator_access.dart';
 import 'package:cajui/src/core/presentation/loading_page.dart';
@@ -9,7 +7,7 @@ import 'package:cajui/src/features/ledger/application/ledger_book.dart';
 import 'package:cajui/src/features/ledger/application/ledger_controller.dart';
 import 'package:cajui/src/features/ledger/application/today_controller.dart';
 import 'package:cajui/src/features/ledger/presentation/date_section.dart';
-import 'package:cajui/src/features/ledger/presentation/entry_form_missing.dart';
+import 'package:cajui/src/features/ledger/presentation/entry_form_footer.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_state.dart';
 import 'package:cajui/src/features/ledger/presentation/entry_form_view_model.dart';
 import 'package:cajui/src/features/ledger/presentation/ledger_coordinator.dart';
@@ -128,6 +126,7 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
   /// por exemplo — e faz os campos de valor renascerem com o número novo.
   void _editByApp(EntryDraft Function(EntryDraft draft) change) {
     _form.edit(change);
+    _description.text = ref.read(entryFormProvider).draft.description;
     setState(() => _revision++);
   }
 
@@ -162,15 +161,17 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     final state = ref.watch(entryFormProvider);
     final book = ref.watch(ledgerProvider).value;
     if (book == null) return const LoadingPage(title: 'Novo gasto');
-    final problem = switch (state) {
-      EntryFormEditing(:final problem) => problem,
-      EntryFormSaving() || EntryFormSaved() => null,
-    };
+    final problem = EntryFormFooter.problemOf(state);
     final header = widget.header;
     return CajuiScreen(
       title: widget.title,
       onBack: widget.onBack ?? context.back,
-      footer: _footer(state, problem),
+      footer: EntryFormFooter(
+        state: state,
+        submitLabel: widget.submitLabel,
+        extraActions: widget.extraActions,
+        onResolve: (code, index) => _byApp(() => _form.resolve(code, index)),
+      ),
       children: [
         if (header != null) ...[header(context, _editByApp), _gap],
         ..._fields(book, state.draft, problem),
@@ -178,17 +179,14 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
     );
   }
 
-  /// O erro de valor zerado fica sob o campo, que já é a saída; os outros
-  /// viram aviso com as saídas do catálogo.
-  bool _isFieldError(PresentedError? problem) =>
-      problem?.code == ErrorCode.entry03;
-
   List<Widget> _fields(
     LedgerBook book,
     EntryDraft draft,
     PresentedError? problem,
   ) {
-    final fieldError = _isFieldError(problem) ? problem!.text.message : null;
+    final fieldError = EntryFormFooter.isFieldError(problem)
+        ? problem!.text.message
+        : null;
     return [
       ..._whatWasBought(book, draft, fieldError),
       _gap,
@@ -265,35 +263,6 @@ class _EntryFormPageState extends ConsumerState<EntryFormPage> {
             ? d.copyWith(secondCents: cents)
             : d.copyWith(firstCents: cents),
       ),
-    );
-  }
-
-  Widget _footer(EntryFormState state, PresentedError? problem) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (problem != null && !_isFieldError(problem)) ...[
-          ErrorNotice(
-            error: problem,
-            onAction: (index) =>
-                _byApp(() => _form.resolve(problem.code, index)),
-          ),
-          const SizedBox(height: CajuiSpacing.md),
-        ],
-        CajuiButton(
-          label: EntryFormMissing.of(state.draft) ?? widget.submitLabel,
-          expand: true,
-          loading: state is EntryFormSaving,
-          // Mudo: o toque abafaria a semente, que soa logo depois.
-          silent: true,
-          onPressed: state.draft.isComplete ? _form.submit : null,
-        ),
-        for (final action in widget.extraActions) ...[
-          const SizedBox(height: CajuiSpacing.sm),
-          action,
-        ],
-      ],
     );
   }
 }

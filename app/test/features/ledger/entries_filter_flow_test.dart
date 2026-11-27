@@ -202,6 +202,22 @@ void main() {
     _expectListed(_september);
   });
 
+  testWidgets('sem gasto repetido, o "Gastei" oferece repetir o último, e o '
+      'toque preenche o formulário', (tester) async {
+    await _openEntries(tester);
+
+    await _tap(tester, find.text('Gastei'));
+    expect(find.text('Repetir o último'), findsOneWidget);
+    await _tap(tester, find.textContaining('Padaria Pão Quente ·'));
+
+    expect(find.text('Lançar'), findsOneWidget);
+    final fields = tester.widgetList<EditableText>(find.byType(EditableText));
+    expect(
+      [for (final field in fields) field.controller.text],
+      contains('Padaria Pão Quente'),
+    );
+  });
+
   testWidgets('as setas trocam o mês; não há mês depois do de hoje, e o '
       'mês vazio aponta o caminho de volta', (tester) async {
     await _openEntries(tester);
