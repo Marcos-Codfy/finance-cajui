@@ -12,7 +12,14 @@ import 'support/gallery_harness.dart';
 /// mostrar uma tela que não existe mais é mentir para quem a olha. Procurar
 /// a raiz, e não frases, prende também o "Limite semanal" que uma lista de
 /// frases deixaria passar.
-final _weekly = RegExp('(^|[^a-zà-ú])semana', caseSensitive: false);
+///
+/// A única exceção é o atalho "Esta semana" de Lançamentos (27/11/2026):
+/// é um filtro da lista, e não um limite de gasto. A exceção é a expressão
+/// inteira, para "semanal" e "por semana" continuarem reprovados.
+final _weekly = RegExp(
+  '(^|[^a-zà-ú])(?<!esta )semana(?!l)|semanal',
+  caseSensitive: false,
+);
 
 String? _weeklyIn(String text) => _weekly.firstMatch(text)?.group(0);
 
