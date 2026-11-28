@@ -22,7 +22,7 @@ comprovantes e responde com os números do mês. É um projeto completo, feito d
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-1.910-2E7D32)
+![Testes](https://img.shields.io/badge/testes-1.918-2E7D32)
 ![Cobertura do domínio](https://img.shields.io/badge/domínio-92,9%25-2E7D32)
 ![Custo](https://img.shields.io/badge/custo%20fixo-R%24%200%2C00-B33A16)
 
@@ -85,7 +85,7 @@ Claude, como assistente de programação. A API do Claude também é usada dentr
 | Servidor        | Dart + Shelf, executável único, na Oracle Cloud (OCI), com TLS; registro de eventos cifrado e encadeado; API documentada | [`server/`](server), [`docs/api.md`](docs/api.md) |
 | Design system   | Pacote próprio com tokens, componentes, movimento 3D e sons; gallery publicada com os estados de tela | [`packages/design_system`](packages/design_system), [gallery](https://cajui-teal.vercel.app/gallery/) |
 | Android nativo  | Compartilhamento, OCR no aparelho, notificações do banco, widget da tela inicial, lembretes e entrada por voz | [`app/android`](app/android) |
-| Qualidade       | 1.910 testes, nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
+| Qualidade       | 1.918 testes, nomeados pela regra que provam; cobertura de 86% a 93% por pacote; varredura de segredos no histórico | [`tool/`](tool), [quality-gates](docs/spec/quality-gates.md) |
 | Processo        | 32 ADRs, Conventional Commits, pull requests e CI no GitHub Actions | [`docs/architecture`](docs/architecture) |
 
 ### Duas decisões que moldaram o projeto
@@ -481,7 +481,7 @@ estudados no semestre. A regra que segui foi **um padrão por pergunta**, sem mi
 
 | Item                | Situação                                                                                                  |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Testes              | **1.910**: app 635 · domínio 504 · servidor 277 · design system 257 · contrato 104 · gallery 82 · persistência 25 · verificador 26 |
+| Testes              | **1.918**: app 635 · domínio 504 · servidor 277 · design system 257 · contrato 104 · gallery 90 · persistência 25 · verificador 26 |
 | Cobertura           | contrato 93,2% · domínio 92,9% · persistência 91,5% · servidor 89,9% · design system 88,0% · app 86,4%   |
 | Regra ↔ teste       | Cada regra tem número (`RN-xxx`) e um teste com o mesmo número. Exemplo numérico da especificação vira teste, centavo a centavo |
 | Textos              | Todo erro que a pessoa lê vem de um catálogo de 47 códigos, e o código que o exibe é **gerado** dele. Um teste por código garante que nenhum texto sai com marcador por preencher |
