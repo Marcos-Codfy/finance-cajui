@@ -2,7 +2,10 @@ import 'package:gallery/src/pages/screens/assistant/assistant_page.dart';
 import 'package:gallery/src/pages/screens/capture/capture_page.dart';
 import 'package:gallery/src/pages/screens/closing/closing_page.dart';
 import 'package:gallery/src/pages/screens/debts/debts_page.dart';
+import 'package:gallery/src/pages/screens/entries/entries_page.dart';
 import 'package:gallery/src/pages/screens/home/home_page.dart';
+import 'package:gallery/src/pages/screens/new_spend/new_spend_page.dart';
+import 'package:gallery/src/pages/screens/settings/settings_page.dart';
 import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
 import 'package:gallery/src/pages/screens/shared/variant_slug.dart';
 import 'package:gallery/src/pages/screens/statement/statement_page.dart';
@@ -25,6 +28,17 @@ abstract final class ScreenCatalog {
   /// Todas as telas, na ordem do menu.
   static const List<CatalogScreen> screens = [
     (id: 'home', title: HomePage.title, variants: HomePage.variants),
+    (id: 'entries', title: EntriesPage.title, variants: EntriesPage.variants),
+    (
+      id: 'newSpend',
+      title: NewSpendPage.title,
+      variants: NewSpendPage.variants,
+    ),
+    (
+      id: 'settings',
+      title: SettingsPage.title,
+      variants: SettingsPage.variants,
+    ),
     (
       id: 'homeWidget',
       title: HomeWidgetPage.title,

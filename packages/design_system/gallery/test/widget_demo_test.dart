@@ -80,9 +80,14 @@ void main() {
       'de tela, e o "+" é o novo gasto', (tester) async {
     await openGallery(tester, page: GalleryDestination.homeWidget);
 
-    expect(find.bySemanticsLabel('Fotografar comprovante'), findsOneWidget);
-    expect(find.bySemanticsLabel('Escolher da galeria'), findsOneWidget);
-    expect(find.bySemanticsLabel('Novo gasto'), findsOneWidget);
+    // Dentro do widget: o menu da gallery também tem uma página "Novo gasto".
+    Finder inWidget(String label) => find.descendant(
+      of: find.byType(GlassWidget),
+      matching: find.bySemanticsLabel(label),
+    );
+    expect(inWidget('Fotografar comprovante'), findsOneWidget);
+    expect(inWidget('Escolher da galeria'), findsOneWidget);
+    expect(inWidget('Novo gasto'), findsOneWidget);
   });
 
   testWidgets('o olho do grande esconde os valores dos três widgets, e o '

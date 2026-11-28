@@ -11,7 +11,12 @@ import 'package:flutter/widgets.dart';
 /// sumir. O leitor de tela ouve se está aberto.
 class CajuiDisclosure extends StatefulWidget {
   /// Cria o "Mais" com [title], guardando [children].
-  const new({required this.title, required this.children, super.key});
+  const new({
+    required this.title,
+    required this.children,
+    this.initiallyOpen = false,
+    super.key,
+  });
 
   /// O nome: "Mais".
   final String title;
@@ -19,12 +24,16 @@ class CajuiDisclosure extends StatefulWidget {
   /// O que aparece aberto.
   final List<Widget> children;
 
+  /// Se nasce aberto. A gallery mostra assim um assunto já lido; no app, o
+  /// "Mais" nasce fechado.
+  final bool initiallyOpen;
+
   @override
   State<CajuiDisclosure> createState() => _CajuiDisclosureState();
 }
 
 class _CajuiDisclosureState extends State<CajuiDisclosure> {
-  bool _open = false;
+  late bool _open = widget.initiallyOpen;
 
   @override
   Widget build(BuildContext context) {

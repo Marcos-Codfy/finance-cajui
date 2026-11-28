@@ -123,6 +123,9 @@ void main() {
 
       expect(ScreenCatalog.screens.map((screen) => screen.id), [
         'home',
+        'entries',
+        'newSpend',
+        'settings',
         'homeWidget',
         'capture',
         'statement',
