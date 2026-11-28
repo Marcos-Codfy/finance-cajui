@@ -46,7 +46,7 @@ duração à mão: pede ao design system, e a esteira reprova quem tentar.
   desligado.
 - **Acessível por teste:** cada par de cor em uso tem o contraste da WCAG medido nos dois temas, cada controle tem área
   de toque mínima e nome para o leitor de tela, e o foco do teclado aparece num anel próprio.
-- **Uma gallery que é produto:** uma porta de entrada, as 7 telas do app nos 69 estados lado a lado ([Estados das telas](https://cajui-teal.vercel.app/gallery/#/estados-das-telas)), as regras em pares ([Faça e evite](https://cajui-teal.vercel.app/gallery/#/faca-e-evite)), tema escuro, som e um endereço para cada página.
+- **Uma gallery que é produto:** uma porta de entrada, as telas do app em todos os estados, lado a lado ([Estados das telas](https://cajui-teal.vercel.app/gallery/#/estados-das-telas)), as regras em pares ([Faça e evite](https://cajui-teal.vercel.app/gallery/#/faca-e-evite)), tema escuro, som e um endereço para cada página.
 
 ## Visual
 
