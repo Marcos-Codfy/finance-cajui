@@ -15,6 +15,16 @@ enum GalleryDestination {
   /// O Início, em todos os estados.
   home('Início', GalleryGroup.app, 'inicio'),
 
+  /// Os lançamentos do mês: a lupa, os atalhos e o já gasto por moeda.
+  entries('Lançamentos', GalleryGroup.app, 'lancamentos'),
+
+  /// O novo gasto: os gastos de sempre, o botão que diz o que falta e a
+  /// pergunta do valor fora do comum.
+  newSpend('Novo gasto', GalleryGroup.app, 'novo-gasto'),
+
+  /// Os ajustes e a ajuda "Como o Cajui conta".
+  settings('Ajustes e ajuda', GalleryGroup.app, 'ajustes'),
+
   /// A conversa com a Juju, o extrato conferido com ela e as falhas da IA.
   assistant('Juju, a assistente', GalleryGroup.app, 'juju'),
 

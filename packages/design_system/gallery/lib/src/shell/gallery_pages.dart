@@ -15,8 +15,11 @@ import 'package:gallery/src/pages/screens/assistant/assistant_page.dart';
 import 'package:gallery/src/pages/screens/capture/capture_page.dart';
 import 'package:gallery/src/pages/screens/closing/closing_page.dart';
 import 'package:gallery/src/pages/screens/debts/debts_page.dart';
+import 'package:gallery/src/pages/screens/entries/entries_page.dart';
 import 'package:gallery/src/pages/screens/home/home_page.dart';
+import 'package:gallery/src/pages/screens/new_spend/new_spend_page.dart';
 import 'package:gallery/src/pages/screens/overview/screen_states_route.dart';
+import 'package:gallery/src/pages/screens/settings/settings_page.dart';
 import 'package:gallery/src/pages/screens/shared/screen_variant.dart';
 import 'package:gallery/src/pages/screens/shared/variant_slug.dart';
 import 'package:gallery/src/pages/screens/shortfall/shortfall_compare_page.dart';
@@ -54,6 +57,12 @@ final Map<GalleryDestination, Widget Function(String? state)> _pages = {
   GalleryDestination.screenStates: (_) => const ScreenStatesRoute(),
   GalleryDestination.home: (state) =>
       HomePage(initialIndex: _at(HomePage.variants, state) ?? 0),
+  GalleryDestination.entries: (state) =>
+      EntriesPage(initialIndex: _at(EntriesPage.variants, state) ?? 0),
+  GalleryDestination.newSpend: (state) =>
+      NewSpendPage(initialIndex: _at(NewSpendPage.variants, state) ?? 0),
+  GalleryDestination.settings: (state) =>
+      SettingsPage(initialIndex: _at(SettingsPage.variants, state) ?? 0),
   GalleryDestination.assistant: (state) =>
       AssistantPage(initialIndex: _at(AssistantPage.variants, state) ?? 0),
   GalleryDestination.capture: (state) =>
